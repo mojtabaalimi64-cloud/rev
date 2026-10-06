@@ -1,848 +1,1074 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fa" dir="rtl">
+
 <head>
+
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>REV — Electric Vehicles & Technology</title>
+<title>REV | خودروهای برقی، تکنولوژی و آینده</title>
 
 <meta name="description"
-content="REV — Electric Vehicles, Technology & Future Mobility">
+content="REV رسانه‌ای فارسی‌زبان درباره خودروهای برقی، تکنولوژی، باتری، شارژ و آینده حمل‌ونقل است.">
 
 <style>
 
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+
 :root {
-  --black: #080b0d;
-  --dark: #0d1215;
-  --card: #11181b;
-  --green: #39ff88;
-  --cyan: #00d9c0;
-  --white: #f5f7f8;
-  --gray: #8a949b;
-  --line: rgba(255,255,255,0.08);
+    --black:#070a0c;
+    --dark:#0c1114;
+    --card:#11171a;
+    --green:#39ff88;
+    --cyan:#00d9c0;
+    --white:#f4f7f6;
+    --gray:#8b969c;
+    --line:rgba(255,255,255,.08);
 }
 
 * {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
 }
 
 html {
-  scroll-behavior: smooth;
+    scroll-behavior:smooth;
 }
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
-  background: var(--black);
-  color: var(--white);
-  line-height: 1.6;
+    font-family:'Vazirmatn',Arial,sans-serif;
+    background:var(--black);
+    color:var(--white);
+    line-height:1.9;
 }
 
 /* HEADER */
 
 header {
-  position: sticky;
-  top: 0;
-  z-index: 100;
+    position:sticky;
+    top:0;
+    z-index:1000;
 
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
+    height:76px;
 
-  padding: 20px 6%;
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
 
-  background: rgba(8,11,13,0.88);
-  backdrop-filter: blur(18px);
+    padding:0 6%;
 
-  border-bottom: 1px solid var(--line);
+    background:rgba(7,10,12,.88);
+    backdrop-filter:blur(20px);
+
+    border-bottom:1px solid var(--line);
 }
 
 .logo {
-  font-size: 32px;
-  font-weight: 900;
-  letter-spacing: 7px;
-  color: var(--white);
+    direction:ltr;
+    font-family:Arial,sans-serif;
+
+    font-size:30px;
+    font-weight:900;
+
+    letter-spacing:6px;
 }
 
 .logo span {
-  color: var(--green);
+    color:var(--green);
 }
 
 nav {
-  display: flex;
-  gap: 28px;
+    display:flex;
+    gap:28px;
 }
 
 nav a {
-  color: var(--gray);
-  text-decoration: none;
-  font-size: 14px;
-  transition: 0.3s;
+    color:#aab3b8;
+    text-decoration:none;
+    font-size:14px;
+    transition:.3s;
 }
 
 nav a:hover {
-  color: var(--green);
+    color:var(--green);
 }
 
 /* HERO */
 
 .hero {
-  min-height: 88vh;
+    min-height:88vh;
 
-  display: flex;
-  align-items: center;
+    display:flex;
+    align-items:center;
 
-  padding: 100px 8%;
+    padding:100px 8%;
 
-  position: relative;
-  overflow: hidden;
+    position:relative;
+    overflow:hidden;
 
-  background:
+    background:
     radial-gradient(
-      circle at 75% 35%,
-      rgba(57,255,136,0.13),
-      transparent 28%
+        circle at 15% 40%,
+        rgba(57,255,136,.10),
+        transparent 25%
     ),
     radial-gradient(
-      circle at 90% 80%,
-      rgba(0,217,192,0.10),
-      transparent 30%
+        circle at 80% 25%,
+        rgba(0,217,192,.10),
+        transparent 30%
     ),
     var(--black);
 }
 
-.hero::before {
-  content: "REV";
+.hero::after {
+    content:"REV";
 
-  position: absolute;
-  right: -40px;
-  bottom: -90px;
+    position:absolute;
 
-  font-size: 30vw;
-  font-weight: 900;
+    left:-5%;
+    bottom:-15%;
 
-  color: rgba(255,255,255,0.025);
+    direction:ltr;
 
-  pointer-events: none;
+    font-family:Arial,sans-serif;
+    font-size:30vw;
+    font-weight:900;
+
+    color:rgba(255,255,255,.018);
+
+    pointer-events:none;
 }
 
 .hero-content {
-  max-width: 900px;
-  position: relative;
-  z-index: 2;
+    max-width:850px;
+    position:relative;
+    z-index:2;
 }
 
 .eyebrow {
-  color: var(--green);
-  font-size: 13px;
-  letter-spacing: 4px;
-  text-transform: uppercase;
+    color:var(--green);
+
+    font-size:13px;
+    font-weight:600;
+
+    letter-spacing:2px;
+
+    margin-bottom:20px;
 }
 
 .hero h1 {
-  font-size: clamp(70px, 12vw, 170px);
-  line-height: 0.85;
-  letter-spacing: -8px;
+    font-family:Arial,sans-serif;
 
-  margin: 25px 0;
+    direction:ltr;
+    text-align:left;
 
-  font-weight: 900;
+    font-size:clamp(65px,10vw,145px);
+
+    line-height:.86;
+
+    letter-spacing:-7px;
+
+    font-weight:900;
+
+    margin-bottom:35px;
 }
 
 .hero h1 span {
-  color: var(--green);
+    color:var(--green);
 }
 
 .hero-description {
-  max-width: 650px;
+    max-width:650px;
 
-  color: var(--gray);
+    color:var(--gray);
 
-  font-size: 20px;
+    font-size:20px;
+
+    line-height:2;
 }
 
 .hero-buttons {
-  margin-top: 40px;
+    display:flex;
 
-  display: flex;
-  gap: 15px;
-  flex-wrap: wrap;
+    gap:15px;
+
+    margin-top:35px;
+
+    flex-wrap:wrap;
 }
 
 .btn {
-  padding: 14px 26px;
+    display:inline-block;
 
-  border: 1px solid var(--green);
+    padding:12px 26px;
 
-  text-decoration: none;
+    background:var(--green);
 
-  color: var(--black);
-  background: var(--green);
+    color:#06100a;
 
-  font-size: 14px;
-  font-weight: bold;
+    text-decoration:none;
 
-  transition: 0.3s;
+    font-size:14px;
+
+    font-weight:700;
+
+    border:1px solid var(--green);
+
+    transition:.3s;
 }
 
 .btn:hover {
-  background: transparent;
-  color: var(--green);
+    background:transparent;
+    color:var(--green);
 }
 
 .btn.secondary {
-  background: transparent;
-  color: var(--white);
-  border-color: var(--line);
+    background:transparent;
+    color:var(--white);
+    border-color:var(--line);
 }
 
 .btn.secondary:hover {
-  border-color: var(--cyan);
-  color: var(--cyan);
+    color:var(--cyan);
+    border-color:var(--cyan);
 }
 
-/* SECTION */
+/* SECTIONS */
 
 section {
-  padding: 100px 8%;
+    padding:100px 8%;
 
-  border-top: 1px solid var(--line);
+    border-top:1px solid var(--line);
 }
 
 .section-label {
-  color: var(--green);
+    color:var(--green);
 
-  font-size: 12px;
+    font-size:12px;
 
-  letter-spacing: 3px;
+    font-weight:600;
 
-  text-transform: uppercase;
+    letter-spacing:2px;
 
-  margin-bottom: 12px;
+    margin-bottom:12px;
 }
 
 .section-title {
-  font-size: clamp(35px,5vw,60px);
+    font-size:clamp(35px,5vw,60px);
 
-  letter-spacing: -2px;
+    line-height:1.2;
 
-  margin-bottom: 50px;
+    margin-bottom:50px;
+
+    font-weight:800;
 }
 
 /* GRID */
 
 .grid {
-  display: grid;
+    display:grid;
 
-  grid-template-columns:
-    repeat(auto-fit, minmax(250px, 1fr));
+    grid-template-columns:
+    repeat(auto-fit,minmax(250px,1fr));
 
-  gap: 20px;
+    gap:20px;
 }
 
 /* CARDS */
 
 .card {
-  position: relative;
+    position:relative;
 
-  min-height: 260px;
+    min-height:260px;
 
-  padding: 32px;
+    padding:32px;
 
-  background:
+    background:
     linear-gradient(
-      145deg,
-      rgba(255,255,255,0.035),
-      rgba(255,255,255,0.01)
+        145deg,
+        rgba(255,255,255,.035),
+        rgba(255,255,255,.008)
     );
 
-  border: 1px solid var(--line);
+    border:1px solid var(--line);
 
-  transition: 0.35s;
+    overflow:hidden;
 
-  overflow: hidden;
-}
-
-.card::after {
-  content: "";
-
-  position: absolute;
-
-  width: 100px;
-  height: 100px;
-
-  right: -50px;
-  bottom: -50px;
-
-  background: var(--green);
-
-  filter: blur(60px);
-
-  opacity: 0;
-
-  transition: 0.35s;
+    transition:.35s;
 }
 
 .card:hover {
-  transform: translateY(-7px);
+    transform:translateY(-7px);
 
-  border-color: rgba(57,255,136,0.4);
-}
-
-.card:hover::after {
-  opacity: 0.25;
+    border-color:rgba(57,255,136,.4);
 }
 
 .card-number {
-  color: var(--green);
+    color:var(--green);
 
-  font-size: 13px;
+    font-family:Arial,sans-serif;
 
-  letter-spacing: 2px;
+    direction:ltr;
+
+    font-size:13px;
+
+    letter-spacing:2px;
 }
 
 .card h3 {
-  font-size: 25px;
+    font-size:25px;
 
-  margin: 25px 0 12px;
+    margin:25px 0 12px;
+
+    font-weight:700;
 }
 
 .card p {
-  color: var(--gray);
+    color:var(--gray);
 
-  font-size: 15px;
+    font-size:15px;
+
+    line-height:2;
+}
+
+/* NEWS */
+
+.news-grid {
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(280px,1fr));
+
+    gap:20px;
+}
+
+.news-card {
+    background:var(--card);
+
+    border:1px solid var(--line);
+
+    overflow:hidden;
+
+    transition:.3s;
+}
+
+.news-card:hover {
+    transform:translateY(-6px);
+
+    border-color:rgba(57,255,136,.35);
+}
+
+.news-image {
+    height:190px;
+
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    background:
+    radial-gradient(
+        circle,
+        rgba(57,255,136,.18),
+        transparent 45%
+    ),
+    #101619;
+}
+
+.news-image span {
+    direction:ltr;
+
+    font-family:Arial,sans-serif;
+
+    font-size:55px;
+
+    font-weight:900;
+
+    color:rgba(255,255,255,.08);
+}
+
+.news-content {
+    padding:25px;
+}
+
+.news-category {
+    color:var(--green);
+
+    font-size:11px;
+
+    font-weight:600;
+}
+
+.news-content h3 {
+    font-size:19px;
+
+    margin:10px 0;
+
+    line-height:1.7;
+}
+
+.news-content p {
+    color:var(--gray);
+
+    font-size:14px;
 }
 
 /* FEATURE */
 
 .feature {
-  display: grid;
+    display:grid;
 
-  grid-template-columns: 1.2fr 1fr;
+    grid-template-columns:1.1fr 1fr;
 
-  min-height: 420px;
+    min-height:430px;
 
-  border: 1px solid var(--line);
+    border:1px solid var(--line);
 
-  background: var(--dark);
+    background:var(--dark);
 }
 
 .feature-image {
-  min-height: 420px;
+    min-height:430px;
 
-  background:
+    display:flex;
+
+    align-items:center;
+    justify-content:center;
+
+    background:
     radial-gradient(
-      circle,
-      rgba(57,255,136,0.22),
-      transparent 40%
+        circle,
+        rgba(57,255,136,.20),
+        transparent 40%
     ),
     linear-gradient(
-      135deg,
-      #10191b,
-      #080b0d
+        135deg,
+        #11191b,
+        #080b0d
     );
-
-  display: flex;
-
-  align-items: center;
-
-  justify-content: center;
 }
 
 .feature-image span {
-  font-size: 100px;
+    direction:ltr;
 
-  font-weight: 900;
+    font-family:Arial,sans-serif;
 
-  letter-spacing: 10px;
+    font-size:110px;
 
-  color: rgba(255,255,255,0.08);
+    font-weight:900;
+
+    letter-spacing:8px;
+
+    color:rgba(255,255,255,.07);
 }
 
 .feature-content {
-  padding: 60px;
+    padding:60px;
 }
 
 .feature-content h3 {
-  font-size: 40px;
+    font-size:38px;
 
-  line-height: 1.1;
+    line-height:1.4;
 
-  margin: 20px 0;
+    margin:20px 0;
 }
 
 .feature-content p {
-  color: var(--gray);
+    color:var(--gray);
 
-  margin-bottom: 30px;
+    font-size:16px;
+
+    margin-bottom:30px;
 }
 
 /* PODCAST */
 
 .podcast {
-  background:
+    background:
     linear-gradient(
-      120deg,
-      rgba(57,255,136,0.06),
-      rgba(0,217,192,0.03)
+        120deg,
+        rgba(57,255,136,.06),
+        rgba(0,217,192,.03)
     );
 }
 
 .podcast-box {
-  max-width: 850px;
+    max-width:800px;
 }
 
 .podcast-box h2 {
-  font-size: clamp(40px,7vw,80px);
+    direction:rtl;
 
-  line-height: 0.95;
+    font-size:clamp(40px,7vw,80px);
 
-  margin-bottom: 25px;
+    line-height:1.2;
+
+    margin-bottom:25px;
 }
 
 .podcast-box p {
-  color: var(--gray);
+    color:var(--gray);
 
-  font-size: 18px;
+    font-size:18px;
 
-  max-width: 650px;
+    max-width:650px;
+}
+
+/* ABOUT */
+
+.about-text {
+    max-width:800px;
+
+    color:var(--gray);
+
+    font-size:19px;
+
+    line-height:2.2;
 }
 
 /* FOOTER */
 
 footer {
-  padding: 50px 8%;
+    padding:45px 8%;
 
-  border-top: 1px solid var(--line);
+    border-top:1px solid var(--line);
 
-  display: flex;
+    display:flex;
 
-  justify-content: space-between;
+    justify-content:space-between;
 
-  gap: 20px;
+    align-items:center;
 
-  flex-wrap: wrap;
+    gap:20px;
 
-  color: var(--gray);
+    flex-wrap:wrap;
 
-  font-size: 13px;
+    color:var(--gray);
+
+    font-size:13px;
 }
 
 .footer-logo {
-  color: var(--white);
+    direction:ltr;
 
-  font-weight: 900;
+    font-family:Arial,sans-serif;
 
-  letter-spacing: 5px;
+    color:var(--white);
+
+    font-size:22px;
+
+    font-weight:900;
+
+    letter-spacing:5px;
 }
 
 /* MOBILE */
 
-@media(max-width: 800px) {
+@media(max-width:800px) {
 
-  header {
-    padding: 18px 5%;
-  }
+    header {
+        padding:0 5%;
+    }
 
-  nav {
-    display: none;
-  }
+    nav {
+        display:none;
+    }
 
-  .hero {
-    min-height: 80vh;
+    .hero {
+        min-height:80vh;
 
-    padding: 80px 7%;
-  }
+        padding:80px 7%;
+    }
 
-  .hero h1 {
-    font-size: 90px;
-  }
+    .hero h1 {
+        font-size:75px;
 
-  section {
-    padding: 75px 7%;
-  }
+        letter-spacing:-5px;
+    }
 
-  .feature {
-    grid-template-columns: 1fr;
-  }
+    .hero-description {
+        font-size:17px;
+    }
 
-  .feature-image {
-    min-height: 250px;
-  }
+    section {
+        padding:75px 7%;
+    }
 
-  .feature-content {
-    padding: 35px;
-  }
+    .feature {
+        grid-template-columns:1fr;
+    }
 
-  footer {
-    padding: 40px 7%;
-  }
+    .feature-image {
+        min-height:250px;
+    }
+
+    .feature-content {
+        padding:35px;
+    }
+
+    footer {
+        padding:40px 7%;
+    }
 
 }
 
 </style>
+
 </head>
 
 
 <body>
 
 
+<!-- HEADER -->
+
 <header>
 
-  <div class="logo">
-    RE<span>V</span>
-  </div>
+    <div class="logo">
+        RE<span>V</span>
+    </div>
 
-  <nav>
+    <nav>
 
-    <a href="#ev">EV</a>
+        <a href="#home">خانه</a>
 
-    <a href="#technology">
-      Technology
-    </a>
+        <a href="#ev">خودروهای برقی</a>
 
-    <a href="#articles">
-      Articles
-    </a>
+        <a href="#technology">تکنولوژی</a>
 
-    <a href="#podcast">
-      Podcast
-    </a>
+        <a href="#news">اخبار</a>
 
-    <a href="#about">
-      About
-    </a>
+        <a href="#articles">مقالات</a>
 
-  </nav>
+        <a href="#podcast">پادکست</a>
+
+        <a href="#about">درباره REV</a>
+
+    </nav>
 
 </header>
 
 
-
 <!-- HERO -->
 
-<section class="hero">
+<section class="hero" id="home">
 
-  <div class="hero-content">
+    <div class="hero-content">
 
-    <div class="eyebrow">
-      Electric Vehicles · Technology · Future Mobility
+        <div class="eyebrow">
+            خودروهای برقی · تکنولوژی · آینده حمل‌ونقل
+        </div>
+
+        <h1>
+            THE FUTURE<br>
+            MOVES <span>ELECTRIC.</span>
+        </h1>
+
+        <p class="hero-description">
+
+            REV یک رسانه مستقل فارسی‌زبان برای شناخت
+            خودروهای برقی، فناوری‌های نوظهور و آینده
+            صنعت حمل‌ونقل است.
+
+        </p>
+
+        <div class="hero-buttons">
+
+            <a href="#news" class="btn">
+                آخرین اخبار
+            </a>
+
+            <a href="#podcast" class="btn secondary">
+                REV Podcast
+            </a>
+
+        </div>
+
     </div>
-
-    <h1>
-      THE FUTURE<br>
-      MOVES <span>ELECTRIC.</span>
-    </h1>
-
-    <p class="hero-description">
-
-      REV explores electric vehicles,
-      emerging technologies and the ideas
-      shaping the future of mobility.
-
-    </p>
-
-    <div class="hero-buttons">
-
-      <a href="#articles" class="btn">
-        Explore REV
-      </a>
-
-      <a href="#podcast" class="btn secondary">
-        Listen to Podcast
-      </a>
-
-    </div>
-
-  </div>
 
 </section>
-
 
 
 <!-- EV -->
 
 <section id="ev">
 
-  <div class="section-label">
-    01 / ELECTRIC VEHICLES
-  </div>
-
-  <h2 class="section-title">
-    Electric Mobility
-  </h2>
-
-
-  <div class="grid">
-
-
-    <div class="card">
-
-      <div class="card-number">
-        01
-      </div>
-
-      <h3>
-        EV News
-      </h3>
-
-      <p>
-        The most important developments,
-        launches and changes in the electric
-        vehicle industry.
-      </p>
-
+    <div class="section-label">
+        01 / ELECTRIC VEHICLES
     </div>
 
+    <h2 class="section-title">
+        دنیای خودروهای برقی
+    </h2>
 
-    <div class="card">
+    <div class="grid">
 
-      <div class="card-number">
-        02
-      </div>
+        <div class="card">
 
-      <h3>
-        Reviews
-      </h3>
+            <div class="card-number">
+                EV
+            </div>
 
-      <p>
-        Understanding electric cars beyond
-        specifications, numbers and marketing.
-      </p>
+            <h3>
+                خودروهای برقی
+            </h3>
+
+            <p>
+                بررسی خودروهای برقی، مدل‌های جدید،
+                بازار EV و اتفاقاتی که صنعت خودرو
+                را تغییر می‌دهند.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-number">
+                BATTERY
+            </div>
+
+            <h3>
+                باتری و انرژی
+            </h3>
+
+            <p>
+                باتری، برد حرکتی، فناوری‌های جدید،
+                شارژ سریع و آینده ذخیره انرژی.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-number">
+                CHARGE
+            </div>
+
+            <h3>
+                شارژ
+            </h3>
+
+            <p>
+                زیرساخت شارژ، استانداردها،
+                شارژ خانگی و فناوری‌های آینده.
+            </p>
+
+        </div>
 
     </div>
-
-
-    <div class="card">
-
-      <div class="card-number">
-        03
-      </div>
-
-      <h3>
-        Battery
-      </h3>
-
-      <p>
-        Battery technology, charging,
-        range and the future of energy storage.
-      </p>
-
-    </div>
-
-
-  </div>
 
 </section>
 
+
+<!-- NEWS -->
+
+<section id="news">
+
+    <div class="section-label">
+        02 / LATEST NEWS
+    </div>
+
+    <h2 class="section-title">
+        آخرین اخبار
+    </h2>
+
+    <div class="news-grid">
+
+
+        <article class="news-card">
+
+            <div class="news-image">
+                <span>EV</span>
+            </div>
+
+            <div class="news-content">
+
+                <div class="news-category">
+                    خودروهای برقی
+                </div>
+
+                <h3>
+                    آینده صنعت خودرو در حال تغییر است
+                </h3>
+
+                <p>
+                    اخبار و اتفاقات مهم صنعت خودروهای
+                    برقی را در REV دنبال کنید.
+                </p>
+
+            </div>
+
+        </article>
+
+
+        <article class="news-card">
+
+            <div class="news-image">
+                <span>AI</span>
+            </div>
+
+            <div class="news-content">
+
+                <div class="news-category">
+                    تکنولوژی
+                </div>
+
+                <h3>
+                    هوش مصنوعی چگونه خودروها را تغییر می‌دهد؟
+                </h3>
+
+                <p>
+                    از نرم‌افزار خودرو تا رانندگی خودکار.
+                </p>
+
+            </div>
+
+        </article>
+
+
+        <article class="news-card">
+
+            <div class="news-image">
+                <span>BAT</span>
+            </div>
+
+            <div class="news-content">
+
+                <div class="news-category">
+                    باتری
+                </div>
+
+                <h3>
+                    نسل جدید باتری‌ها به کجا می‌روند؟
+                </h3>
+
+                <p>
+                    فناوری‌های جدید باتری و آینده ذخیره انرژی.
+                </p>
+
+            </div>
+
+        </article>
+
+
+    </div>
+
+</section>
 
 
 <!-- FEATURE -->
 
 <section id="articles">
 
-  <div class="section-label">
-    02 / FEATURE
-  </div>
-
-  <div class="feature">
-
-    <div class="feature-image">
-
-      <span>
-        EV
-      </span>
-
+    <div class="section-label">
+        03 / REV STUDIES
     </div>
 
+    <div class="feature">
 
-    <div class="feature-content">
+        <div class="feature-image">
 
-      <div class="section-label">
-        REV STUDIES
-      </div>
+            <span>
+                REV
+            </span>
 
-      <h3>
-        Understanding the
-        Electric Revolution
-      </h3>
+        </div>
 
-      <p>
 
-        We study the technologies,
-        companies and decisions that are
-        transforming the automotive industry.
+        <div class="feature-content">
 
-      </p>
+            <div class="section-label">
+                FEATURED ARTICLE
+            </div>
 
-      <a href="#" class="btn">
-        Read Studies
-      </a>
+            <h3>
+                انقلاب خودروهای برقی
+                دقیقاً از کجا شروع شد؟
+            </h3>
+
+            <p>
+
+                در REV فقط خبرها را دنبال نمی‌کنیم.
+                تلاش می‌کنیم پشت اتفاقات صنعت خودرو،
+                تکنولوژی و تصمیم‌های مهم را بفهمیم.
+
+            </p>
+
+            <a href="#" class="btn">
+                مطالعه مقاله
+            </a>
+
+        </div>
 
     </div>
-
-  </div>
 
 </section>
-
 
 
 <!-- TECHNOLOGY -->
 
 <section id="technology">
 
-  <div class="section-label">
-    03 / TECHNOLOGY
-  </div>
-
-  <h2 class="section-title">
-    Beyond the Car
-  </h2>
-
-
-  <div class="grid">
-
-
-    <div class="card">
-
-      <div class="card-number">
-        AI
-      </div>
-
-      <h3>
-        Artificial Intelligence
-      </h3>
-
-      <p>
-        How AI is changing vehicles,
-        transportation and mobility.
-      </p>
-
+    <div class="section-label">
+        04 / TECHNOLOGY
     </div>
 
+    <h2 class="section-title">
+        فراتر از خودرو
+    </h2>
 
-    <div class="card">
 
-      <div class="card-number">
-        AUTO
-      </div>
+    <div class="grid">
 
-      <h3>
-        Autonomous Driving
-      </h3>
 
-      <p>
-        Sensors, software and the race
-        toward autonomous mobility.
-      </p>
+        <div class="card">
+
+            <div class="card-number">
+                AI
+            </div>
+
+            <h3>
+                هوش مصنوعی
+            </h3>
+
+            <p>
+                هوش مصنوعی چگونه خودرو،
+                رانندگی و صنعت حمل‌ونقل را
+                متحول می‌کند؟
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-number">
+                AUTO
+            </div>
+
+            <h3>
+                رانندگی خودکار
+            </h3>
+
+            <p>
+                سنسورها، نرم‌افزار و رقابت
+                برای ساخت خودروهای خودران.
+            </p>
+
+        </div>
+
+
+        <div class="card">
+
+            <div class="card-number">
+                FUTURE
+            </div>
+
+            <h3>
+                آینده حمل‌ونقل
+            </h3>
+
+            <p>
+                فناوری‌هایی که ممکن است
+                شیوه حرکت ما را برای همیشه تغییر دهند.
+            </p>
+
+        </div>
+
 
     </div>
-
-
-    <div class="card">
-
-      <div class="card-number">
-        FUTURE
-      </div>
-
-      <h3>
-        Future Mobility
-      </h3>
-
-      <p>
-        Technologies and ideas that could
-        redefine how we move.
-      </p>
-
-    </div>
-
-
-  </div>
 
 </section>
-
 
 
 <!-- PODCAST -->
 
 <section id="podcast" class="podcast">
 
-  <div class="section-label">
-    04 / REV PODCAST
-  </div>
+    <div class="section-label">
+        05 / REV PODCAST
+    </div>
 
 
-  <div class="podcast-box">
+    <div class="podcast-box">
 
-    <h2>
-      Conversations<br>
-      about the future.
-    </h2>
+        <h2>
+            گفتگو درباره
+            آینده.
+        </h2>
 
-    <p>
+        <p>
 
-      Deep conversations about electric
-      vehicles, technology, innovation and
-      the people building tomorrow.
+            گفتگو با آدم‌هایی که در دنیای
+            خودرو، تکنولوژی، کسب‌وکار و نوآوری
+            آینده را می‌سازند.
 
-    </p>
+        </p>
 
-    <br>
+        <br>
 
-    <a href="#" class="btn">
-      Discover the Podcast
-    </a>
+        <a href="#" class="btn">
+            ورود به REV Podcast
+        </a>
 
-  </div>
+    </div>
 
 </section>
-
 
 
 <!-- ABOUT -->
 
 <section id="about">
 
-  <div class="section-label">
-    05 / ABOUT REV
-  </div>
+    <div class="section-label">
+        06 / ABOUT REV
+    </div>
 
-  <h2 class="section-title">
-    Why REV?
-  </h2>
+    <h2 class="section-title">
+        REV چیست؟
+    </h2>
 
-  <p style="max-width:750px;color:#8a949b;font-size:19px;">
+    <p class="about-text">
 
-    REV is an independent media project
-    focused on electric vehicles,
-    emerging technologies and future mobility.
+        REV یک پروژه رسانه‌ای مستقل با تمرکز بر
+        خودروهای برقی، تکنولوژی، نوآوری و آینده
+        حمل‌ونقل است.
 
-    We don't just follow the technology.
-    We try to understand where it is going.
+        <br><br>
 
-  </p>
+        هدف REV فقط معرفی محصولات جدید نیست؛
+        بلکه تلاش می‌کنیم بفهمیم فناوری‌ها،
+        شرکت‌ها و تصمیم‌های امروز چگونه
+        آینده حرکت انسان را شکل می‌دهند.
+
+    </p>
 
 </section>
 
 
+<!-- FOOTER -->
 
 <footer>
 
-  <div class="footer-logo">
-    REV
-  </div>
+    <div class="footer-logo">
+        REV
+    </div>
 
-  <div>
-    Electric Vehicles · Technology · Future Mobility
-  </div>
+    <div>
+        Electric Vehicles · Technology · Future Mobility
+    </div>
 
-  <div>
-    © 2026 REV
-  </div>
+    <div>
+        © 2026 REV
+    </div>
 
 </footer>
 
 
 </body>
+
 </html>
