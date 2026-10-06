@@ -1,0 +1,1004 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>اخبار | REV</title>
+
+<meta name="description"
+content="آخرین اخبار خودروهای برقی، باتری، تکنولوژی و آینده حمل‌ونقل در REV">
+
+<style>
+
+@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+
+:root {
+    --black:#070a0c;
+    --dark:#0c1114;
+    --card:#11171a;
+    --green:#39ff88;
+    --cyan:#00d9c0;
+    --white:#f4f7f6;
+    --gray:#8b969c;
+    --line:rgba(255,255,255,.08);
+}
+
+* {
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+html {
+    scroll-behavior:smooth;
+}
+
+body {
+    font-family:'Vazirmatn',Arial,sans-serif;
+    background:var(--black);
+    color:var(--white);
+    line-height:1.9;
+}
+
+/* HEADER */
+
+header {
+    position:sticky;
+    top:0;
+    z-index:1000;
+
+    height:76px;
+
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+
+    padding:0 6%;
+
+    background:rgba(7,10,12,.9);
+    backdrop-filter:blur(20px);
+
+    border-bottom:1px solid var(--line);
+}
+
+.logo {
+    direction:ltr;
+
+    font-family:Arial,sans-serif;
+
+    font-size:30px;
+    font-weight:900;
+
+    letter-spacing:6px;
+}
+
+.logo span {
+    color:var(--green);
+}
+
+nav {
+    display:flex;
+    gap:28px;
+}
+
+nav a {
+    color:#aab3b8;
+    text-decoration:none;
+
+    font-size:14px;
+
+    transition:.3s;
+}
+
+nav a:hover {
+    color:var(--green);
+}
+
+nav a.active {
+    color:var(--green);
+}
+
+
+/* HERO */
+
+.news-hero {
+    padding:110px 8% 80px;
+
+    position:relative;
+
+    overflow:hidden;
+
+    border-bottom:1px solid var(--line);
+
+    background:
+    radial-gradient(
+        circle at 20% 40%,
+        rgba(57,255,136,.10),
+        transparent 25%
+    ),
+    radial-gradient(
+        circle at 80% 20%,
+        rgba(0,217,192,.08),
+        transparent 30%
+    ),
+    var(--black);
+}
+
+.news-hero::after {
+
+    content:"NEWS";
+
+    position:absolute;
+
+    left:-40px;
+    bottom:-100px;
+
+    direction:ltr;
+
+    font-family:Arial,sans-serif;
+
+    font-size:25vw;
+
+    font-weight:900;
+
+    color:rgba(255,255,255,.018);
+
+    pointer-events:none;
+}
+
+.hero-content {
+    position:relative;
+    z-index:2;
+
+    max-width:900px;
+}
+
+.label {
+    color:var(--green);
+
+    font-size:12px;
+
+    font-weight:600;
+
+    letter-spacing:3px;
+
+    margin-bottom:15px;
+}
+
+h1 {
+
+    font-size:clamp(50px,8vw,100px);
+
+    line-height:1.1;
+
+    font-weight:900;
+
+    margin-bottom:25px;
+}
+
+.hero-text {
+
+    max-width:650px;
+
+    color:var(--gray);
+
+    font-size:18px;
+}
+
+
+/* CONTENT */
+
+.news-section {
+
+    padding:90px 8%;
+}
+
+.section-title {
+
+    font-size:36px;
+
+    margin-bottom:35px;
+
+    font-weight:800;
+}
+
+
+/* FEATURED */
+
+.featured {
+
+    display:grid;
+
+    grid-template-columns:1.2fr 1fr;
+
+    min-height:420px;
+
+    margin-bottom:70px;
+
+    border:1px solid var(--line);
+
+    background:var(--dark);
+
+    overflow:hidden;
+}
+
+.featured-image {
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    min-height:420px;
+
+    background:
+
+    radial-gradient(
+        circle,
+        rgba(57,255,136,.20),
+        transparent 40%
+    ),
+
+    linear-gradient(
+        135deg,
+        #11191b,
+        #080b0d
+    );
+}
+
+.featured-image span {
+
+    direction:ltr;
+
+    font-family:Arial,sans-serif;
+
+    font-size:100px;
+
+    font-weight:900;
+
+    letter-spacing:8px;
+
+    color:rgba(255,255,255,.07);
+}
+
+.featured-content {
+
+    padding:55px;
+
+}
+
+.category {
+
+    color:var(--green);
+
+    font-size:11px;
+
+    font-weight:700;
+
+    letter-spacing:1px;
+}
+
+.featured-content h2 {
+
+    font-size:38px;
+
+    line-height:1.5;
+
+    margin:20px 0;
+}
+
+.featured-content p {
+
+    color:var(--gray);
+
+    font-size:16px;
+
+    line-height:2;
+
+    margin-bottom:30px;
+}
+
+.read-more {
+
+    display:inline-block;
+
+    padding:11px 23px;
+
+    color:var(--black);
+
+    background:var(--green);
+
+    border:1px solid var(--green);
+
+    text-decoration:none;
+
+    font-size:13px;
+
+    font-weight:700;
+
+    transition:.3s;
+}
+
+.read-more:hover {
+
+    background:transparent;
+
+    color:var(--green);
+}
+
+
+/* FILTERS */
+
+.filters {
+
+    display:flex;
+
+    gap:10px;
+
+    flex-wrap:wrap;
+
+    margin-bottom:40px;
+}
+
+.filter {
+
+    padding:8px 18px;
+
+    border:1px solid var(--line);
+
+    color:var(--gray);
+
+    font-size:13px;
+
+    text-decoration:none;
+
+    transition:.3s;
+}
+
+.filter:hover,
+.filter.active {
+
+    color:var(--black);
+
+    background:var(--green);
+
+    border-color:var(--green);
+}
+
+
+/* NEWS GRID */
+
+.news-grid {
+
+    display:grid;
+
+    grid-template-columns:
+    repeat(auto-fit,minmax(280px,1fr));
+
+    gap:20px;
+}
+
+.news-card {
+
+    background:var(--card);
+
+    border:1px solid var(--line);
+
+    overflow:hidden;
+
+    transition:.35s;
+}
+
+.news-card:hover {
+
+    transform:translateY(-7px);
+
+    border-color:rgba(57,255,136,.35);
+}
+
+.news-image {
+
+    height:190px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    background:
+
+    radial-gradient(
+        circle,
+        rgba(57,255,136,.16),
+        transparent 45%
+    ),
+
+    #101619;
+}
+
+.news-image span {
+
+    direction:ltr;
+
+    font-family:Arial,sans-serif;
+
+    font-size:45px;
+
+    font-weight:900;
+
+    color:rgba(255,255,255,.07);
+}
+
+.news-content {
+
+    padding:25px;
+}
+
+.news-meta {
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:12px;
+
+    color:var(--gray);
+
+    font-size:11px;
+}
+
+.news-category {
+
+    color:var(--green);
+
+    font-weight:700;
+}
+
+.news-content h3 {
+
+    font-size:19px;
+
+    line-height:1.7;
+
+    margin-bottom:10px;
+}
+
+.news-content p {
+
+    color:var(--gray);
+
+    font-size:14px;
+
+    line-height:2;
+}
+
+
+/* FOOTER */
+
+footer {
+
+    padding:45px 8%;
+
+    border-top:1px solid var(--line);
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    gap:20px;
+
+    flex-wrap:wrap;
+
+    color:var(--gray);
+
+    font-size:13px;
+}
+
+.footer-logo {
+
+    direction:ltr;
+
+    font-family:Arial,sans-serif;
+
+    color:var(--white);
+
+    font-size:22px;
+
+    font-weight:900;
+
+    letter-spacing:5px;
+}
+
+
+/* MOBILE */
+
+@media(max-width:800px) {
+
+    header {
+        padding:0 5%;
+    }
+
+    nav {
+        display:none;
+    }
+
+    .news-hero {
+        padding:80px 7% 65px;
+    }
+
+    .news-section {
+        padding:70px 7%;
+    }
+
+    .featured {
+        grid-template-columns:1fr;
+    }
+
+    .featured-image {
+        min-height:250px;
+    }
+
+    .featured-content {
+        padding:35px;
+    }
+
+    .featured-content h2 {
+        font-size:28px;
+    }
+
+    footer {
+        padding:40px 7%;
+    }
+
+}
+
+</style>
+
+</head>
+
+
+<body>
+
+
+<!-- HEADER -->
+
+<header>
+
+    <div class="logo">
+        RE<span>V</span>
+    </div>
+
+    <nav>
+
+        <a href="index.html">
+            خانه
+        </a>
+
+        <a href="#news" class="active">
+            اخبار
+        </a>
+
+        <a href="#ev">
+            خودروهای برقی
+        </a>
+
+        <a href="#technology">
+            تکنولوژی
+        </a>
+
+        <a href="#battery">
+            باتری و شارژ
+        </a>
+
+        <a href="#podcast">
+            پادکست
+        </a>
+
+    </nav>
+
+</header>
+
+
+<!-- HERO -->
+
+<section class="news-hero">
+
+    <div class="hero-content">
+
+        <div class="label">
+            REV / NEWS
+        </div>
+
+        <h1>
+            آخرین اخبار
+        </h1>
+
+        <p class="hero-text">
+
+            مهم‌ترین اتفاقات دنیای خودروهای برقی،
+            باتری، تکنولوژی و آینده حمل‌ونقل؛
+            در REV.
+
+        </p>
+
+    </div>
+
+</section>
+
+
+<!-- NEWS -->
+
+<section class="news-section" id="news">
+
+
+    <div class="label">
+        01 / FEATURED
+    </div>
+
+    <h2 class="section-title">
+        خبر منتخب
+    </h2>
+
+
+    <!-- FEATURED NEWS -->
+
+    <div class="featured">
+
+
+        <div class="featured-image">
+
+            <span>
+                EV
+            </span>
+
+        </div>
+
+
+        <div class="featured-content">
+
+            <div class="category">
+                خودروهای برقی
+            </div>
+
+            <h2>
+                آینده صنعت خودرو
+                در حال تغییر است
+            </h2>
+
+            <p>
+
+                خودروهای برقی دیگر یک فناوری
+                آینده‌نگرانه نیستند؛ آنها به یکی
+                از مهم‌ترین بخش‌های صنعت خودرو
+                تبدیل شده‌اند.
+
+            </p>
+
+            <a href="#" class="read-more">
+                ادامه مطلب
+            </a>
+
+        </div>
+
+    </div>
+
+
+    <!-- FILTER -->
+
+    <div class="label">
+        02 / CATEGORIES
+    </div>
+
+    <div class="filters">
+
+        <a href="#" class="filter active">
+            همه
+        </a>
+
+        <a href="#" class="filter">
+            خودروهای برقی
+        </a>
+
+        <a href="#" class="filter">
+            باتری
+        </a>
+
+        <a href="#" class="filter">
+            شارژ
+        </a>
+
+        <a href="#" class="filter">
+            تکنولوژی
+        </a>
+
+        <a href="#" class="filter">
+            هوش مصنوعی
+        </a>
+
+        <a href="#" class="filter">
+            خودران
+        </a>
+
+    </div>
+
+
+    <!-- NEWS GRID -->
+
+    <div class="news-grid">
+
+
+        <!-- NEWS 01 -->
+
+        <article class="news-card">
+
+            <div class="news-image">
+
+                <span>
+                    EV
+                </span>
+
+            </div>
+
+            <div class="news-content">
+
+                <div class="news-meta">
+
+                    <span class="news-category">
+                        خودروهای برقی
+                    </span>
+
+                    <span>
+                        ۰۶ مهر ۱۴۰۵
+                    </span>
+
+                </div>
+
+                <h3>
+                    خودروهای برقی چگونه بازار خودرو را تغییر می‌دهند؟
+                </h3>
+
+                <p>
+                    نگاهی به روند رشد خودروهای برقی
+                    و تغییر رفتار بازار.
+                </p>
+
+            </div>
+
+        </article>
+
+
+        <!-- NEWS 02 -->
+
+        <article class="news-card">
+
+            <div class="news-image">
+
+                <span>
+                    BAT
+                </span>
+
+            </div>
+
+            <div class="news-content">
+
+                <div class="news-meta">
+
+                    <span class="news-category">
+                        باتری
+                    </span>
+
+                    <span>
+                        ۰۵ مهر ۱۴۰۵
+                    </span>
+
+                </div>
+
+                <h3>
+                    نسل جدید باتری‌ها چه تغییری ایجاد می‌کنند؟
+                </h3>
+
+                <p>
+                    بررسی فناوری‌های جدید باتری
+                    و تأثیر آنها بر برد خودرو.
+                </p>
+
+            </div>
+
+        </article>
+
+
+        <!-- NEWS 03 -->
+
+        <article class="news-card">
+
+            <div class="news-image">
+
+                <span>
+                    AI
+                </span>
+
+            </div>
+
+            <div class="news-content">
+
+                <div class="news-meta">
+
+                    <span class="news-category">
+                        هوش مصنوعی
+                    </span>
+
+                    <span>
+                        ۰۴ مهر ۱۴۰۵
+                    </span>
+
+                </div>
+
+                <h3>
+                    هوش مصنوعی وارد نسل جدید خودروها می‌شود
+                </h3>
+
+                <p>
+                    نقش AI در تجربه رانندگی،
+                    نرم‌افزار خودرو و سیستم‌های هوشمند.
+                </p>
+
+            </div>
+
+        </article>
+
+
+        <!-- NEWS 04 -->
+
+        <article class="news-card">
+
+            <div class="news-image">
+
+                <span>
+                    AUTO
+                </span>
+
+            </div>
+
+            <div class="news-content">
+
+                <div class="news-meta">
+
+                    <span class="news-category">
+                        خودران
+                    </span>
+
+                    <span>
+                        ۰۳ مهر ۱۴۰۵
+                    </span>
+
+                </div>
+
+                <h3>
+                    رقابت برای ساخت خودروهای خودران وارد مرحله جدیدی شد
+                </h3>
+
+                <p>
+                    فناوری‌های جدید سنجش،
+                    پردازش و رانندگی خودکار.
+                </p>
+
+            </div>
+
+        </article>
+
+
+        <!-- NEWS 05 -->
+
+        <article class="news-card">
+
+            <div class="news-image">
+
+                <span>
+                    CHG
+                </span>
+
+            </div>
+
+            <div class="news-content">
+
+                <div class="news-meta">
+
+                    <span class="news-category">
+                        شارژ
+                    </span>
+
+                    <span>
+                        ۰۲ مهر ۱۴۰۵
+                    </span>
+
+                </div>
+
+                <h3>
+                    آینده زیرساخت شارژ خودروهای برقی چگونه خواهد بود؟
+                </h3>
+
+                <p>
+                    از شارژ سریع تا شبکه‌های هوشمند انرژی.
+                </p>
+
+            </div>
+
+        </article>
+
+
+        <!-- NEWS 06 -->
+
+        <article class="news-card">
+
+            <div class="news-image">
+
+                <span>
+                    FUTURE
+                </span>
+
+            </div>
+
+            <div class="news-content">
+
+                <div class="news-meta">
+
+                    <span class="news-category">
+                        آینده
+                    </span>
+
+                    <span>
+                        ۰۱ مهر ۱۴۰۵
+                    </span>
+
+                </div>
+
+                <h3>
+                    آینده حمل‌ونقل در دهه آینده چه شکلی خواهد بود؟
+                </h3>
+
+                <p>
+                    بررسی فناوری‌هایی که ممکن است
+                    شیوه حرکت ما را تغییر دهند.
+                </p>
+
+            </div>
+
+        </article>
+
+
+    </div>
+
+</section>
+
+
+<!-- FOOTER -->
+
+<footer>
+
+    <div class="footer-logo">
+        REV
+    </div>
+
+    <div>
+        Electric Vehicles · Technology · Future Mobility
+    </div>
+
+    <div>
+        © 2026 REV
+    </div>
+
+</footer>
+
+
+</body>
+
+</html>
