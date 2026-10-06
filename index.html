@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>REV | Electric Vehicles & Technology</title>
+
+  <meta name="description"
+        content="REV — Electric Vehicles, Technology & Future Mobility">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #0b0b0b;
+      color: #ffffff;
+      line-height: 1.6;
+    }
+
+    header {
+      border-bottom: 1px solid #222;
+      padding: 22px 6%;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      position: sticky;
+      top: 0;
+      background: rgba(11,11,11,0.95);
+      backdrop-filter: blur(10px);
+      z-index: 10;
+    }
+
+    .logo {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: 5px;
+    }
+
+    nav a {
+      color: #aaa;
+      text-decoration: none;
+      margin-left: 25px;
+      font-size: 14px;
+    }
+
+    nav a:hover {
+      color: #fff;
+    }
+
+    .hero {
+      min-height: 75vh;
+      display: flex;
+      align-items: center;
+      padding: 80px 8%;
+      background:
+        radial-gradient(circle at 75% 40%, #252525 0%, #0b0b0b 45%);
+    }
+
+    .hero-content {
+      max-width: 800px;
+    }
+
+    .hero span {
+      color: #aaa;
+      font-size: 14px;
+      letter-spacing: 4px;
+      text-transform: uppercase;
+    }
+
+    h1 {
+      font-size: clamp(60px, 10vw, 140px);
+      line-height: 0.9;
+      margin: 25px 0;
+      letter-spacing: -5px;
+    }
+
+    .hero p {
+      max-width: 650px;
+      color: #aaa;
+      font-size: 20px;
+    }
+
+    .button {
+      display: inline-block;
+      margin-top: 35px;
+      padding: 14px 28px;
+      border: 1px solid #555;
+      color: white;
+      text-decoration: none;
+      transition: 0.3s;
+    }
+
+    .button:hover {
+      background: white;
+      color: black;
+    }
+
+    section {
+      padding: 90px 8%;
+      border-top: 1px solid #1d1d1d;
+    }
+
+    .section-title {
+      font-size: 38px;
+      margin-bottom: 45px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 20px;
+    }
+
+    .card {
+      min-height: 220px;
+      padding: 30px;
+      background: #151515;
+      border: 1px solid #222;
+      transition: 0.3s;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      border-color: #555;
+    }
+
+    .card h3 {
+      font-size: 23px;
+      margin-bottom: 15px;
+    }
+
+    .card p {
+      color: #999;
+      font-size: 15px;
+    }
+
+    footer {
+      padding: 50px 8%;
+      border-top: 1px solid #222;
+      color: #777;
+      display: flex;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+
+    @media (max-width: 700px) {
+      nav {
+        display: none;
+      }
+
+      h1 {
+        font-size: 70px;
+      }
+
+      .hero {
+        min-height: 65vh;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+<header>
+  <div class="logo">REV</div>
+
+  <nav>
+    <a href="#ev">EV</a>
+    <a href="#technology">Technology</a>
+    <a href="#articles">Articles</a>
+    <a href="#podcast">Podcast</a>
+    <a href="#about">About</a>
+  </nav>
+</header>
+
+<main>
+
+  <section class="hero">
+
+    <div class="hero-content">
+
+      <span>Electric Vehicles · Technology · Future Mobility</span>
+
+      <h1>REV</h1>
+
+      <p>
+        Exploring electric vehicles, emerging technologies
+        and the future of mobility.
+      </p>
+
+      <a class="button" href="#articles">
+        Explore REV
+      </a>
+
+    </div>
+
+  </section>
+
+
+  <section id="ev">
+
+    <h2 class="section-title">
+      Electric Vehicles
+    </h2>
+
+    <div class="grid">
+
+      <div class="card">
+        <h3>EV News</h3>
+        <p>
+          The latest developments, launches and major
+          changes in the electric vehicle industry.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Reviews</h3>
+        <p>
+          Exploring electric cars, their technology,
+          performance and real-world experience.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Battery</h3>
+        <p>
+          Battery technology, charging systems,
+          range and the future of energy storage.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <section id="technology">
+
+    <h2 class="section-title">
+      Technology
+    </h2>
+
+    <div class="grid">
+
+      <div class="card">
+        <h3>AI</h3>
+        <p>
+          Artificial intelligence and its impact on
+          transportation and mobility.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Future Mobility</h3>
+        <p>
+          Autonomous driving, connected vehicles
+          and new mobility technologies.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Innovation</h3>
+        <p>
+          Technologies that could reshape the way
+          we move in the coming years.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <section id="articles">
+
+    <h2 class="section-title">
+      Latest Articles
+    </h2>
+
+    <div class="grid">
+
+      <div class="card">
+        <h3>What Is Happening in EVs?</h3>
+        <p>
+          Analysis of the most important developments
+          in the electric vehicle industry.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>The Future of EV Batteries</h3>
+        <p>
+          Understanding the technologies shaping
+          the next generation of electric vehicles.
+        </p>
+      </div>
+
+      <div class="card">
+        <h3>Why EVs Matter</h3>
+        <p>
+          A look at the transition from traditional
+          vehicles to electric mobility.
+        </p>
+      </div>
+
+    </div>
+
+  </section>
+
+
+  <section id="podcast">
+
+    <h2 class="section-title">
+      REV Podcast
+    </h2>
+
+    <div class="card">
+
+      <h3>Conversations about technology and mobility</h3>
+
+      <p>
+        Interviews, discussions and deep conversations
+        about electric vehicles, technology and the future.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <section id="about">
+
+    <h2 class="section-title">
+      About REV
+    </h2>
+
+    <p style="max-width:700px;color:#999;font-size:18px;">
+
+      REV is an independent media project focused on
+      electric vehicles, emerging technologies and
+      future mobility.
+
+    </p>
+
+  </section>
+
+</main>
+
+
+<footer>
+
+  <div>
+    © 2026 REV
+  </div>
+
+  <div>
+    Electric Vehicles · Technology · Future Mobility
+  </div>
+
+</footer>
+
+</body>
+</html>
