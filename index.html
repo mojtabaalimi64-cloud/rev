@@ -1,370 +1,848 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>REV | Electric Vehicles & Technology</title>
+<title>REV — Electric Vehicles & Technology</title>
 
-  <meta name="description"
-        content="REV — Electric Vehicles, Technology & Future Mobility">
+<meta name="description"
+content="REV — Electric Vehicles, Technology & Future Mobility">
 
-  <style>
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+<style>
 
-    body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #0b0b0b;
-      color: #ffffff;
-      line-height: 1.6;
-    }
+:root {
+  --black: #080b0d;
+  --dark: #0d1215;
+  --card: #11181b;
+  --green: #39ff88;
+  --cyan: #00d9c0;
+  --white: #f5f7f8;
+  --gray: #8a949b;
+  --line: rgba(255,255,255,0.08);
+}
 
-    header {
-      border-bottom: 1px solid #222;
-      padding: 22px 6%;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      background: rgba(11,11,11,0.95);
-      backdrop-filter: blur(10px);
-      z-index: 10;
-    }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-    .logo {
-      font-size: 32px;
-      font-weight: 800;
-      letter-spacing: 5px;
-    }
+html {
+  scroll-behavior: smooth;
+}
 
-    nav a {
-      color: #aaa;
-      text-decoration: none;
-      margin-left: 25px;
-      font-size: 14px;
-    }
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background: var(--black);
+  color: var(--white);
+  line-height: 1.6;
+}
 
-    nav a:hover {
-      color: #fff;
-    }
+/* HEADER */
 
-    .hero {
-      min-height: 75vh;
-      display: flex;
-      align-items: center;
-      padding: 80px 8%;
-      background:
-        radial-gradient(circle at 75% 40%, #252525 0%, #0b0b0b 45%);
-    }
+header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
 
-    .hero-content {
-      max-width: 800px;
-    }
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 
-    .hero span {
-      color: #aaa;
-      font-size: 14px;
-      letter-spacing: 4px;
-      text-transform: uppercase;
-    }
+  padding: 20px 6%;
 
-    h1 {
-      font-size: clamp(60px, 10vw, 140px);
-      line-height: 0.9;
-      margin: 25px 0;
-      letter-spacing: -5px;
-    }
+  background: rgba(8,11,13,0.88);
+  backdrop-filter: blur(18px);
 
-    .hero p {
-      max-width: 650px;
-      color: #aaa;
-      font-size: 20px;
-    }
+  border-bottom: 1px solid var(--line);
+}
 
-    .button {
-      display: inline-block;
-      margin-top: 35px;
-      padding: 14px 28px;
-      border: 1px solid #555;
-      color: white;
-      text-decoration: none;
-      transition: 0.3s;
-    }
+.logo {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 7px;
+  color: var(--white);
+}
 
-    .button:hover {
-      background: white;
-      color: black;
-    }
+.logo span {
+  color: var(--green);
+}
 
-    section {
-      padding: 90px 8%;
-      border-top: 1px solid #1d1d1d;
-    }
+nav {
+  display: flex;
+  gap: 28px;
+}
 
-    .section-title {
-      font-size: 38px;
-      margin-bottom: 45px;
-    }
+nav a {
+  color: var(--gray);
+  text-decoration: none;
+  font-size: 14px;
+  transition: 0.3s;
+}
 
-    .grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-      gap: 20px;
-    }
+nav a:hover {
+  color: var(--green);
+}
 
-    .card {
-      min-height: 220px;
-      padding: 30px;
-      background: #151515;
-      border: 1px solid #222;
-      transition: 0.3s;
-    }
+/* HERO */
 
-    .card:hover {
-      transform: translateY(-5px);
-      border-color: #555;
-    }
+.hero {
+  min-height: 88vh;
 
-    .card h3 {
-      font-size: 23px;
-      margin-bottom: 15px;
-    }
+  display: flex;
+  align-items: center;
 
-    .card p {
-      color: #999;
-      font-size: 15px;
-    }
+  padding: 100px 8%;
 
-    footer {
-      padding: 50px 8%;
-      border-top: 1px solid #222;
-      color: #777;
-      display: flex;
-      justify-content: space-between;
-      flex-wrap: wrap;
-      gap: 20px;
-    }
+  position: relative;
+  overflow: hidden;
 
-    @media (max-width: 700px) {
-      nav {
-        display: none;
-      }
+  background:
+    radial-gradient(
+      circle at 75% 35%,
+      rgba(57,255,136,0.13),
+      transparent 28%
+    ),
+    radial-gradient(
+      circle at 90% 80%,
+      rgba(0,217,192,0.10),
+      transparent 30%
+    ),
+    var(--black);
+}
 
-      h1 {
-        font-size: 70px;
-      }
+.hero::before {
+  content: "REV";
 
-      .hero {
-        min-height: 65vh;
-      }
-    }
-  </style>
+  position: absolute;
+  right: -40px;
+  bottom: -90px;
+
+  font-size: 30vw;
+  font-weight: 900;
+
+  color: rgba(255,255,255,0.025);
+
+  pointer-events: none;
+}
+
+.hero-content {
+  max-width: 900px;
+  position: relative;
+  z-index: 2;
+}
+
+.eyebrow {
+  color: var(--green);
+  font-size: 13px;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  font-size: clamp(70px, 12vw, 170px);
+  line-height: 0.85;
+  letter-spacing: -8px;
+
+  margin: 25px 0;
+
+  font-weight: 900;
+}
+
+.hero h1 span {
+  color: var(--green);
+}
+
+.hero-description {
+  max-width: 650px;
+
+  color: var(--gray);
+
+  font-size: 20px;
+}
+
+.hero-buttons {
+  margin-top: 40px;
+
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.btn {
+  padding: 14px 26px;
+
+  border: 1px solid var(--green);
+
+  text-decoration: none;
+
+  color: var(--black);
+  background: var(--green);
+
+  font-size: 14px;
+  font-weight: bold;
+
+  transition: 0.3s;
+}
+
+.btn:hover {
+  background: transparent;
+  color: var(--green);
+}
+
+.btn.secondary {
+  background: transparent;
+  color: var(--white);
+  border-color: var(--line);
+}
+
+.btn.secondary:hover {
+  border-color: var(--cyan);
+  color: var(--cyan);
+}
+
+/* SECTION */
+
+section {
+  padding: 100px 8%;
+
+  border-top: 1px solid var(--line);
+}
+
+.section-label {
+  color: var(--green);
+
+  font-size: 12px;
+
+  letter-spacing: 3px;
+
+  text-transform: uppercase;
+
+  margin-bottom: 12px;
+}
+
+.section-title {
+  font-size: clamp(35px,5vw,60px);
+
+  letter-spacing: -2px;
+
+  margin-bottom: 50px;
+}
+
+/* GRID */
+
+.grid {
+  display: grid;
+
+  grid-template-columns:
+    repeat(auto-fit, minmax(250px, 1fr));
+
+  gap: 20px;
+}
+
+/* CARDS */
+
+.card {
+  position: relative;
+
+  min-height: 260px;
+
+  padding: 32px;
+
+  background:
+    linear-gradient(
+      145deg,
+      rgba(255,255,255,0.035),
+      rgba(255,255,255,0.01)
+    );
+
+  border: 1px solid var(--line);
+
+  transition: 0.35s;
+
+  overflow: hidden;
+}
+
+.card::after {
+  content: "";
+
+  position: absolute;
+
+  width: 100px;
+  height: 100px;
+
+  right: -50px;
+  bottom: -50px;
+
+  background: var(--green);
+
+  filter: blur(60px);
+
+  opacity: 0;
+
+  transition: 0.35s;
+}
+
+.card:hover {
+  transform: translateY(-7px);
+
+  border-color: rgba(57,255,136,0.4);
+}
+
+.card:hover::after {
+  opacity: 0.25;
+}
+
+.card-number {
+  color: var(--green);
+
+  font-size: 13px;
+
+  letter-spacing: 2px;
+}
+
+.card h3 {
+  font-size: 25px;
+
+  margin: 25px 0 12px;
+}
+
+.card p {
+  color: var(--gray);
+
+  font-size: 15px;
+}
+
+/* FEATURE */
+
+.feature {
+  display: grid;
+
+  grid-template-columns: 1.2fr 1fr;
+
+  min-height: 420px;
+
+  border: 1px solid var(--line);
+
+  background: var(--dark);
+}
+
+.feature-image {
+  min-height: 420px;
+
+  background:
+    radial-gradient(
+      circle,
+      rgba(57,255,136,0.22),
+      transparent 40%
+    ),
+    linear-gradient(
+      135deg,
+      #10191b,
+      #080b0d
+    );
+
+  display: flex;
+
+  align-items: center;
+
+  justify-content: center;
+}
+
+.feature-image span {
+  font-size: 100px;
+
+  font-weight: 900;
+
+  letter-spacing: 10px;
+
+  color: rgba(255,255,255,0.08);
+}
+
+.feature-content {
+  padding: 60px;
+}
+
+.feature-content h3 {
+  font-size: 40px;
+
+  line-height: 1.1;
+
+  margin: 20px 0;
+}
+
+.feature-content p {
+  color: var(--gray);
+
+  margin-bottom: 30px;
+}
+
+/* PODCAST */
+
+.podcast {
+  background:
+    linear-gradient(
+      120deg,
+      rgba(57,255,136,0.06),
+      rgba(0,217,192,0.03)
+    );
+}
+
+.podcast-box {
+  max-width: 850px;
+}
+
+.podcast-box h2 {
+  font-size: clamp(40px,7vw,80px);
+
+  line-height: 0.95;
+
+  margin-bottom: 25px;
+}
+
+.podcast-box p {
+  color: var(--gray);
+
+  font-size: 18px;
+
+  max-width: 650px;
+}
+
+/* FOOTER */
+
+footer {
+  padding: 50px 8%;
+
+  border-top: 1px solid var(--line);
+
+  display: flex;
+
+  justify-content: space-between;
+
+  gap: 20px;
+
+  flex-wrap: wrap;
+
+  color: var(--gray);
+
+  font-size: 13px;
+}
+
+.footer-logo {
+  color: var(--white);
+
+  font-weight: 900;
+
+  letter-spacing: 5px;
+}
+
+/* MOBILE */
+
+@media(max-width: 800px) {
+
+  header {
+    padding: 18px 5%;
+  }
+
+  nav {
+    display: none;
+  }
+
+  .hero {
+    min-height: 80vh;
+
+    padding: 80px 7%;
+  }
+
+  .hero h1 {
+    font-size: 90px;
+  }
+
+  section {
+    padding: 75px 7%;
+  }
+
+  .feature {
+    grid-template-columns: 1fr;
+  }
+
+  .feature-image {
+    min-height: 250px;
+  }
+
+  .feature-content {
+    padding: 35px;
+  }
+
+  footer {
+    padding: 40px 7%;
+  }
+
+}
+
+</style>
 </head>
+
 
 <body>
 
+
 <header>
-  <div class="logo">REV</div>
+
+  <div class="logo">
+    RE<span>V</span>
+  </div>
 
   <nav>
+
     <a href="#ev">EV</a>
-    <a href="#technology">Technology</a>
-    <a href="#articles">Articles</a>
-    <a href="#podcast">Podcast</a>
-    <a href="#about">About</a>
+
+    <a href="#technology">
+      Technology
+    </a>
+
+    <a href="#articles">
+      Articles
+    </a>
+
+    <a href="#podcast">
+      Podcast
+    </a>
+
+    <a href="#about">
+      About
+    </a>
+
   </nav>
+
 </header>
 
-<main>
 
-  <section class="hero">
 
-    <div class="hero-content">
+<!-- HERO -->
 
-      <span>Electric Vehicles · Technology · Future Mobility</span>
+<section class="hero">
 
-      <h1>REV</h1>
+  <div class="hero-content">
 
-      <p>
-        Exploring electric vehicles, emerging technologies
-        and the future of mobility.
-      </p>
+    <div class="eyebrow">
+      Electric Vehicles · Technology · Future Mobility
+    </div>
 
-      <a class="button" href="#articles">
+    <h1>
+      THE FUTURE<br>
+      MOVES <span>ELECTRIC.</span>
+    </h1>
+
+    <p class="hero-description">
+
+      REV explores electric vehicles,
+      emerging technologies and the ideas
+      shaping the future of mobility.
+
+    </p>
+
+    <div class="hero-buttons">
+
+      <a href="#articles" class="btn">
         Explore REV
+      </a>
+
+      <a href="#podcast" class="btn secondary">
+        Listen to Podcast
       </a>
 
     </div>
 
-  </section>
+  </div>
+
+</section>
 
 
-  <section id="ev">
 
-    <h2 class="section-title">
-      Electric Vehicles
-    </h2>
+<!-- EV -->
 
-    <div class="grid">
+<section id="ev">
 
-      <div class="card">
-        <h3>EV News</h3>
-        <p>
-          The latest developments, launches and major
-          changes in the electric vehicle industry.
-        </p>
-      </div>
+  <div class="section-label">
+    01 / ELECTRIC VEHICLES
+  </div>
 
-      <div class="card">
-        <h3>Reviews</h3>
-        <p>
-          Exploring electric cars, their technology,
-          performance and real-world experience.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3>Battery</h3>
-        <p>
-          Battery technology, charging systems,
-          range and the future of energy storage.
-        </p>
-      </div>
-
-    </div>
-
-  </section>
+  <h2 class="section-title">
+    Electric Mobility
+  </h2>
 
 
-  <section id="technology">
+  <div class="grid">
 
-    <h2 class="section-title">
-      Technology
-    </h2>
-
-    <div class="grid">
-
-      <div class="card">
-        <h3>AI</h3>
-        <p>
-          Artificial intelligence and its impact on
-          transportation and mobility.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3>Future Mobility</h3>
-        <p>
-          Autonomous driving, connected vehicles
-          and new mobility technologies.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3>Innovation</h3>
-        <p>
-          Technologies that could reshape the way
-          we move in the coming years.
-        </p>
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <section id="articles">
-
-    <h2 class="section-title">
-      Latest Articles
-    </h2>
-
-    <div class="grid">
-
-      <div class="card">
-        <h3>What Is Happening in EVs?</h3>
-        <p>
-          Analysis of the most important developments
-          in the electric vehicle industry.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3>The Future of EV Batteries</h3>
-        <p>
-          Understanding the technologies shaping
-          the next generation of electric vehicles.
-        </p>
-      </div>
-
-      <div class="card">
-        <h3>Why EVs Matter</h3>
-        <p>
-          A look at the transition from traditional
-          vehicles to electric mobility.
-        </p>
-      </div>
-
-    </div>
-
-  </section>
-
-
-  <section id="podcast">
-
-    <h2 class="section-title">
-      REV Podcast
-    </h2>
 
     <div class="card">
 
-      <h3>Conversations about technology and mobility</h3>
+      <div class="card-number">
+        01
+      </div>
+
+      <h3>
+        EV News
+      </h3>
 
       <p>
-        Interviews, discussions and deep conversations
-        about electric vehicles, technology and the future.
+        The most important developments,
+        launches and changes in the electric
+        vehicle industry.
       </p>
 
     </div>
 
-  </section>
+
+    <div class="card">
+
+      <div class="card-number">
+        02
+      </div>
+
+      <h3>
+        Reviews
+      </h3>
+
+      <p>
+        Understanding electric cars beyond
+        specifications, numbers and marketing.
+      </p>
+
+    </div>
 
 
-  <section id="about">
+    <div class="card">
 
-    <h2 class="section-title">
-      About REV
+      <div class="card-number">
+        03
+      </div>
+
+      <h3>
+        Battery
+      </h3>
+
+      <p>
+        Battery technology, charging,
+        range and the future of energy storage.
+      </p>
+
+    </div>
+
+
+  </div>
+
+</section>
+
+
+
+<!-- FEATURE -->
+
+<section id="articles">
+
+  <div class="section-label">
+    02 / FEATURE
+  </div>
+
+  <div class="feature">
+
+    <div class="feature-image">
+
+      <span>
+        EV
+      </span>
+
+    </div>
+
+
+    <div class="feature-content">
+
+      <div class="section-label">
+        REV STUDIES
+      </div>
+
+      <h3>
+        Understanding the
+        Electric Revolution
+      </h3>
+
+      <p>
+
+        We study the technologies,
+        companies and decisions that are
+        transforming the automotive industry.
+
+      </p>
+
+      <a href="#" class="btn">
+        Read Studies
+      </a>
+
+    </div>
+
+  </div>
+
+</section>
+
+
+
+<!-- TECHNOLOGY -->
+
+<section id="technology">
+
+  <div class="section-label">
+    03 / TECHNOLOGY
+  </div>
+
+  <h2 class="section-title">
+    Beyond the Car
+  </h2>
+
+
+  <div class="grid">
+
+
+    <div class="card">
+
+      <div class="card-number">
+        AI
+      </div>
+
+      <h3>
+        Artificial Intelligence
+      </h3>
+
+      <p>
+        How AI is changing vehicles,
+        transportation and mobility.
+      </p>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="card-number">
+        AUTO
+      </div>
+
+      <h3>
+        Autonomous Driving
+      </h3>
+
+      <p>
+        Sensors, software and the race
+        toward autonomous mobility.
+      </p>
+
+    </div>
+
+
+    <div class="card">
+
+      <div class="card-number">
+        FUTURE
+      </div>
+
+      <h3>
+        Future Mobility
+      </h3>
+
+      <p>
+        Technologies and ideas that could
+        redefine how we move.
+      </p>
+
+    </div>
+
+
+  </div>
+
+</section>
+
+
+
+<!-- PODCAST -->
+
+<section id="podcast" class="podcast">
+
+  <div class="section-label">
+    04 / REV PODCAST
+  </div>
+
+
+  <div class="podcast-box">
+
+    <h2>
+      Conversations<br>
+      about the future.
     </h2>
 
-    <p style="max-width:700px;color:#999;font-size:18px;">
+    <p>
 
-      REV is an independent media project focused on
-      electric vehicles, emerging technologies and
-      future mobility.
+      Deep conversations about electric
+      vehicles, technology, innovation and
+      the people building tomorrow.
 
     </p>
 
-  </section>
+    <br>
 
-</main>
+    <a href="#" class="btn">
+      Discover the Podcast
+    </a>
+
+  </div>
+
+</section>
+
+
+
+<!-- ABOUT -->
+
+<section id="about">
+
+  <div class="section-label">
+    05 / ABOUT REV
+  </div>
+
+  <h2 class="section-title">
+    Why REV?
+  </h2>
+
+  <p style="max-width:750px;color:#8a949b;font-size:19px;">
+
+    REV is an independent media project
+    focused on electric vehicles,
+    emerging technologies and future mobility.
+
+    We don't just follow the technology.
+    We try to understand where it is going.
+
+  </p>
+
+</section>
+
 
 
 <footer>
 
-  <div>
-    © 2026 REV
+  <div class="footer-logo">
+    REV
   </div>
 
   <div>
     Electric Vehicles · Technology · Future Mobility
   </div>
 
+  <div>
+    © 2026 REV
+  </div>
+
 </footer>
+
 
 </body>
 </html>
