@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>پنل مدیریت REV</title>
+<style>
+:root{--ink:#080B0D;--ink-2:#121A1F;--paper:#F5F7F8;--line:#DDE3E6;--muted:#5B666D;--green:#39FF88;--teal-d:#00806F;
+--font:"Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--paper);color:var(--ink);line-height:1.8;font-size:16px}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:var(--ink);color:#fff;padding:14px 20px;font-weight:900;font-size:20px;letter-spacing:.04em}
+header b{color:var(--green)}
+.wrap{width:min(100% - 32px,820px);margin:24px auto 60px}
+.bar2{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
+.tab{padding:6px 18px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pub{margin-inline-start:auto;background:var(--green);color:var(--ink);font-weight:700;border:0;border-radius:999px;padding:6px 22px;cursor:pointer}
+.box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:12px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin-bottom:8px}
+.row small{color:var(--muted);display:block}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:2px 14px;cursor:pointer}
+.btn.red{color:#B3261E}
+.btn.main{background:var(--ink);color:#fff;border-color:var(--ink)}
+label{display:block;margin:12px 0 4px;font-weight:700;font-size:14px}
+input[type=text],input[type=password],select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff}
+#msg{min-height:26px;color:var(--teal-d);margin-bottom:8px}
+.lnk{background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:underline}
+ol{padding-inline-start:20px;color:var(--muted);font-size:14px;margin-top:10px}
+:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+</style>
+</head>
+<body>
+<header>REV <b>پنل مدیریت</b></header>
+<div class="wrap" id="root"></div>
+<script>
+const OWNER='mojtabaalimi64-cloud', REPO='rev', FILE='content.json';
+const PARTS={battery:'باتری',motor:'موتور',charging:'شارژ',electronics:'اینورتر و برق',software:'نرم‌افزار و هوش مصنوعی'};
+const TYPES={
+ articles:{label:'مقالات',fields:[['title','عنوان','text'],['part','بخش','part'],['date','تاریخ (مثلاً ۱۴۰۵/۰۷/۲۰)','text'],['excerpt','خلاصه کوتاه','area'],['body','متن کامل (پاراگراف‌ها را با یک خط خالی جدا کنید)','body']]},
+ news:{label:'اخبار',fields:[['title','عنوان خبر','text'],['part','بخش','part'],['date','تاریخ','text'],['url','لینک خبر (اختیاری)','text']]},
+ episodes:{label:'پادکست',fields:[['title','عنوان قسمت','text'],['date','تاریخ','text'],['url','لینک شنیدن','text'],['desc','توضیح','area']]}
+};
+let tok=localStorage.getItem('rev_tok')||'', c=null, sha='', tab='articles', edit=null, dirty=false, note='';
+const root=document.getElementById('root');
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const api=(m,b)=>fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`,{method:m,headers:{Authorization:'Bearer '+tok,Accept:'application/vnd.github+json'},body:b&&JSON.stringify(b)});
+function msg(t){note=t;const e=document.getElementById('msg');if(e)e.textContent=t}
+
+async function load(){
+  msg('در حال بارگذاری...');
+  try{
+    const r=await api('GET');
+    if(r.status===401||r.status===403){tok='';localStorage.removeItem('rev_tok');note='توکن نامعتبر است یا دسترسی کافی ندارد.';return draw()}
+    if(r.status===404){c={shop:false,podcast:'REV Podcast',news:[],articles:[],episodes:[]};sha=''}
+    else if(!r.ok) throw 0;
+    else{const j=await r.json();sha=j.sha;c=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))))}
+    note='';draw();
+  }catch(e){msg('اتصال به گیت‌هاب برقرار نشد. اینترنت را بررسی و دوباره تلاش کنید.')}
+}
+async function save(){
+  msg('در حال انتشار...');
+  const b={message:'به‌روزرسانی محتوا از پنل',content:btoa(unescape(encodeURIComponent(JSON.stringify(c,null,1))))};
+  if(sha)b.sha=sha;
+  try{
+    const r=await api('PUT',b);
+    if(r.ok){sha=(await r.json()).content.sha;dirty=false;draw();msg('منتشر شد. تا یکی دو دقیقه دیگر روی سایت دیده می‌شود.')}
+    else msg('ذخیره نشد (کد '+r.status+'). اگر ۴۰۹ است، صفحه را رفرش کنید.');
+  }catch(e){msg('ذخیره نشد؛ اتصال برقرار نیست.')}
+}
+function login(){
+  root.innerHTML=`<div class="box"><h2>ورود</h2><p style="color:var(--muted)">توکن گیت‌هاب را وارد کنید. فقط روی همین مرورگر ذخیره می‌شود.</p>
+  <label for="t">توکن</label><input type="password" id="t" dir="ltr" autocomplete="off">
+  <p style="margin-top:12px"><button class="btn main" data-a="login">ورود</button></p><p id="msg">${esc(note)}</p>
+  <ol><li>گیت‌هاب ← Settings ← Developer settings ← Personal access tokens ← Fine-grained tokens</li>
+  <li>Generate new token؛ در Repository access فقط مخزن rev را انتخاب کنید</li>
+  <li>در Permissions، بخش Contents را روی Read and write بگذارید و توکن را بسازید</li></ol></div>`;
+}
+function list(){
+  const t=TYPES[tab], items=c[tab]||[];
+  return `<p style="margin-bottom:12px"><button class="btn main" data-a="new">افزودن ${t.label==='پادکست'?'قسمت':t.label.slice(0,-1)} جدید</button></p>`+
+   (items.length?items.map((it,i)=>`<div class="row"><div>${esc(it.title)}<small>${esc(PARTS[it.part]||'')} ${esc(it.date||'')}</small></div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`).join(''):'<div class="box" style="color:var(--muted)">هنوز موردی ثبت نشده است.</div>');
+}
+function form(){
+  const t=TYPES[tab], it=edit.item;
+  return `<div class="box">`+t.fields.map(([k,l,ty])=>{
+    const v=it[k]??'', id='f_'+k;
+    let el;
+    if(ty==='part') el=`<select id="${id}" data-f="${k}">${Object.entries(PARTS).map(([pk,pn])=>`<option value="${pk}" ${v===pk?'selected':''}>${pn}</option>`).join('')}</select>`;
+    else if(ty==='area') el=`<textarea id="${id}" data-f="${k}" rows="3">${esc(v)}</textarea>`;
+    else if(ty==='body') el=`<textarea id="${id}" data-f="${k}" rows="12">${esc((v||[]).join('\n\n'))}</textarea>`;
+    else el=`<input type="text" id="${id}" data-f="${k}" value="${esc(v)}">`;
+    return `<label for="${id}">${l}</label>${el}`;
+  }).join('')+`<p style="margin-top:16px"><button class="btn main" data-a="ok">ثبت</button> <button class="btn" data-a="cancel">انصراف</button></p></div>`;
+}
+function settings(){
+  return `<div class="box"><label for="pn">نام پادکست</label><input type="text" id="pn" value="${esc(c.podcast)}">
+  <label style="display:flex;gap:8px;align-items:center;margin-top:16px"><input type="checkbox" id="sh" ${c.shop?'checked':''}> نمایش فروشگاه در منوی سایت</label></div>`;
+}
+function draw(){
+  if(!tok) return login();
+  if(!c){load();return}
+  const tabs=Object.entries(TYPES).map(([k,t])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${t.label}</button>`).join('')+`<button class="tab ${tab==='set'?'on':''}" data-a="tab" data-k="set">تنظیمات</button>`;
+  const body=edit?form():tab==='set'?settings():list();
+  root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
+}
+root.addEventListener('input',e=>{
+  if(e.target.id==='pn'){c.podcast=e.target.value;dirty=true}
+});
+root.addEventListener('change',e=>{
+  if(e.target.id==='sh'){c.shop=e.target.checked;dirty=true;draw()}
+});
+root.addEventListener('click',e=>{
+  const b=e.target.closest('[data-a]'); if(!b) return;
+  const a=b.dataset.a, i=+b.dataset.i;
+  if(a==='login'){tok=document.getElementById('t').value.trim();if(!tok)return;localStorage.setItem('rev_tok',tok);c=null;draw()}
+  else if(a==='out'){localStorage.removeItem('rev_tok');tok='';c=null;note='';draw()}
+  else if(a==='tab'){tab=b.dataset.k;edit=null;note='';draw()}
+  else if(a==='new'){edit={i:-1,item:{part:'battery'}};draw()}
+  else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
+  else if(a==='del'){if(confirm('این مورد حذف شود؟')){c[tab].splice(i,1);dirty=true;draw()}}
+  else if(a==='cancel'){edit=null;draw()}
+  else if(a==='ok'){
+    const it={...edit.item};
+    document.querySelectorAll('[data-f]').forEach(el=>{const f=el.dataset.f;it[f]=f==='body'?el.value.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean):el.value.trim()});
+    if(!it.title){msg('عنوان لازم است.');return}
+    if(tab==='articles'&&!it.slug)it.slug='a'+Date.now().toString(36);
+    if(edit.i<0)c[tab].unshift(it);else c[tab][edit.i]=it;
+    edit=null;dirty=true;draw();
+  }
+  else if(a==='pub')save();
+});
+draw();
+</script>
+</body>
+</html>
