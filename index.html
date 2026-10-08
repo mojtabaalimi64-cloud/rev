@@ -1,1076 +1,241 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
-
 <head>
-
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<title>REV | خودروهای برقی، تکنولوژی و آینده</title>
-
-<meta name="description"
-content="REV رسانه‌ای فارسی‌زبان درباره خودروهای برقی، تکنولوژی، باتری، شارژ و آینده حمل‌ونقل است.">
-
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>REV | خودروهای برقی، تکنولوژی و آینده حمل‌ونقل</title>
+<meta name="description" content="REV رسانه‌ای مستقل و فارسی‌زبان درباره خودروهای برقی، باتری، موتور، شارژ و آینده حمل‌ونقل.">
+<meta name="theme-color" content="#080B0D">
+<meta property="og:title" content="REV | خودروهای برقی، تکنولوژی و آینده">
+<meta property="og:locale" content="fa_IR">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23080B0D'/%3E%3Cpath d='M18 4 8 18h7l-1 10 10-14h-7z' fill='%2339FF88'/%3E%3C/svg%3E">
 <style>
-
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
-
-:root {
-    --black:#070a0c;
-    --dark:#0c1114;
-    --card:#11171a;
-    --green:#39ff88;
-    --cyan:#00d9c0;
-    --white:#f4f7f6;
-    --gray:#8b969c;
-    --line:rgba(255,255,255,.08);
-}
-
-* {
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
-
-html {
-    scroll-behavior:smooth;
-}
-
-body {
-    font-family:'Vazirmatn',Arial,sans-serif;
-    background:var(--black);
-    color:var(--white);
-    line-height:1.9;
-}
-
-/* HEADER */
-
-header {
-    position:sticky;
-    top:0;
-    z-index:1000;
-
-    height:76px;
-
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-
-    padding:0 6%;
-
-    background:rgba(7,10,12,.88);
-    backdrop-filter:blur(20px);
-
-    border-bottom:1px solid var(--line);
-}
-
-.logo {
-    direction:ltr;
-    font-family:Arial,sans-serif;
-
-    font-size:30px;
-    font-weight:900;
-
-    letter-spacing:6px;
-}
-
-.logo span {
-    color:var(--green);
-}
-
-nav {
-    display:flex;
-    gap:28px;
-}
-
-nav a {
-    color:#aab3b8;
-    text-decoration:none;
-    font-size:14px;
-    transition:.3s;
-}
-
-nav a:hover {
-    color:var(--green);
-}
-
-/* HERO */
-
-.hero {
-    min-height:88vh;
-
-    display:flex;
-    align-items:center;
-
-    padding:100px 8%;
-
-    position:relative;
-    overflow:hidden;
-
-    background:
-    radial-gradient(
-        circle at 15% 40%,
-        rgba(57,255,136,.10),
-        transparent 25%
-    ),
-    radial-gradient(
-        circle at 80% 25%,
-        rgba(0,217,192,.10),
-        transparent 30%
-    ),
-    var(--black);
-}
-
-.hero::after {
-    content:"REV";
-
-    position:absolute;
-
-    left:-5%;
-    bottom:-15%;
-
-    direction:ltr;
-
-    font-family:Arial,sans-serif;
-    font-size:30vw;
-    font-weight:900;
-
-    color:rgba(255,255,255,.018);
-
-    pointer-events:none;
-}
-
-.hero-content {
-    max-width:850px;
-    position:relative;
-    z-index:2;
-}
-
-.eyebrow {
-    color:var(--green);
-
-    font-size:13px;
-    font-weight:600;
-
-    letter-spacing:2px;
-
-    margin-bottom:20px;
-}
-
-.hero h1 {
-    font-family:Arial,sans-serif;
-
-    direction:ltr;
-    text-align:left;
-
-    font-size:clamp(65px,10vw,145px);
-
-    line-height:.86;
-
-    letter-spacing:-7px;
-
-    font-weight:900;
-
-    margin-bottom:35px;
-}
-
-.hero h1 span {
-    color:var(--green);
-}
-
-.hero-description {
-    max-width:650px;
-
-    color:var(--gray);
-
-    font-size:20px;
-
-    line-height:2;
-}
-
-.hero-buttons {
-    display:flex;
-
-    gap:15px;
-
-    margin-top:35px;
-
-    flex-wrap:wrap;
-}
-
-.btn {
-    display:inline-block;
-
-    padding:12px 26px;
-
-    background:var(--green);
-
-    color:#06100a;
-
-    text-decoration:none;
-
-    font-size:14px;
-
-    font-weight:700;
-
-    border:1px solid var(--green);
-
-    transition:.3s;
-}
-
-.btn:hover {
-    background:transparent;
-    color:var(--green);
-}
-
-.btn.secondary {
-    background:transparent;
-    color:var(--white);
-    border-color:var(--line);
-}
-
-.btn.secondary:hover {
-    color:var(--cyan);
-    border-color:var(--cyan);
-}
-
-/* SECTIONS */
-
-section {
-    padding:100px 8%;
-
-    border-top:1px solid var(--line);
-}
-
-.section-label {
-    color:var(--green);
-
-    font-size:12px;
-
-    font-weight:600;
-
-    letter-spacing:2px;
-
-    margin-bottom:12px;
-}
-
-.section-title {
-    font-size:clamp(35px,5vw,60px);
-
-    line-height:1.2;
-
-    margin-bottom:50px;
-
-    font-weight:800;
-}
-
-/* GRID */
-
-.grid {
-    display:grid;
-
-    grid-template-columns:
-    repeat(auto-fit,minmax(250px,1fr));
-
-    gap:20px;
-}
-
-/* CARDS */
-
-.card {
-    position:relative;
-
-    min-height:260px;
-
-    padding:32px;
-
-    background:
-    linear-gradient(
-        145deg,
-        rgba(255,255,255,.035),
-        rgba(255,255,255,.008)
-    );
-
-    border:1px solid var(--line);
-
-    overflow:hidden;
-
-    transition:.35s;
-}
-
-.card:hover {
-    transform:translateY(-7px);
-
-    border-color:rgba(57,255,136,.4);
-}
-
-.card-number {
-    color:var(--green);
-
-    font-family:Arial,sans-serif;
-
-    direction:ltr;
-
-    font-size:13px;
-
-    letter-spacing:2px;
-}
-
-.card h3 {
-    font-size:25px;
-
-    margin:25px 0 12px;
-
-    font-weight:700;
-}
-
-.card p {
-    color:var(--gray);
-
-    font-size:15px;
-
-    line-height:2;
-}
-
-/* NEWS */
-
-.news-grid {
-    display:grid;
-
-    grid-template-columns:
-    repeat(auto-fit,minmax(280px,1fr));
-
-    gap:20px;
-}
-
-.news-card {
-    background:var(--card);
-
-    border:1px solid var(--line);
-
-    overflow:hidden;
-
-    transition:.3s;
-}
-
-.news-card:hover {
-    transform:translateY(-6px);
-
-    border-color:rgba(57,255,136,.35);
-}
-
-.news-image {
-    height:190px;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
-    background:
-    radial-gradient(
-        circle,
-        rgba(57,255,136,.18),
-        transparent 45%
-    ),
-    #101619;
-}
-
-.news-image span {
-    direction:ltr;
-
-    font-family:Arial,sans-serif;
-
-    font-size:55px;
-
-    font-weight:900;
-
-    color:rgba(255,255,255,.08);
-}
-
-.news-content {
-    padding:25px;
-}
-
-.news-category {
-    color:var(--green);
-
-    font-size:11px;
-
-    font-weight:600;
-}
-
-.news-content h3 {
-    font-size:19px;
-
-    margin:10px 0;
-
-    line-height:1.7;
-}
-
-.news-content p {
-    color:var(--gray);
-
-    font-size:14px;
-}
-
-/* FEATURE */
-
-.feature {
-    display:grid;
-
-    grid-template-columns:1.1fr 1fr;
-
-    min-height:430px;
-
-    border:1px solid var(--line);
-
-    background:var(--dark);
-}
-
-.feature-image {
-    min-height:430px;
-
-    display:flex;
-
-    align-items:center;
-    justify-content:center;
-
-    background:
-    radial-gradient(
-        circle,
-        rgba(57,255,136,.20),
-        transparent 40%
-    ),
-    linear-gradient(
-        135deg,
-        #11191b,
-        #080b0d
-    );
-}
-
-.feature-image span {
-    direction:ltr;
-
-    font-family:Arial,sans-serif;
-
-    font-size:110px;
-
-    font-weight:900;
-
-    letter-spacing:8px;
-
-    color:rgba(255,255,255,.07);
-}
-
-.feature-content {
-    padding:60px;
-}
-
-.feature-content h3 {
-    font-size:38px;
-
-    line-height:1.4;
-
-    margin:20px 0;
-}
-
-.feature-content p {
-    color:var(--gray);
-
-    font-size:16px;
-
-    margin-bottom:30px;
-}
-
-/* PODCAST */
-
-.podcast {
-    background:
-    linear-gradient(
-        120deg,
-        rgba(57,255,136,.06),
-        rgba(0,217,192,.03)
-    );
-}
-
-.podcast-box {
-    max-width:800px;
-}
-
-.podcast-box h2 {
-    direction:rtl;
-
-    font-size:clamp(40px,7vw,80px);
-
-    line-height:1.2;
-
-    margin-bottom:25px;
-}
-
-.podcast-box p {
-    color:var(--gray);
-
-    font-size:18px;
-
-    max-width:650px;
-}
-
-/* ABOUT */
-
-.about-text {
-    max-width:800px;
-
-    color:var(--gray);
-
-    font-size:19px;
-
-    line-height:2.2;
-}
-
-/* FOOTER */
-
-footer {
-    padding:45px 8%;
-
-    border-top:1px solid var(--line);
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    gap:20px;
-
-    flex-wrap:wrap;
-
-    color:var(--gray);
-
-    font-size:13px;
-}
-
-.footer-logo {
-    direction:ltr;
-
-    font-family:Arial,sans-serif;
-
-    color:var(--white);
-
-    font-size:22px;
-
-    font-weight:900;
-
-    letter-spacing:5px;
-}
-
-/* MOBILE */
-
-@media(max-width:800px) {
-
-    header {
-        padding:0 5%;
-    }
-
-    nav {
-        display:none;
-    }
-
-    .hero {
-        min-height:80vh;
-
-        padding:80px 7%;
-    }
-
-    .hero h1 {
-        font-size:75px;
-
-        letter-spacing:-5px;
-    }
-
-    .hero-description {
-        font-size:17px;
-    }
-
-    section {
-        padding:75px 7%;
-    }
-
-    .feature {
-        grid-template-columns:1fr;
-    }
-
-    .feature-image {
-        min-height:250px;
-    }
-
-    .feature-content {
-        padding:35px;
-    }
-
-    footer {
-        padding:40px 7%;
-    }
-
-}
-
+/* ===== رنگ‌های سازمانی: فقط همین چند خط را عوض کنید ===== */
+:root{--ink:#080B0D;--ink-2:#121A1F;--paper:#F5F7F8;--card:#fff;--line:#DDE3E6;--muted:#5B666D;--teal:#00D9C0;--teal-d:#00806F;--gray:#8A949B;--green:#39FF88;
+--font:"Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,system-ui,sans-serif;--max:1120px}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:var(--font);background:var(--paper);color:var(--ink);line-height:1.9;font-size:17px}
+a{color:inherit;text-decoration:none}
+button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
+:focus-visible{outline:3px solid var(--green);outline-offset:3px;border-radius:6px}
+.wrap{width:min(100% - 40px,var(--max));margin-inline:auto}
+.skip{position:absolute;top:-60px;inset-inline-start:12px;background:var(--green);padding:8px 14px;border-radius:8px;z-index:99;font-weight:700}
+.skip:focus{top:12px}
+header{position:sticky;top:0;z-index:50;background:rgba(8,11,13,.97);color:#fff}
+.bar{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:62px}
+.brand{font-weight:900;font-size:26px;letter-spacing:.06em;direction:ltr;display:flex;align-items:center;gap:8px}
+.brand svg{width:20px;height:20px;fill:var(--green)}
+.nav{display:flex;gap:4px;overflow-x:auto;scrollbar-width:none}
+.nav a{padding:8px 14px;border-radius:999px;font-size:15px;white-space:nowrap;color:#C3CBD0}
+.nav a:hover,.nav a.on{background:var(--ink-2);color:#fff}
+.parts-bar{background:var(--ink-2);padding:8px 0;overflow-x:auto}
+.parts-bar .wrap{display:flex;gap:8px}
+.chip{white-space:nowrap;padding:4px 16px;border-radius:999px;border:1px solid #2A343A;color:#C3CBD0;font-size:14px}
+.chip:hover,.chip.on{background:var(--green);border-color:var(--green);color:var(--ink)}
+main{min-height:70vh;animation:in .35s ease}
+@keyframes in{from{opacity:0}to{opacity:1}}
+/* hero + car */
+.hero{background:radial-gradient(ellipse 70% 60% at 50% 78%,rgba(57,255,136,.10),transparent 70%),var(--ink);color:#fff;padding:56px 0 40px;overflow:hidden}
+.hero h1{font-size:clamp(32px,6vw,60px);line-height:1.3;font-weight:900}
+.hero p.lead{margin-top:12px;color:#C3CBD0;max-width:52ch}
+.stage{position:relative;direction:ltr;max-width:860px;margin:36px auto 0;aspect-ratio:800/340}
+.stage svg{width:100%;height:100%;overflow:visible;transition:transform .75s cubic-bezier(.65,0,.25,1);transform-origin:var(--ox,50%) var(--oy,50%)}
+.stage.zoom svg{transform:scale(3.2)}
+.stage.zoom .hs{opacity:0;transition:opacity .2s}
+.car-line{fill:none;stroke:#2F3E46;stroke-width:3;stroke-linejoin:round}
+.hs{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;direction:rtl}
+.hs i{width:22px;height:22px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(57,255,136,.6);animation:pulse 2.2s infinite;flex:none}
+.hs span{background:var(--ink-2);border:1px solid #2A343A;padding:0 12px;border-radius:999px;font-size:14px;line-height:30px;white-space:nowrap}
+.hs:hover span,.hs:focus-visible span{background:var(--green);color:var(--ink)}
+@keyframes pulse{70%{box-shadow:0 0 0 14px rgba(57,255,136,0)}100%{box-shadow:0 0 0 0 rgba(57,255,136,0)}}
+.chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:24px}
+.hint{text-align:center;color:#8A949B;font-size:14px;margin-top:14px}
+/* sections */
+section.blk{padding:64px 0}
+h2{font-size:clamp(24px,3.6vw,34px);font-weight:800;line-height:1.4;padding-inline-start:16px;border-inline-start:6px solid var(--green);margin-bottom:28px}
+.grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:24px;display:flex;flex-direction:column;gap:8px}
+a.card:hover{border-color:var(--teal)}
+.card h3{font-size:19px;line-height:1.6}
+.card p{color:var(--muted);font-size:15.5px}
+.tag{align-self:flex-start;font-size:13px;font-weight:700;color:var(--teal-d);background:#DDFBE9;padding:0 12px;border-radius:999px}
+.empty{border:1px dashed var(--line);border-radius:14px;padding:28px;color:var(--muted);text-align:center}
+.news{list-style:none;display:grid;gap:10px}
+.news li{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 20px;display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.news small{color:var(--muted)}
+.phead{background:var(--ink);color:#fff;padding:56px 0}
+.phead h1{font-size:clamp(32px,5vw,52px);line-height:1.3}
+.phead p{color:#C3CBD0;max-width:56ch;margin-top:10px}
+.phead .back{display:inline-block;margin-bottom:14px;color:var(--green);font-size:15px}
+.article{max-width:68ch;padding:56px 0}
+.article p{margin-top:18px;line-height:2.1}
+.pod{display:flex;gap:20px;align-items:center;flex-wrap:wrap;background:var(--ink);color:#fff;border-radius:18px;padding:32px}
+.pod p{color:#C3CBD0;flex:1;min-width:240px}
+.btn{display:inline-block;background:var(--green);color:var(--ink);font-weight:700;border-radius:999px;padding:8px 24px}
+footer{background:var(--ink);color:#C3CBD0;padding:36px 0;font-size:15px}
+.foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
+@media(max-width:760px){.hs span{display:none}.stage.zoom svg{transform:scale(2.4)}.bar{flex-direction:column;align-items:stretch;gap:0;padding-top:8px}.nav{padding-bottom:8px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
-
 </head>
-
-
 <body>
-
-
-<!-- HEADER -->
-
+<a class="skip" href="#app">رفتن به محتوا</a>
 <header>
-
-    <div class="logo">
-        RE<span>V</span>
-    </div>
-
-    <nav>
-
-        <a href="#home">خانه</a>
-
-        <a href="#ev">خودروهای برقی</a>
-
-        <a href="#technology">تکنولوژی</a>
-
-        <a href="news.html">
-
-        <a href="#articles">مقالات</a>
-
-        <a href="#podcast">پادکست</a>
-
-        <a href="#about">درباره REV</a>
-
-    </nav>
-
+  <div class="wrap bar">
+    <a class="brand" href="#/" aria-label="REV؛ صفحه اول"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 2 5 14h6l-1 8 9-12h-6z"/></svg>REV</a>
+    <nav class="nav" id="nav" aria-label="منوی اصلی"></nav>
+  </div>
+  <div class="parts-bar" id="partsbar" hidden><div class="wrap" id="partchips"></div></div>
 </header>
+<main id="app" tabindex="-1"></main>
+<footer><div class="wrap foot"><div><strong style="color:#fff;letter-spacing:.06em">REV</strong> · خودروهای برقی، تکنولوژی و آینده حمل‌ونقل</div><div>© ۲۰۲۶ REV</div></div></footer>
 
+<script>
+/* =====================================================================
+   محتوای سایت: برای افزودن مطلب یا خبر فقط همین بخش را ویرایش کنید
+   ===================================================================== */
+const SHOP_ENABLED = false;            // وقتی فروشگاه آماده شد، این را true کنید
 
-<!-- HERO -->
+// نقطه‌های روی خودرو: x و y بر مبنای بوم ۸۰۰×۳۴۰
+const PARTS = {
+  battery:{name:'باتری',x:405,y:236,lead:'قلب انرژی خودرو برقی؛ تعیین‌کننده برد، قیمت و عمر خودرو.',
+    tech:[['شیمی سلول: NMC و LFP','NMC چگالی انرژی بالاتر و LFP عمر و ایمنی بیشتر و هزینه کمتر دارد.'],
+          ['سیستم مدیریت باتری (BMS)','نظارت بر ولتاژ، دما و سلامت تک‌تک سلول‌ها و تعادل شارژ آن‌ها.'],
+          ['باتری حالت جامد','الکترولیت جامد به‌جای مایع؛ وعده چگالی انرژی بیشتر و ایمنی بهتر، هنوز در مرحله توسعه و ورود تدریجی به بازار.'],
+          ['Cell-to-Pack','حذف ماژول‌ها و جاسازی مستقیم سلول در پک برای صرفه‌جویی در فضا و هزینه.']]},
+  motor:{name:'موتور',x:215,y:252,lead:'تبدیل انرژی الکتریکی به حرکت با راندمان بسیار بالا و گشتاور فوری.',
+    tech:[['موتور آهنربای دائم (PMSM)','رایج‌ترین انتخاب؛ راندمان بالا و ابعاد کوچک.'],
+          ['موتور القایی','بدون آهنربای نادر زمین؛ ساده‌تر و ارزان‌تر در برخی طراحی‌ها.'],
+          ['ترمز بازیاب','موتور هنگام کاهش سرعت به ژنراتور تبدیل می‌شود و بخشی از انرژی را به باتری برمی‌گرداند.'],
+          ['موتور محوری و درون‌چرخی','طراحی‌های نوظهور برای چگالی توان بیشتر و جای‌گذاری انعطاف‌پذیرتر.']]},
+  charging:{name:'شارژ',x:118,y:194,lead:'زیرساخت و استانداردهایی که تعیین می‌کنند خودرو چقدر راحت و سریع پر می‌شود.',
+    tech:[['شارژ AC و DC','AC با شارژر داخلی خودرو و DC مستقیم به باتری و بسیار سریع‌تر.'],
+          ['استانداردهای کانکتور','CCS، GB/T، CHAdeMO و NACS؛ سازگاری کانکتور مهم‌ترین نکته هنگام خرید است.'],
+          ['شارژ خانگی','وال‌باکس و برق منزل؛ رایج‌ترین روش شارژ روزانه.'],
+          ['V2G و V2H','بازگرداندن انرژی خودرو به شبکه یا خانه.']]},
+  electronics:{name:'اینورتر و برق',x:668,y:190,lead:'مغز الکتریکی خودرو که انرژی باتری را مدیریت و به موتور منتقل می‌کند.',
+    tech:[['اینورتر','تبدیل جریان مستقیم باتری به جریان متناوب موتور و کنترل دقیق سرعت و گشتاور.'],
+          ['نیمه‌هادی SiC','سیلیکون‌کاربید تلفات را کم می‌کند و معماری ۸۰۰ ولتی را ممکن می‌سازد.'],
+          ['مدیریت حرارت','پمپ حرارتی و خنک‌کاری باتری برای حفظ برد در هوای سرد و گرم.'],
+          ['شارژر داخلی و DC-DC','تبدیل برق شبکه برای باتری و تأمین برق ۱۲ ولت تجهیزات.']]},
+  software:{name:'نرم‌افزار و هوش مصنوعی',x:430,y:92,lead:'نرم‌افزار، سنسورها و هوش مصنوعی که خودرو برقی را «خودروی نرم‌افزاری» می‌کنند.',
+    tech:[['سنسورها','دوربین، رادار، اولتراسونیک و لیدار برای درک محیط.'],
+          ['سطوح خودران SAE','از سطح ۰ تا ۵؛ بیشتر خودروهای امروز در سطح ۱ و ۲ هستند.'],
+          ['بروزرسانی از راه دور (OTA)','بهبود قابلیت‌ها و رفع مشکل بدون مراجعه به نمایندگی.'],
+          ['خودرو نرم‌افزارمحور','معماری متمرکز که امکانات را بیشتر با نرم‌افزار تعریف می‌کند تا سخت‌افزار.']]}
+};
 
-<section class="hero" id="home">
+// اخبار: نمونه هستند. بعداً جایگزین کنید (part یکی از کلیدهای بالا)
+const NEWS = [
+  {part:'battery',date:'نمونه',title:'عنوان خبر نمونه درباره باتری',url:''},
+  {part:'motor',date:'نمونه',title:'عنوان خبر نمونه درباره موتور',url:''},
+  {part:'charging',date:'نمونه',title:'عنوان خبر نمونه درباره شارژ',url:''}
+];
 
-    <div class="hero-content">
+// مقالات: برای مطلب جدید یک آیتم اضافه کنید. slug باید یکتا و انگلیسی باشد
+const ARTICLES = [
+  {slug:'ev-revolution',part:'battery',date:'۱۴۰۵',title:'انقلاب خودروهای برقی دقیقاً از کجا شروع شد؟',
+   excerpt:'نگاهی به نقطه‌های عطفی که خودروی برقی را از یک ایده به یک صنعت تبدیل کردند.',
+   body:['خودروی برقی ایده تازه‌ای نیست؛ نمونه‌های اولیه آن بیش از یک قرن پیش وجود داشتند. اما ارزان‌تر شدن باتری‌های لیتیوم‌یونی، سیاست‌های دولت‌ها و رقابت شرکت‌ها آن را به رقیب جدی بنزین تبدیل کرد.',
+         'در REV تلاش می‌کنیم فقط خبر نگوییم، بلکه دلیل اتفاق‌ها را بفهمیم. این مقاله نمونه است؛ متن نهایی را جایگزین کنید.']},
+  {slug:'ai-in-cars',part:'software',date:'۱۴۰۵',title:'هوش مصنوعی چگونه خودروها را تغییر می‌دهد؟',
+   excerpt:'از دستیار صوتی تا رانندگی خودکار؛ نقش نرم‌افزار در خودروی آینده.',
+   body:['خودروهای امروز هر سال بیشتر شبیه یک کامپیوتر روی چرخ می‌شوند؛ از دستیار صوتی و پیشنهاد مسیر تا کمک‌راننده و رانندگی خودکار.',
+         'این مقاله نمونه است؛ متن نهایی را جایگزین کنید.']}
+];
 
-        <div class="eyebrow">
-            خودروهای برقی · تکنولوژی · آینده حمل‌ونقل
-        </div>
+// پادکست: هر قسمت {title, date, url (لینک شنیدن), desc}
+const PODCAST_NAME = 'REV Podcast';
+const EPISODES = [];
 
-        <h1>
-            THE FUTURE<br>
-            MOVES <span>ELECTRIC.</span>
-        </h1>
+/* ===================================================================== */
+const $ = s => document.querySelector(s), app = $('#app');
+const partKeys = Object.keys(PARTS);
+const nav = [['#/','خانه'],['#/articles','مقالات'],['#/podcast','پادکست']];
+if (SHOP_ENABLED) nav.push(['#/shop','فروشگاه']);
 
-        <p class="hero-description">
+const artCard = a => `<a class="card" href="#/a/${a.slug}"><span class="tag">${PARTS[a.part].name}</span><h3>${a.title}</h3><p>${a.excerpt}</p></a>`;
+const artGrid = list => list.length ? `<div class="grid">${list.map(artCard).join('')}</div>` : `<div class="empty">هنوز مقاله‌ای در این بخش منتشر نشده است.</div>`;
+const partHead = (t,p,back) => `<div class="phead"><div class="wrap">${back?'<a class="back" href="#/">بازگشت به خودرو</a><br>':''}<h1>${t}</h1><p>${p}</p></div></div>`;
 
-            REV یک رسانه مستقل فارسی‌زبان برای شناخت
-            خودروهای برقی، فناوری‌های نوظهور و آینده
-            صنعت حمل‌ونقل است.
-
-        </p>
-
-        <div class="hero-buttons">
-
-            <<a href="news.html" class="btn">
-    آخرین اخبار
-</a>>
-                آخرین اخبار
-            </a>
-
-            <a href="#podcast" class="btn secondary">
-                REV Podcast
-            </a>
-
-        </div>
-
+function home(){
+  const hs = partKeys.map(k=>{const p=PARTS[k];return `<button class="hs" data-k="${k}" style="left:${p.x/8}%;top:${p.y/3.4}%" aria-label="${p.name}"><i></i><span>${p.name}</span></button>`}).join('');
+  const chips = partKeys.map(k=>`<a class="chip" href="#/s/${k}">${PARTS[k].name}</a>`).join('');
+  return `<div class="hero"><div class="wrap">
+    <h1>آینده، برقی حرکت می‌کند.</h1>
+    <p class="lead">خودروی برقی را از درون بشناسید. روی هر بخش بزنید تا وارد توضیحات، فناوری‌ها و آخرین اخبار آن شوید.</p>
+    <div class="stage" id="stage">
+      <svg viewBox="0 0 800 340" role="img" aria-label="نمای کناری یک خودروی برقی">
+        <defs>
+          <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1F2C33"/><stop offset="1" stop-color="#0B1114"/></linearGradient>
+          <filter id="gl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
+          <g id="w"><circle r="46" fill="#0B1114" stroke="#2F3E46" stroke-width="3"/><circle r="31" fill="#121A1F" stroke="#8A949B" stroke-width="2"/>
+            <g stroke="#8A949B" stroke-width="3" stroke-linecap="round"><path d="M0-9V-27"/><path d="M0-9V-27" transform="rotate(72)"/><path d="M0-9V-27" transform="rotate(144)"/><path d="M0-9V-27" transform="rotate(216)"/><path d="M0-9V-27" transform="rotate(288)"/></g>
+            <circle r="7" fill="#080B0D" stroke="#8A949B" stroke-width="2"/></g>
+        </defs>
+        <ellipse cx="400" cy="306" rx="350" ry="10" fill="#39FF88" fill-opacity=".09"/>
+        <path d="M70 248V218C70 204 82 196 104 192L238 168C262 132 300 108 352 100C400 94 470 94 520 102C560 108 596 128 640 160L712 178C738 184 748 198 748 222V248Z" fill="url(#bg)" stroke="#2F3E46" stroke-width="2"/>
+        <path d="M262 164C284 134 314 114 354 108L440 106V164Z" fill="#0F171B" stroke="#2F3E46" stroke-width="2"/>
+        <path d="M452 106L512 108C542 112 570 128 600 156L452 164Z" fill="#0F171B" stroke="#2F3E46" stroke-width="2"/>
+        <path d="M262 168C290 130 320 108 360 101" fill="none" stroke="#00D9C0" stroke-opacity=".7" stroke-width="2" filter="url(#gl)"/>
+        <path d="M100 228H700" stroke="#00D9C0" stroke-opacity=".3" stroke-width="1.5"/>
+        <path d="M708 184L744 194" stroke="#39FF88" stroke-width="4" stroke-linecap="round" filter="url(#gl)"/>
+        <path d="M72 208L102 199" stroke="#00D9C0" stroke-width="4" stroke-linecap="round" filter="url(#gl)"/>
+        <circle cx="215" cy="252" r="54" fill="#080B0D"/><circle cx="595" cy="252" r="54" fill="#080B0D"/>
+        <use href="#w" x="215" y="252"/><use href="#w" x="595" y="252"/>
+        <rect x="262" y="228" width="286" height="18" rx="6" fill="#39FF88" fill-opacity=".18" stroke="#39FF88" stroke-width="2" filter="url(#gl)"/>
+        <path d="M310 228V246M358 228V246M406 228V246M454 228V246M502 228V246" stroke="#39FF88" stroke-opacity=".5"/>
+        <circle cx="215" cy="252" r="12" fill="#00D9C0" fill-opacity=".35" stroke="#00D9C0" stroke-width="2" filter="url(#gl)"/>
+        <rect x="640" y="178" width="56" height="20" rx="5" fill="#00D9C0" fill-opacity=".18" stroke="#00D9C0" stroke-width="2"/>
+        <path d="M120 182l-9 13h7l-3 11 11-15h-7z" fill="#39FF88" filter="url(#gl)"/>
+        <ellipse cx="430" cy="93" rx="14" ry="5" fill="#00D9C0" fill-opacity=".4" stroke="#00D9C0" stroke-width="2"/>
+      </svg>${hs}
     </div>
-
-</section>
-
-
-<!-- EV -->
-
-<section id="ev">
-
-    <div class="section-label">
-        01 / ELECTRIC VEHICLES
-    </div>
-
-    <h2 class="section-title">
-        دنیای خودروهای برقی
-    </h2>
-
-    <div class="grid">
-
-        <div class="card">
-
-            <div class="card-number">
-                EV
-            </div>
-
-            <h3>
-                خودروهای برقی
-            </h3>
-
-            <p>
-                بررسی خودروهای برقی، مدل‌های جدید،
-                بازار EV و اتفاقاتی که صنعت خودرو
-                را تغییر می‌دهند.
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-number">
-                BATTERY
-            </div>
-
-            <h3>
-                باتری و انرژی
-            </h3>
-
-            <p>
-                باتری، برد حرکتی، فناوری‌های جدید،
-                شارژ سریع و آینده ذخیره انرژی.
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-number">
-                CHARGE
-            </div>
-
-            <h3>
-                شارژ
-            </h3>
-
-            <p>
-                زیرساخت شارژ، استانداردها،
-                شارژ خانگی و فناوری‌های آینده.
-            </p>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- NEWS -->
-
-<section id="news">
-
-    <div class="section-label">
-        02 / LATEST NEWS
-    </div>
-
-    <h2 class="section-title">
-        آخرین اخبار
-    </h2>
-
-    <div class="news-grid">
-
-
-        <article class="news-card">
-
-            <div class="news-image">
-                <span>EV</span>
-            </div>
-
-            <div class="news-content">
-
-                <div class="news-category">
-                    خودروهای برقی
-                </div>
-
-                <h3>
-                    آینده صنعت خودرو در حال تغییر است
-                </h3>
-
-                <p>
-                    اخبار و اتفاقات مهم صنعت خودروهای
-                    برقی را در REV دنبال کنید.
-                </p>
-
-            </div>
-
-        </article>
-
-
-        <article class="news-card">
-
-            <div class="news-image">
-                <span>AI</span>
-            </div>
-
-            <div class="news-content">
-
-                <div class="news-category">
-                    تکنولوژی
-                </div>
-
-                <h3>
-                    هوش مصنوعی چگونه خودروها را تغییر می‌دهد؟
-                </h3>
-
-                <p>
-                    از نرم‌افزار خودرو تا رانندگی خودکار.
-                </p>
-
-            </div>
-
-        </article>
-
-
-        <article class="news-card">
-
-            <div class="news-image">
-                <span>BAT</span>
-            </div>
-
-            <div class="news-content">
-
-                <div class="news-category">
-                    باتری
-                </div>
-
-                <h3>
-                    نسل جدید باتری‌ها به کجا می‌روند؟
-                </h3>
-
-                <p>
-                    فناوری‌های جدید باتری و آینده ذخیره انرژی.
-                </p>
-
-            </div>
-
-        </article>
-
-
-    </div>
-
-</section>
-
-
-<!-- FEATURE -->
-
-<section id="articles">
-
-    <div class="section-label">
-        03 / REV STUDIES
-    </div>
-
-    <div class="feature">
-
-        <div class="feature-image">
-
-            <span>
-                REV
-            </span>
-
-        </div>
-
-
-        <div class="feature-content">
-
-            <div class="section-label">
-                FEATURED ARTICLE
-            </div>
-
-            <h3>
-                انقلاب خودروهای برقی
-                دقیقاً از کجا شروع شد؟
-            </h3>
-
-            <p>
-
-                در REV فقط خبرها را دنبال نمی‌کنیم.
-                تلاش می‌کنیم پشت اتفاقات صنعت خودرو،
-                تکنولوژی و تصمیم‌های مهم را بفهمیم.
-
-            </p>
-
-            <a href="#" class="btn">
-                مطالعه مقاله
-            </a>
-
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- TECHNOLOGY -->
-
-<section id="technology">
-
-    <div class="section-label">
-        04 / TECHNOLOGY
-    </div>
-
-    <h2 class="section-title">
-        فراتر از خودرو
-    </h2>
-
-
-    <div class="grid">
-
-
-        <div class="card">
-
-            <div class="card-number">
-                AI
-            </div>
-
-            <h3>
-                هوش مصنوعی
-            </h3>
-
-            <p>
-                هوش مصنوعی چگونه خودرو،
-                رانندگی و صنعت حمل‌ونقل را
-                متحول می‌کند؟
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-number">
-                AUTO
-            </div>
-
-            <h3>
-                رانندگی خودکار
-            </h3>
-
-            <p>
-                سنسورها، نرم‌افزار و رقابت
-                برای ساخت خودروهای خودران.
-            </p>
-
-        </div>
-
-
-        <div class="card">
-
-            <div class="card-number">
-                FUTURE
-            </div>
-
-            <h3>
-                آینده حمل‌ونقل
-            </h3>
-
-            <p>
-                فناوری‌هایی که ممکن است
-                شیوه حرکت ما را برای همیشه تغییر دهند.
-            </p>
-
-        </div>
-
-
-    </div>
-
-</section>
-
-
-<!-- PODCAST -->
-
-<section id="podcast" class="podcast">
-
-    <div class="section-label">
-        05 / REV PODCAST
-    </div>
-
-
-    <div class="podcast-box">
-
-        <h2>
-            گفتگو درباره
-            آینده.
-        </h2>
-
-        <p>
-
-            گفتگو با آدم‌هایی که در دنیای
-            خودرو، تکنولوژی، کسب‌وکار و نوآوری
-            آینده را می‌سازند.
-
-        </p>
-
-        <br>
-
-        <a href="#" class="btn">
-            ورود به REV Podcast
-        </a>
-
-    </div>
-
-</section>
-
-
-<!-- ABOUT -->
-
-<section id="about">
-
-    <div class="section-label">
-        06 / ABOUT REV
-    </div>
-
-    <h2 class="section-title">
-        REV چیست؟
-    </h2>
-
-    <p class="about-text">
-
-        REV یک پروژه رسانه‌ای مستقل با تمرکز بر
-        خودروهای برقی، تکنولوژی، نوآوری و آینده
-        حمل‌ونقل است.
-
-        <br><br>
-
-        هدف REV فقط معرفی محصولات جدید نیست؛
-        بلکه تلاش می‌کنیم بفهمیم فناوری‌ها،
-        شرکت‌ها و تصمیم‌های امروز چگونه
-        آینده حرکت انسان را شکل می‌دهند.
-
-    </p>
-
-</section>
-
-
-<!-- FOOTER -->
-
-<footer>
-
-    <div class="footer-logo">
-        REV
-    </div>
-
-    <div>
-        Electric Vehicles · Technology · Future Mobility
-    </div>
-
-    <div>
-        © 2026 REV
-    </div>
-
-</footer>
-
-
+    <div class="chips">${chips}</div>
+  </div></div>
+  <section class="blk"><div class="wrap"><h2>تازه‌ترین مقالات</h2>${artGrid(ARTICLES.slice(0,3))}</div></section>
+  <section class="blk" style="padding-top:0"><div class="wrap"><div class="pod"><div><h2 style="color:#fff;margin:0 0 12px">${PODCAST_NAME}</h2><p>گفتگو با کسانی که آینده خودرو و تکنولوژی را می‌سازند.</p></div><a class="btn" href="#/podcast">درباره پادکست</a></div></div></section>`;
+}
+function part(k){
+  const p=PARTS[k], news=NEWS.filter(n=>n.part===k);
+  return partHead(p.name,p.lead,true)+`<section class="blk"><div class="wrap"><h2>فناوری‌ها</h2><div class="grid">${p.tech.map(t=>`<div class="card"><h3>${t[0]}</h3><p>${t[1]}</p></div>`).join('')}</div></div></section>
+  <section class="blk" style="padding-top:0"><div class="wrap"><h2>آخرین اخبار ${p.name}</h2>${news.length?`<ul class="news">${news.map(n=>`<li>${n.url?`<a href="${n.url}" target="_blank" rel="noopener">${n.title}</a>`:`<span>${n.title}</span>`}<small>${n.date}</small></li>`).join('')}</ul>`:'<div class="empty">خبری ثبت نشده است.</div>'}</div></section>
+  <section class="blk" style="padding-top:0"><div class="wrap"><h2>مقالات مرتبط</h2>${artGrid(ARTICLES.filter(a=>a.part===k))}</div></section>`;
+}
+const articles = () => partHead('مقالات','تحلیل‌ها و آموزش‌های REV درباره خودروهای برقی و فناوری‌های آینده.')+`<section class="blk"><div class="wrap">${artGrid(ARTICLES)}</div></section>`;
+function article(s){
+  const a=ARTICLES.find(x=>x.slug===s); if(!a) return articles();
+  document.title=a.title+' | REV';
+  return `<div class="wrap article"><a class="chip" style="color:var(--teal-d);border-color:var(--line)" href="#/s/${a.part}">${PARTS[a.part].name}</a><h1 style="margin-top:14px;line-height:1.5">${a.title}</h1><small style="color:var(--muted)">${a.date}</small>${a.body.map(p=>`<p>${p}</p>`).join('')}</div>`;
+}
+const podcast = () => partHead(PODCAST_NAME,'گفتگو درباره آینده خودرو، تکنولوژی و نوآوری.')+`<section class="blk"><div class="wrap">${EPISODES.length?`<div class="grid">${EPISODES.map(e=>`<a class="card" href="${e.url}" target="_blank" rel="noopener"><h3>${e.title}</h3><small>${e.date}</small><p>${e.desc||''}</p></a>`).join('')}</div>`:'<div class="empty">قسمت اول به‌زودی منتشر می‌شود.</div>'}</div></section>`;
+const shop = () => partHead('فروشگاه','قطعات و لوازم جانبی خودروهای برقی.')+`<section class="blk"><div class="wrap"><div class="empty">فروشگاه به‌زودی راه‌اندازی می‌شود.</div></div></section>`;
+
+function route(){
+  const h=location.hash||'#/', [,r,arg]=h.split('/');
+  document.title='REV | خودروهای برقی، تکنولوژی و آینده حمل‌ونقل';
+  let html, key=r||'';
+  if(r==='s'&&PARTS[arg]){html=part(arg);document.title=PARTS[arg].name+' | REV'}
+  else if(r==='a') html=article(arg);
+  else if(r==='articles') html=articles();
+  else if(r==='podcast') html=podcast();
+  else if(r==='shop'&&SHOP_ENABLED) html=shop();
+  else {html=home();key=''}
+  app.innerHTML=html;
+  window.scrollTo(0,0);
+  $('#nav').innerHTML=nav.map(n=>`<a href="${n[0]}" class="${n[0]==='#/'+key||(n[0]==='#/'&&!key)?'on':''}">${n[1]}</a>`).join('');
+  const pb=$('#partsbar'); pb.hidden=!key||key==='';
+  $('#partchips').innerHTML=partKeys.map(k=>`<a class="chip ${r==='s'&&arg===k?'on':''}" href="#/s/${k}">${PARTS[k].name}</a>`).join('');
+  document.querySelectorAll('.hs').forEach(b=>b.onclick=()=>{
+    const p=PARTS[b.dataset.k], st=$('#stage');
+    const go=()=>{location.hash='#/s/'+b.dataset.k};
+    if(matchMedia('(prefers-reduced-motion:reduce)').matches) return go();
+    st.style.setProperty('--ox',p.x/8+'%'); st.style.setProperty('--oy',p.y/3.4+'%');
+    st.classList.add('zoom'); setTimeout(go,700);
+  });
+}
+addEventListener('hashchange',route); route();
+</script>
 </body>
-
 </html>
