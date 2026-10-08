@@ -1,944 +1,1272 @@
 <!DOCTYPE html>
 <html lang="fa" dir="rtl">
-
 <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>خودروی برقی چگونه کار می‌کند؟ | REV</title>
 
-<title>خودروی برقی چگونه کار می‌کند؟ | REV</title>
+  <meta name="description"
+        content="خودروی برقی چگونه کار می‌کند؟ بررسی باتری، موتور الکتریکی، اینورتر، شارژ و ترمز احیاکننده در راهنمای REV.">
 
-<meta name="description"
-content="خودروی برقی چگونه کار می‌کند؟ بررسی موتور الکتریکی، باتری، اینورتر، شارژ و تفاوت EV با خودروهای بنزینی.">
+  <meta name="theme-color" content="#080B0D">
 
-<style>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
-@import url('https://fonts.googleapis.com/css2?family=Vazirmatn:wght@300;400;500;600;700;800;900&display=swap');
+  <link href="https://fonts.googleapis.com/css2?family=Vazirmatn:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
 
-:root {
-    --black:#070a0c;
-    --dark:#0c1114;
-    --card:#11171a;
-    --green:#39ff88;
-    --cyan:#00d9c0;
-    --white:#f4f7f6;
-    --gray:#8b969c;
-    --line:rgba(255,255,255,.08);
-}
+  <style>
 
-* {
-    margin:0;
-    padding:0;
-    box-sizing:border-box;
-}
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
 
-html {
-    scroll-behavior:smooth;
-}
+    html {
+      scroll-behavior: smooth;
+    }
 
-body {
-    font-family:'Vazirmatn',Arial,sans-serif;
+    body {
+      background: #080B0D;
+      color: #F5F7F8;
+      font-family: "Vazirmatn", sans-serif;
+      line-height: 1.95;
+    }
 
-    background:var(--black);
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
 
-    color:var(--white);
+    img,
+    svg {
+      max-width: 100%;
+    }
 
-    line-height:2;
-}
+    .container {
+      width: min(1120px, 92%);
+      margin: auto;
+    }
 
-
-/* HEADER */
-
-header {
-
-    position:sticky;
-
-    top:0;
-
-    z-index:1000;
-
-    height:76px;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:space-between;
-
-    padding:0 6%;
-
-    background:rgba(7,10,12,.92);
-
-    backdrop-filter:blur(20px);
-
-    border-bottom:1px solid var(--line);
-}
-
-.logo {
-
-    direction:ltr;
-
-    font-family:Arial,sans-serif;
-
-    font-size:30px;
-
-    font-weight:900;
-
-    letter-spacing:6px;
-}
-
-.logo span {
-
-    color:var(--green);
-}
-
-nav {
-
-    display:flex;
-
-    gap:28px;
-}
-
-nav a {
-
-    color:#aab3b8;
-
-    text-decoration:none;
-
-    font-size:14px;
-
-    transition:.3s;
-}
-
-nav a:hover {
-
-    color:var(--green);
-}
-
-
-/* ARTICLE HERO */
-
-.article-hero {
-
-    padding:100px 8% 70px;
-
-    border-bottom:1px solid var(--line);
-
-    background:
-
-    radial-gradient(
-        circle at 20% 40%,
-        rgba(57,255,136,.09),
-        transparent 25%
-    ),
-
-    radial-gradient(
-        circle at 80% 20%,
-        rgba(0,217,192,.07),
-        transparent 30%
-    ),
-
-    var(--black);
-}
-
-.article-container {
-
-    max-width:1000px;
-
-    margin:auto;
-}
-
-.category {
-
-    color:var(--green);
-
-    font-size:12px;
-
-    font-weight:700;
-
-    letter-spacing:2px;
-
-    margin-bottom:20px;
-}
-
-.article-hero h1 {
-
-    font-size:clamp(42px,7vw,82px);
-
-    line-height:1.35;
-
-    font-weight:900;
-
-    margin-bottom:25px;
-}
-
-.subtitle {
-
-    color:var(--gray);
-
-    font-size:20px;
-
-    max-width:750px;
-
-    line-height:2;
-}
-
-.meta {
-
-    display:flex;
-
-    gap:25px;
-
-    flex-wrap:wrap;
-
-    margin-top:30px;
-
-    color:#707b81;
-
-    font-size:12px;
-}
-
-
-/* ARTICLE IMAGE */
-
-.article-image {
-
-    height:420px;
-
-    margin:50px auto 70px;
-
-    max-width:1200px;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    background:
-
-    radial-gradient(
-        circle,
-        rgba(57,255,136,.20),
-        transparent 40%
-    ),
-
-    linear-gradient(
-        135deg,
-        #11191b,
-        #080b0d
-    );
-
-    border:1px solid var(--line);
-}
-
-.article-image span {
-
-    direction:ltr;
-
-    font-family:Arial,sans-serif;
-
-    font-size:130px;
-
-    font-weight:900;
-
-    letter-spacing:10px;
-
-    color:rgba(255,255,255,.07);
-}
-
-
-/* ARTICLE BODY */
-
-.article-body {
-
-    max-width:820px;
-
-    margin:auto;
-
-    padding:0 8% 100px;
-}
-
-.article-body h2 {
-
-    font-size:32px;
-
-    line-height:1.5;
-
-    margin:55px 0 18px;
-
-    color:var(--white);
-}
-
-.article-body h2::before {
-
-    content:"";
-
-    display:inline-block;
-
-    width:5px;
-
-    height:30px;
-
-    margin-left:14px;
-
-    vertical-align:-4px;
-
-    background:var(--green);
-}
-
-.article-body p {
-
-    color:#b2bcc0;
-
-    font-size:17px;
-
-    line-height:2.3;
-
-    margin-bottom:22px;
-}
-
-.article-body strong {
-
-    color:var(--white);
-}
-
-.article-body ul {
-
-    padding-right:25px;
-
-    margin:20px 0 30px;
-}
-
-.article-body li {
-
-    color:#b2bcc0;
-
-    margin-bottom:12px;
-}
-
-
-/* INFO BOX */
-
-.info-box {
-
-    margin:40px 0;
-
-    padding:28px;
-
-    background:rgba(57,255,136,.04);
-
-    border:1px solid rgba(57,255,136,.18);
-
-    border-right:4px solid var(--green);
-}
-
-.info-box p {
-
-    margin:0;
-
-    color:#c4cccf;
-}
-
-
-/* QUOTE */
-
-.quote {
-
-    margin:50px 0;
-
-    padding:35px;
-
-    background:var(--card);
-
-    border:1px solid var(--line);
-
-    font-size:22px;
-
-    line-height:2;
-
-    color:var(--white);
-}
-
-
-/* SOURCES */
-
-.sources {
-
-    margin-top:70px;
-
-    padding-top:35px;
-
-    border-top:1px solid var(--line);
-}
-
-.sources h3 {
-
-    font-size:22px;
-
-    margin-bottom:20px;
-}
-
-.sources p {
-
-    font-size:14px;
-
-    color:var(--gray);
-}
-
-
-/* BACK */
-
-.back {
-
-    display:inline-block;
-
-    margin-top:40px;
-
-    padding:11px 22px;
-
-    background:var(--green);
-
-    color:#06100a;
-
-    text-decoration:none;
-
-    font-size:13px;
-
-    font-weight:700;
-
-    border:1px solid var(--green);
-
-    transition:.3s;
-}
-
-.back:hover {
-
-    background:transparent;
-
-    color:var(--green);
-}
-
-
-/* FOOTER */
-
-footer {
-
-    padding:45px 8%;
-
-    border-top:1px solid var(--line);
-
-    display:flex;
-
-    justify-content:space-between;
-
-    align-items:center;
-
-    gap:20px;
-
-    flex-wrap:wrap;
-
-    color:var(--gray);
-
-    font-size:13px;
-}
-
-.footer-logo {
-
-    direction:ltr;
-
-    font-family:Arial,sans-serif;
-
-    color:var(--white);
-
-    font-size:22px;
-
-    font-weight:900;
-
-    letter-spacing:5px;
-}
-
-
-/* MOBILE */
-
-@media(max-width:800px) {
+    /* ================= HEADER ================= */
 
     header {
+      position: sticky;
+      top: 0;
+      z-index: 100;
+      background: rgba(8, 11, 13, 0.88);
+      backdrop-filter: blur(18px);
+      border-bottom: 1px solid rgba(255,255,255,.07);
+    }
 
-        padding:0 5%;
+    .nav {
+      min-height: 78px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 30px;
+    }
+
+    .logo {
+      font-size: 32px;
+      font-weight: 800;
+      letter-spacing: -2px;
+    }
+
+    .logo span {
+      color: #39FF88;
     }
 
     nav {
-
-        display:none;
+      display: flex;
+      align-items: center;
+      gap: 25px;
+      flex-wrap: wrap;
     }
 
-    .article-hero {
-
-        padding:75px 7% 55px;
+    nav a {
+      color: #899399;
+      font-size: 14px;
+      transition: .25s;
     }
 
-    .article-hero h1 {
-
-        font-size:42px;
+    nav a:hover,
+    nav a.active {
+      color: #ffffff;
     }
 
-    .subtitle {
+    /* ================= HERO ================= */
 
-        font-size:17px;
+    .hero {
+      padding: 85px 0 35px;
     }
 
-    .article-image {
-
-        height:250px;
-
-        margin:35px 7% 50px;
+    .eyebrow {
+      color: #39FF88;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+      margin-bottom: 18px;
     }
 
-    .article-image span {
-
-        font-size:70px;
+    h1 {
+      font-size: clamp(38px, 6vw, 68px);
+      line-height: 1.18;
+      letter-spacing: -2px;
+      max-width: 900px;
+      margin-bottom: 25px;
     }
 
-    .article-body {
-
-        padding:0 7% 70px;
+    .lead {
+      max-width: 820px;
+      color: #AEB7BC;
+      font-size: 18px;
     }
 
-    .article-body h2 {
-
-        font-size:27px;
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+      color: #707B81;
+      margin-top: 28px;
+      font-size: 13px;
     }
 
-    .article-body p {
+    /* ================= HERO IMAGE ================= */
 
-        font-size:16px;
+    .hero-image {
+      margin: 45px 0 65px;
+      border-radius: 28px;
+      overflow: hidden;
+      border: 1px solid rgba(57,255,136,.18);
+      background: #0D1316;
+      box-shadow:
+        0 30px 90px rgba(0,0,0,.45),
+        0 0 50px rgba(57,255,136,.04);
     }
+
+    .hero-svg {
+      display: block;
+      width: 100%;
+      height: auto;
+    }
+
+    /* ================= ARTICLE ================= */
+
+    .article {
+      max-width: 850px;
+      margin: auto;
+      padding-bottom: 80px;
+    }
+
+    .article h2 {
+      margin: 48px 0 17px;
+      font-size: 31px;
+      line-height: 1.4;
+    }
+
+    .article h3 {
+      margin: 30px 0 12px;
+      font-size: 22px;
+    }
+
+    .article p {
+      color: #C5CED2;
+      font-size: 17px;
+      margin-bottom: 19px;
+    }
+
+    .article strong {
+      color: #ffffff;
+    }
+
+    /* ================= HIGHLIGHT ================= */
+
+    .highlight {
+      margin: 32px 0;
+      padding: 23px 25px;
+      border-right: 3px solid #39FF88;
+      border-radius: 15px;
+
+      background:
+        linear-gradient(
+          90deg,
+          rgba(57,255,136,.09),
+          rgba(0,217,192,.03)
+        );
+
+      color: #DCE4E7;
+    }
+
+    /* ================= CARDS ================= */
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 18px;
+      margin: 32px 0;
+    }
+
+    .card {
+      padding: 23px;
+      background: #101619;
+      border: 1px solid rgba(255,255,255,.07);
+      border-radius: 18px;
+      transition: .25s;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(57,255,136,.2);
+    }
+
+    .tag {
+      display: block;
+      color: #39FF88;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 7px;
+    }
+
+    .card h3 {
+      margin: 0 0 8px;
+      font-size: 19px;
+    }
+
+    .card p {
+      margin: 0;
+      font-size: 15px;
+      color: #98A4AA;
+    }
+
+    /* ================= SOURCES ================= */
+
+    .sources {
+      margin-top: 50px;
+      padding-top: 30px;
+      border-top: 1px solid rgba(255,255,255,.08);
+    }
+
+    .sources p {
+      color: #7E898F;
+      font-size: 14px;
+    }
+
+    /* ================= BUTTON ================= */
+
+    .back {
+      display: inline-flex;
+      margin-top: 34px;
+      padding: 12px 20px;
+      border-radius: 12px;
+
+      border: 1px solid rgba(57,255,136,.3);
+      color: #39FF88;
+
+      transition: .25s;
+    }
+
+    .back:hover {
+      background: rgba(57,255,136,.08);
+    }
+
+    /* ================= FOOTER ================= */
 
     footer {
-
-        padding:40px 7%;
+      border-top: 1px solid rgba(255,255,255,.07);
+      padding: 30px 0 45px;
+      text-align: center;
+      font-size: 13px;
+      color: #6F7A80;
     }
 
-}
+    /* ================= MOBILE ================= */
 
-</style>
+    @media (max-width: 760px) {
 
+      .nav {
+        padding: 16px 0;
+        align-items: flex-start;
+      }
+
+      nav {
+        gap: 12px;
+        justify-content: flex-end;
+      }
+
+      .hero {
+        padding-top: 50px;
+      }
+
+      .lead {
+        font-size: 16px;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      .article p {
+        font-size: 16px;
+      }
+
+      .article h2 {
+        font-size: 26px;
+      }
+
+    }
+
+  </style>
 </head>
 
 
 <body>
 
-
-<!-- HEADER -->
+<!-- ================= HEADER ================= -->
 
 <header>
 
-    <div class="logo">
-        RE<span>V</span>
-    </div>
+  <div class="container nav">
+
+    <a class="logo" href="index.html">
+      RE<span>V</span>
+    </a>
 
     <nav>
 
-        <a href="index.html">
-            خانه
-        </a>
+      <a href="index.html">
+        خانه
+      </a>
 
-        <a href="news.html">
-            اخبار
-        </a>
+      <a href="news.html" class="active">
+        اخبار
+      </a>
 
-        <a href="index.html#ev">
-            خودروهای برقی
-        </a>
+      <a href="index.html#technology">
+        تکنولوژی
+      </a>
 
-        <a href="index.html#technology">
-            تکنولوژی
-        </a>
+      <a href="index.html#podcast">
+        پادکست
+      </a>
 
-        <a href="index.html#podcast">
-            پادکست
-        </a>
+      <a href="index.html#about">
+        درباره REV
+      </a>
 
     </nav>
+
+  </div>
 
 </header>
 
 
-<!-- ARTICLE HERO -->
+<!-- ================= MAIN ================= -->
 
-<section class="article-hero">
+<main>
 
-    <div class="article-container">
+  <!-- HERO -->
 
-        <div class="category">
-            REV / ELECTRIC VEHICLES
-        </div>
+  <section class="hero">
 
-        <h1>
-            خودروی برقی چگونه کار می‌کند؟
-        </h1>
+    <div class="container">
 
-        <p class="subtitle">
+      <div class="eyebrow">
+        REV / ELECTRIC VEHICLES
+      </div>
 
-            از باتری و موتور الکتریکی تا اینورتر و شارژ؛
-            یک راهنمای ساده برای اینکه بفهمیم
-            پشت فرمان یک خودروی برقی چه اتفاقی می‌افتد.
+      <h1>
+        خودروی برقی چگونه کار می‌کند؟
+      </h1>
 
-        </p>
+      <p class="lead">
+        از باتری و موتور الکتریکی تا اینورتر، شارژ و ترمز احیاکننده؛
+        سازوکار یک خودروی برقی را ساده و دقیق بررسی می‌کنیم.
+      </p>
 
-        <div class="meta">
+      <div class="meta">
 
-            <span>
-                نویسنده: تیم REV
-            </span>
+        <span>
+          نویسنده: تیم REV
+        </span>
 
-            <span>
-                زمان مطالعه: ۸ دقیقه
-            </span>
+        <span>
+          زمان مطالعه: ۸ دقیقه
+        </span>
 
-            <span>
-                ۶ مهر ۱۴۰۵
-            </span>
+        <span>
+          ۶ مهر ۱۴۰۵
+        </span>
 
-        </div>
-
-    </div>
-
-</section>
-
-
-<!-- IMAGE -->
-
-<img src="ev-how-it-works.jpg" alt="خودروی برقی">
-    <span>
-        EV
-    </span>
-
-</div>
-
-
-<!-- ARTICLE -->
-
-<article class="article-body">
-
-
-    <p>
-
-        وقتی برای اولین بار یک خودروی برقی را می‌بینیم،
-        ممکن است تصور کنیم فقط موتور خودرو عوض شده است.
-        اما واقعیت بسیار بزرگ‌تر از این است.
-
-    </p>
-
-
-    <p>
-
-        در یک خودروی برقی، موتور احتراق داخلی،
-        گیربکس سنتی و بسیاری از قطعات مکانیکی
-        جای خود را به یک سیستم الکتریکی داده‌اند
-        که از باتری، موتور، اینورتر و نرم‌افزار تشکیل شده است.
-
-    </p>
-
-
-    <div class="info-box">
-
-        <p>
-
-            <strong>خلاصه:</strong>
-            انرژی در باتری ذخیره می‌شود،
-            این انرژی توسط سیستم کنترل به موتور می‌رسد
-            و موتور الکتریکی آن را به حرکت تبدیل می‌کند.
-
-        </p>
+      </div>
 
     </div>
 
+  </section>
 
-    <h2>
+
+  <!-- ================= EMBEDDED IMAGE ================= -->
+
+  <div class="container">
+
+    <div class="hero-image">
+
+      <!--
+        تصویر اصلی کاملاً داخل HTML قرار گرفته است.
+        هیچ فایل خارجی برای این تصویر نیاز نیست.
+      -->
+
+      <svg
+        class="hero-svg"
+        viewBox="0 0 1400 790"
+        xmlns="http://www.w3.org/2000/svg"
+        role="img"
+        aria-label="تصویر تکنولوژیک خودروی برقی و اجزای اصلی آن"
+      >
+
+        <defs>
+
+          <linearGradient
+            id="bg"
+            x1="0"
+            y1="0"
+            x2="1"
+            y2="1"
+          >
+            <stop offset="0%" stop-color="#071012"/>
+            <stop offset="55%" stop-color="#0D1719"/>
+            <stop offset="100%" stop-color="#06100D"/>
+          </linearGradient>
+
+          <linearGradient
+            id="road"
+            x1="0"
+            y1="0"
+            x2="1"
+            y2="0"
+          >
+            <stop offset="0%" stop-color="#10191C"/>
+            <stop offset="100%" stop-color="#07100F"/>
+          </linearGradient>
+
+          <linearGradient
+            id="car"
+            x1="0"
+            y1="0"
+            x2="1"
+            y2="1"
+          >
+            <stop offset="0%" stop-color="#343D41"/>
+            <stop offset="48%" stop-color="#111719"/>
+            <stop offset="100%" stop-color="#050708"/>
+          </linearGradient>
+
+          <linearGradient
+            id="window"
+            x1="0"
+            y1="0"
+            x2="1"
+            y2="1"
+          >
+            <stop offset="0%" stop-color="#142A2E"/>
+            <stop offset="100%" stop-color="#061013"/>
+          </linearGradient>
+
+          <linearGradient
+            id="battery"
+            x1="0"
+            y1="0"
+            x2="0"
+            y2="1"
+          >
+            <stop offset="0%" stop-color="#5DFF9D"/>
+            <stop offset="100%" stop-color="#00A878"/>
+          </linearGradient>
+
+          <filter
+            id="glow"
+            x="-50%"
+            y="-50%"
+            width="200%"
+            height="200%"
+          >
+            <feGaussianBlur
+              stdDeviation="7"
+              result="blur"
+            />
+            <feMerge>
+              <feMergeNode in="blur"/>
+              <feMergeNode in="SourceGraphic"/>
+            </feMerge>
+          </filter>
+
+          <filter
+            id="softGlow"
+            x="-50%"
+            y="-50%"
+            width="200%"
+            height="200%"
+          >
+            <feGaussianBlur
+              stdDeviation="16"
+            />
+          </filter>
+
+        </defs>
+
+
+        <!-- BACKGROUND -->
+
+        <rect
+          width="1400"
+          height="790"
+          fill="url(#bg)"
+        />
+
+
+        <!-- GREEN ATMOSPHERIC GLOW -->
+
+        <ellipse
+          cx="1030"
+          cy="245"
+          rx="300"
+          ry="170"
+          fill="#39FF88"
+          opacity=".08"
+          filter="url(#softGlow)"
+        />
+
+        <ellipse
+          cx="360"
+          cy="510"
+          rx="250"
+          ry="130"
+          fill="#00D9C0"
+          opacity=".06"
+          filter="url(#softGlow)"
+        />
+
+
+        <!-- GRID -->
+
+        <g
+          stroke="#39FF88"
+          opacity=".07"
+          stroke-width="1"
+        >
+
+          <line x1="0" y1="100" x2="1400" y2="100"/>
+          <line x1="0" y1="200" x2="1400" y2="200"/>
+          <line x1="0" y1="300" x2="1400" y2="300"/>
+          <line x1="0" y1="400" x2="1400" y2="400"/>
+          <line x1="0" y1="500" x2="1400" y2="500"/>
+          <line x1="0" y1="600" x2="1400" y2="600"/>
+
+          <line x1="100" y1="0" x2="100" y2="790"/>
+          <line x1="250" y1="0" x2="250" y2="790"/>
+          <line x1="400" y1="0" x2="400" y2="790"/>
+          <line x1="550" y1="0" x2="550" y2="790"/>
+          <line x1="700" y1="0" x2="700" y2="790"/>
+          <line x1="850" y1="0" x2="850" y2="790"/>
+          <line x1="1000" y1="0" x2="1000" y2="790"/>
+          <line x1="1150" y1="0" x2="1150" y2="790"/>
+          <line x1="1300" y1="0" x2="1300" y2="790"/>
+
+        </g>
+
+
+        <!-- CITY -->
+
+        <g opacity=".35" fill="#132022">
+
+          <rect x="60" y="300" width="100" height="200"/>
+          <rect x="180" y="260" width="120" height="240"/>
+          <rect x="330" y="330" width="90" height="170"/>
+          <rect x="445" y="280" width="100" height="220"/>
+          <rect x="565" y="340" width="90" height="160"/>
+          <rect x="1130" y="310" width="90" height="190"/>
+          <rect x="1240" y="260" width="100" height="240"/>
+
+        </g>
+
+
+        <!-- ROAD -->
+
+        <path
+          d="M0 610
+             C300 570 440 555 700 560
+             C1000 565 1200 580 1400 520
+             L1400 790
+             L0 790 Z"
+          fill="url(#road)"
+        />
+
+
+        <!-- ROAD LIGHT -->
+
+        <path
+          d="M0 615
+             C300 575 440 560 700 565
+             C1000 570 1200 585 1400 525"
+          fill="none"
+          stroke="#39FF88"
+          stroke-width="2"
+          opacity=".55"
+          filter="url(#glow)"
+        />
+
+
+        <!-- ================= CAR ================= -->
+
+        <!-- CAR SHADOW -->
+
+        <ellipse
+          cx="680"
+          cy="624"
+          rx="410"
+          ry="46"
+          fill="#000000"
+          opacity=".75"
+        />
+
+
+        <!-- CAR BODY -->
+
+        <path
+          d="
+          M270 555
+          C305 490 370 445 475 424
+          L600 396
+          C650 385 702 380 765 386
+          L900 405
+          C1000 418 1060 454 1112 510
+          L1170 555
+          C1190 570 1184 595 1150 602
+          L315 602
+          C280 602 255 580 270 555
+          Z"
+          fill="url(#car)"
+          stroke="#5B666B"
+          stroke-width="2"
+        />
+
+
+        <!-- WINDOWS -->
+
+        <path
+          d="
+          M500 425
+          L610 400
+          C655 391 700 390 760 396
+          L875 412
+          L930 462
+          L475 462
+          Z"
+          fill="url(#window)"
+          stroke="#28373A"
+          stroke-width="2"
+        />
+
+
+        <!-- WINDOW DIVIDER -->
+
+        <line
+          x1="670"
+          y1="397"
+          x2="670"
+          y2="462"
+          stroke="#263337"
+          stroke-width="4"
+        />
+
+
+        <!-- FRONT LIGHT -->
+
+        <path
+          d="
+          M1035 480
+          C1070 488 1090 504 1107 524
+          L1050 524
+          Z"
+          fill="#DAFFF0"
+          filter="url(#glow)"
+        />
+
+
+        <!-- REAR LIGHT -->
+
+        <path
+          d="
+          M285 535
+          L330 518
+          L342 545
+          L295 553
+          Z"
+          fill="#FF5C66"
+          opacity=".9"
+        />
+
+
+        <!-- WHEELS -->
+
+        <circle
+          cx="400"
+          cy="586"
+          r="64"
+          fill="#060708"
+          stroke="#303A3D"
+          stroke-width="8"
+        />
+
+        <circle
+          cx="400"
+          cy="586"
+          r="30"
+          fill="#161D20"
+          stroke="#657076"
+          stroke-width="4"
+        />
+
+        <circle
+          cx="1010"
+          cy="586"
+          r="64"
+          fill="#060708"
+          stroke="#303A3D"
+          stroke-width="8"
+        />
+
+        <circle
+          cx="1010"
+          cy="586"
+          r="30"
+          fill="#161D20"
+          stroke="#657076"
+          stroke-width="4"
+        />
+
+
+        <!-- BATTERY PACK -->
+
+        <rect
+          x="540"
+          y="530"
+          width="360"
+          height="42"
+          rx="9"
+          fill="#101C18"
+          stroke="#39FF88"
+          stroke-width="2"
+        />
+
+        <rect
+          x="555"
+          y="540"
+          width="330"
+          height="22"
+          rx="5"
+          fill="url(#battery)"
+          opacity=".9"
+        />
+
+        <!-- BATTERY CELLS -->
+
+        <g
+          stroke="#082618"
+          stroke-width="2"
+        >
+
+          <line x1="590" y1="540" x2="590" y2="562"/>
+          <line x1="630" y1="540" x2="630" y2="562"/>
+          <line x1="670" y1="540" x2="670" y2="562"/>
+          <line x1="710" y1="540" x2="710" y2="562"/>
+          <line x1="750" y1="540" x2="750" y2="562"/>
+          <line x1="790" y1="540" x2="790" y2="562"/>
+          <line x1="830" y1="540" x2="830" y2="562"/>
+
+        </g>
+
+
+        <!-- POWER FLOW -->
+
+        <path
+          d="
+          M710 532
+          C690 500 650 485 620 470
+          C590 455 565 440 540 420"
+          fill="none"
+          stroke="#39FF88"
+          stroke-width="5"
+          stroke-linecap="round"
+          opacity=".9"
+          filter="url(#glow)"
+        />
+
+
+        <path
+          d="
+          M900 490
+          C940 505 975 525 1000 555"
+          fill="none"
+          stroke="#00D9C0"
+          stroke-width="5"
+          stroke-linecap="round"
+          opacity=".9"
+          filter="url(#glow)"
+        />
+
+
+        <!-- MOTOR -->
+
+        <circle
+          cx="915"
+          cy="520"
+          r="28"
+          fill="#0A1112"
+          stroke="#00D9C0"
+          stroke-width="3"
+        />
+
+        <circle
+          cx="915"
+          cy="520"
+          r="12"
+          fill="#00D9C0"
+          filter="url(#glow)"
+        />
+
+
+        <!-- INVERTER -->
+
+        <rect
+          x="535"
+          y="462"
+          width="82"
+          height="46"
+          rx="9"
+          fill="#101619"
+          stroke="#39FF88"
+          stroke-width="2"
+        />
+
+        <text
+          x="576"
+          y="491"
+          text-anchor="middle"
+          fill="#39FF88"
+          font-size="14"
+          font-family="Arial"
+          font-weight="700">
+          INVERTER
+        </text>
+
+
+        <!-- CHARGE PORT -->
+
+        <circle
+          cx="1077"
+          cy="474"
+          r="17"
+          fill="#08100F"
+          stroke="#39FF88"
+          stroke-width="3"
+        />
+
+        <circle
+          cx="1077"
+          cy="474"
+          r="7"
+          fill="#39FF88"
+          filter="url(#glow)"
+        />
+
+
+        <!-- LABELS -->
+
+        <g
+          font-family="Arial"
+          font-weight="700"
+          font-size="18"
+        >
+
+          <text
+            x="545"
+            y="520"
+            fill="#39FF88">
+            BATTERY PACK
+          </text>
+
+          <text
+            x="855"
+            y="475"
+            fill="#00D9C0">
+            ELECTRIC MOTOR
+          </text>
+
+          <text
+            x="1030"
+            y="445"
+            fill="#F5F7F8">
+            CHARGING
+          </text>
+
+        </g>
+
+
+        <!-- TOP BRAND -->
+
+        <text
+          x="90"
+          y="115"
+          fill="#F5F7F8"
+          font-size="56"
+          font-family="Arial"
+          font-weight="800"
+          letter-spacing="-3"
+        >
+          RE<tspan fill="#39FF88">V</tspan>
+        </text>
+
+
+        <text
+          x="92"
+          y="150"
+          fill="#7E8A8F"
+          font-size="15"
+          font-family="Arial"
+          letter-spacing="3"
+        >
+          ELECTRIC VEHICLES / TECHNOLOGY / FUTURE MOBILITY
+        </text>
+
+
+        <!-- ENERGY INDICATORS -->
+
+        <g font-family="Arial">
+
+          <text
+            x="1080"
+            y="100"
+            fill="#39FF88"
+            font-size="18">
+            EV SYSTEM
+          </text>
+
+          <text
+            x="1080"
+            y="128"
+            fill="#7C888D"
+            font-size="13">
+            POWER • BATTERY • SOFTWARE
+          </text>
+
+        </g>
+
+      </svg>
+
+    </div>
+
+
+    <!-- ================= ARTICLE ================= -->
+
+    <article class="article">
+
+      <h2>
         خودروی برقی چیست؟
-    </h2>
+      </h2>
 
+      <p>
+        خودروی برقی یا <strong>EV</strong> وسیله‌ای است که برای حرکت اصلی خود
+        از یک یا چند موتور الکتریکی استفاده می‌کند و انرژی مورد نیاز موتور
+        را از یک باتری ولتاژ بالا دریافت می‌کند.
+      </p>
 
-    <p>
+      <p>
+        در یک خودروی بنزینی، انرژی شیمیایی سوخت ابتدا در موتور احتراقی
+        به انرژی مکانیکی تبدیل می‌شود. در خودروی برقی، مسیر تبدیل انرژی
+        ساده‌تر است: انرژی ذخیره‌شده در باتری به کمک سامانه قدرت الکتریکی
+        به موتور می‌رسد و موتور چرخ‌ها را به حرکت درمی‌آورد.
+      </p>
 
-        خودروی برقی یا EV خودرویی است که برای حرکت
-        از یک یا چند موتور الکتریکی استفاده می‌کند.
-        انرژی مورد نیاز این موتورها معمولاً
-        در یک باتری بزرگ ذخیره می‌شود.
 
-    </p>
+      <div class="highlight">
 
+        نکته مهم: باتری، موتور، اینورتر و سامانه مدیریت انرژی
+        به صورت یک زنجیره واحد کار می‌کنند؛ عملکرد خوب EV نتیجه
+        هماهنگی این اجزاست، نه فقط قدرت موتور.
 
-    <p>
+      </div>
 
-        برخلاف خودروهای بنزینی، در یک خودروی تمام‌برقی
-        خبری از احتراق سوخت برای تولید حرکت نیست.
-        انرژی الکتریکی مستقیماً به سیستم محرکه منتقل می‌شود.
 
-    </p>
+      <h2>
+        ۱. باتری؛ مخزن انرژی خودرو
+      </h2>
 
+      <p>
+        مهم‌ترین بخش یک خودروی تمام‌برقی، بسته باتری ولتاژ بالاست.
+        این بسته از تعداد زیادی سلول تشکیل می‌شود که در ماژول‌ها
+        و سپس در یک پک بزرگ سازمان‌دهی شده‌اند.
+      </p>
 
-    <h2>
-        باتری چه کاری انجام می‌دهد؟
-    </h2>
+      <p>
+        ظرفیت باتری معمولاً با <strong>kWh</strong> بیان می‌شود.
+        هرچه ظرفیت بالاتر باشد، در شرایط مشابه امکان ذخیره انرژی
+        بیشتری وجود دارد؛ اما وزن، هزینه، مدیریت حرارتی و زمان شارژ
+        نیز اهمیت پیدا می‌کنند.
+      </p>
 
 
-    <p>
+      <h2>
+        ۲. موتور الکتریکی؛ جایی که انرژی به حرکت تبدیل می‌شود
+      </h2>
 
-        باتری را می‌توان قلب انرژی یک خودروی برقی دانست.
-        باتری از تعداد زیادی سلول تشکیل شده است
-        که در کنار یکدیگر یک بسته باتری بزرگ را تشکیل می‌دهند.
+      <p>
+        موتور الکتریکی انرژی الکتریکی را به گشتاور و حرکت چرخشی
+        تبدیل می‌کند. یکی از ویژگی‌های مهم موتور الکتریکی این است
+        که می‌تواند گشتاور بالایی را از سرعت‌های پایین در اختیار
+        خودرو قرار دهد.
+      </p>
 
-    </p>
+      <p>
+        به همین دلیل بسیاری از خودروهای برقی در شتاب‌گیری اولیه
+        بسیار سریع هستند. همچنین در بسیاری از EVها انتقال قدرت
+        نسبت به خودروهای احتراقی ساده‌تر است و اجزای مکانیکی کمتری
+        در مسیر انتقال نیرو وجود دارد.
+      </p>
 
 
-    <p>
+      <h2>
+        ۳. اینورتر؛ مغز بخش قدرت
+      </h2>
 
-        ظرفیت باتری معمولاً با واحد
-        <strong>کیلووات‌ساعت یا kWh</strong>
-        بیان می‌شود.
+      <p>
+        باتری معمولاً برق مستقیم یا DC ذخیره می‌کند، در حالی که
+        در بسیاری از معماری‌های موتور برقی، کنترل موتور به جریان
+        متناوب یا AC نیاز دارد. <strong>اینورتر</strong> بین باتری
+        و موتور قرار می‌گیرد و با کنترل ولتاژ و فرکانس، نحوه کار
+        موتور را مدیریت می‌کند.
+      </p>
 
-        به زبان ساده، ظرفیت بیشتر معمولاً
-        به معنی امکان ذخیره انرژی بیشتر است،
-        هرچند برد واقعی خودرو به عوامل دیگری
-        مانند وزن، سرعت، دما و سبک رانندگی نیز بستگی دارد.
+      <p>
+        به زبان ساده، اینورتر تعیین می‌کند چه مقدار انرژی و با چه
+        مشخصاتی به موتور برسد تا خودرو شتاب بگیرد، سرعت خود را حفظ
+        کند یا انرژی را پس بگیرد.
+      </p>
 
-    </p>
 
+      <!-- COMPONENT CARDS -->
 
-    <h2>
-        موتور الکتریکی چگونه خودرو را حرکت می‌دهد؟
-    </h2>
+      <div class="grid">
 
+        <div class="card">
 
-    <p>
+          <span class="tag">
+            BATTERY
+          </span>
 
-        موتور الکتریکی انرژی الکتریکی را
-        به انرژی مکانیکی تبدیل می‌کند.
+          <h3>
+            باتری
+          </h3>
 
-        این موتور می‌تواند گشتاور را تقریباً
-        بلافاصله در اختیار چرخ‌ها قرار دهد.
-        یکی از دلایل شتاب‌گیری سریع بسیاری
-        از خودروهای برقی همین ویژگی است.
+          <p>
+            ذخیره انرژی الکتریکی و تأمین توان مورد نیاز سامانه پیشرانه.
+          </p>
 
-    </p>
+        </div>
 
 
-    <div class="quote">
+        <div class="card">
 
-        «در خودروهای برقی، بخش بزرگی از پیچیدگی
-        خودرو از مکانیک به الکترونیک و نرم‌افزار منتقل شده است.»
+          <span class="tag">
+            INVERTER
+          </span>
 
-    </div>
+          <h3>
+            اینورتر
+          </h3>
 
+          <p>
+            تبدیل و کنترل توان الکتریکی بین باتری و موتور.
+          </p>
 
-    <h2>
-        اینورتر چیست؟
-    </h2>
+        </div>
 
 
-    <p>
+        <div class="card">
 
-        بین باتری و موتور یک قطعه بسیار مهم به نام
-        <strong>اینورتر</strong> قرار دارد.
+          <span class="tag">
+            MOTOR
+          </span>
 
-        اینورتر جریان برق باتری را به شکلی کنترل می‌کند
-        که موتور بتواند با سرعت و گشتاور مورد نیاز کار کند.
+          <h3>
+            موتور الکتریکی
+          </h3>
 
-    </p>
+          <p>
+            تبدیل انرژی الکتریکی به گشتاور مکانیکی برای حرکت خودرو.
+          </p>
 
+        </div>
 
-    <p>
 
-        به همین دلیل، اینورتر یکی از اجزای کلیدی
-        در عملکرد، بازدهی و کنترل یک خودروی برقی است.
+        <div class="card">
 
-    </p>
+          <span class="tag">
+            CHARGING
+          </span>
 
+          <h3>
+            شارژ
+          </h3>
 
-    <h2>
-        خودرو چگونه شارژ می‌شود؟
-    </h2>
+          <p>
+            انتقال انرژی از شبکه برق به باتری از طریق سامانه شارژ خودرو.
+          </p>
 
+        </div>
 
-    <p>
+      </div>
 
-        هنگامی که خودرو به شارژر متصل می‌شود،
-        انرژی الکتریکی وارد سیستم شارژ خودرو شده
-        و باتری را شارژ می‌کند.
 
-    </p>
+      <h2>
+        ۴. شارژ خودرو چگونه انجام می‌شود؟
+      </h2>
 
+      <p>
+        برای شارژ EV، انرژی از شبکه برق وارد خودرو می‌شود. در شارژ AC،
+        شارژر داخلی خودرو وظیفه تبدیل برق ورودی به شکل مناسب برای
+        باتری را بر عهده دارد. در شارژ DC سریع، تبدیل اصلی خارج از خودرو
+        و در تجهیزات شارژ انجام می‌شود و انرژی با توان بالاتری وارد
+        باتری می‌شود.
+      </p>
 
-    <p>
+      <p>
+        سرعت واقعی شارژ فقط به توان شارژر بستگی ندارد؛ ظرفیت باتری،
+        دمای باتری، درصد شارژ فعلی، معماری خودرو و محدودیت‌های سامانه
+        مدیریت باتری نیز روی آن اثر دارند.
+      </p>
 
-        شارژ می‌تواند در خانه، محل کار یا ایستگاه‌های
-        شارژ عمومی انجام شود.
 
-        سرعت شارژ نیز به نوع شارژر،
-        توان آن، ظرفیت باتری و معماری خودرو بستگی دارد.
+      <h2>
+        ۵. ترمز احیاکننده چیست؟
+      </h2>
 
-    </p>
+      <p>
+        در زمان کاهش سرعت، موتور الکتریکی می‌تواند در نقش ژنراتور
+        عمل کند. بخشی از انرژی جنبشی خودرو به انرژی الکتریکی تبدیل
+        می‌شود و دوباره به باتری بازمی‌گردد.
+      </p>
 
+      <p>
+        این فرآیند را <strong>Regenerative Braking</strong> یا
+        ترمز احیاکننده می‌نامند. مقدار انرژی بازیابی‌شده به شرایط
+        رانندگی، سرعت، دمای باتری و محدودیت‌های سامانه بستگی دارد.
+      </p>
 
-    <h2>
-        ترمز احیاکننده چیست؟
-    </h2>
 
+      <h2>
+        تفاوت اصلی EV با خودروهای بنزینی چیست؟
+      </h2>
 
-    <p>
+      <p>
+        تفاوت فقط در منبع انرژی نیست. معماری خودرو نیز تغییر می‌کند.
+        در EV خبری از مجموعه‌ای مانند موتور احتراقی، سیستم اگزوز
+        و بسیاری از اجزای وابسته به سوخت مایع نیست و در مقابل،
+        باتری بزرگ، الکترونیک قدرت و سامانه مدیریت انرژی اهمیت
+        بسیار بیشتری پیدا می‌کنند.
+      </p>
 
-        یکی از تفاوت‌های جذاب خودروهای برقی،
-        امکان استفاده از انرژی هنگام کاهش سرعت است.
+      <p>
+        این تغییر معماری روی هزینه نگهداری، تجربه رانندگی،
+        روش شارژ، تعمیرات و حتی طراحی خودرو اثر می‌گذارد.
+      </p>
 
-    </p>
 
+      <h2>
+        آیا خودروهای برقی آینده هستند؟
+      </h2>
 
-    <p>
+      <p>
+        خودروهای برقی در حال تغییر دادن صنعت خودرو هستند، اما سرعت
+        این تغییر در همه کشورها یکسان نیست. قیمت باتری، زیرساخت شارژ،
+        سیاست‌های دولت‌ها، دسترسی به انرژی و رفتار مصرف‌کننده
+        همگی در سرعت پذیرش EV نقش دارند.
+      </p>
 
-        در زمان کاهش سرعت، موتور می‌تواند
-        مانند یک ژنراتور عمل کند و بخشی از انرژی
-        جنبشی خودرو را به انرژی الکتریکی تبدیل
-        کرده و به باتری بازگرداند.
+      <p>
+        در نتیجه، بحث فقط «برقی یا بنزینی» نیست؛ مسئله اصلی این است
+        که کدام معماری برای یک بازار، مسیر استفاده و زیرساخت مشخص،
+        اقتصادی‌تر و کاربردی‌تر است.
+      </p>
 
-        به این فرایند
-        <strong>Regenerative Braking</strong>
-        یا ترمز احیاکننده گفته می‌شود.
 
-    </p>
-
-
-    <h2>
-        تفاوت اصلی با خودروهای بنزینی چیست؟
-    </h2>
-
-
-    <ul>
-
-        <li>
-            موتور الکتریکی به قطعات مکانیکی متحرک کمتری نیاز دارد.
-        </li>
-
-        <li>
-            انرژی به جای سوخت مایع در باتری ذخیره می‌شود.
-        </li>
-
-        <li>
-            کنترل الکترونیکی و نرم‌افزار نقش بسیار مهم‌تری پیدا می‌کنند.
-        </li>
-
-        <li>
-            امکان بازیابی انرژی هنگام کاهش سرعت وجود دارد.
-        </li>
-
-        <li>
-            روش تأمین انرژی خودرو از سوخت‌گیری به شارژ تغییر می‌کند.
-        </li>
-
-    </ul>
-
-
-    <h2>
-        آیا خودروهای برقی واقعاً آینده خودرو هستند؟
-    </h2>
-
-
-    <p>
-
-        پاسخ ساده‌ای برای همه بازارها وجود ندارد.
-        سرعت رشد خودروهای برقی به قیمت خودرو،
-        زیرساخت شارژ، قیمت انرژی، سیاست‌های دولت‌ها،
-        فناوری باتری و رفتار مصرف‌کنندگان بستگی دارد.
-
-    </p>
-
-
-    <p>
-
-        اما یک نکته روشن است:
-        خودرو دیگر فقط یک وسیله مکانیکی نیست.
-
-        نرم‌افزار، باتری، هوش مصنوعی،
-        ارتباطات و سیستم‌های الکترونیکی
-        روزبه‌روز نقش بیشتری در خودرو پیدا می‌کنند.
-
-    </p>
-
-
-    <h2>
+      <h2>
         جمع‌بندی
-    </h2>
+      </h2>
+
+      <p>
+        یک خودروی برقی را می‌توان به‌صورت ساده یک زنجیره انرژی در نظر گرفت:
+        <strong>شارژ → باتری → اینورتر → موتور → چرخ‌ها</strong>.
+        هنگام ترمز نیز بخشی از این مسیر برعکس می‌شود و انرژی می‌تواند
+        از موتور به باتری بازگردد.
+      </p>
+
+      <p>
+        در ادامه محتوای REV، هرکدام از این بخش‌ها را جداگانه بررسی می‌کنیم؛
+        از فناوری سلول‌های باتری و شارژ فوق‌سریع تا موتورهای نسل جدید،
+        نرم‌افزار خودرو و سیستم‌های رانندگی خودکار.
+      </p>
 
 
-    <p>
+      <!-- SOURCES -->
 
-        یک خودروی برقی در ساده‌ترین تعریف،
-        انرژی ذخیره‌شده در باتری را دریافت می‌کند،
-        آن را توسط سیستم‌های الکترونیکی کنترل می‌کند
-        و موتور الکتریکی این انرژی را به حرکت تبدیل می‌کند.
+      <div class="sources">
 
-    </p>
-
-
-    <p>
-
-        اما پشت همین فرایند ساده،
-        یکی از بزرگ‌ترین تغییرات تکنولوژیک صنعت خودرو
-        در حال رخ دادن است.
-
-        و این دقیقاً همان جایی است که REV می‌خواهد
-        داستان را دنبال کند.
-
-    </p>
-
-
-    <!-- SOURCES -->
-
-    <div class="sources">
-
-        <h3>
-            منابع و مطالعه بیشتر
-        </h3>
+        <h2 style="margin-top:0;">
+          منابع
+        </h2>
 
         <p>
-
-            منابع این مقاله در نسخه نهایی مقاله
-            به منابع معتبر فنی و صنعتی اضافه خواهند شد.
-
+          این مقاله یک محتوای آموزشی عمومی است. برای نسخه نهایی انتشار،
+          می‌توان منابع رسمی سازندگان، استانداردهای فنی و منابع دانشگاهی
+          مرتبط را به این بخش اضافه کرد.
         </p>
 
-    </div>
+      </div>
 
 
-    <a href="news.html" class="back">
-        ← بازگشت به اخبار REV
-    </a>
+      <!-- BACK BUTTON -->
+
+      <a
+        class="back"
+        href="news.html"
+      >
+        ← بازگشت به آخرین اخبار REV
+      </a>
+
+    </article>
+
+  </div>
+
+</main>
 
 
-</article>
-
-
-<!-- FOOTER -->
+<!-- ================= FOOTER ================= -->
 
 <footer>
 
-    <div class="footer-logo">
-        REV
-    </div>
+  <div class="container">
 
-    <div>
-        Electric Vehicles · Technology · Future Mobility
-    </div>
+    © ۱۴۰۵ REV — Electric Vehicles, Technology & Future Mobility
 
-    <div>
-        © 2026 REV
-    </div>
+  </div>
 
 </footer>
 
 
 </body>
-
 </html>
