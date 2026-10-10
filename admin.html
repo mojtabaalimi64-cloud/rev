@@ -50,6 +50,7 @@ const TYPES={
  news:{label:'اخبار',one:'خبر',fields:[['title','عنوان خبر','text'],['part','بخش','part'],['date','تاریخ','text'],['url','لینک خبر (اختیاری)','text']]},
  episodes:{label:'پادکست',one:'قسمت',fields:[['title','عنوان قسمت','text'],['date','تاریخ','text'],['image','تصویر قسمت','img'],['url','لینک شنیدن','text'],['desc','توضیح','area']]}
  ,products:{label:'فروشگاه',one:'محصول',fields:[['title','نام محصول','text'],['price','قیمت (فقط عدد، مثلاً 1500000)','text'],['image','تصویر محصول','img'],['desc','توضیحات کوتاه','area'],['url','لینک سفارش همین محصول (اختیاری)','text'],['stock','موجودی','stock']]}
+ ,cars:{label:'خودروها',one:'خودرو',fields:[['title','نام خودرو (برند و مدل)','text'],['type','نوع بدنه','sel:sedan|سدان,suv|شاسی‌بلند,hatch|هاچ‌بک,crossover|کراس‌اور,other|سایر'],['market','وضعیت در بازار ایران','sel:iran|موجود در بازار ایران,import|وارداتی یا غیررسمی,none|فعلاً در بازار ایران نیست'],['price','قیمت به تومان (عدد کامل، مثلاً 2500000000)','text'],['priceDate','تاریخ قیمت (مثلاً ۱۴۰۵/۰۷/۲۰)','text'],['range','برد (کیلومتر، فقط عدد)','text'],['rangeStd','استاندارد اندازه‌گیری برد (WLTP، EPA، CLTC و...)','text'],['battery','ظرفیت باتری (کیلووات‌ساعت، فقط عدد)','text'],['power','توان (اسب‌بخار، فقط عدد)','text'],['accel','شتاب ۰ تا ۱۰۰ (ثانیه، فقط عدد)','text'],['dc','حداکثر شارژ DC (کیلووات، فقط عدد)','text'],['seats','تعداد صندلی (فقط عدد)','text'],['drive','سیستم محرک','sel:RWD|عقب‌رو,FWD|جلو‌رو,AWD|چهارچرخ‌محرک'],['connector','نوع کانکتور شارژ (مثلاً CCS2)','text'],['image','تصویر خودرو','img'],['pros','نقاط قوت (هر مورد در یک خط)','area'],['cons','نقاط ضعف (هر مورد در یک خط)','area'],['url','لینک بررسی کامل یا خرید (اختیاری)','text']]}
 };
 const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
@@ -70,8 +71,8 @@ async function load(){
     if(r.status===404){c={};sha=''}
     else if(!r.ok) throw 0;
     else{const j=await r.json();sha=j.sha;c=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))))}
-    c.theme={...THEME0,...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.about=c.about||'';
-    ['news','articles','episodes','products'].forEach(k=>c[k]=c[k]||[]);
+    c.theme={...THEME0,...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.carsInfo=c.carsInfo||{};c.about=c.about||'';
+    ['news','articles','episodes','products','cars'].forEach(k=>c[k]=c[k]||[]);
     note='';draw();
   }catch(e){msg('اتصال به گیت‌هاب برقرار نشد. اینترنت را بررسی و دوباره تلاش کنید.')}
 }
@@ -108,7 +109,7 @@ function login(){
 function list(){
   const t=TYPES[tab], items=c[tab];
   return `<p style="margin-bottom:12px"><button class="btn main" data-a="new">افزودن ${t.one} جدید</button></p>`+
-   (items.length?items.map((it,i)=>`<div class="row"><div>${esc(it.title)}<small>${esc(PARTS[it.part]||'')} ${esc(it.date||it.price||'')}</small></div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`).join(''):'<div class="box" style="color:var(--muted)">هنوز موردی ثبت نشده است.</div>');
+   (items.length?items.map((it,i)=>`<div class="row"><div>${esc(it.title)}<small>${esc(PARTS[it.part]||'')} ${esc(it.date||it.priceDate||it.price||'')}</small></div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`).join(''):'<div class="box" style="color:var(--muted)">هنوز موردی ثبت نشده است.</div>');
 }
 function imgField(id,v,attr){
   return `<div class="imgf"><input type="text" id="${id}" ${attr} value="${esc(v)}" dir="ltr" placeholder="تصویری انتخاب نشده" readonly>
@@ -122,6 +123,7 @@ function form(){
     let el;
     if(ty==='part') el=`<select id="${id}" data-f="${k}">${Object.entries(PARTS).map(([pk,pn])=>`<option value="${pk}" ${v===pk?'selected':''}>${pn}</option>`).join('')}</select>`;
     else if(ty==='area') el=`<textarea id="${id}" data-f="${k}" rows="3">${esc(v)}</textarea>`;
+    else if(ty.startsWith('sel:')) el=`<select id="${id}" data-f="${k}">${ty.slice(4).split(',').map(o=>{const [ov,ol]=o.split('|');return `<option value="${ov}" ${v===ov?'selected':''}>${ol}</option>`}).join('')}</select>`;
     else if(ty==='stock') el=`<select id="${id}" data-f="${k}"><option value="in" ${v!=='out'?'selected':''}>موجود</option><option value="out" ${v==='out'?'selected':''}>ناموجود</option></select>`;
     else if(ty==='img') el=imgField(id,v,`data-f="${k}"`);
     else if(ty==='body') el=`<div class="tb"><button class="btn" data-a="fmt" data-w="b"><b>B</b> پررنگ</button><button class="btn" data-a="fmt" data-w="mark">مهم</button><button class="btn" data-a="fmt" data-w="h">عنوان فرعی</button><button class="btn" data-a="fmt" data-w="link">لینک</button><button class="btn" data-a="fmt" data-w="img">تصویر</button><label style="margin:0;display:flex;gap:6px;align-items:center">رنگ متن <input type="color" id="tc" value="#d93025"></label></div>
@@ -151,12 +153,16 @@ const shopBox=()=>{const s=c.shopInfo;return `<div class="box"><h3>تنظیما�
  <label for="s_terms">قوانین فروش، ارسال و بازگشت کالا</label><textarea id="s_terms" data-s="terms" rows="5">${esc(s.terms)}</textarea>
  <p class="hint">مشتری روی «سفارش و خرید» می‌زند و به لینک سفارش شما (تلگرام، واتساپ یا درگاه پرداخت) می‌رود. پرداخت مستقیم روی خود سایت وجود ندارد.</p></div>
  <h3 style="margin:16px 0 8px">محصولات</h3>`};
+const carsBox=()=>`<div class="box"><h3>راهنمای بخش مقایسه و پیشنهاد خرید</h3>
+ <p class="hint">با ثبت حداقل دو خودرو، بخش «انتخاب و مقایسه‌ی خودروی برقی» در صفحه‌ی اول سایت ظاهر می‌شود. قیمت را به تومان و به‌صورت عدد کامل بنویسید و برد، باتری، توان، شتاب و شارژ را فقط به‌صورت عدد. تاریخ قیمت را حتماً بنویسید و قیمت‌ها را مرتب به‌روز کنید، چون قیمت خودرو سریع تغییر می‌کند. هرچه اطلاعات کامل‌تر باشد، پیشنهادها دقیق‌تر می‌شوند.</p>
+ <label for="ci_note">توضیح اضافه زیر این بخش (اختیاری)</label><textarea id="ci_note" data-ci="note" rows="2">${esc(c.carsInfo.note)}</textarea></div>
+ <h3 style="margin:16px 0 8px">خودروها</h3>`;
 const aboutTab=()=>`<div class="box"><label for="ab">متن صفحه‌ی «درباره ما»</label><textarea id="ab" rows="14">${esc(c.about)}</textarea><p class="hint">پاراگراف‌ها را با یک خط خالی جدا کنید. «## عنوان» عنوان فرعی می‌سازد و **متن** پررنگ می‌شود.</p></div>`;
 function draw(){
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
-  const body=edit?form():tab==='products'?shopBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
+  const body=edit?form():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
 }
 /* ---- رویدادها ---- */
@@ -171,6 +177,7 @@ root.addEventListener('input',e=>{
   if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true}
   else if(d.c){c.contact[d.c]=t.value.trim();dirty=true}
   else if(d.s){c.shopInfo[d.s]=t.value;dirty=true}
+  else if(d.ci){c.carsInfo[d.ci]=t.value;dirty=true}
   else if(t.id==='ab'){c.about=t.value;dirty=true}
   else if(d.g){c.gaId=t.value.trim();dirty=true}
   else if(t.id==='pn'){c.podcast=t.value;dirty=true}
@@ -185,7 +192,7 @@ root.addEventListener('click',async e=>{
   if(a==='login'){tok=$('t').value.trim();if(!tok)return;localStorage.setItem('rev_tok',tok);c=null;draw()}
   else if(a==='out'){localStorage.removeItem('rev_tok');tok='';c=null;note='';draw()}
   else if(a==='tab'){tab=b.dataset.k;edit=null;note='';draw()}
-  else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:{part:'battery'}};draw()}
+  else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:{part:'battery'}};draw()}
   else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
   else if(a==='del'){if(confirm('این مورد حذف شود؟')){c[tab].splice(i,1);dirty=true;draw()}}
   else if(a==='cancel'){edit=null;draw()}
