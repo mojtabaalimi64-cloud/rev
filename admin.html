@@ -11,52 +11,66 @@
 *{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--paper);color:var(--ink);line-height:1.8;font-size:16px}
 button,input,select,textarea{font:inherit;color:inherit}
-header{background:var(--ink);color:#fff;padding:14px 20px;font-weight:900;font-size:20px;letter-spacing:.04em}
-header b{color:var(--green)}
-.wrap{width:min(100% - 32px,820px);margin:24px auto 60px}
-.bar2{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px}
-.tab{padding:6px 18px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer}
+header{background:var(--ink);color:#fff;padding:14px 20px;font-weight:900;font-size:20px;display:flex;justify-content:space-between;align-items:center}
+header b{color:var(--green)}header a{font-size:14px;font-weight:400;color:#C3CBD0}
+.wrap{width:min(100% - 32px,860px);margin:24px auto 60px}
+.bar2{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;position:sticky;top:0;background:var(--paper);padding:8px 0;z-index:5}
+.tab{padding:6px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer}
 .tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
 .pub{margin-inline-start:auto;background:var(--green);color:var(--ink);font-weight:700;border:0;border-radius:999px;padding:6px 22px;cursor:pointer}
 .box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:12px}
+.box h3{margin-bottom:6px}
 .row{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin-bottom:8px}
 .row small{color:var(--muted);display:block}
 .btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:2px 14px;cursor:pointer}
-.btn.red{color:#B3261E}
-.btn.main{background:var(--ink);color:#fff;border-color:var(--ink)}
+.btn.red{color:#B3261E}.btn.main{background:var(--ink);color:#fff;border-color:var(--ink)}
 label{display:block;margin:12px 0 4px;font-weight:700;font-size:14px}
-input[type=text],input[type=password],select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff}
+input[type=text],input[type=password],input[type=number],select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff}
+input[type=color]{width:64px;height:36px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff;cursor:pointer}
 #msg{min-height:26px;color:var(--teal-d);margin-bottom:8px}
 .lnk{background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:underline}
 ol{padding-inline-start:20px;color:var(--muted);font-size:14px;margin-top:10px}
+.tb{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;align-items:center}
+.imgf{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.imgf input{flex:1;min-width:180px}
+.imgf img{max-height:90px;border-radius:8px;border:1px solid var(--line)}
+.hint{color:var(--muted);font-size:13px}
 :focus-visible{outline:3px solid var(--green);outline-offset:2px}
 </style>
 </head>
 <body>
-<header>REV <b>پنل مدیریت</b></header>
+<header><span>REV <b>پنل مدیریت</b></span><a href="./">مشاهده سایت ←</a></header>
 <div class="wrap" id="root"></div>
 <script>
 const OWNER='mojtabaalimi64-cloud', REPO='rev', FILE='content.json';
+const API=`https://api.github.com/repos/${OWNER}/${REPO}/contents/`;
 const PARTS={battery:'باتری',motor:'موتور',charging:'شارژ',electronics:'اینورتر و برق',software:'نرم‌افزار و هوش مصنوعی'};
 const TYPES={
- articles:{label:'مقالات',fields:[['title','عنوان','text'],['part','بخش','part'],['date','تاریخ (مثلاً ۱۴۰۵/۰۷/۲۰)','text'],['excerpt','خلاصه کوتاه','area'],['body','متن کامل (پاراگراف‌ها را با یک خط خالی جدا کنید)','body']]},
- news:{label:'اخبار',fields:[['title','عنوان خبر','text'],['part','بخش','part'],['date','تاریخ','text'],['url','لینک خبر (اختیاری)','text']]},
- episodes:{label:'پادکست',fields:[['title','عنوان قسمت','text'],['date','تاریخ','text'],['url','لینک شنیدن','text'],['desc','توضیح','area']]}
+ articles:{label:'مقالات',one:'مقاله',fields:[['title','عنوان','text'],['part','بخش','part'],['date','تاریخ (مثلاً ۱۴۰۵/۰۷/۲۰)','text'],['image','تصویر شاخص مقاله','img'],['excerpt','خلاصه کوتاه','area'],['body','متن کامل','body']]},
+ news:{label:'اخبار',one:'خبر',fields:[['title','عنوان خبر','text'],['part','بخش','part'],['date','تاریخ','text'],['url','لینک خبر (اختیاری)','text']]},
+ episodes:{label:'پادکست',one:'قسمت',fields:[['title','عنوان قسمت','text'],['date','تاریخ','text'],['image','تصویر قسمت','img'],['url','لینک شنیدن','text'],['desc','توضیح','area']]}
 };
-let tok=localStorage.getItem('rev_tok')||'', c=null, sha='', tab='articles', edit=null, dirty=false, note='';
-const root=document.getElementById('root');
+const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
+const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
+const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
+const CONTACT=[['email','ایمیل'],['phone','تلفن'],['telegram','تلگرام (نام کاربری یا لینک)'],['instagram','اینستاگرام (نام کاربری یا لینک)'],['youtube','یوتیوب (لینک کامل)'],['x','ایکس (نام کاربری یا لینک)'],['address','آدرس'],['note','متن کوتاه پایین صفحه‌ی تماس']];
+let tok=localStorage.getItem('rev_tok')||'', c=null, sha='', tab='articles', edit=null, dirty=false, note='', prev={};
+const root=document.getElementById('root'), $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const api=(m,b)=>fetch(`https://api.github.com/repos/${OWNER}/${REPO}/contents/${FILE}`,{method:m,headers:{Authorization:'Bearer '+tok,Accept:'application/vnd.github+json'},body:b&&JSON.stringify(b)});
-function msg(t){note=t;const e=document.getElementById('msg');if(e)e.textContent=t}
+const H=()=>({Authorization:'Bearer '+tok,Accept:'application/vnd.github+json'});
+const api=(m,b)=>fetch(API+FILE,{method:m,headers:H(),body:b&&JSON.stringify(b)});
+function msg(t){note=t;const e=$('msg');if(e)e.textContent=t}
 
 async function load(){
   msg('در حال بارگذاری...');
   try{
     const r=await api('GET');
     if(r.status===401||r.status===403){tok='';localStorage.removeItem('rev_tok');note='توکن نامعتبر است یا دسترسی کافی ندارد.';return draw()}
-    if(r.status===404){c={shop:false,podcast:'REV Podcast',news:[],articles:[],episodes:[]};sha=''}
+    if(r.status===404){c={};sha=''}
     else if(!r.ok) throw 0;
     else{const j=await r.json();sha=j.sha;c=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))))}
+    c.theme={...THEME0,...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';
+    ['news','articles','episodes'].forEach(k=>c[k]=c[k]||[]);
     note='';draw();
   }catch(e){msg('اتصال به گیت‌هاب برقرار نشد. اینترنت را بررسی و دوباره تلاش کنید.')}
 }
@@ -70,18 +84,35 @@ async function save(){
     else msg('ذخیره نشد (کد '+r.status+'). اگر ۴۰۹ است، صفحه را رفرش کنید.');
   }catch(e){msg('ذخیره نشد؛ اتصال برقرار نیست.')}
 }
+/* ---- تصویر: انتخاب، کوچک‌سازی و آپلود ---- */
+const choose=()=>new Promise(r=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>r(i.files[0]);i.click()});
+const shrink=f=>new Promise((res,rej)=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1400/im.width),cv=document.createElement('canvas');cv.width=im.width*s;cv.height=im.height*s;const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);res(cv.toDataURL('image/jpeg',.82))};im.onerror=rej;im.src=URL.createObjectURL(f)});
+async function upImage(){
+  const f=await choose(); if(!f) return null;
+  msg('در حال آپلود تصویر...');
+  try{
+    const d=await shrink(f), p='images/'+Date.now().toString(36)+'.jpg';
+    const r=await fetch(API+p,{method:'PUT',headers:H(),body:JSON.stringify({message:'آپلود تصویر',content:d.split(',')[1]})});
+    if(!r.ok){msg('آپلود نشد (کد '+r.status+')');return null}
+    prev[p]=d;msg('تصویر آپلود شد. بعد از «انتشار تغییرات» روی سایت دیده می‌شود.');return p;
+  }catch(e){msg('این فایل به‌عنوان تصویر خوانده نشد.');return null}
+}
+/* ---- صفحه‌ها ---- */
 function login(){
   root.innerHTML=`<div class="box"><h2>ورود</h2><p style="color:var(--muted)">توکن گیت‌هاب را وارد کنید. فقط روی همین مرورگر ذخیره می‌شود.</p>
   <label for="t">توکن</label><input type="password" id="t" dir="ltr" autocomplete="off">
   <p style="margin-top:12px"><button class="btn main" data-a="login">ورود</button></p><p id="msg">${esc(note)}</p>
-  <ol><li>گیت‌هاب ← Settings ← Developer settings ← Personal access tokens ← Fine-grained tokens</li>
-  <li>Generate new token؛ در Repository access فقط مخزن rev را انتخاب کنید</li>
-  <li>در Permissions، بخش Contents را روی Read and write بگذارید و توکن را بسازید</li></ol></div>`;
+  <ol><li>گیت‌هاب ← Settings ← Developer settings ← Personal access tokens</li><li>توکن را با دسترسی نوشتن روی مخزن rev بسازید</li></ol></div>`;
 }
 function list(){
-  const t=TYPES[tab], items=c[tab]||[];
-  return `<p style="margin-bottom:12px"><button class="btn main" data-a="new">افزودن ${t.label==='پادکست'?'قسمت':t.label.slice(0,-1)} جدید</button></p>`+
+  const t=TYPES[tab], items=c[tab];
+  return `<p style="margin-bottom:12px"><button class="btn main" data-a="new">افزودن ${t.one} جدید</button></p>`+
    (items.length?items.map((it,i)=>`<div class="row"><div>${esc(it.title)}<small>${esc(PARTS[it.part]||'')} ${esc(it.date||'')}</small></div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`).join(''):'<div class="box" style="color:var(--muted)">هنوز موردی ثبت نشده است.</div>');
+}
+function imgField(id,v,attr){
+  return `<div class="imgf"><input type="text" id="${id}" ${attr} value="${esc(v)}" dir="ltr" placeholder="تصویری انتخاب نشده" readonly>
+  <button class="btn main" data-a="up" data-id="${id}">آپلود تصویر</button><button class="btn red" data-a="clr" data-id="${id}">حذف</button>
+  <img id="p_${id}" src="${esc(prev[v]||v)}" alt="" ${v?'':'hidden'}></div>`;
 }
 function form(){
   const t=TYPES[tab], it=edit.item;
@@ -90,41 +121,77 @@ function form(){
     let el;
     if(ty==='part') el=`<select id="${id}" data-f="${k}">${Object.entries(PARTS).map(([pk,pn])=>`<option value="${pk}" ${v===pk?'selected':''}>${pn}</option>`).join('')}</select>`;
     else if(ty==='area') el=`<textarea id="${id}" data-f="${k}" rows="3">${esc(v)}</textarea>`;
-    else if(ty==='body') el=`<textarea id="${id}" data-f="${k}" rows="12">${esc((v||[]).join('\n\n'))}</textarea>`;
+    else if(ty==='img') el=imgField(id,v,`data-f="${k}"`);
+    else if(ty==='body') el=`<div class="tb"><button class="btn" data-a="fmt" data-w="b"><b>B</b> پررنگ</button><button class="btn" data-a="fmt" data-w="mark">مهم</button><button class="btn" data-a="fmt" data-w="h">عنوان فرعی</button><button class="btn" data-a="fmt" data-w="link">لینک</button><button class="btn" data-a="fmt" data-w="img">تصویر</button><label style="margin:0;display:flex;gap:6px;align-items:center">رنگ متن <input type="color" id="tc" value="#d93025"></label></div>
+      <textarea id="${id}" data-f="${k}" rows="14">${esc((v||[]).join('\n\n'))}</textarea><p class="hint">برای جدا کردن پاراگراف‌ها یک خط خالی بگذارید. متن را انتخاب کنید و یکی از دکمه‌های بالا را بزنید.</p>`;
     else el=`<input type="text" id="${id}" data-f="${k}" value="${esc(v)}">`;
     return `<label for="${id}">${l}</label>${el}`;
   }).join('')+`<p style="margin-top:16px"><button class="btn main" data-a="ok">ثبت</button> <button class="btn" data-a="cancel">انصراف</button></p></div>`;
 }
-function settings(){
-  return `<div class="box"><label for="pn">نام پادکست</label><input type="text" id="pn" value="${esc(c.podcast)}">
-  <label style="display:flex;gap:8px;align-items:center;margin-top:16px"><input type="checkbox" id="sh" ${c.shop?'checked':''}> نمایش فروشگاه در منوی سایت</label></div>`;
+function look(){
+  const t=c.theme;
+  const col=(k,l)=>`<label>${l}</label><input type="color" data-t="${k}" value="${t[k]}">`;
+  return `<div class="box"><h3>رنگ‌ها و فونت</h3>${col('accent','رنگ اصلی (دکمه‌ها، نقطه‌ها، خط تیترها)')}${col('dark','زمینه‌ی تیره (هدر و بالای صفحه‌ها)')}${col('paper','زمینه‌ی روشن')}${col('text','رنگ متن')}
+  <label>فونت</label><select data-t="font">${Object.entries(FONTS).map(([k,n])=>`<option value="${k}" ${t.font===k?'selected':''}>${n}</option>`).join('')}</select>
+  <label>اندازه‌ی متن (۱۴ تا ۲۲)</label><input type="number" data-t="size" min="14" max="22" value="${t.size}">
+  <p class="hint">برای فونت وزیرمتن، فایل Vazirmatn.woff2 را داخل پوشه‌ی fonts مخزن آپلود کنید. بدون آن، فونت جایگزین استفاده می‌شود.</p>
+  <p style="margin-top:12px"><button class="btn" data-a="reset">بازگشت به رنگ‌های پیش‌فرض</button></p></div>
+  <div class="box"><h3>تصویر بالای صفحه‌ی هر بخش</h3>${Object.entries(PARTS).map(([k,n])=>`<label>${n}</label>${imgField('pi_'+k,c.partImages[k]||'',`data-pi="${k}"`)}`).join('')}</div>`;
 }
+const contactTab=()=>`<div class="box"><h3>راه‌های ارتباطی</h3><p class="hint">فقط موردهایی که پر کنید در سایت نمایش داده می‌شوند.</p>${CONTACT.map(([k,l])=>`<label for="c_${k}">${l}</label><input type="text" id="c_${k}" data-c="${k}" value="${esc(c.contact[k])}" ${k!=='address'&&k!=='note'?'dir="ltr"':''}>`).join('')}</div>`;
+const settings=()=>`<div class="box"><label for="pn">نام پادکست</label><input type="text" id="pn" value="${esc(c.podcast)}">
+  <label style="display:flex;gap:8px;align-items:center;margin-top:16px"><input type="checkbox" id="sh" ${c.shop?'checked':''}> نمایش فروشگاه در منوی سایت</label></div>`;
 function draw(){
   if(!tok) return login();
   if(!c){load();return}
-  const tabs=Object.entries(TYPES).map(([k,t])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${t.label}</button>`).join('')+`<button class="tab ${tab==='set'?'on':''}" data-a="tab" data-k="set">تنظیمات</button>`;
-  const body=edit?form():tab==='set'?settings():list();
+  const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
+  const body=edit?form():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
 }
+/* ---- رویدادها ---- */
+function wrap(a,b,ph){const el=$('f_body'),s=el.selectionStart,e=el.selectionEnd;el.setRangeText(a+(el.value.slice(s,e)||ph)+b,s,e,'end');el.focus()}
+function collect(){
+  const it={...edit.item};
+  document.querySelectorAll('[data-f]').forEach(el=>{const f=el.dataset.f;it[f]=f==='body'?el.value.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean):el.value.trim()});
+  return it;
+}
 root.addEventListener('input',e=>{
-  if(e.target.id==='pn'){c.podcast=e.target.value;dirty=true}
+  const t=e.target,d=t.dataset;
+  if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true}
+  else if(d.c){c.contact[d.c]=t.value.trim();dirty=true}
+  else if(t.id==='pn'){c.podcast=t.value;dirty=true}
 });
 root.addEventListener('change',e=>{
-  if(e.target.id==='sh'){c.shop=e.target.checked;dirty=true;draw()}
+  if(e.target.id==='sh'){c.shop=e.target.checked;dirty=true}
+  if(e.target.id==='tc')wrap('{'+e.target.value+'|','}','متن رنگی');
 });
-root.addEventListener('click',e=>{
+root.addEventListener('click',async e=>{
   const b=e.target.closest('[data-a]'); if(!b) return;
   const a=b.dataset.a, i=+b.dataset.i;
-  if(a==='login'){tok=document.getElementById('t').value.trim();if(!tok)return;localStorage.setItem('rev_tok',tok);c=null;draw()}
+  if(a==='login'){tok=$('t').value.trim();if(!tok)return;localStorage.setItem('rev_tok',tok);c=null;draw()}
   else if(a==='out'){localStorage.removeItem('rev_tok');tok='';c=null;note='';draw()}
   else if(a==='tab'){tab=b.dataset.k;edit=null;note='';draw()}
   else if(a==='new'){edit={i:-1,item:{part:'battery'}};draw()}
   else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
   else if(a==='del'){if(confirm('این مورد حذف شود؟')){c[tab].splice(i,1);dirty=true;draw()}}
   else if(a==='cancel'){edit=null;draw()}
+  else if(a==='reset'){c.theme={...THEME0};dirty=true;draw()}
+  else if(a==='up'||a==='clr'){
+    const id=b.dataset.id, inp=$(id), im=$('p_'+id);
+    let p=''; if(a==='up'){p=await upImage(); if(!p)return}
+    inp.value=p; im.hidden=!p; if(p)im.src=prev[p];
+    if(inp.dataset.pi){c.partImages[inp.dataset.pi]=p;if(!p)delete c.partImages[inp.dataset.pi];dirty=true}
+  }
+  else if(a==='fmt'){
+    const w=b.dataset.w;
+    if(w==='b')wrap('**','**','متن پررنگ');
+    else if(w==='mark')wrap('==','==','متن مهم');
+    else if(w==='h')wrap('\n\n## ','\n\n','عنوان فرعی');
+    else if(w==='link'){const u=prompt('آدرس لینک (با https:// شروع شود):');if(u)wrap('[','](' +u.trim()+')','متن لینک')}
+    else if(w==='img'){const p=await upImage();if(p)wrap('\n\n![توضیح تصویر](' +p+')\n\n','','')}
+  }
   else if(a==='ok'){
-    const it={...edit.item};
-    document.querySelectorAll('[data-f]').forEach(el=>{const f=el.dataset.f;it[f]=f==='body'?el.value.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean):el.value.trim()});
+    const it=collect();
     if(!it.title){msg('عنوان لازم است.');return}
     if(tab==='articles'&&!it.slug)it.slug='a'+Date.now().toString(36);
     if(edit.i<0)c[tab].unshift(it);else c[tab][edit.i]=it;
