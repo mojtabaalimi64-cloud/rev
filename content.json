@@ -1,5 +1,5 @@
 {
- "shop": true,
+ "shop": false,
  "podcast": "REV Podcast",
  "news": [],
  "articles": [
@@ -29,6 +29,12 @@
   "font": "modern",
   "size": 17
  },
- "contact": {},
+ "contact": {
+  "instagram": "revteach",
+  "youtube": "rev-teach",
+  "note": "آینده ،همین الانه!!!",
+  "email": "mojtaba.alimi64@gmail.com",
+  "phone": "09106414316"
+ },
  "partImages": {}
 }
