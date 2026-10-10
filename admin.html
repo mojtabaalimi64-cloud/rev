@@ -49,8 +49,9 @@ const TYPES={
  articles:{label:'مقالات',one:'مقاله',fields:[['title','عنوان','text'],['part','بخش','part'],['date','تاریخ (مثلاً ۱۴۰۵/۰۷/۲۰)','text'],['image','تصویر شاخص مقاله','img'],['excerpt','خلاصه کوتاه','area'],['body','متن کامل','body']]},
  news:{label:'اخبار',one:'خبر',fields:[['title','عنوان خبر','text'],['part','بخش','part'],['date','تاریخ','text'],['url','لینک خبر (اختیاری)','text']]},
  episodes:{label:'پادکست',one:'قسمت',fields:[['title','عنوان قسمت','text'],['date','تاریخ','text'],['image','تصویر قسمت','img'],['url','لینک شنیدن','text'],['desc','توضیح','area']]}
+ ,products:{label:'فروشگاه',one:'محصول',fields:[['title','نام محصول','text'],['price','قیمت (فقط عدد، مثلاً 1500000)','text'],['image','تصویر محصول','img'],['desc','توضیحات کوتاه','area'],['url','لینک سفارش همین محصول (اختیاری)','text'],['stock','موجودی','stock']]}
 };
-const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
+const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
 const CONTACT=[['email','ایمیل'],['phone','تلفن'],['telegram','تلگرام (نام کاربری یا لینک)'],['instagram','اینستاگرام (نام کاربری یا لینک)'],['youtube','یوتیوب (لینک کامل)'],['x','ایکس (نام کاربری یا لینک)'],['address','آدرس'],['note','متن کوتاه پایین صفحه‌ی تماس']];
@@ -69,8 +70,8 @@ async function load(){
     if(r.status===404){c={};sha=''}
     else if(!r.ok) throw 0;
     else{const j=await r.json();sha=j.sha;c=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))))}
-    c.theme={...THEME0,...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';
-    ['news','articles','episodes'].forEach(k=>c[k]=c[k]||[]);
+    c.theme={...THEME0,...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.about=c.about||'';
+    ['news','articles','episodes','products'].forEach(k=>c[k]=c[k]||[]);
     note='';draw();
   }catch(e){msg('اتصال به گیت‌هاب برقرار نشد. اینترنت را بررسی و دوباره تلاش کنید.')}
 }
@@ -107,7 +108,7 @@ function login(){
 function list(){
   const t=TYPES[tab], items=c[tab];
   return `<p style="margin-bottom:12px"><button class="btn main" data-a="new">افزودن ${t.one} جدید</button></p>`+
-   (items.length?items.map((it,i)=>`<div class="row"><div>${esc(it.title)}<small>${esc(PARTS[it.part]||'')} ${esc(it.date||'')}</small></div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`).join(''):'<div class="box" style="color:var(--muted)">هنوز موردی ثبت نشده است.</div>');
+   (items.length?items.map((it,i)=>`<div class="row"><div>${esc(it.title)}<small>${esc(PARTS[it.part]||'')} ${esc(it.date||it.price||'')}</small></div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`).join(''):'<div class="box" style="color:var(--muted)">هنوز موردی ثبت نشده است.</div>');
 }
 function imgField(id,v,attr){
   return `<div class="imgf"><input type="text" id="${id}" ${attr} value="${esc(v)}" dir="ltr" placeholder="تصویری انتخاب نشده" readonly>
@@ -121,6 +122,7 @@ function form(){
     let el;
     if(ty==='part') el=`<select id="${id}" data-f="${k}">${Object.entries(PARTS).map(([pk,pn])=>`<option value="${pk}" ${v===pk?'selected':''}>${pn}</option>`).join('')}</select>`;
     else if(ty==='area') el=`<textarea id="${id}" data-f="${k}" rows="3">${esc(v)}</textarea>`;
+    else if(ty==='stock') el=`<select id="${id}" data-f="${k}"><option value="in" ${v!=='out'?'selected':''}>موجود</option><option value="out" ${v==='out'?'selected':''}>ناموجود</option></select>`;
     else if(ty==='img') el=imgField(id,v,`data-f="${k}"`);
     else if(ty==='body') el=`<div class="tb"><button class="btn" data-a="fmt" data-w="b"><b>B</b> پررنگ</button><button class="btn" data-a="fmt" data-w="mark">مهم</button><button class="btn" data-a="fmt" data-w="h">عنوان فرعی</button><button class="btn" data-a="fmt" data-w="link">لینک</button><button class="btn" data-a="fmt" data-w="img">تصویر</button><label style="margin:0;display:flex;gap:6px;align-items:center">رنگ متن <input type="color" id="tc" value="#d93025"></label></div>
       <textarea id="${id}" data-f="${k}" rows="14">${esc((v||[]).join('\n\n'))}</textarea><p class="hint">برای جدا کردن پاراگراف‌ها یک خط خالی بگذارید. متن را انتخاب کنید و یکی از دکمه‌های بالا را بزنید.</p>`;
@@ -140,12 +142,21 @@ function look(){
 }
 const contactTab=()=>`<div class="box"><h3>راه‌های ارتباطی</h3><p class="hint">فقط موردهایی که پر کنید در سایت نمایش داده می‌شوند.</p>${CONTACT.map(([k,l])=>`<label for="c_${k}">${l}</label><input type="text" id="c_${k}" data-c="${k}" value="${esc(c.contact[k])}" ${k!=='address'&&k!=='note'?'dir="ltr"':''}>`).join('')}</div>`;
 const settings=()=>`<div class="box"><label for="pn">نام پادکست</label><input type="text" id="pn" value="${esc(c.podcast)}">
-  <label style="display:flex;gap:8px;align-items:center;margin-top:16px"><input type="checkbox" id="sh" ${c.shop?'checked':''}> نمایش فروشگاه در منوی سایت</label></div>`;
+  <label for="ga">شناسه‌ی گوگل آنالیتیکس (اختیاری، مثل G-XXXXXXXX)</label><input type="text" id="ga" data-g="1" dir="ltr" value="${esc(c.gaId)}"><p class="hint">با این شناسه می‌توانید تعداد بازدید و منبع بازدیدکنندگان را ببینید.</p></div>`;
+const shopBox=()=>{const s=c.shopInfo;return `<div class="box"><h3>تنظیمات فروشگاه</h3>
+ <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="sh" ${c.shop?'checked':''}> نمایش فروشگاه در منوی سایت</label>
+ <label for="s_intro">متن معرفی بالای فروشگاه</label><textarea id="s_intro" data-s="intro" rows="2">${esc(s.intro)}</textarea>
+ <label for="s_cur">واحد پول</label><input type="text" id="s_cur" data-s="currency" value="${esc(s.currency||'تومان')}">
+ <label for="s_url">لینک پیش‌فرض سفارش (تلگرام، واتساپ، درگاه پرداخت و...)</label><input type="text" id="s_url" data-s="orderUrl" dir="ltr" value="${esc(s.orderUrl)}" placeholder="https://t.me/...">
+ <label for="s_terms">قوانین فروش، ارسال و بازگشت کالا</label><textarea id="s_terms" data-s="terms" rows="5">${esc(s.terms)}</textarea>
+ <p class="hint">مشتری روی «سفارش و خرید» می‌زند و به لینک سفارش شما (تلگرام، واتساپ یا درگاه پرداخت) می‌رود. پرداخت مستقیم روی خود سایت وجود ندارد.</p></div>
+ <h3 style="margin:16px 0 8px">محصولات</h3>`};
+const aboutTab=()=>`<div class="box"><label for="ab">متن صفحه‌ی «درباره ما»</label><textarea id="ab" rows="14">${esc(c.about)}</textarea><p class="hint">پاراگراف‌ها را با یک خط خالی جدا کنید. «## عنوان» عنوان فرعی می‌سازد و **متن** پررنگ می‌شود.</p></div>`;
 function draw(){
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
-  const body=edit?form():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
+  const body=edit?form():tab==='products'?shopBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
 }
 /* ---- رویدادها ---- */
@@ -159,6 +170,9 @@ root.addEventListener('input',e=>{
   const t=e.target,d=t.dataset;
   if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true}
   else if(d.c){c.contact[d.c]=t.value.trim();dirty=true}
+  else if(d.s){c.shopInfo[d.s]=t.value;dirty=true}
+  else if(t.id==='ab'){c.about=t.value;dirty=true}
+  else if(d.g){c.gaId=t.value.trim();dirty=true}
   else if(t.id==='pn'){c.podcast=t.value;dirty=true}
 });
 root.addEventListener('change',e=>{
@@ -171,7 +185,7 @@ root.addEventListener('click',async e=>{
   if(a==='login'){tok=$('t').value.trim();if(!tok)return;localStorage.setItem('rev_tok',tok);c=null;draw()}
   else if(a==='out'){localStorage.removeItem('rev_tok');tok='';c=null;note='';draw()}
   else if(a==='tab'){tab=b.dataset.k;edit=null;note='';draw()}
-  else if(a==='new'){edit={i:-1,item:{part:'battery'}};draw()}
+  else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:{part:'battery'}};draw()}
   else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
   else if(a==='del'){if(confirm('این مورد حذف شود؟')){c[tab].splice(i,1);dirty=true;draw()}}
   else if(a==='cancel'){edit=null;draw()}
