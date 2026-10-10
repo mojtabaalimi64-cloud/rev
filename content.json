@@ -36,5 +36,10 @@
   "email": "mojtaba.alimi64@gmail.com",
   "phone": "09106414316"
  },
- "partImages": {}
+ "partImages": {
+  "battery": "images/mv23orc0.jpg"
+ },
+ "shopInfo": {},
+ "about": "",
+ "products": []
 }
