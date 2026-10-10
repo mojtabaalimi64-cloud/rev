@@ -342,5 +342,6 @@ function route(){
 addEventListener('hashchange',route);
 fetch('content.json?'+Date.now()).then(r=>r.json()).then(c=>{SHOP_ENABLED=!!c.shop;PODCAST_NAME=c.podcast||PODCAST_NAME;NEWS=c.news||[];ARTICLES=c.articles||[];EPISODES=c.episodes||[];CONTACT=c.contact||{};PIMG=c.partImages||{};PRODUCTS=c.products||[];SHOPINFO=c.shopInfo||{};ABOUT=c.about||'';CARS=c.cars||[];CARSINFO=c.carsInfo||{};applyTheme(c.theme);if(/^G-[A-Z0-9]{4,}$/.test(c.gaId||'')){const g=document.createElement('script');g.async=1;g.src='https://www.googletagmanager.com/gtag/js?id='+c.gaId;document.head.appendChild(g);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config',c.gaId)}}).catch(()=>{}).finally(route);
 </script>
+  <script src="features.js"></script>
 </body>
 </html>
