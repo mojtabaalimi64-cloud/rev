@@ -37,7 +37,8 @@
   "phone": "09106414316"
  },
  "partImages": {
-  "battery": "images/mv23orc0.jpg"
+  "battery": "images/mv23orc0.jpg",
+  "motor": "images/mv23selu.jpg"
  },
  "shopInfo": {},
  "about": "",
