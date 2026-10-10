@@ -8,6 +8,12 @@
 <meta name="theme-color" content="#080B0D">
 <meta property="og:title" content="REV | خودروهای برقی، تکنولوژی و آینده">
 <meta property="og:locale" content="fa_IR">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://mojtabaalimi64-cloud.github.io/rev/">
+<meta property="og:image" content="https://mojtabaalimi64-cloud.github.io/rev/ev.jpg">
+<meta property="og:description" content="رسانه مستقل فارسی‌زبان درباره خودروهای برقی، باتری، موتور، شارژ و آینده حمل‌ونقل.">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="canonical" href="https://mojtabaalimi64-cloud.github.io/rev/">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23080B0D'/%3E%3Cpath d='M18 4 8 18h7l-1 10 10-14h-7z' fill='%2339FF88'/%3E%3C/svg%3E">
 <style>
 @font-face{font-family:'Vazirmatn';src:local('Vazirmatn'),url(fonts/Vazirmatn.woff2) format('woff2');font-display:swap}
@@ -60,6 +66,15 @@ main{min-height:70vh;animation:in .35s ease}
 .article mark{background:var(--green);color:#080B0D;padding:0 5px;border-radius:4px}
 .article .cover{margin-top:20px}
 .foot a:hover{color:#fff}
+/* search, share, shop */
+.search{width:100%;max-width:420px;border:1px solid var(--line);border-radius:999px;padding:8px 18px;font:inherit;margin-bottom:24px;background:#fff;color:var(--text)}
+.share{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:32px 0 8px;padding-top:20px;border-top:1px solid var(--line)}
+.share a,.share button{border:1px solid var(--line);border-radius:999px;padding:2px 14px;font-size:14px;background:#fff;color:var(--text)}
+.share a:hover,.share button:hover{border-color:var(--teal)}
+.meta{color:var(--muted);font-size:14px}
+.price{font-weight:800;font-size:18px}
+.prod .cover{aspect-ratio:1/1}.prod .btn{align-self:flex-start;margin-top:auto}
+.soldout{background:#eee;color:var(--muted)}
 /* sections */
 section.blk{padding:64px 0}
 h2{font-size:clamp(24px,3.6vw,34px);font-weight:800;line-height:1.4;padding-inline-start:16px;border-inline-start:6px solid var(--green);margin-bottom:28px}
@@ -98,7 +113,7 @@ footer{background:var(--ink);color:#C3CBD0;padding:36px 0;font-size:15px}
   <div class="parts-bar" id="partsbar" hidden><div class="wrap" id="partchips"></div></div>
 </header>
 <main id="app" tabindex="-1"></main>
-<footer><div class="wrap foot"><div><strong style="color:#fff;letter-spacing:.06em">REV</strong> · خودروهای برقی، تکنولوژی و آینده حمل‌ونقل</div><div><a href="#/contact">ارتباط با ما</a> · <a href="admin.html" style="opacity:.6">ورود مدیر</a> · © ۲۰۲۶ REV</div></div></footer>
+<footer><div class="wrap foot"><div><strong style="color:#fff;letter-spacing:.06em">REV</strong> · خودروهای برقی، تکنولوژی و آینده حمل‌ونقل</div><div><a href="#/about">درباره ما</a> · <a href="#/contact">ارتباط با ما</a> · <a href="admin.html" style="opacity:.6">ورود مدیر</a> · © ۲۰۲۶ REV</div></div></footer>
 
 <script>
 /* =====================================================================
@@ -139,7 +154,9 @@ const PARTS = {
 let NEWS=[],ARTICLES=[],EPISODES=[],PODCAST_NAME='REV Podcast';
 
 /* ===================================================================== */
-let CONTACT={},PIMG={};
+const DESC='رسانه مستقل فارسی‌زبان درباره خودروهای برقی، باتری، موتور، شارژ و آینده حمل‌ونقل.';
+const setMeta=(t,d)=>{document.title=t;const m=document.querySelector('meta[name=description]');if(m)m.content=d||DESC};
+let CONTACT={},PIMG={},PRODUCTS=[],SHOPINFO={},ABOUT='';
 const FONTS={modern:'"Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,system-ui,sans-serif',classic:'Tahoma,"Segoe UI",system-ui,sans-serif',serif:'"Times New Roman",Georgia,"B Nazanin",serif'};
 function applyTheme(t){if(!t)return;const s=document.documentElement.style,hex=/^#[0-9a-fA-F]{6}$/;[['accent','--green'],['dark','--ink'],['paper','--paper'],['text','--text']].forEach(([k,v])=>hex.test(t[k]||'')&&s.setProperty(v,t[k]));if(FONTS[t.font])s.setProperty('--font',FONTS[t.font]);if(t.size>=14&&t.size<=22)s.setProperty('--fs',t.size+'px')}
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -175,19 +192,24 @@ function part(k){
   <section class="blk" style="padding-top:0"><div class="wrap"><h2>آخرین اخبار ${p.name}</h2>${news.length?`<ul class="news">${news.map(n=>`<li>${n.url?`<a href="${n.url}" target="_blank" rel="noopener">${n.title}</a>`:`<span>${n.title}</span>`}<small>${n.date}</small></li>`).join('')}</ul>`:'<div class="empty">خبری ثبت نشده است.</div>'}</div></section>
   <section class="blk" style="padding-top:0"><div class="wrap"><h2>مقالات مرتبط</h2>${artGrid(ARTICLES.filter(a=>a.part===k))}</div></section>`;
 }
-const articles = () => partHead('مقالات','تحلیل‌ها و آموزش‌های REV درباره خودروهای برقی و فناوری‌های آینده.')+`<section class="blk"><div class="wrap">${artGrid(ARTICLES)}</div></section>`;
+const articles = () => partHead('مقالات','تحلیل‌ها و آموزش‌های REV درباره خودروهای برقی و فناوری‌های آینده.')+`<section class="blk"><div class="wrap"><input class="search" id="q" type="search" placeholder="جستجو در مقالات..." aria-label="جستجو در مقالات"><div id="res">${artGrid(ARTICLES)}</div></div></section>`;
+const searchBind=()=>{const q=$('#q');if(q)q.oninput=()=>{const v=q.value.trim().toLowerCase();$('#res').innerHTML=artGrid(v?ARTICLES.filter(a=>(a.title+' '+a.excerpt+' '+a.body.join(' ')).toLowerCase().includes(v)):ARTICLES)}};
+const shareBar=a=>{const u=encodeURIComponent(location.href.split('#')[0]+'#/a/'+a.slug),t=encodeURIComponent(a.title);return `<div class="share"><span class="meta">اشتراک‌گذاری:</span><a href="https://t.me/share/url?url=${u}&text=${t}" target="_blank" rel="noopener">تلگرام</a><a href="https://wa.me/?text=${t}%20${u}" target="_blank" rel="noopener">واتساپ</a><a href="https://x.com/intent/post?text=${t}&url=${u}" target="_blank" rel="noopener">ایکس</a><button type="button" onclick="navigator.clipboard&&navigator.clipboard.writeText(location.href);this.textContent='کپی شد'">کپی لینک</button></div>`};
+const related=a=>{const r=ARTICLES.filter(x=>x.slug!==a.slug&&x.part===a.part).slice(0,3);return r.length?`<h2 style="margin-top:40px">مقالات مرتبط</h2><div class="grid" style="margin-top:16px">${r.map(artCard).join('')}</div>`:''};
 function article(s){
   const a=ARTICLES.find(x=>x.slug===s); if(!a) return articles();
-  document.title=a.title+' | REV';
-  return `<div class="wrap article"><a class="chip" style="color:var(--teal-d);border-color:var(--line)" href="#/s/${a.part}">${PARTS[a.part].name}</a><h1 style="margin-top:14px;line-height:1.5">${a.title}</h1><small style="color:var(--muted)">${a.date}</small>${a.image?`<img class="cover" src="${esc(a.image)}" alt="">`:''}${a.body.map(block).join('')}</div>`;
+  setMeta(a.title+' | REV',a.excerpt);
+  return `<div class="wrap article"><a class="chip" style="color:var(--teal-d);border-color:var(--line)" href="#/s/${a.part}">${PARTS[a.part].name}</a><h1 style="margin-top:14px;line-height:1.5">${a.title}</h1><small style="color:var(--muted)">${a.date} · ${Math.max(1,Math.round(a.body.join(' ').split(/\s+/).length/180)).toLocaleString('fa-IR')} دقیقه مطالعه</small>${a.image?`<img class="cover" src="${esc(a.image)}" alt="">`:''}${a.body.map(block).join('')}${shareBar(a)}${related(a)}</div>`;
 }
 const podcast = () => partHead(PODCAST_NAME,'گفتگو درباره آینده خودرو، تکنولوژی و نوآوری.')+`<section class="blk"><div class="wrap">${EPISODES.length?`<div class="grid">${EPISODES.map(e=>`<a class="card" href="${e.url}" target="_blank" rel="noopener"><h3>${e.title}</h3><small>${e.date}</small><p>${e.desc||''}</p></a>`).join('')}</div>`:'<div class="empty">قسمت اول به‌زودی منتشر می‌شود.</div>'}</div></section>`;
 const contact = () => partHead('ارتباط با ما','نظر، پیشنهاد یا همکاری؟ از این راه‌ها پیام بدهید.')+`<section class="blk"><div class="wrap">${CT.filter(([k])=>CONTACT[k]).length?`<div class="grid">${CT.filter(([k])=>CONTACT[k]).map(([k,l,f])=>{const tg=f?'a':'div';return `<${tg} class="card" ${f?`href="${esc(safe(f(CONTACT[k])))}" target="_blank" rel="noopener"`:''}><span class="tag">${l}</span><h3 dir="auto">${esc(CONTACT[k])}</h3></${tg}>`}).join('')}</div>`:'<div class="empty">اطلاعات تماس هنوز ثبت نشده است.</div>'}${CONTACT.note?`<p style="margin-top:24px">${esc(CONTACT.note)}</p>`:''}</div></section>`;
-const shop = () => partHead('فروشگاه','قطعات و لوازم جانبی خودروهای برقی.')+`<section class="blk"><div class="wrap"><div class="empty">فروشگاه به‌زودی راه‌اندازی می‌شود.</div></div></section>`;
+const money=v=>{const n=String(v).replace(/[,\s٬]/g,'');return /^\d+$/.test(n)?Number(n).toLocaleString('fa-IR')+' '+(SHOPINFO.currency||'تومان'):esc(v)};
+const shop = () => partHead('فروشگاه',SHOPINFO.intro||'قطعات و لوازم جانبی خودروهای برقی.')+`<section class="blk"><div class="wrap">${PRODUCTS.length?`<div class="grid">${PRODUCTS.map(p=>{const u=safe(p.url||SHOPINFO.orderUrl||''),out=p.stock==='out';return `<div class="card prod">${p.image?`<img class="cover" src="${esc(p.image)}" alt="${esc(p.title)}" loading="lazy">`:''}<h3>${esc(p.title)}</h3>${p.desc?`<p>${esc(p.desc)}</p>`:''}${p.price?`<div class="price">${money(p.price)}</div>`:''}${out?'<span class="tag soldout">ناموجود</span>':u!=='#'?`<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">سفارش و خرید</a>`:''}</div>`}).join('')}</div>`:'<div class="empty">هنوز محصولی ثبت نشده است.</div>'}${SHOPINFO.terms?`<div class="article" style="padding:32px 0 0">${SHOPINFO.terms.split(/\n\s*\n/).map(block).join('')}</div>`:''}</div></section>`;
+const about = () => partHead('درباره REV','')+`<section class="blk"><div class="wrap article" style="padding:0">${(ABOUT||'REV یک پروژه‌ی رسانه‌ای مستقل با تمرکز بر خودروهای برقی، تکنولوژی، نوآوری و آینده حمل‌ونقل است.').split(/\n\s*\n/).map(block).join('')}</div></section>`;
 
 function route(){
   const h=location.hash||'#/', [,r,arg]=h.split('/');
-  document.title='REV | خودروهای برقی، تکنولوژی و آینده حمل‌ونقل';
+  setMeta('REV | خودروهای برقی، تکنولوژی و آینده حمل‌ونقل');
   let html, key=r||'';
   if(r==='s'&&PARTS[arg]){html=part(arg);document.title=PARTS[arg].name+' | REV'}
   else if(r==='a') html=article(arg);
@@ -195,8 +217,10 @@ function route(){
   else if(r==='podcast') html=podcast();
   else if(r==='shop'&&SHOP_ENABLED) html=shop();
   else if(r==='contact') html=contact();
+  else if(r==='about') html=about();
   else {html=home();key=''}
   app.innerHTML=html;
+  searchBind();
   window.scrollTo(0,0);
   $('#nav').innerHTML=navList().map(n=>`<a href="${n[0]}" class="${n[0]==='#/'+key||(n[0]==='#/'&&!key)?'on':''}">${n[1]}</a>`).join('');
   const pb=$('#partsbar'); pb.hidden=!key||key==='';
@@ -210,7 +234,7 @@ function route(){
   });
 }
 addEventListener('hashchange',route);
-fetch('content.json?'+Date.now()).then(r=>r.json()).then(c=>{SHOP_ENABLED=!!c.shop;PODCAST_NAME=c.podcast||PODCAST_NAME;NEWS=c.news||[];ARTICLES=c.articles||[];EPISODES=c.episodes||[];CONTACT=c.contact||{};PIMG=c.partImages||{};applyTheme(c.theme)}).catch(()=>{}).finally(route);
+fetch('content.json?'+Date.now()).then(r=>r.json()).then(c=>{SHOP_ENABLED=!!c.shop;PODCAST_NAME=c.podcast||PODCAST_NAME;NEWS=c.news||[];ARTICLES=c.articles||[];EPISODES=c.episodes||[];CONTACT=c.contact||{};PIMG=c.partImages||{};PRODUCTS=c.products||[];SHOPINFO=c.shopInfo||{};ABOUT=c.about||'';applyTheme(c.theme);if(/^G-[A-Z0-9]{4,}$/.test(c.gaId||'')){const g=document.createElement('script');g.async=1;g.src='https://www.googletagmanager.com/gtag/js?id='+c.gaId;document.head.appendChild(g);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config',c.gaId)}}).catch(()=>{}).finally(route);
 </script>
 </body>
 </html>
