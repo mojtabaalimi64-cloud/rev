@@ -10,12 +10,13 @@
 <meta property="og:locale" content="fa_IR">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23080B0D'/%3E%3Cpath d='M18 4 8 18h7l-1 10 10-14h-7z' fill='%2339FF88'/%3E%3C/svg%3E">
 <style>
+@font-face{font-family:'Vazirmatn';src:local('Vazirmatn'),url(fonts/Vazirmatn.woff2) format('woff2');font-display:swap}
 /* ===== رنگ‌های سازمانی: فقط همین چند خط را عوض کنید ===== */
-:root{--ink:#080B0D;--ink-2:#121A1F;--paper:#F5F7F8;--card:#fff;--line:#DDE3E6;--muted:#5B666D;--teal:#00D9C0;--teal-d:#00806F;--gray:#8A949B;--green:#39FF88;
+:root{--ink:#080B0D;--ink-2:#121A1F;--paper:#F5F7F8;--card:#fff;--line:#DDE3E6;--muted:#5B666D;--teal:#00D9C0;--teal-d:#00806F;--gray:#8A949B;--green:#39FF88;--text:#080B0D;--fs:17px;
 --font:"Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,system-ui,sans-serif;--max:1120px}
 *{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
-body{font-family:var(--font);background:var(--paper);color:var(--ink);line-height:1.9;font-size:17px}
+body{font-family:var(--font);background:var(--paper);color:var(--text);line-height:1.9;font-size:var(--fs)}
 a{color:inherit;text-decoration:none}
 button{font:inherit;cursor:pointer;border:0;background:none;color:inherit}
 :focus-visible{outline:3px solid var(--green);outline-offset:3px;border-radius:6px}
@@ -50,6 +51,15 @@ main{min-height:70vh;animation:in .35s ease}
 @keyframes pulse{70%{box-shadow:0 0 0 14px rgba(57,255,136,0)}100%{box-shadow:0 0 0 0 rgba(57,255,136,0)}}
 .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:24px}
 .hint{text-align:center;color:#8A949B;font-size:14px;margin-top:14px}
+/* images + article body */
+.cover{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px}
+.pimg{display:block;width:100%;max-height:360px;object-fit:cover;border-radius:14px;margin-top:24px}
+.article figure{margin:26px 0}.article figure img{width:100%;border-radius:12px}
+.article figcaption{color:var(--muted);font-size:14px;text-align:center}
+.article h2{font-size:24px;border:0;padding:0;margin:30px 0 0}
+.article mark{background:var(--green);color:#080B0D;padding:0 5px;border-radius:4px}
+.article .cover{margin-top:20px}
+.foot a:hover{color:#fff}
 /* sections */
 section.blk{padding:64px 0}
 h2{font-size:clamp(24px,3.6vw,34px);font-weight:800;line-height:1.4;padding-inline-start:16px;border-inline-start:6px solid var(--green);margin-bottom:28px}
@@ -88,7 +98,7 @@ footer{background:var(--ink);color:#C3CBD0;padding:36px 0;font-size:15px}
   <div class="parts-bar" id="partsbar" hidden><div class="wrap" id="partchips"></div></div>
 </header>
 <main id="app" tabindex="-1"></main>
-<footer><div class="wrap foot"><div><strong style="color:#fff;letter-spacing:.06em">REV</strong> · خودروهای برقی، تکنولوژی و آینده حمل‌ونقل</div><div>© ۲۰۲۶ REV</div></div></footer>
+<footer><div class="wrap foot"><div><strong style="color:#fff;letter-spacing:.06em">REV</strong> · خودروهای برقی، تکنولوژی و آینده حمل‌ونقل</div><div><a href="#/contact">ارتباط با ما</a> · <a href="admin.html" style="opacity:.6">ورود مدیر</a> · © ۲۰۲۶ REV</div></div></footer>
 
 <script>
 /* =====================================================================
@@ -129,13 +139,21 @@ const PARTS = {
 let NEWS=[],ARTICLES=[],EPISODES=[],PODCAST_NAME='REV Podcast';
 
 /* ===================================================================== */
+let CONTACT={},PIMG={};
+const FONTS={modern:'"Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,system-ui,sans-serif',classic:'Tahoma,"Segoe UI",system-ui,sans-serif',serif:'"Times New Roman",Georgia,"B Nazanin",serif'};
+function applyTheme(t){if(!t)return;const s=document.documentElement.style,hex=/^#[0-9a-fA-F]{6}$/;[['accent','--green'],['dark','--ink'],['paper','--paper'],['text','--text']].forEach(([k,v])=>hex.test(t[k]||'')&&s.setProperty(v,t[k]));if(FONTS[t.font])s.setProperty('--font',FONTS[t.font]);if(t.size>=14&&t.size<=22)s.setProperty('--fs',t.size+'px')}
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const md=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/==(.+?)==/g,'<mark>$1</mark>').replace(/\{(#[0-9a-fA-F]{3,8})\|(.+?)\}/g,'<span style="color:$1">$2</span>').replace(/\[([^\]]+)\]\((https?:\/\/[^)\s]+)\)/g,'<a href="$2" target="_blank" rel="noopener" style="color:var(--teal-d);text-decoration:underline">$1</a>');
+const block=p=>{let m;if(m=p.match(/^!\[(.*)\]\((images\/[\w.\-\/]+)\)$/))return `<figure><img src="${m[2]}" alt="${esc(m[1])}" loading="lazy"><figcaption>${esc(m[1])}</figcaption></figure>`;if(p.startsWith('## '))return `<h2>${md(p.slice(3))}</h2>`;return `<p>${md(p)}</p>`};
+const safe=u=>/^(https?:|mailto:|tel:)/.test(u)?u:'#';
+const CT=[['email','ایمیل',v=>'mailto:'+v],['phone','تلفن',v=>'tel:'+v.replace(/\s/g,'')],['telegram','تلگرام',v=>/^http/.test(v)?v:'https://t.me/'+v.replace('@','')],['instagram','اینستاگرام',v=>/^http/.test(v)?v:'https://instagram.com/'+v.replace('@','')],['youtube','یوتیوب',v=>v],['x','ایکس',v=>/^http/.test(v)?v:'https://x.com/'+v.replace('@','')],['address','آدرس',null]];
 const $ = s => document.querySelector(s), app = $('#app');
 const partKeys = Object.keys(PARTS);
-const navList=()=>{const n=[['#/','خانه'],['#/articles','مقالات'],['#/podcast','پادکست']];if(SHOP_ENABLED)n.push(['#/shop','فروشگاه']);return n};
+const navList=()=>{const n=[['#/','خانه'],['#/articles','مقالات'],['#/podcast','پادکست']];if(SHOP_ENABLED)n.push(['#/shop','فروشگاه']);n.push(['#/contact','ارتباط با ما']);return n};
 
-const artCard = a => `<a class="card" href="#/a/${a.slug}"><span class="tag">${PARTS[a.part].name}</span><h3>${a.title}</h3><p>${a.excerpt}</p></a>`;
+const artCard = a => `<a class="card" href="#/a/${a.slug}">${a.image?`<img class="cover" src="${esc(a.image)}" alt="" loading="lazy">`:''}<span class="tag">${PARTS[a.part].name}</span><h3>${a.title}</h3><p>${a.excerpt}</p></a>`;
 const artGrid = list => list.length ? `<div class="grid">${list.map(artCard).join('')}</div>` : `<div class="empty">هنوز مقاله‌ای در این بخش منتشر نشده است.</div>`;
-const partHead = (t,p,back) => `<div class="phead"><div class="wrap">${back?'<a class="back" href="#/">بازگشت به خودرو</a><br>':''}<h1>${t}</h1><p>${p}</p></div></div>`;
+const partHead = (t,p,back,img) => `<div class="phead"><div class="wrap">${back?'<a class="back" href="#/">بازگشت به خودرو</a><br>':''}<h1>${t}</h1><p>${p}</p>${img?`<img class="pimg" src="${esc(img)}" alt="">`:''}</div></div>`;
 
 function home(){
   const hs = partKeys.map(k=>{const p=PARTS[k];return `<button class="hs" data-k="${k}" style="left:${p.x}%;top:${p.y}%" aria-label="${p.name}"><i></i><span>${p.name}</span></button>`}).join('');
@@ -153,7 +171,7 @@ function home(){
 }
 function part(k){
   const p=PARTS[k], news=NEWS.filter(n=>n.part===k);
-  return partHead(p.name,p.lead,true)+`<section class="blk"><div class="wrap"><h2>فناوری‌ها</h2><div class="grid">${p.tech.map(t=>`<div class="card"><h3>${t[0]}</h3><p>${t[1]}</p></div>`).join('')}</div></div></section>
+  return partHead(p.name,p.lead,true,PIMG[k])+`<section class="blk"><div class="wrap"><h2>فناوری‌ها</h2><div class="grid">${p.tech.map(t=>`<div class="card"><h3>${t[0]}</h3><p>${t[1]}</p></div>`).join('')}</div></div></section>
   <section class="blk" style="padding-top:0"><div class="wrap"><h2>آخرین اخبار ${p.name}</h2>${news.length?`<ul class="news">${news.map(n=>`<li>${n.url?`<a href="${n.url}" target="_blank" rel="noopener">${n.title}</a>`:`<span>${n.title}</span>`}<small>${n.date}</small></li>`).join('')}</ul>`:'<div class="empty">خبری ثبت نشده است.</div>'}</div></section>
   <section class="blk" style="padding-top:0"><div class="wrap"><h2>مقالات مرتبط</h2>${artGrid(ARTICLES.filter(a=>a.part===k))}</div></section>`;
 }
@@ -161,9 +179,10 @@ const articles = () => partHead('مقالات','تحلیل‌ها و آموزش�
 function article(s){
   const a=ARTICLES.find(x=>x.slug===s); if(!a) return articles();
   document.title=a.title+' | REV';
-  return `<div class="wrap article"><a class="chip" style="color:var(--teal-d);border-color:var(--line)" href="#/s/${a.part}">${PARTS[a.part].name}</a><h1 style="margin-top:14px;line-height:1.5">${a.title}</h1><small style="color:var(--muted)">${a.date}</small>${a.body.map(p=>`<p>${p}</p>`).join('')}</div>`;
+  return `<div class="wrap article"><a class="chip" style="color:var(--teal-d);border-color:var(--line)" href="#/s/${a.part}">${PARTS[a.part].name}</a><h1 style="margin-top:14px;line-height:1.5">${a.title}</h1><small style="color:var(--muted)">${a.date}</small>${a.image?`<img class="cover" src="${esc(a.image)}" alt="">`:''}${a.body.map(block).join('')}</div>`;
 }
 const podcast = () => partHead(PODCAST_NAME,'گفتگو درباره آینده خودرو، تکنولوژی و نوآوری.')+`<section class="blk"><div class="wrap">${EPISODES.length?`<div class="grid">${EPISODES.map(e=>`<a class="card" href="${e.url}" target="_blank" rel="noopener"><h3>${e.title}</h3><small>${e.date}</small><p>${e.desc||''}</p></a>`).join('')}</div>`:'<div class="empty">قسمت اول به‌زودی منتشر می‌شود.</div>'}</div></section>`;
+const contact = () => partHead('ارتباط با ما','نظر، پیشنهاد یا همکاری؟ از این راه‌ها پیام بدهید.')+`<section class="blk"><div class="wrap">${CT.filter(([k])=>CONTACT[k]).length?`<div class="grid">${CT.filter(([k])=>CONTACT[k]).map(([k,l,f])=>{const tg=f?'a':'div';return `<${tg} class="card" ${f?`href="${esc(safe(f(CONTACT[k])))}" target="_blank" rel="noopener"`:''}><span class="tag">${l}</span><h3 dir="auto">${esc(CONTACT[k])}</h3></${tg}>`}).join('')}</div>`:'<div class="empty">اطلاعات تماس هنوز ثبت نشده است.</div>'}${CONTACT.note?`<p style="margin-top:24px">${esc(CONTACT.note)}</p>`:''}</div></section>`;
 const shop = () => partHead('فروشگاه','قطعات و لوازم جانبی خودروهای برقی.')+`<section class="blk"><div class="wrap"><div class="empty">فروشگاه به‌زودی راه‌اندازی می‌شود.</div></div></section>`;
 
 function route(){
@@ -175,6 +194,7 @@ function route(){
   else if(r==='articles') html=articles();
   else if(r==='podcast') html=podcast();
   else if(r==='shop'&&SHOP_ENABLED) html=shop();
+  else if(r==='contact') html=contact();
   else {html=home();key=''}
   app.innerHTML=html;
   window.scrollTo(0,0);
@@ -190,7 +210,7 @@ function route(){
   });
 }
 addEventListener('hashchange',route);
-fetch('content.json?'+Date.now()).then(r=>r.json()).then(c=>{SHOP_ENABLED=!!c.shop;PODCAST_NAME=c.podcast||PODCAST_NAME;NEWS=c.news||[];ARTICLES=c.articles||[];EPISODES=c.episodes||[]}).catch(()=>{}).finally(route);
+fetch('content.json?'+Date.now()).then(r=>r.json()).then(c=>{SHOP_ENABLED=!!c.shop;PODCAST_NAME=c.podcast||PODCAST_NAME;NEWS=c.news||[];ARTICLES=c.articles||[];EPISODES=c.episodes||[];CONTACT=c.contact||{};PIMG=c.partImages||{};applyTheme(c.theme)}).catch(()=>{}).finally(route);
 </script>
 </body>
 </html>
