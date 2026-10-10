@@ -75,6 +75,25 @@ main{min-height:70vh;animation:in .35s ease}
 .price{font-weight:800;font-size:18px}
 .prod .cover{aspect-ratio:1/1}.prod .btn{align-self:flex-start;margin-top:auto}
 .soldout{background:#eee;color:var(--muted)}
+/* cars: recommender + compare */
+.ctabs{display:flex;gap:8px;margin-bottom:20px}
+.ctab{padding:6px 20px;border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:700;color:var(--text)}
+.ctab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.cform{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));align-items:end;background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px}
+.cform label{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:700}
+.cform input,.cform select{border:1px solid var(--line);border-radius:10px;padding:8px 12px;font:inherit;background:#fff;color:var(--text)}
+.cform button.btn{border:0;min-height:42px}
+.sbar{height:8px;background:var(--line);border-radius:99px;overflow:hidden}.sbar i{display:block;height:100%;background:var(--green)}
+.why{margin:4px 0 0;padding-inline-start:18px;font-size:15px;color:var(--muted)}
+.spec{font-size:14px;color:var(--muted)}
+.tblwrap{overflow-x:auto;margin-top:20px;background:#fff;border:1px solid var(--line);border-radius:14px}
+.cmp{width:100%;border-collapse:collapse;min-width:520px}
+.cmp th,.cmp td{padding:10px 14px;border-bottom:1px solid var(--line);text-align:start;vertical-align:top;font-size:15px}
+.cmp thead th{background:var(--ink);color:#fff}
+.cmp tbody th{color:var(--muted);font-weight:700;width:150px}
+.cmp td.win{background:#DDFBE9;font-weight:800;color:#00583E}
+.verdict{margin-top:14px;font-weight:700}
+.cnote{margin-top:16px;max-width:72ch}
 /* sections */
 section.blk{padding:64px 0}
 h2{font-size:clamp(24px,3.6vw,34px);font-weight:800;line-height:1.4;padding-inline-start:16px;border-inline-start:6px solid var(--green);margin-bottom:28px}
@@ -156,7 +175,7 @@ let NEWS=[],ARTICLES=[],EPISODES=[],PODCAST_NAME='REV Podcast';
 /* ===================================================================== */
 const DESC='رسانه مستقل فارسی‌زبان درباره خودروهای برقی، باتری، موتور، شارژ و آینده حمل‌ونقل.';
 const setMeta=(t,d)=>{document.title=t;const m=document.querySelector('meta[name=description]');if(m)m.content=d||DESC};
-let CONTACT={},PIMG={},PRODUCTS=[],SHOPINFO={},ABOUT='';
+let CONTACT={},PIMG={},PRODUCTS=[],SHOPINFO={},ABOUT='',CARS=[],CARSINFO={};
 const FONTS={modern:'"Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,system-ui,sans-serif',classic:'Tahoma,"Segoe UI",system-ui,sans-serif',serif:'"Times New Roman",Georgia,"B Nazanin",serif'};
 function applyTheme(t){if(!t)return;const s=document.documentElement.style,hex=/^#[0-9a-fA-F]{6}$/;[['accent','--green'],['dark','--ink'],['paper','--paper'],['text','--text']].forEach(([k,v])=>hex.test(t[k]||'')&&s.setProperty(v,t[k]));if(FONTS[t.font])s.setProperty('--font',FONTS[t.font]);if(t.size>=14&&t.size<=22)s.setProperty('--fs',t.size+'px')}
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -164,6 +183,10 @@ const md=t=>esc(t).replace(/\*\*(.+?)\*\*/g,'<b>$1</b>').replace(/==(.+?)==/g,'<
 const block=p=>{let m;if(m=p.match(/^!\[(.*)\]\((images\/[\w.\-\/]+)\)$/))return `<figure><img src="${m[2]}" alt="${esc(m[1])}" loading="lazy"><figcaption>${esc(m[1])}</figcaption></figure>`;if(p.startsWith('## '))return `<h2>${md(p.slice(3))}</h2>`;return `<p>${md(p)}</p>`};
 const safe=u=>/^(https?:|mailto:|tel:)/.test(u)?u:'#';
 const CT=[['email','ایمیل',v=>'mailto:'+v],['phone','تلفن',v=>'tel:'+v.replace(/\s/g,'')],['telegram','تلگرام',v=>/^http/.test(v)?v:'https://t.me/'+v.replace('@','')],['instagram','اینستاگرام',v=>/^http/.test(v)?v:'https://instagram.com/'+v.replace('@','')],['youtube','یوتیوب',v=>v],['x','ایکس',v=>/^http/.test(v)?v:'https://x.com/'+v.replace('@','')],['address','آدرس',null]];
+const fa2en=s=>String(s??'').replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/٫/g,'.').replace(/[,٬،\s]/g,'');
+const NUM=v=>{const n=parseFloat(fa2en(v));return isFinite(n)?n:null};
+const fnum=n=>n==null?'—':Number(n).toLocaleString('fa-IR');
+const TYPE_FA={sedan:'سدان',suv:'شاسی‌بلند',hatch:'هاچ‌بک',crossover:'کراس‌اور',other:'سایر'},MKT_FA={iran:'موجود در بازار ایران',import:'وارداتی/غیررسمی',none:'خارج از بازار ایران'},DRV_FA={RWD:'عقب‌رو',FWD:'جلو‌رو',AWD:'چهارچرخ‌محرک'};
 const $ = s => document.querySelector(s), app = $('#app');
 const partKeys = Object.keys(PARTS);
 const navList=()=>{const n=[['#/','خانه'],['#/articles','مقالات'],['#/podcast','پادکست']];if(SHOP_ENABLED)n.push(['#/shop','فروشگاه']);n.push(['#/contact','ارتباط با ما']);return n};
@@ -183,6 +206,7 @@ function home(){
     </div>
     <div class="chips">${chips}</div>
   </div></div>
+  ${CARS.length>=2?carsSection():''}
   <section class="blk"><div class="wrap"><h2>تازه‌ترین مقالات</h2>${artGrid(ARTICLES.slice(0,3))}</div></section>
   <section class="blk" style="padding-top:0"><div class="wrap"><div class="pod"><div><h2 style="color:#fff;margin:0 0 12px">${PODCAST_NAME}</h2><p>گفتگو با کسانی که آینده خودرو و تکنولوژی را می‌سازند.</p></div><a class="btn" href="#/podcast">درباره پادکست</a></div></div></section>`;
 }
@@ -203,9 +227,90 @@ function article(s){
 }
 const podcast = () => partHead(PODCAST_NAME,'گفتگو درباره آینده خودرو، تکنولوژی و نوآوری.')+`<section class="blk"><div class="wrap">${EPISODES.length?`<div class="grid">${EPISODES.map(e=>`<a class="card" href="${e.url}" target="_blank" rel="noopener"><h3>${e.title}</h3><small>${e.date}</small><p>${e.desc||''}</p></a>`).join('')}</div>`:'<div class="empty">قسمت اول به‌زودی منتشر می‌شود.</div>'}</div></section>`;
 const contact = () => partHead('ارتباط با ما','نظر، پیشنهاد یا همکاری؟ از این راه‌ها پیام بدهید.')+`<section class="blk"><div class="wrap">${CT.filter(([k])=>CONTACT[k]).length?`<div class="grid">${CT.filter(([k])=>CONTACT[k]).map(([k,l,f])=>{const tg=f?'a':'div';return `<${tg} class="card" ${f?`href="${esc(safe(f(CONTACT[k])))}" target="_blank" rel="noopener"`:''}><span class="tag">${l}</span><h3 dir="auto">${esc(CONTACT[k])}</h3></${tg}>`}).join('')}</div>`:'<div class="empty">اطلاعات تماس هنوز ثبت نشده است.</div>'}${CONTACT.note?`<p style="margin-top:24px">${esc(CONTACT.note)}</p>`:''}</div></section>`;
-const money=v=>{const n=String(v).replace(/[,\s٬]/g,'');return /^\d+$/.test(n)?Number(n).toLocaleString('fa-IR')+' '+(SHOPINFO.currency||'تومان'):esc(v)};
+const money=(v,cur)=>{const n=fa2en(v);return /^\d+$/.test(n)?Number(n).toLocaleString('fa-IR')+' '+(cur||SHOPINFO.currency||'تومان'):esc(v)};
 const shop = () => partHead('فروشگاه',SHOPINFO.intro||'قطعات و لوازم جانبی خودروهای برقی.')+`<section class="blk"><div class="wrap">${PRODUCTS.length?`<div class="grid">${PRODUCTS.map(p=>{const u=safe(p.url||SHOPINFO.orderUrl||''),out=p.stock==='out';return `<div class="card prod">${p.image?`<img class="cover" src="${esc(p.image)}" alt="${esc(p.title)}" loading="lazy">`:''}<h3>${esc(p.title)}</h3>${p.desc?`<p>${esc(p.desc)}</p>`:''}${p.price?`<div class="price">${money(p.price)}</div>`:''}${out?'<span class="tag soldout">ناموجود</span>':u!=='#'?`<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">سفارش و خرید</a>`:''}</div>`}).join('')}</div>`:'<div class="empty">هنوز محصولی ثبت نشده است.</div>'}${SHOPINFO.terms?`<div class="article" style="padding:32px 0 0">${SHOPINFO.terms.split(/\n\s*\n/).map(block).join('')}</div>`:''}</div></section>`;
 const about = () => partHead('درباره REV','')+`<section class="blk"><div class="wrap article" style="padding:0">${(ABOUT||'REV یک پروژه‌ی رسانه‌ای مستقل با تمرکز بر خودروهای برقی، تکنولوژی، نوآوری و آینده حمل‌ونقل است.').split(/\n\s*\n/).map(block).join('')}</div></section>`;
+
+/* ===== انتخاب و مقایسه‌ی خودروها ===== */
+const W={balanced:{price:.25,range:.25,accel:.15,dc:.15,power:.2},price:{price:.55,range:.2,accel:.05,dc:.1,power:.1},range:{range:.5,price:.2,dc:.15,accel:.05,power:.1},performance:{accel:.4,power:.3,range:.1,price:.1,dc:.1},charging:{dc:.5,range:.2,price:.15,accel:.05,power:.1}};
+function recommend(f){
+  const budget=f.budget?f.budget*1e6:null;
+  const checks={
+    budget:x=>budget==null||NUM(x.c.price)==null||NUM(x.c.price)<=budget,
+    range:x=>!f.range||(NUM(x.c.range)!=null&&NUM(x.c.range)>=f.range),
+    type:x=>f.type==='any'||x.c.type===f.type,
+    market:x=>f.market==='any'||x.c.market==='iran'
+  };
+  let list=CARS.map(c=>({c})),cnt={};
+  Object.entries(checks).forEach(([k,fn])=>cnt[k]=list.filter(fn).length);
+  list=list.filter(x=>Object.values(checks).every(fn=>fn(x)));
+  const w=W[f.prio]||W.balanced,stats={};
+  Object.keys(w).forEach(k=>{const v=list.map(x=>NUM(x.c[k])).filter(n=>n!=null);stats[k]=v.length?{min:Math.min(...v),max:Math.max(...v)}:null});
+  list.forEach(x=>{let s=0,t=0;Object.keys(w).forEach(k=>{const v=NUM(x.c[k]),st=stats[k];if(v==null||!st)return;let n=st.max===st.min?.5:(v-st.min)/(st.max-st.min);if(k==='price'||k==='accel')n=1-n;s+=w[k]*n;t+=w[k]});x.s=t?s/t:0});
+  list.sort((a,b)=>b.s-a.s);
+  return {top:list.slice(0,3),cnt,total:list.length,stats};
+}
+function reasons(x,f,stats,n){
+  const c=x.c,r=[],price=NUM(c.price),range=NUM(c.range),acc=NUM(c.accel),dc=NUM(c.dc);
+  const best=(k,v,lo)=>n>1&&v!=null&&stats[k]&&v===(lo?stats[k].min:stats[k].max);
+  if(f.budget&&price!=null){const p=Math.round((1-price/(f.budget*1e6))*100);if(p>=3)r.push(fnum(p)+'٪ کمتر از سقف بودجه‌ی شما')}
+  if(f.range&&range!=null){const d=range-f.range;r.push(d>0?`برد ${fnum(range)} کیلومتر؛ ${fnum(d)} کیلومتر بیشتر از نیاز شما`:`برد ${fnum(range)} کیلومتر؛ دقیقاً در حد نیاز شما`)}
+  if(best('price',price,1))r.push('کم‌هزینه‌ترین گزینه بین نتایج');
+  if(best('range',range))r.push('بیشترین برد بین نتایج');
+  if(best('accel',acc,1))r.push('سریع‌ترین شتاب بین نتایج');
+  if(best('dc',dc))r.push('سریع‌ترین شارژ DC بین نتایج');
+  if(c.market==='iran')r.push('در بازار ایران موجود است');
+  if(!r.length&&range!=null)r.push(`برد ${fnum(range)} کیلومتر`);
+  return r.slice(0,3);
+}
+const carCard=(x,i,rs)=>{const c=x.c,u=safe(c.url||'');return `<div class="card"><span class="tag">${['بهترین انتخاب','گزینه‌ی دوم','گزینه‌ی سوم'][i]}</span>${c.image?`<img class="cover" src="${esc(c.image)}" alt="${esc(c.title)}" loading="lazy">`:''}<h3>${esc(c.title)}</h3><div class="price">${c.price?money(c.price,'تومان'):'قیمت ثبت نشده'}</div><div class="meta">${c.priceDate?'قیمت در تاریخ '+esc(c.priceDate):'تاریخ قیمت ثبت نشده'}</div><div class="spec">برد ${fnum(NUM(c.range))} کیلومتر · شتاب ${fnum(NUM(c.accel))} ثانیه · شارژ DC ${fnum(NUM(c.dc))} کیلووات</div><div class="sbar"><i style="width:${Math.round(x.s*100)}%"></i></div><div class="meta">امتیاز نسبی ${fnum(Math.round(x.s*100))} از ۱۰۰، در مقایسه با نتایج همین جست‌وجو</div><ul class="why">${rs.map(t=>`<li>${esc(t)}</li>`).join('')}</ul>${u!=='#'?`<a class="btn" href="${esc(u)}" target="_blank" rel="noopener">بررسی کامل</a>`:''}</div>`};
+const lines=t=>t?'<ul class="why">'+String(t).split('\n').filter(x=>x.trim()).map(x=>`<li>${esc(x.trim())}</li>`).join('')+'</ul>':'—';
+const ROWS=[['price','قیمت',c=>c.price?money(c.price,'تومان'):'—',1],['range','برد (کیلومتر)',c=>fnum(NUM(c.range)),0],['battery','باتری (کیلووات‌ساعت)',c=>fnum(NUM(c.battery)),null],['power','توان (اسب‌بخار)',c=>fnum(NUM(c.power)),0],['accel','شتاب ۰ تا ۱۰۰ (ثانیه)',c=>fnum(NUM(c.accel)),1],['dc','حداکثر شارژ DC (کیلووات)',c=>fnum(NUM(c.dc)),0]];
+const TXT=[['priceDate','تاریخ قیمت',c=>esc(c.priceDate||'—')],['type','نوع بدنه',c=>TYPE_FA[c.type]||'—'],['seats','تعداد صندلی',c=>fnum(NUM(c.seats))],['drive','سیستم محرک',c=>DRV_FA[c.drive]||'—'],['connector','کانکتور شارژ',c=>esc(c.connector||'—')],['rangeStd','استاندارد برد',c=>esc(c.rangeStd||'—')],['market','وضعیت در ایران',c=>MKT_FA[c.market]||'—'],['pros','نقاط قوت',c=>lines(c.pros)],['cons','نقاط ضعف',c=>lines(c.cons)]];
+function compareHtml(ids){
+  const cs=ids.map(i=>CARS[i]).filter(Boolean);
+  if(cs.length<2)return '<div class="empty" style="margin-top:20px">حداقل دو خودرو را انتخاب کنید.</div>';
+  const wins=cs.map(()=>0);
+  const rows=ROWS.map(([k,l,f,dir])=>{
+    const vals=cs.map(c=>NUM(c[k]));let bi=-1;
+    if(dir!==null){const ok=vals.filter(v=>v!=null);if(ok.length>1){const b=dir?Math.min(...ok):Math.max(...ok);if(vals.filter(v=>v===b).length===1){bi=vals.indexOf(b);wins[bi]++}}}
+    return `<tr><th>${l}</th>${cs.map((c,i)=>`<td class="${i===bi?'win':''}">${f(c)}</td>`).join('')}</tr>`;
+  }).join('');
+  const txt=TXT.map(([k,l,f])=>`<tr><th>${l}</th>${cs.map(c=>`<td>${f(c)}</td>`).join('')}</tr>`).join('');
+  const mx=Math.max(...wins),lead=wins.map((w,i)=>w===mx?i:-1).filter(i=>i>=0);
+  const verdict=mx>0&&lead.length===1?`از معیارهای قابل مقایسه، <b>${esc(cs[lead[0]].title)}</b> در ${fnum(mx)} معیار برتر است.`:'هیچ خودرویی در همه‌ی معیارها برنده نیست؛ خانه‌های سبز برتری هر خودرو را نشان می‌دهند.';
+  return `<div class="tblwrap"><table class="cmp"><thead><tr><th></th>${cs.map(c=>`<th>${esc(c.title)}</th>`).join('')}</tr></thead><tbody>${rows}${txt}</tbody></table></div><p class="verdict">${verdict}</p>`;
+}
+const carsSection=()=>`<section class="blk" id="cars"><div class="wrap"><h2>انتخاب و مقایسه‌ی خودروی برقی</h2>
+  <p class="meta" style="margin:-12px 0 20px;max-width:64ch">نیازت را بگو تا از میان خودروهای ثبت‌شده در REV مناسب‌ترین گزینه‌ها را پیشنهاد بدهیم، یا چند خودرو را کنار هم مقایسه کن.</p>
+  <div class="ctabs"><button class="ctab on" data-ct="rec">پیشنهاد خرید</button><button class="ctab" data-ct="cmp">مقایسه</button></div>
+  <div id="cpanel"></div>
+  <p class="meta cnote">این بخش بر اساس اطلاعاتی کار می‌کند که تیم REV ثبت کرده است. قیمت‌ها و موجودی در بازار سریع تغییر می‌کنند و اینجا تضمین نیستند؛ پیش از خرید، قیمت و شرایط را از فروشنده بپرسید. ${esc(CARSINFO.note||'')}</p></div></section>`;
+function carsBind(){
+  const root=$('#cars');if(!root)return;
+  const panel=$('#cpanel');
+  const types=[...new Set(CARS.map(c=>c.type).filter(Boolean))];
+  const opt=CARS.map((c,i)=>`<option value="${i}">${esc(c.title)}</option>`).join('');
+  const rec=`<div class="cform"><label>حداکثر بودجه (میلیون تومان)<input id="cb" inputmode="numeric" placeholder="مثلاً ۲۵۰۰"></label>
+  <label>حداقل برد مورد نیاز (کیلومتر)<input id="cr" inputmode="numeric" placeholder="مثلاً ۳۵۰"></label>
+  <label>نوع بدنه<select id="ct"><option value="any">فرقی نمی‌کند</option>${types.map(t=>`<option value="${t}">${TYPE_FA[t]||t}</option>`).join('')}</select></label>
+  <label>بازار<select id="cm"><option value="any">همه‌ی خودروها</option><option value="iran">فقط موجود در بازار ایران</option></select></label>
+  <label>اولویت اصلی<select id="cp"><option value="balanced">متعادل</option><option value="price">کم‌هزینه‌تر</option><option value="range">برد بیشتر</option><option value="performance">عملکرد و شتاب</option><option value="charging">شارژ سریع‌تر</option></select></label>
+  <button class="btn" id="cgo" type="button">پیشنهاد بده</button></div><div id="cres"></div>`;
+  const cmp=`<div class="cform">${['اول','دوم','سوم'].map(n=>`<label>خودروی ${n}<select class="cs"><option value="">—</option>${opt}</select></label>`).join('')}</div><div id="cout"></div>`;
+  const show=t=>{
+    root.querySelectorAll('.ctab').forEach(b=>b.classList.toggle('on',b.dataset.ct===t));
+    panel.innerHTML=t==='rec'?rec:cmp;
+    if(t==='rec')$('#cgo').onclick=()=>{
+      const f={budget:NUM($('#cb').value),range:NUM($('#cr').value),type:$('#ct').value,market:$('#cm').value,prio:$('#cp').value};
+      const r=recommend(f);
+      $('#cres').innerHTML=r.total?`<div class="grid" style="margin-top:20px">${r.top.map((x,i)=>carCard(x,i,reasons(x,f,r.stats,r.total))).join('')}</div>`:`<div class="empty" style="margin-top:20px">با این شرایط خودرویی پیدا نشد.<br>از میان ${fnum(CARS.length)} خودروی ثبت‌شده، ${fnum(r.cnt.budget)} مورد با بودجه، ${fnum(r.cnt.range)} مورد با برد، ${fnum(r.cnt.type)} مورد با نوع بدنه و ${fnum(r.cnt.market)} مورد با شرط بازار سازگارند. یکی از شرط‌ها را سبک‌تر کنید.</div>`;
+    };
+    else{const sel=[...panel.querySelectorAll('.cs')];sel[0].value='0';sel[1].value='1';const upd=()=>{$('#cout').innerHTML=compareHtml(sel.map(x=>x.value).filter(v=>v!=='').map(Number))};sel.forEach(x=>x.onchange=upd);upd()}
+  };
+  root.querySelectorAll('.ctab').forEach(b=>b.onclick=()=>show(b.dataset.ct));
+  show('rec');
+}
 
 function route(){
   const h=location.hash||'#/', [,r,arg]=h.split('/');
@@ -221,6 +326,7 @@ function route(){
   else {html=home();key=''}
   app.innerHTML=html;
   searchBind();
+  carsBind();
   window.scrollTo(0,0);
   $('#nav').innerHTML=navList().map(n=>`<a href="${n[0]}" class="${n[0]==='#/'+key||(n[0]==='#/'&&!key)?'on':''}">${n[1]}</a>`).join('');
   const pb=$('#partsbar'); pb.hidden=!key||key==='';
@@ -234,7 +340,7 @@ function route(){
   });
 }
 addEventListener('hashchange',route);
-fetch('content.json?'+Date.now()).then(r=>r.json()).then(c=>{SHOP_ENABLED=!!c.shop;PODCAST_NAME=c.podcast||PODCAST_NAME;NEWS=c.news||[];ARTICLES=c.articles||[];EPISODES=c.episodes||[];CONTACT=c.contact||{};PIMG=c.partImages||{};PRODUCTS=c.products||[];SHOPINFO=c.shopInfo||{};ABOUT=c.about||'';applyTheme(c.theme);if(/^G-[A-Z0-9]{4,}$/.test(c.gaId||'')){const g=document.createElement('script');g.async=1;g.src='https://www.googletagmanager.com/gtag/js?id='+c.gaId;document.head.appendChild(g);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config',c.gaId)}}).catch(()=>{}).finally(route);
+fetch('content.json?'+Date.now()).then(r=>r.json()).then(c=>{SHOP_ENABLED=!!c.shop;PODCAST_NAME=c.podcast||PODCAST_NAME;NEWS=c.news||[];ARTICLES=c.articles||[];EPISODES=c.episodes||[];CONTACT=c.contact||{};PIMG=c.partImages||{};PRODUCTS=c.products||[];SHOPINFO=c.shopInfo||{};ABOUT=c.about||'';CARS=c.cars||[];CARSINFO=c.carsInfo||{};applyTheme(c.theme);if(/^G-[A-Z0-9]{4,}$/.test(c.gaId||'')){const g=document.createElement('script');g.async=1;g.src='https://www.googletagmanager.com/gtag/js?id='+c.gaId;document.head.appendChild(g);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config',c.gaId)}}).catch(()=>{}).finally(route);
 </script>
 </body>
 </html>
