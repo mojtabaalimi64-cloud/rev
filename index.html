@@ -206,6 +206,7 @@ function home(){
     </div>
     <div class="chips">${chips}</div>
   </div></div>
+  <section class="blk" style="padding:32px 0 0"><div class="wrap"><div class="pod"><div><h2 style="color:#fff;margin:0 0 12px">برنامه‌ریزی سفر با خودروی برقی و هیبریدی</h2><p>نزدیک‌ترین ایستگاه شارژ را پیدا کن و محل توقف‌های پیشنهادی مسیرت را ببین.</p></div><a class="btn" href="trip.html">شروع برنامه‌ریزی</a></div></div></section>
   ${CARS.length>=2?carsSection():''}
   <section class="blk"><div class="wrap"><h2>تازه‌ترین مقالات</h2>${artGrid(ARTICLES.slice(0,3))}</div></section>
   <section class="blk" style="padding-top:0"><div class="wrap"><div class="pod"><div><h2 style="color:#fff;margin:0 0 12px">${PODCAST_NAME}</h2><p>گفتگو با کسانی که آینده خودرو و تکنولوژی را می‌سازند.</p></div><a class="btn" href="#/podcast">درباره پادکست</a></div></div></section>`;
@@ -342,6 +343,5 @@ function route(){
 addEventListener('hashchange',route);
 fetch('content.json?'+Date.now()).then(r=>r.json()).then(c=>{SHOP_ENABLED=!!c.shop;PODCAST_NAME=c.podcast||PODCAST_NAME;NEWS=c.news||[];ARTICLES=c.articles||[];EPISODES=c.episodes||[];CONTACT=c.contact||{};PIMG=c.partImages||{};PRODUCTS=c.products||[];SHOPINFO=c.shopInfo||{};ABOUT=c.about||'';CARS=c.cars||[];CARSINFO=c.carsInfo||{};applyTheme(c.theme);if(/^G-[A-Z0-9]{4,}$/.test(c.gaId||'')){const g=document.createElement('script');g.async=1;g.src='https://www.googletagmanager.com/gtag/js?id='+c.gaId;document.head.appendChild(g);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config',c.gaId)}}).catch(()=>{}).finally(route);
 </script>
-  <script src="features.js"></script>
 </body>
 </html>
