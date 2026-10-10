@@ -1,5 +1,5 @@
 {
- "shop": false,
+ "shop": true,
  "podcast": "REV Podcast",
  "news": [],
  "articles": [
@@ -20,5 +20,15 @@
    "slug": "amuz4qpvl"
   }
  ],
- "episodes": []
+ "episodes": [],
+ "theme": {
+  "accent": "#39FF88",
+  "dark": "#080B0D",
+  "paper": "#F5F7F8",
+  "text": "#080B0D",
+  "font": "modern",
+  "size": 17
+ },
+ "contact": {},
+ "partImages": {}
 }
