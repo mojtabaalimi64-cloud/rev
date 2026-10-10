@@ -23,10 +23,10 @@
  "episodes": [],
  "theme": {
   "accent": "#39FF88",
-  "dark": "#409cbf",
+  "dark": "#080B0D",
   "paper": "#F5F7F8",
   "text": "#080B0D",
-  "font": "classic",
+  "font": "modern",
   "size": 17
  },
  "contact": {
