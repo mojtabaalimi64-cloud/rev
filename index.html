@@ -10,6 +10,7 @@
 <meta property="og:locale" content="fa_IR">
 <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%23080B0D'/%3E%3Cpath d='M18 4 8 18h7l-1 10 10-14h-7z' fill='%2339FF88'/%3E%3C/svg%3E">
 <style>
+/* ===== رنگ‌های سازمانی: فقط همین چند خط را عوض کنید ===== */
 :root{--ink:#080B0D;--ink-2:#121A1F;--paper:#F5F7F8;--card:#fff;--line:#DDE3E6;--muted:#5B666D;--teal:#00D9C0;--teal-d:#00806F;--gray:#8A949B;--green:#39FF88;
 --font:"Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,system-ui,sans-serif;--max:1120px}
 *{box-sizing:border-box;margin:0;padding:0}
@@ -34,20 +35,22 @@ header{position:sticky;top:0;z-index:50;background:rgba(8,11,13,.97);color:#fff}
 .chip:hover,.chip.on{background:var(--green);border-color:var(--green);color:var(--ink)}
 main{min-height:70vh;animation:in .35s ease}
 @keyframes in{from{opacity:0}to{opacity:1}}
+/* hero + car */
 .hero{background:radial-gradient(ellipse 70% 60% at 50% 78%,rgba(57,255,136,.10),transparent 70%),var(--ink);color:#fff;padding:56px 0 40px;overflow:hidden}
 .hero h1{font-size:clamp(32px,6vw,60px);line-height:1.3;font-weight:900}
 .hero p.lead{margin-top:12px;color:#C3CBD0;max-width:52ch}
-.stage{position:relative;direction:ltr;max-width:860px;margin:36px auto 0;aspect-ratio:800/340}
-.stage svg{width:100%;height:100%;overflow:visible;transition:transform .75s cubic-bezier(.65,0,.25,1);transform-origin:var(--ox,50%) var(--oy,50%)}
-.stage.zoom svg{transform:scale(3.2)}
+.stage{position:relative;direction:ltr;max-width:1100px;margin:32px auto 0;aspect-ratio:3/2;border-radius:18px;overflow:hidden;background:#0B1114}
+.stage img{width:100%;height:100%;display:block;object-fit:cover;transition:transform .8s cubic-bezier(.65,0,.25,1);transform-origin:var(--ox,50%) var(--oy,50%)}
+.stage.zoom img{transform:scale(2.6)}
 .stage.zoom .hs{opacity:0;transition:opacity .2s}
-.car-line{fill:none;stroke:#2F3E46;stroke-width:3;stroke-linejoin:round}
 .hs{position:absolute;transform:translate(-50%,-50%);display:flex;align-items:center;gap:8px;direction:rtl}
 .hs i{width:22px;height:22px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 rgba(57,255,136,.6);animation:pulse 2.2s infinite;flex:none}
 .hs span{background:var(--ink-2);border:1px solid #2A343A;padding:0 12px;border-radius:999px;font-size:14px;line-height:30px;white-space:nowrap}
 .hs:hover span,.hs:focus-visible span{background:var(--green);color:var(--ink)}
 @keyframes pulse{70%{box-shadow:0 0 0 14px rgba(57,255,136,0)}100%{box-shadow:0 0 0 0 rgba(57,255,136,0)}}
 .chips{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-top:24px}
+.hint{text-align:center;color:#8A949B;font-size:14px;margin-top:14px}
+/* sections */
 section.blk{padding:64px 0}
 h2{font-size:clamp(24px,3.6vw,34px);font-weight:800;line-height:1.4;padding-inline-start:16px;border-inline-start:6px solid var(--green);margin-bottom:28px}
 .grid{display:grid;gap:18px;grid-template-columns:repeat(auto-fit,minmax(250px,1fr))}
@@ -71,7 +74,7 @@ a.card:hover{border-color:var(--teal)}
 .btn{display:inline-block;background:var(--green);color:var(--ink);font-weight:700;border-radius:999px;padding:8px 24px}
 footer{background:var(--ink);color:#C3CBD0;padding:36px 0;font-size:15px}
 .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
-@media(max-width:760px){.hs span{display:none}.stage.zoom svg{transform:scale(2.4)}.bar{flex-direction:column;align-items:stretch;gap:0;padding-top:8px}.nav{padding-bottom:8px}}
+@media(max-width:760px){.hs span{display:none}.stage.zoom img{transform:scale(2.1)}.bar{flex-direction:column;align-items:stretch;gap:0;padding-top:8px}.nav{padding-bottom:8px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
 </style>
 </head>
@@ -88,30 +91,34 @@ footer{background:var(--ink);color:#C3CBD0;padding:36px 0;font-size:15px}
 <footer><div class="wrap foot"><div><strong style="color:#fff;letter-spacing:.06em">REV</strong> · خودروهای برقی، تکنولوژی و آینده حمل‌ونقل</div><div>© ۲۰۲۶ REV</div></div></footer>
 
 <script>
+/* =====================================================================
+   محتوای سایت: برای افزودن مطلب یا خبر فقط همین بخش را ویرایش کنید
+   ===================================================================== */
 let SHOP_ENABLED = false;
 
+// نقطه‌های روی تصویر: x و y بر حسب درصد از عرض و ارتفاع تصویر
 const PARTS = {
-  battery:{name:'باتری',x:405,y:236,lead:'قلب انرژی خودرو برقی؛ تعیین‌کننده برد، قیمت و عمر خودرو.',
+  battery:{name:'باتری',x:62,y:56,lead:'قلب انرژی خودرو برقی؛ تعیین‌کننده برد، قیمت و عمر خودرو.',
     tech:[['شیمی سلول: NMC و LFP','NMC چگالی انرژی بالاتر و LFP عمر و ایمنی بیشتر و هزینه کمتر دارد.'],
           ['سیستم مدیریت باتری (BMS)','نظارت بر ولتاژ، دما و سلامت تک‌تک سلول‌ها و تعادل شارژ آن‌ها.'],
           ['باتری حالت جامد','الکترولیت جامد به‌جای مایع؛ وعده چگالی انرژی بیشتر و ایمنی بهتر، هنوز در مرحله توسعه و ورود تدریجی به بازار.'],
           ['Cell-to-Pack','حذف ماژول‌ها و جاسازی مستقیم سلول در پک برای صرفه‌جویی در فضا و هزینه.']]},
-  motor:{name:'موتور',x:215,y:252,lead:'تبدیل انرژی الکتریکی به حرکت با راندمان بسیار بالا و گشتاور فوری.',
+  motor:{name:'موتور',x:27,y:55,lead:'تبدیل انرژی الکتریکی به حرکت با راندمان بسیار بالا و گشتاور فوری.',
     tech:[['موتور آهنربای دائم (PMSM)','رایج‌ترین انتخاب؛ راندمان بالا و ابعاد کوچک.'],
           ['موتور القایی','بدون آهنربای نادر زمین؛ ساده‌تر و ارزان‌تر در برخی طراحی‌ها.'],
           ['ترمز بازیاب','موتور هنگام کاهش سرعت به ژنراتور تبدیل می‌شود و بخشی از انرژی را به باتری برمی‌گرداند.'],
           ['موتور محوری و درون‌چرخی','طراحی‌های نوظهور برای چگالی توان بیشتر و جای‌گذاری انعطاف‌پذیرتر.']]},
-  charging:{name:'شارژ',x:118,y:194,lead:'زیرساخت و استانداردهایی که تعیین می‌کنند خودرو چقدر راحت و سریع پر می‌شود.',
+  charging:{name:'شارژ',x:81.5,y:37,lead:'زیرساخت و استانداردهایی که تعیین می‌کنند خودرو چقدر راحت و سریع پر می‌شود.',
     tech:[['شارژ AC و DC','AC با شارژر داخلی خودرو و DC مستقیم به باتری و بسیار سریع‌تر.'],
           ['استانداردهای کانکتور','CCS، GB/T، CHAdeMO و NACS؛ سازگاری کانکتور مهم‌ترین نکته هنگام خرید است.'],
           ['شارژ خانگی','وال‌باکس و برق منزل؛ رایج‌ترین روش شارژ روزانه.'],
           ['V2G و V2H','بازگرداندن انرژی خودرو به شبکه یا خانه.']]},
-  electronics:{name:'اینورتر و برق',x:668,y:190,lead:'مغز الکتریکی خودرو که انرژی باتری را مدیریت و به موتور منتقل می‌کند.',
+  electronics:{name:'اینورتر و برق',x:31,y:42,lead:'مغز الکتریکی خودرو که انرژی باتری را مدیریت و به موتور منتقل می‌کند.',
     tech:[['اینورتر','تبدیل جریان مستقیم باتری به جریان متناوب موتور و کنترل دقیق سرعت و گشتاور.'],
           ['نیمه‌هادی SiC','سیلیکون‌کاربید تلفات را کم می‌کند و معماری ۸۰۰ ولتی را ممکن می‌سازد.'],
           ['مدیریت حرارت','پمپ حرارتی و خنک‌کاری باتری برای حفظ برد در هوای سرد و گرم.'],
           ['شارژر داخلی و DC-DC','تبدیل برق شبکه برای باتری و تأمین برق ۱۲ ولت تجهیزات.']]},
-  software:{name:'نرم‌افزار و هوش مصنوعی',x:430,y:92,lead:'نرم‌افزار، سنسورها و هوش مصنوعی که خودرو برقی را «خودروی نرم‌افزاری» می‌کنند.',
+  software:{name:'نرم‌افزار و هوش مصنوعی',x:54,y:27,lead:'نرم‌افزار، سنسورها و هوش مصنوعی که خودرو برقی را «خودروی نرم‌افزاری» می‌کنند.',
     tech:[['سنسورها','دوربین، رادار، اولتراسونیک و لیدار برای درک محیط.'],
           ['سطوح خودران SAE','از سطح ۰ تا ۵؛ بیشتر خودروهای امروز در سطح ۱ و ۲ هستند.'],
           ['بروزرسانی از راه دور (OTA)','بهبود قابلیت‌ها و رفع مشکل بدون مراجعه به نمایندگی.'],
@@ -121,6 +128,7 @@ const PARTS = {
 /* اخبار، مقالات و پادکست از فایل content.json خوانده می‌شوند (با admin.html ویرایش کنید) */
 let NEWS=[],ARTICLES=[],EPISODES=[],PODCAST_NAME='REV Podcast';
 
+/* ===================================================================== */
 const $ = s => document.querySelector(s), app = $('#app');
 const partKeys = Object.keys(PARTS);
 const navList=()=>{const n=[['#/','خانه'],['#/articles','مقالات'],['#/podcast','پادکست']];if(SHOP_ENABLED)n.push(['#/shop','فروشگاه']);return n};
@@ -130,37 +138,13 @@ const artGrid = list => list.length ? `<div class="grid">${list.map(artCard).joi
 const partHead = (t,p,back) => `<div class="phead"><div class="wrap">${back?'<a class="back" href="#/">بازگشت به خودرو</a><br>':''}<h1>${t}</h1><p>${p}</p></div></div>`;
 
 function home(){
-  const hs = partKeys.map(k=>{const p=PARTS[k];return `<button class="hs" data-k="${k}" style="left:${p.x/8}%;top:${p.y/3.4}%" aria-label="${p.name}"><i></i><span>${p.name}</span></button>`}).join('');
+  const hs = partKeys.map(k=>{const p=PARTS[k];return `<button class="hs" data-k="${k}" style="left:${p.x}%;top:${p.y}%" aria-label="${p.name}"><i></i><span>${p.name}</span></button>`}).join('');
   const chips = partKeys.map(k=>`<a class="chip" href="#/s/${k}">${PARTS[k].name}</a>`).join('');
   return `<div class="hero"><div class="wrap">
     <h1>آینده، برقی حرکت می‌کند.</h1>
-    <p class="lead">خودروی برقی را از درون بشناسید. روی هر بخش بزنید تا وارد توضیحات، فناوری‌ها و آخرین اخبار آن شوید.</p>
+    <p class="lead">خودروی برقی را از درون ببینید. روی هر بخش بزنید تا وارد توضیحات، فناوری‌ها و آخرین اخبار آن شوید.</p>
     <div class="stage" id="stage">
-      <svg viewBox="0 0 800 340" role="img" aria-label="نمای کناری یک خودروی برقی">
-        <defs>
-          <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1F2C33"/><stop offset="1" stop-color="#0B1114"/></linearGradient>
-          <filter id="gl" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>
-          <g id="w"><circle r="46" fill="#0B1114" stroke="#2F3E46" stroke-width="3"/><circle r="31" fill="#121A1F" stroke="#8A949B" stroke-width="2"/>
-            <g stroke="#8A949B" stroke-width="3" stroke-linecap="round"><path d="M0-9V-27"/><path d="M0-9V-27" transform="rotate(72)"/><path d="M0-9V-27" transform="rotate(144)"/><path d="M0-9V-27" transform="rotate(216)"/><path d="M0-9V-27" transform="rotate(288)"/></g>
-            <circle r="7" fill="#080B0D" stroke="#8A949B" stroke-width="2"/></g>
-        </defs>
-        <ellipse cx="400" cy="306" rx="350" ry="10" fill="#39FF88" fill-opacity=".09"/>
-        <path d="M70 248V218C70 204 82 196 104 192L238 168C262 132 300 108 352 100C400 94 470 94 520 102C560 108 596 128 640 160L712 178C738 184 748 198 748 222V248Z" fill="url(#bg)" stroke="#2F3E46" stroke-width="2"/>
-        <path d="M262 164C284 134 314 114 354 108L440 106V164Z" fill="#0F171B" stroke="#2F3E46" stroke-width="2"/>
-        <path d="M452 106L512 108C542 112 570 128 600 156L452 164Z" fill="#0F171B" stroke="#2F3E46" stroke-width="2"/>
-        <path d="M262 168C290 130 320 108 360 101" fill="none" stroke="#00D9C0" stroke-opacity=".7" stroke-width="2" filter="url(#gl)"/>
-        <path d="M100 228H700" stroke="#00D9C0" stroke-opacity=".3" stroke-width="1.5"/>
-        <path d="M708 184L744 194" stroke="#39FF88" stroke-width="4" stroke-linecap="round" filter="url(#gl)"/>
-        <path d="M72 208L102 199" stroke="#00D9C0" stroke-width="4" stroke-linecap="round" filter="url(#gl)"/>
-        <circle cx="215" cy="252" r="54" fill="#080B0D"/><circle cx="595" cy="252" r="54" fill="#080B0D"/>
-        <use href="#w" x="215" y="252"/><use href="#w" x="595" y="252"/>
-        <rect x="262" y="228" width="286" height="18" rx="6" fill="#39FF88" fill-opacity=".18" stroke="#39FF88" stroke-width="2" filter="url(#gl)"/>
-        <path d="M310 228V246M358 228V246M406 228V246M454 228V246M502 228V246" stroke="#39FF88" stroke-opacity=".5"/>
-        <circle cx="215" cy="252" r="12" fill="#00D9C0" fill-opacity=".35" stroke="#00D9C0" stroke-width="2" filter="url(#gl)"/>
-        <rect x="640" y="178" width="56" height="20" rx="5" fill="#00D9C0" fill-opacity=".18" stroke="#00D9C0" stroke-width="2"/>
-        <path d="M120 182l-9 13h7l-3 11 11-15h-7z" fill="#39FF88" filter="url(#gl)"/>
-        <ellipse cx="430" cy="93" rx="14" ry="5" fill="#00D9C0" fill-opacity=".4" stroke="#00D9C0" stroke-width="2"/>
-      </svg>${hs}
+      <img src="ev.jpg" onerror="this.onerror=null;this.src='ev.png'" width="1536" height="1024" fetchpriority="high" alt="خودروی برقی با نمایش باتری، موتور، اینورتر و پورت شارژ">${hs}
     </div>
     <div class="chips">${chips}</div>
   </div></div>
@@ -201,7 +185,7 @@ function route(){
     const p=PARTS[b.dataset.k], st=$('#stage');
     const go=()=>{location.hash='#/s/'+b.dataset.k};
     if(matchMedia('(prefers-reduced-motion:reduce)').matches) return go();
-    st.style.setProperty('--ox',p.x/8+'%'); st.style.setProperty('--oy',p.y/3.4+'%');
+    st.style.setProperty('--ox',p.x+'%'); st.style.setProperty('--oy',p.y+'%');
     st.classList.add('zoom'); setTimeout(go,700);
   });
 }
