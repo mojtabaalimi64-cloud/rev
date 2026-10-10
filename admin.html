@@ -81,8 +81,7 @@ const r=await api('PUT',b);
 if(r.ok){sha=(await r.json()).content.sha;dirty=false;draw();msg('منتشر شد. تا یکی دو دقیقه دیگر روی سایت دیده می‌شود.')}
 else msg('ذخیره نشد (کد '+r.status+'). اگر ۴۰۹ است، صفحه را رفرش کنید.');
 }catch(e){msg('ذخیره نشد؛ اتصال برقرار نیست.')}
-}
-/* ---- تصویر: انتخاب، کوچک‌سازی و آپلود ---- */
+}/* ---- تصویر: انتخاب، کوچک‌سازی و آپلود ---- */
 const choose=()=>new Promise(r=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>r(i.files[0]);i.click()});
 const shrink=f=>new Promise((res,rej)=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1400/im.width),cv=document.createElement('canvas');cv.width=im.width*s;cv.height=im.height*s;const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);res(cv.toDataURL('image/jpeg',.82))};im.onerror=rej;im.src=URL.createObjectURL(f)});
 async function upImage(){
@@ -95,7 +94,6 @@ if(!r.ok){msg('آپلود نشد (کد '+r.status+')');return null}
 prev[p]=d;msg('تصویر آپلود شد. بعد از «انتشار تغییرات» روی سایت دیده می‌شود.');return p;
 }catch(e){msg('این فایل به‌عنوان تصویر خوانده نشد.')}
 }
-
 /* ---- صفحه‌ها ---- */
 function login(){
 root.innerHTML=`<div class="box"><h2>ورود</h2><p style="color:var(--muted)">توکن گیت‌هاب را وارد کنید. فقط روی همین مرورگر ذخیره می‌شود.</p>
@@ -154,8 +152,8 @@ const carsBox=()=>`<div class="box"><h3>راهنمای بخش مقایسه و پ
 <p class="hint">با ثبت حداقل دو خودرو، بخش «انتخاب و مقایسه‌ی خودروی برقی» در صفحه‌ی اول سایت ظاهر می‌شود. قیمت را به تومان و به‌صورت عدد کامل بنویسید و برد، باتری، توان، شتاب و شارژ را فقط به‌صورت عدد. تاریخ قیمت را حتماً بنویسید و قیمت‌ها را مرتب به‌روز کنید، چون قیمت خودرو سریع تغییر می‌کند. هرچه اطلاعات کامل‌تر باشد، پیشنهادها دقیق‌تر می‌شوند.</p>
 <label for="ci_note">توضیح اضافه زیر این بخش (اختیاری)</label><textarea id="ci_note" data-ci="note" rows="2">${esc(c.carsInfo.note)}</textarea></div>
 <h3 style="margin:16px 0 8px">خودروها</h3>`;
-const aboutTab=()=>`<div class="box"><label for="ab">متن صفحه‌ی «درباره ما»</label><textarea id="ab" rows="14">${esc(c.about)}</textarea><p class="hint">پاراگراف‌ها را با یک خط خالی جدا کنید. «## عنوان» عنوان فرعی می‌سازد و **متن** پررنگ می‌شود.</p></div>`;
-function draw(){
+const aboutTab=()=>`<div class="box"><label for="ab">متن صفحه‌ی «درباره ما»</label><textarea id="ab" rows="14">${esc(c.about)}</textarea><p class="hint">پاراگراف‌ها را با یک خط خالی جدا کنید. «## عنوان» عنوان فرعی می‌سازد و **متن** پررنگ می‌شود.</p></div>`;function draw(){
+if(!tok){login();return}
 if(!c){load();return}
 const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
 const body=edit?form():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
