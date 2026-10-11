@@ -320,4 +320,26 @@ const stopCard=(s,i,kind,optional,chargeTo)=>`<div class="card"><span class="tag
 function show(rt,v,ev,fuel,opt){
   const main=ev||fuel,kind=ev?'ev':'fuel',optional=v==='phev'&&!!ev;
   const stops=main.stops,extra=stops.reduce((a,s)=>a+(s.mins||0)*60+(s.off||0)*2/50*3600,0);
-  let h=`<div class="sum"><div><span class="meta">مسافت کل</span><div class="num">${fnum(rt.km)} کیلومتر</div></div><div><span class="meta">زمان رانندگی</span><div class="num">${fmtT(rt.sec)}</div></div><div><span class="meta">تعداد توقف</span><div
+  let h=`<div class="sum"><div><span class="meta">مسافت کل</span><div class="num">${fnum(rt.km)} کیلومتر</div></div><div><span class="meta">زمان رانندگی</span><div class="num">${fmtT(rt.sec)}</div></div><div><span class="meta">تعداد توقف</span><div class="num">${fnum(stops.length)}</div></div><div><span class="meta">زمان کل با توقف‌ها</span><div class="num">${fmtT(rt.sec+extra)}</div></div></div>`;
+  if(!stops.length)h+=`<div class="ok">${v==='hev'?'با این میزان سوخت':'با این شارژ'} بدون توقف به مقصد می‌رسید؛ هنگام رسیدن حدود ${fnum(main.finalSoc)}٪ ${kind==='ev'?'شارژ':'سوخت'} باقی می‌ماند.</div>`;
+  else h+=`<div class="cards">${stops.map((s,i)=>stopCard(s,i,kind,optional,opt.chargeTo)).join('')}</div><div class="ok">هنگام رسیدن به مقصد حدود ${fnum(main.finalSoc)}٪ ${kind==='ev'?'شارژ':'سوخت'} باقی می‌ماند.</div>`;
+  if(optional)h=`<div class="ok">چون خودروی شما بنزین هم دارد، توقف‌های شارژ زیر اختیاری‌اند و فقط برای کم کردن مصرف بنزین هستند.</div>`+h;
+  if(fuel&&ev){h+=`<p class="sec-t" style="margin-top:16px">سوخت‌گیری پیشنهادی</p><div class="cards">${fuel.stops.map((s,i)=>stopCard(s,i,'fuel',false,100)).join('')}</div>`}
+  if(main.incomplete)h+=warn('با این برد، رسیدن به مقصد با توقف‌های محدود ممکن نشد؛ برد یا درصد شارژ را بیشتر کنید.');
+  $('pout').innerHTML=h;
+  const marks=[{...S.o,t:'مبدأ',c:'#fff'},{...S.d,t:'مقصد',c:'#080B0D'},...stops.map((s,i)=>({lat:s.lat,lng:s.lng,t:(s.title||'توقف')+' (توقف '+(i+1)+')',c:s.approx?'#EF9F27':'#39FF88'}))];
+  draw(rt.pts,marks);
+}
+
+/* ---------- راه‌اندازی ---------- */
+document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));['t1','t2'].forEach(t=>$(t).hidden=t!==b.dataset.t)});
+fetch('content.json?'+Date.now()).then(r=>r.json()).then(c=>{
+  CARS=(c.cars||[]).filter(x=>NUM(x.range));
+  $('car').innerHTML+=CARS.map((x,i)=>`<option value="${i}">${esc(x.title)}</option>`).join('');
+  const t=c.theme||{},s=document.documentElement.style,hex=/^#[0-9a-fA-F]{6}$/;
+  [['accent','--green'],['dark','--ink'],['paper','--paper'],['text','--text']].forEach(([k,v])=>hex.test(t[k]||'')&&s.setProperty(v,t[k]));
+}).catch(()=>{});
+vt();
+</script>
+</body>
+</html>
