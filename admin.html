@@ -209,11 +209,7 @@ root.addEventListener('click',async e=>{
     else if(w==='mark')wrap('==','==','متن مهم');
     else if(w==='h')wrap('\n\n## ','\n\n','عنوان فرعی');
     else if(w==='link'){const u=prompt('آدرس لینک (با https:// شروع شود):');if(u)wrap('[','](' +u.trim()+')','متن لینک')}
-    else if(w==='img'){const p=await upImage();if(p)wrap('\n\n
-
-![توضیح تصویر](' +p+')
-
-\n\n','','')}
+    else if(w==='img'){const p=await upImage();if(p)wrap('\n\n![توضیح تصویر](' +p+')\n\n','','')}
   }
   else if(a==='ok'){
     const it=collect();
