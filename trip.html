@@ -24,6 +24,14 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .stat{background:#0c131b;border:1px solid var(--line);padding:10px;border-radius:10px}.stat b{display:block;font-size:20px;color:var(--accent)}.stat span{font-size:12px;color:var(--muted)}
 .results{margin-top:14px}.station{border-top:1px solid var(--line);padding:12px 0}.station strong{display:block}.station small{color:var(--muted)}
+.plan-box{margin:14px 0;padding:13px;border:1px solid #53633a;background:#151e17;border-radius:12px}
+.plan-box h2{margin:0 0 8px;color:var(--accent)}
+.plan-stop{padding:10px 0;border-top:1px solid #354331}
+.plan-stop strong{display:block}
+.plan-meta{font-size:12px;color:var(--muted)}
+.plan-alert{color:#ffd18a;font-size:13px}
+.plan-ok{color:#d7ff3f;font-size:13px}
+
 .pill{display:inline-block;font-size:11px;border:1px solid #4a5b69;border-radius:99px;padding:2px 7px;margin:4px 3px 0 0;color:#d9e4eb}
 .warning{font-size:12px;color:#ffd18a;margin-top:10px}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.wrap{padding:12px}#map{height:430px}.head{align-items:flex-start;flex-direction:column}.head-actions{width:100%;justify-content:space-between}.stats{grid-template-columns:repeat(3,1fr)}}
@@ -41,7 +49,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px
   <div class="layout">
     <aside class="panel">
       <h1>برنامه‌ریزی سفر</h1>
-      <div class="sub">مبدأ و مقصد را وارد کنید تا مسیر و شارژرهای ثبت‌شده در محدوده مسیر نمایش داده شوند.</div>
+      <div class="sub">مبدأ، مقصد و مشخصات باتری را وارد کنید تا مسیر، شارژرهای ثبت‌شده و توقف‌های پیشنهادی محاسبه شوند.</div>
       <label for="origin">مبدأ</label><input id="origin" placeholder="مثلاً تهران، میدان آزادی" value="تهران">
       <label for="destination">مقصد</label><input id="destination" placeholder="مثلاً اصفهان، میدان نقش جهان" value="اصفهان">
       <div class="grid2">
@@ -50,8 +58,10 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px
       </div>
       <div class="grid2">
         <div><label for="consumption">مصرف (kWh/100km)</label><input id="consumption" type="number" min="5" max="50" step="0.5" value="18"></div>
-        <div><label for="reserve">ذخیره مقصد (%)</label><input id="reserve" type="number" min="5" max="40" value="15"></div>
+        <div><label for="reserve">ذخیره ایمنی (%)</label><input id="reserve" type="number" min="5" max="40" value="15"></div>
       </div>
+      <label for="targetSoc">شارژ هدف در توقف‌های بین‌راهی (%)</label>
+      <input id="targetSoc" type="number" min="30" max="100" value="80">
       <label for="radius">فاصله قابل‌قبول شارژر از مسیر</label>
       <select id="radius"><option value="5">۵ کیلومتر</option><option value="10" selected>۱۰ کیلومتر</option><option value="20">۲۰ کیلومتر</option><option value="40">۴۰ کیلومتر</option></select>
       <button class="primary" id="planBtn">محاسبه مسیر و یافتن شارژرها</button>
@@ -61,7 +71,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px
         <div class="stat"><b id="duration">—</b><span>زمان تقریبی</span></div>
         <div class="stat"><b id="range">—</b><span>برد تخمینی (km)</span></div>
       </div>
-      <div class="warning">داده‌های شارژر از بانک REV و در صورت نیاز OpenStreetMap دریافت می‌شوند. اطلاعات زنده‌بودن، اشغال بودن یا فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.</div>
+      <div class="warning">برنامه توقف بر اساس ظرفیت باتری، مصرف، شارژ اولیه و ذخیره ایمنی تخمین زده می‌شود. اطلاعات زنده‌بودن، اشغال بودن، توان و سازگاری کانکتور ایستگاه‌ها تضمین نمی‌شود؛ پیش از سفر بررسی کنید.</div>
       <div class="results" id="results"><h2 style="margin-top:18px">شارژرهای نزدیک مسیر</h2><div class="sub">پس از محاسبه مسیر، فهرست اینجا نمایش داده می‌شود.</div></div>
     </aside>
     <main class="panel"><div id="map" role="img" aria-label="نقشه مسیر سفر و ایستگاه‌های شارژ"></div></main>
@@ -280,21 +290,121 @@ async function getIranStations(routeCoords,radiusKm){
     throw new Error("بانک شارژرهای REV خالی است و دریافت اطلاعات از OpenStreetMap هم ناموفق بود. جزئیات فنی در Console مرورگر ثبت شده است: روی صفحه راست‌کلیک کنید، Inspect و سپس Console را باز کنید.");
   }
 }
+function routeMetrics(routeCoords){
+  const points=routeCoords.map(c=>[Number(c[1]),Number(c[0])]);
+  const cumulative=[0];
+  for(let i=1;i<points.length;i++) cumulative[i]=cumulative[i-1]+haversine(points[i-1],points[i]);
+  return {points,cumulative,total:cumulative[cumulative.length-1]||0};
+}
+function stationAlongRouteKm(station,metrics){
+  const p=[station.lat,station.lon];
+  let best=Infinity,bestKm=0;
+  for(let i=1;i<metrics.points.length;i++){
+    const a=metrics.points[i-1],b=metrics.points[i];
+    const lat0=(p[0]+a[0]+b[0])/3*Math.PI/180;
+    const xy=q=>[q[1]*111.32*Math.cos(lat0),q[0]*110.57];
+    const P=xy(p),A=xy(a),B=xy(b),dx=B[0]-A[0],dy=B[1]-A[1];
+    const den=dx*dx+dy*dy;
+    const t=den?Math.max(0,Math.min(1,((P[0]-A[0])*dx+(P[1]-A[1])*dy)/den)):0;
+    const dist=Math.hypot(P[0]-(A[0]+t*dx),P[1]-(A[1]+t*dy));
+    if(dist<best){
+      best=dist;
+      bestKm=metrics.cumulative[i-1]+(metrics.cumulative[i]-metrics.cumulative[i-1])*t;
+    }
+  }
+  return {routeKm:bestKm,offRouteKm:best};
+}
+function buildChargingPlan(stations,routeCoords,routeKm,params){
+  const {battery,soc,consumption,reserve,targetSoc,radius}=params;
+  const metrics=routeMetrics(routeCoords);
+  const usableRange=pct=>Math.max(0,(pct-reserve)/100*battery/consumption*100);
+  const candidates=stations.map(s=>({...s,...stationAlongRouteKm(s,metrics)}))
+    .filter(s=>s.routeKm>2&&s.routeKm<routeKm-2&&s.offRouteKm<=radius+0.5)
+    .sort((a,b)=>a.routeKm-b.routeKm);
+  if(routeKm<=usableRange(soc)) return {status:'ok',message:`با شارژ اولیه ${soc}%، برد محاسباتی برای رسیدن به مقصد کافی است؛ توقف شارژ اجباری برآورد نمی‌شود.`,stops:[],candidates};
+  if(!candidates.length) return {status:'alert',message:'مسافت از برد قابل‌استفاده بیشتر است، اما شارژر میانی در داده‌های فعلی پیدا نشد. اطلاعات نقشه ممکن است ناقص باشد؛ این نتیجه به معنی نبود شارژر واقعی نیست.',stops:[],candidates};
+  const stops=[];
+  let currentKm=0,currentSoc=soc;
+  const remaining=[...candidates];
+  for(let iteration=0;iteration<20;iteration++){
+    const range=usableRange(currentSoc);
+    if(routeKm-currentKm<=range) break;
+    const reachable=remaining.filter(st=>st.routeKm>currentKm+2&&st.routeKm-currentKm<=range+0.1);
+    if(!reachable.length){
+      return {status:'alert',message:`از کیلومتر ${Math.round(currentKm)} به بعد، با شارژ فعلی و ذخیره ${reserve}% شارژر ثبت‌شده‌ای در برد قابل‌دسترسی پیدا نشد. ادامه مسیر را ایمن فرض نکنید.`,stops,candidates};
+    }
+    const nextRange=usableRange(targetSoc);
+    // Prefer the furthest reachable station from which the destination or at least
+    // another listed station is reachable after charging to targetSoc.
+    let chosen=null;
+    for(let i=reachable.length-1;i>=0;i--){
+      const st=reachable[i];
+      const destinationReachable=routeKm-st.routeKm<=nextRange;
+      const nextStationReachable=remaining.some(n=>n.routeKm>st.routeKm+2&&n.routeKm-st.routeKm<=nextRange+0.1);
+      if(destinationReachable||nextStationReachable){chosen=st;break;}
+    }
+    if(!chosen) chosen=reachable[reachable.length-1];
+    const legKm=chosen.routeKm-currentKm;
+    const arrivalSoc=currentSoc-(legKm*consumption/battery);
+    // The range test should protect reserve, but report an alert if data rounding or
+    // route geometry causes the calculated arrival SOC to fall below reserve.
+    if(arrivalSoc<reserve-0.5) return {status:'alert',message:'به‌دلیل فاصله ایستگاه‌ها یا خطای داده مسیر، رسیدن به ایستگاه بعدی با ذخیره ایمنی قابل تأیید نیست.',stops,candidates};
+    const energyToTarget=Math.max(0,(targetSoc-arrivalSoc)/100*battery);
+    const effectivePower=chosen.power>0?chosen.power*0.7:null;
+    const chargeMinutes=effectivePower?Math.round(energyToTarget/effectivePower*60):null;
+    stops.push({...chosen,legKm,arrivalSoc,targetSoc,energyToTarget,chargeMinutes});
+    currentKm=chosen.routeKm;
+    currentSoc=targetSoc;
+    for(let i=remaining.length-1;i>=0;i--) if(remaining[i].routeKm<=currentKm+2) remaining.splice(i,1);
+    if(iteration===19) return {status:'alert',message:'تعداد توقف‌های محاسباتی از حد مجاز گذشت؛ داده مسیر یا ایستگاه‌ها را بررسی کنید.',stops,candidates};
+  }
+  const reached=routeKm-currentKm<=usableRange(currentSoc)+0.1;
+  return {status:reached?'ok':'alert',message:reached?`برآورد اولیه: ${stops.length} توقف شارژ با هدف ${targetSoc}% و ذخیره ایمنی ${reserve}%.`:'با ایستگاه‌های پیدا‌شده، رسیدن به مقصد با ذخیره ایمنی قابل تأیید نیست. ممکن است پوشش شارژرها ناقص باشد.',stops,candidates};
+}
+function renderChargingPlan(plan){
+  const box=document.createElement('section');box.className='plan-box';
+  const heading=document.createElement('h2');heading.textContent='برنامه پیشنهادی توقف و شارژ';box.appendChild(heading);
+  const intro=document.createElement('div');intro.className=plan.status==='ok'?'plan-ok':'plan-alert';intro.textContent=plan.message;box.appendChild(intro);
+  plan.stops.forEach((s,i)=>{
+    const item=document.createElement('div');item.className='plan-stop';
+    const time=s.chargeMinutes==null?'زمان شارژ قابل برآورد نیست؛ توان ایستگاه ثبت نشده':`زمان شارژ تقریبی ${s.chargeMinutes} دقیقه`;
+    item.innerHTML=`<strong>توقف ${i+1}: ${escapeHTML(s.name)}</strong>
+      <div class="plan-meta">حدود کیلومتر ${Math.round(s.routeKm)} مسیر · ${s.legKm.toFixed(0)} کیلومتر از توقف قبلی · ${s.routeDistance.toFixed(1)} کیلومتر فاصله مستقیم از جاده</div>
+      <div class="plan-meta">شارژ هنگام رسیدن: حدود ${Math.round(s.arrivalSoc)}٪ · هدف شارژ: ${s.targetSoc}٪ · انرژی نظری موردنیاز: ${s.energyToTarget.toFixed(1)} kWh</div>
+      <div class="plan-meta">${time}${s.power?` · توان ثبت‌شده ${s.power} kW` : ''}</div>
+      <div class="plan-meta">زمان شارژ، در صورت نمایش، با فرض میانگین ۷۰٪ توان نامی تخمین زده شده؛ زمان واقعی می‌تواند بیشتر باشد.</div>`;
+    box.appendChild(item);
+  });
+  const note=document.createElement('div');note.className='plan-meta';note.style.marginTop='8px';
+  note.textContent='این برنامه فقط برآورد انرژی بر اساس مسیر و داده‌های موجود است. فعال بودن شارژر، سازگاری کانکتور، ترافیک، آب‌وهوا، سرعت و مصرف واقعی تضمین نمی‌شود؛ پیش از حرکت وضعیت ایستگاه‌ها را بررسی کنید.';
+  box.appendChild(note);return box;
+}
+
 function fmtDuration(seconds){
   const mins=Math.round(seconds/60), h=Math.floor(mins/60),m=mins%60;
   return h?`${h} ساعت و ${m} دقیقه`:`${m} دقیقه`;
 }
-function renderStations(stations){
-  const el=$("results");
-  el.innerHTML="<h2 style='margin-top:18px'>شارژرهای نزدیک مسیر ("+stations.length+")</h2>";
-  if(!stations.length){el.innerHTML+="<div class='sub'>در بانک REV یا داده‌های عمومی OpenStreetMap ایستگاهی در شعاع انتخاب‌شده پیدا نشد. برای جست‌وجوی گسترده‌تر، فاصله قابل‌قبول را روی ۲۰ یا ۴۰ کیلومتر بگذارید. پوشش داده‌های عمومی شارژر در ایران ممکن است ناقص باشد؛ این نتیجه به معنی نبود شارژر واقعی نیست.</div>";return;}
-  stations.slice(0,50).forEach(s=>{
-    const marker=L.circleMarker([s.lat,s.lon],{radius:7,color:"#0b1016",weight:2,fillColor:"#d7ff3f",fillOpacity:.95}).addTo(stationLayer);
-    marker.bindPopup(`<b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+" kW":"نامشخص"}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a>`);
-    const item=document.createElement("div");item.className="station";
-    item.innerHTML=`<strong>${escapeHTML(s.name)}</strong><small>${escapeHTML(s.address||"نشانی کامل ثبت نشده")}</small><div><span class="pill">${s.routeDistance.toFixed(1)} کیلومتر از مسیر</span><span class="pill">${s.power?s.power+" kW":"توان نامشخص"}</span><span class="pill">${escapeHTML(s.status)}</span></div><div class="sub">${escapeHTML(s.connectors.join("، ")||"نوع کانکتور نامشخص")}${s.operator?" · "+escapeHTML(s.operator):""}</div><div style="margin-top:6px"><a href="${s.url}" target="_blank" rel="noopener" style="color:#64b5ff">مشاهده جزئیات</a> · <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lon}#map=16/${s.lat}/${s.lon}" target="_blank" rel="noopener" style="color:#64b5ff">نمایش روی نقشه</a></div>`;
+function renderStations(stations,routeCoords,routeKm,params){
+  const el=$('results');el.innerHTML='';
+  const metrics=routeMetrics(routeCoords);
+  const listStations=stations.map(s=>({...s,...stationAlongRouteKm(s,metrics)}));
+  const plan=buildChargingPlan(listStations,routeCoords,routeKm,params);
+  el.appendChild(renderChargingPlan(plan));
+  const heading=document.createElement('h2');heading.style.marginTop='18px';heading.textContent=`شارژرهای نزدیک مسیر (${listStations.length})`;el.appendChild(heading);
+  if(!listStations.length){
+    const empty=document.createElement('div');empty.className='sub';
+    empty.textContent='در بانک REV یا داده‌های عمومی OpenStreetMap ایستگاهی در شعاع انتخاب‌شده پیدا نشد. فاصله را روی ۲۰ یا ۴۰ کیلومتر بگذارید. پوشش داده‌های عمومی ممکن است ناقص باشد؛ این نتیجه به معنی نبود شارژر واقعی نیست.';
+    el.appendChild(empty);return;
+  }
+  const plannedIds=new Set(plan.stops.map(s=>String(s.id)));
+  listStations.slice(0,50).forEach(s=>{
+    const planned=plannedIds.has(String(s.id));
+    const marker=L.circleMarker([s.lat,s.lon],{radius:planned?10:7,color:'#0b1016',weight:2,fillColor:planned?'#64b5ff':'#d7ff3f',fillOpacity:.98}).addTo(stationLayer);
+    marker.bindPopup(`<b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+' kW':'نامشخص'}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a>`);
+    const item=document.createElement('div');item.className='station';
+    item.innerHTML=`<strong>${planned?'★ توقف پیشنهادی: ':''}${escapeHTML(s.name)}</strong><small>${escapeHTML(s.address||'نشانی کامل ثبت نشده')}</small><div><span class="pill">${s.routeDistance.toFixed(1)} کیلومتر فاصله از جاده</span><span class="pill">کیلومتر ${Math.round(s.routeKm??0)} مسیر</span><span class="pill">${s.power?s.power+' kW':'توان نامشخص'}</span><span class="pill">${escapeHTML(s.status)}</span></div><div class="sub">${escapeHTML(s.connectors.join('، ')||'نوع کانکتور نامشخص')}${s.operator?' · '+escapeHTML(s.operator):''}</div><div style="margin-top:6px"><a href="${s.url}" target="_blank" rel="noopener" style="color:#64b5ff">مشاهده جزئیات</a> · <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lon}#map=16/${s.lat}/${s.lon}" target="_blank" rel="noopener" style="color:#64b5ff">نمایش روی نقشه</a></div>`;
     el.appendChild(item);
-    item.addEventListener("click",()=>{map.setView([s.lat,s.lon],14);marker.openPopup();});
+    item.addEventListener('click',()=>{map.setView([s.lat,s.lon],14);marker.openPopup();});
   });
 }
 async function planTrip(){
@@ -323,8 +433,13 @@ async function planTrip(){
     if(km>range) setStatus(`هشدار: مسافت سفر از برد تخمینی خودرو (${range.toFixed(0)} کیلومتر) بیشتر است؛ احتمالاً به شارژ بین‌راهی نیاز دارید.\nدر حال دریافت شارژرهای ثبت‌شده نزدیک مسیر…`);
     const radius=num("radius",10);
     const stations=await getIranStations(coords,radius);
-    renderStations(stations);
-    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد.\nاطلاعات زنده‌بودن یا فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
+    const targetSoc=Math.min(100,Math.max(reserve+5,num('targetSoc',80)));
+    if(soc<=reserve) throw new Error('درصد شارژ اولیه باید از درصد ذخیره ایمنی بیشتر باشد.');
+    if(targetSoc<=reserve) throw new Error('شارژ هدف باید از درصد ذخیره ایمنی بیشتر باشد.');
+    const params={battery,soc,consumption,reserve,targetSoc,radius};
+    renderStations(stations,coords,km,params);
+    const plan=buildChargingPlan(stations,coords,km,params);
+    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد.\n${plan.message}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
   }catch(e){setStatus("مشکل: "+e.message);console.error(e);}
   finally{$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";}
 }
