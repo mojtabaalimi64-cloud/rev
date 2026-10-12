@@ -24,7 +24,6 @@ input,select{width:100%;padding:10px;background:#0c131b;color:var(--text);border
 button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px;font-weight:bold}
 .primary{width:100%;margin-top:15px;background:var(--accent);color:#10150a}
 .primary:disabled{opacity:.6;cursor:wait}
-.secondary{background:#263746;color:white}
 .back-link{color:var(--text);text-decoration:none;background:#263746;padding:8px 12px;border-radius:9px;font-size:13px}
 #map{height:610px;border-radius:12px;border:1px solid var(--line)}
 .status{margin-top:12px;background:#0c131b;border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--muted);font-size:13px;white-space:pre-wrap;overflow-wrap:anywhere}
@@ -46,7 +45,10 @@ a{overflow-wrap:anywhere}
 <body>
 <div class="wrap">
 <header class="head">
-  <div><div class="logo">REV</div><div class="sub">برنامه‌ریز سفر با خودروی برقی — ایران</div></div>
+  <div>
+    <div class="logo">REV</div>
+    <div class="sub">برنامه‌ریز سفر با خودروی برقی — ایران</div>
+  </div>
   <a class="back-link" href="https://mojtabaalimi64-cloud.github.io/rev/">→ بازگشت به سایت REV</a>
 </header>
 
@@ -73,7 +75,8 @@ a{overflow-wrap:anywhere}
 
   <div class="grid2">
     <div><label for="targetSoc">شارژ هدف (%)</label><input id="targetSoc" type="number" min="30" max="100" value="80"></div>
-    <div><label for="radius">فاصله از مسیر</label>
+    <div>
+      <label for="radius">فاصله از مسیر</label>
       <select id="radius">
         <option value="5">۵ کیلومتر</option>
         <option value="10" selected>۱۰ کیلومتر</option>
@@ -104,8 +107,8 @@ a{overflow-wrap:anywhere}
 <script>
 "use strict";
 
-/* تنظیمات فعلی بک‌اند REV؛ نیازی به کلید API ندارد */
 const REV_API = "https://rev-api.mojtaba-alimi64.workers.dev";
+
 const OSM_ENDPOINTS = [
   "https://overpass-api.de/api/interpreter",
   "https://overpass.kumi.systems/api/interpreter"
@@ -116,13 +119,12 @@ const map = L.map("map").setView([32.4,53.7],5);
 
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{
   maxZoom:19,
-  attribution:'&copy; OpenStreetMap contributors'
+  attribution:"&copy; OpenStreetMap contributors"
 }).addTo(map);
 
 const routeLayer=L.layerGroup().addTo(map);
 const stationLayer=L.layerGroup().addTo(map);
 
-/* وضعیت جست‌وجوی جاری */
 let activeRequest=0;
 let currentStations=[];
 let currentRoute=null;
@@ -130,7 +132,9 @@ let currentParams=null;
 let currentRouteKm=0;
 let currentRouteCoords=[];
 
-function status(message){$("status").textContent=message;}
+function status(message){
+  $("status").textContent=message;
+}
 
 function number(id,fallback){
   const n=Number($(id).value);
@@ -143,7 +147,7 @@ function esc(value){
   }[c]));
 }
 
-async function jsonFetch(url,options={},ms=8000){
+async function jsonFetch(url,options={},ms=10000){
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),ms);
   try{
@@ -183,7 +187,7 @@ function haversine(a,b){
   return 2*R*Math.asin(Math.sqrt(Math.max(0,x)));
 }
 
-/* فاصله نقطه تا قطعه مسیر؛ مناسب‌تر از فاصله تا رأس‌های مسیر */
+/* فاصله نقطه تا قطعه مسیر */
 function pointSegmentDistanceKm(p,a,b){
   const lat0=(p[0]+a[0]+b[0])/3*Math.PI/180;
   const xy=q=>[q[1]*111.32*Math.cos(lat0),q[0]*110.57];
@@ -221,8 +225,11 @@ function parseConnectors(value){
 function normalizeStation(raw,source="REV"){
   const lat=Number(raw.latitude??raw.lat??raw.Latitude??raw.center?.lat);
   const lon=Number(raw.longitude??raw.lon??raw.lng??raw.Longitude??raw.center?.lon);
+
   if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return null;
+
   const power=Number(raw.power_kw??raw.power??raw.PowerKW);
+
   return {
     id:String(raw.id??raw.source_id??`${source}-${lat},${lon}`),
     name:raw.name||raw.title||raw.station_name||"ایستگاه شارژ",
@@ -239,12 +246,13 @@ function normalizeStation(raw,source="REV"){
 
 function filterByRoute(stations,coords,radius){
   return stations.filter(Boolean).map(s=>({
-    ...s,routeDistance:distanceToRoute([s.lat,s.lon],coords)
+    ...s,
+    routeDistance:distanceToRoute([s.lat,s.lon],coords)
   })).filter(s=>s.routeDistance<=radius)
     .sort((a,b)=>a.routeDistance-b.routeDistance);
 }
 
-/* دریافت ایستگاه‌های ذخیره‌شده در دیتابیس REV */
+/* دریافت ایستگاه‌های دیتابیس REV */
 async function getRevStations(coords,radius){
   const payload=await jsonFetch(REV_API+"/api/stations",{
     method:"GET",
@@ -268,9 +276,10 @@ async function getRevStations(coords,radius){
   );
 }
 
-/* نمونه‌برداری از کل مسیر برای کاهش حجم درخواست OSM */
-function sampleRoute(coords,maxPoints=12){
+/* نمونه‌برداری از کل مسیر */
+function sampleRoute(coords,maxPoints=8){
   if(!coords.length)return [];
+
   const points=coords.map(c=>[Number(c[1]),Number(c[0])]);
   const cumulative=[0];
 
@@ -281,12 +290,13 @@ function sampleRoute(coords,maxPoints=12){
   const total=cumulative[cumulative.length-1]||0;
   if(points.length===1||total===0)return [points[0]];
 
-  const count=Math.min(maxPoints,Math.max(2,Math.ceil(total/35)+1));
+  const count=Math.min(maxPoints,Math.max(2,Math.ceil(total/45)+1));
   const result=[];
 
   for(let n=0;n<count;n++){
     const target=total*n/(count-1);
     let i=1;
+
     while(i<cumulative.length-1&&cumulative[i]<target)i++;
 
     const span=cumulative[i]-cumulative[i-1];
@@ -297,12 +307,19 @@ function sampleRoute(coords,maxPoints=12){
       points[i-1][1]+(points[i][1]-points[i-1][1])*t
     ]);
   }
+
   return result;
 }
 
-/* جست‌وجوی شارژرها در OpenStreetMap */
+/*
+ * جست‌وجوی آنلاین:
+ * - درخواست سبک‌تر با ۸ نقطه نمونه
+ * - بررسی دو سرویس مستقل
+ * - تلاش برای سرویس دوم در صورت خطای سرویس اول
+ * - ثبت تعداد نتایج خام برای عیب‌یابی
+ */
 async function getOsmStations(coords,radius){
-  const samples=sampleRoute(coords,12);
+  const samples=sampleRoute(coords,8);
   if(!samples.length)return [];
 
   const radiusM=Math.round(radius*1000);
@@ -310,14 +327,18 @@ async function getOsmStations(coords,radius){
   const queryParts=samples.map(([lat,lon])=>`
     node(around:${radiusM},${lat.toFixed(5)},${lon.toFixed(5)})["amenity"="charging_station"];
     way(around:${radiusM},${lat.toFixed(5)},${lon.toFixed(5)})["amenity"="charging_station"];
-    relation(around:${radiusM},${lat.toFixed(5)},${lon.toFixed(5)})["amenity"="charging_station"];
   `);
 
-  const query=`[out:json][timeout:15];(${queryParts.join("\n")});out center tags;`;
+  const query=`[out:json][timeout:25];(${queryParts.join("\n")});out center tags;`;
   let lastError=null;
 
   for(const endpoint of OSM_ENDPOINTS){
     try{
+      status(
+        "مسیر محاسبه شد.\n"+
+        "در حال دریافت جایگاه‌های آنلاین از OpenStreetMap…"
+      );
+
       const data=await jsonFetch(endpoint,{
         method:"POST",
         headers:{
@@ -325,9 +346,11 @@ async function getOsmStations(coords,radius){
           "Accept":"application/json"
         },
         body:"data="+encodeURIComponent(query)
-      },10000);
+      },20000);
 
-      if(!Array.isArray(data.elements))throw new Error("پاسخ نامعتبر OSM");
+      if(!Array.isArray(data.elements)){
+        throw new Error("پاسخ سرویس نقشه معتبر نیست.");
+      }
 
       const found=new Map();
 
@@ -335,26 +358,33 @@ async function getOsmStations(coords,radius){
         const tags=el.tags||{};
         const lat=Number(el.lat??el.center?.lat);
         const lon=Number(el.lon??el.center?.lon);
+
         if(!Number.isFinite(lat)||!Number.isFinite(lon))continue;
 
-        const key=el.type+":"+el.id;
+        const key=`${el.type}:${el.id}`;
         if(found.has(key))continue;
 
         const connectors=Object.entries(tags)
           .filter(([k,v])=>/^socket:/i.test(k)&&v&&v!=="no")
-          .map(([k,v])=>k.replace(/^socket:/i,"")+": "+v);
+          .map(([k,v])=>`${k.replace(/^socket:/i,"")}: ${v}`);
 
         const powerText=tags["charging_station:output"]||tags["socket:output"]||"";
-        const match=String(powerText).match(/[0-9]+(?:\.[0-9]+)?/);
+        const powerMatch=String(powerText).match(/[0-9]+(?:\.[0-9]+)?/);
 
         const station=normalizeStation({
           id:"osm-"+key,
           name:tags.name||tags.operator||"ایستگاه شارژ (OSM)",
-          address:[tags["addr:city"],tags["addr:street"],tags["addr:housenumber"]].filter(Boolean).join("، "),
+          address:[
+            tags["addr:city"],
+            tags["addr:street"],
+            tags["addr:housenumber"]
+          ].filter(Boolean).join("، "),
           lat,lon,
           operator:tags.operator||"",
-          status:tags.access==="private"?"خصوصی":(tags.operational_status||"وضعیت نامشخص"),
-          power_kw:match?Number(match[0]):null,
+          status:tags.access==="private"
+            ?"خصوصی"
+            :(tags.operational_status||"وضعیت نامشخص"),
+          power_kw:powerMatch?Number(powerMatch[0]):null,
           connectors,
           source_url:`https://www.openstreetmap.org/${el.type}/${el.id}`
         },"OpenStreetMap");
@@ -362,17 +392,32 @@ async function getOsmStations(coords,radius){
         if(station)found.set(key,station);
       }
 
-      return filterByRoute([...found.values()],coords,radius);
+      console.info("OSM lookup result",{
+        endpoint,
+        rawElements:data.elements.length,
+        normalizedStations:found.size
+      });
+
+      const filtered=filterByRoute([...found.values()],coords,radius);
+
+      console.info("OSM stations near route",{
+        beforeFilter:found.size,
+        afterFilter:filtered.length,
+        radiusKm:radius
+      });
+
+      return filtered;
+
     }catch(error){
       lastError=error;
       console.warn("OSM endpoint failed:",endpoint,error);
     }
   }
 
-  throw lastError||new Error("جست‌وجوی OSM ناموفق بود.");
+  throw lastError||new Error("تمام سرویس‌های جست‌وجوی آنلاین ناموفق بودند.");
 }
 
-/* حذف موارد تکراری با فاصله کمتر از ۱۵۰ متر */
+/* حذف تکراری‌ها */
 function mergeStations(existing,incoming){
   const result=[...existing];
 
@@ -387,7 +432,7 @@ function mergeStations(existing,incoming){
   return result.sort((a,b)=>a.routeDistance-b.routeDistance);
 }
 
-/* برنامه‌ریزی توقف‌ها */
+/* محاسبه فاصله هر ایستگاه در طول مسیر */
 function routeMetrics(coords){
   const points=coords.map(c=>[Number(c[1]),Number(c[0])]);
   const cumulative=[0];
@@ -396,7 +441,11 @@ function routeMetrics(coords){
     cumulative[i]=cumulative[i-1]+haversine(points[i-1],points[i]);
   }
 
-  return {points,cumulative,total:cumulative[cumulative.length-1]||0};
+  return {
+    points,
+    cumulative,
+    total:cumulative[cumulative.length-1]||0
+  };
 }
 
 function stationAlongRoute(station,metrics){
@@ -414,24 +463,29 @@ function stationAlongRoute(station,metrics){
 
     if(dist<best){
       best=dist;
-      bestKm=metrics.cumulative[i-1]+(metrics.cumulative[i]-metrics.cumulative[i-1])*t;
+      bestKm=metrics.cumulative[i-1]+
+        (metrics.cumulative[i]-metrics.cumulative[i-1])*t;
     }
   }
 
   return {routeKm:bestKm,offRouteKm:best};
 }
 
+/* برنامه‌ریزی توقف شارژ؛ تخمین است و تضمین ایمنی نیست */
 function chargingPlan(stations,coords,routeKm,p){
   const metrics=routeMetrics(coords);
   const usableRange=soc=>Math.max(0,(soc-p.reserve)/100*p.battery/p.consumption*100);
 
-  const candidates=stations.map(s=>({...s,...stationAlongRoute(s,metrics)}))
+  const candidates=stations.map(s=>({
+    ...s,
+    ...stationAlongRoute(s,metrics)
+  }))
     .filter(s=>s.routeKm>2&&s.routeKm<routeKm-2&&s.offRouteKm<=p.radius+0.5)
     .sort((a,b)=>a.routeKm-b.routeKm);
 
   if(routeKm<=usableRange(p.soc)){
     return {
-      message:"برد قابل‌استفاده برای رسیدن به مقصد کافی به نظر می‌رسد؛ این تخمین جایگزین بررسی برد واقعی خودرو نیست.",
+      message:"برد قابل‌استفاده برای رسیدن به مقصد کافی به نظر می‌رسد؛ برد واقعی خودرو را بررسی کنید.",
       stops:[],candidates
     };
   }
@@ -451,7 +505,8 @@ function chargingPlan(stations,coords,routeKm,p){
     if(routeKm-currentKm<=usableRange(currentSoc))break;
 
     const reachable=remaining.filter(s=>
-      s.routeKm>currentKm+2&&s.routeKm-currentKm<=usableRange(currentSoc)+0.1
+      s.routeKm>currentKm+2&&
+      s.routeKm-currentKm<=usableRange(currentSoc)+0.1
     );
 
     if(!reachable.length){
@@ -471,7 +526,10 @@ function chargingPlan(stations,coords,routeKm,p){
         n.routeKm>s.routeKm+2&&n.routeKm-s.routeKm<=nextRange
       );
 
-      if(reachesDestination||reachesNext){chosen=s;break;}
+      if(reachesDestination||reachesNext){
+        chosen=s;
+        break;
+      }
     }
 
     if(!chosen)chosen=reachable[reachable.length-1];
@@ -521,6 +579,7 @@ function renderPlan(plan){
   plan.stops.forEach((s,i)=>{
     const item=document.createElement("div");
     item.className="plan-stop";
+
     item.innerHTML=`
       <strong>توقف ${i+1}: ${esc(s.name)}</strong>
       <div class="plan-meta">حدود کیلومتر ${Math.round(s.routeKm)} مسیر · ${s.legKm.toFixed(0)} کیلومتر از توقف قبلی</div>
@@ -528,6 +587,7 @@ function renderPlan(plan){
       <div class="plan-meta">انرژی نظری: ${s.energy.toFixed(1)} kWh · ${
         s.minutes==null?"زمان شارژ نامشخص":`زمان شارژ تقریبی ${s.minutes} دقیقه`
       }</div>`;
+
     box.appendChild(item);
   });
 
@@ -539,10 +599,7 @@ function fmtDuration(seconds){
   return h?`${h} ساعت و ${m} دقیقه`:`${m} دقیقه`;
 }
 
-/*
- * نمایش یا به‌روزرسانی نتایج.
- * هر بار فهرست فعلی حفظ می‌شود و نقشه از نو ساخته می‌شود.
- */
+/* نمایش فهرست و نشانگرهای ایستگاه */
 function renderStations(stations){
   currentStations=stations;
   stationLayer.clearLayers();
@@ -551,8 +608,10 @@ function renderStations(stations){
   el.innerHTML="";
 
   const metrics=routeMetrics(currentRouteCoords);
-  const list=stations.map(s=>({...s,...stationAlongRoute(s,metrics)}))
-    .sort((a,b)=>a.routeDistance-b.routeDistance);
+  const list=stations.map(s=>({
+    ...s,
+    ...stationAlongRoute(s,metrics)
+  })).sort((a,b)=>a.routeDistance-b.routeDistance);
 
   const plan=chargingPlan(list,currentRouteCoords,currentRouteKm,currentParams);
   el.appendChild(renderPlan(plan));
@@ -564,7 +623,7 @@ function renderStations(stations){
   if(!list.length){
     const empty=document.createElement("div");
     empty.className="sub";
-    empty.textContent="هنوز ایستگاهی در داده‌های دریافت‌شده پیدا نشده است. جست‌وجوی آنلاین ممکن است همچنان در حال انجام باشد.";
+    empty.textContent="هنوز ایستگاهی در داده‌های دریافت‌شده پیدا نشده است.";
     el.appendChild(empty);
     return;
   }
@@ -592,6 +651,7 @@ function renderStations(stations){
 
     const item=document.createElement("div");
     item.className="station";
+
     item.innerHTML=`
       <strong>${planned?"★ توقف پیشنهادی: ":""}${esc(s.name)}</strong>
       <small>${esc(s.address||"نشانی کامل ثبت نشده")}</small>
@@ -614,7 +674,7 @@ function renderStations(stations){
   });
 }
 
-/* اجرای سفر با دریافت تدریجی نتایج */
+/* اجرای سفر و دریافت تدریجی دو منبع */
 async function planTrip(){
   const thisRequest=++activeRequest;
   const btn=$("planBtn");
@@ -627,6 +687,7 @@ async function planTrip(){
   currentStations=[];
   currentRoute=null;
   currentRouteCoords=[];
+
   $("results").innerHTML="<h2>شارژرهای نزدیک مسیر</h2><div class='sub'>در حال آماده‌سازی مسیر…</div>";
 
   try{
@@ -687,18 +748,14 @@ async function planTrip(){
     const usableRange=battery*(soc-reserve)/100/consumption*100;
     $("rangeValue").textContent=usableRange.toFixed(0);
 
-    /* در ابتدا فهرست خالی و وضعیت جست‌وجو را نمایش بده */
     renderStations([]);
+
     status(
       `مسیر محاسبه شد: ${km.toFixed(0)} کیلومتر.\n`+
       `برد قابل‌استفاده تقریبی: ${usableRange.toFixed(0)} کیلومتر.\n`+
-      "در حال دریافت ایستگاه‌های دیتابیس REV…"
+      "در حال دریافت ایستگاه‌های دیتابیس REV و جست‌وجوی آنلاین…"
     );
 
-    /*
-     * درخواست REV و OSM مستقل‌اند.
-     * جست‌وجوی OSM هم‌زمان آغاز می‌شود تا منتظر پایان REV نماند.
-     */
     const revPromise=getRevStations(currentRouteCoords,radius);
     const osmPromise=getOsmStations(currentRouteCoords,radius);
 
@@ -706,37 +763,50 @@ async function planTrip(){
     let osmStations=[];
     let revFinished=false;
     let osmFinished=false;
+    let revError=null;
+    let osmError=null;
 
-    /*
-     * REV را به محض پاسخ نمایش بده.
-     * سپس هر زمان OSM آماده شد، نتایجش را اضافه کن.
-     */
+    function updateResults(){
+      if(thisRequest!==activeRequest)return;
+      renderStations(mergeStations(revStations,osmStations));
+    }
+
+    function updateStatus(){
+      if(thisRequest!==activeRequest)return;
+
+      const lines=[
+        `مسافت مسیر: ${km.toFixed(0)} کیلومتر.`,
+        `زمان رانندگی تخمینی: ${fmtDuration(route.duration)}.`,
+        `ایستگاه‌های REV: ${revStations.length}`,
+        `ایستگاه‌های آنلاین: ${osmStations.length}`,
+        `تعداد نهایی پس از حذف تکراری‌ها: ${mergeStations(revStations,osmStations).length}`
+      ];
+
+      if(!revFinished)lines.push("دریافت دیتابیس REV هنوز در حال انجام است.");
+      else if(revError)lines.push("خطای REV: "+revError);
+
+      if(!osmFinished)lines.push("جست‌وجوی آنلاین هنوز در حال انجام است.");
+      else if(osmError)lines.push("خطای آنلاین: "+osmError.message);
+      else if(osmStations.length===0)lines.push("سرویس آنلاین پاسخ داده، اما جایگاه قابل‌استفاده‌ای برای این مسیر برنگردانده است.");
+
+      lines.push("اطلاعات و فعال بودن ایستگاه‌ها را قبل از حرکت بررسی کنید.");
+      status(lines.join("\n"));
+    }
+
     const revTask=revPromise.then(stations=>{
       if(thisRequest!==activeRequest)return;
 
       revStations=stations;
       revFinished=true;
+      updateResults();
+      updateStatus();
 
-      renderStations(mergeStations(revStations,osmStations));
-
-      status(
-        `دیتابیس REV بررسی شد: ${revStations.length} ایستگاه نزدیک مسیر.\n`+
-        (osmFinished
-          ?"جست‌وجوی آنلاین نیز پایان یافته است."
-          :"در حال جست‌وجوی مستقل ایستگاه‌های آنلاین؛ نتایج جدید پس از دریافت اضافه می‌شوند.")
-      );
     }).catch(error=>{
       revFinished=true;
+      revError=error.message||"خطای نامشخص";
       console.warn("REV API unavailable:",error);
-
-      if(thisRequest!==activeRequest)return;
-
-      renderStations(mergeStations(revStations,osmStations));
-
-      status(
-        "دریافت دیتابیس REV ناموفق بود؛ جست‌وجوی آنلاین ادامه دارد.\n"+
-        "اگر سرویس آنلاین هم خطا بدهد، پیام خطا نمایش داده خواهد شد."
-      );
+      updateResults();
+      updateStatus();
     });
 
     const osmTask=osmPromise.then(stations=>{
@@ -744,48 +814,23 @@ async function planTrip(){
 
       osmStations=stations;
       osmFinished=true;
+      updateResults();
+      updateStatus();
 
-      renderStations(mergeStations(revStations,osmStations));
-
-      status(
-        `جست‌وجوی آنلاین پایان یافت.\n`+
-        `ایستگاه‌های REV: ${revStations.length}\n`+
-        `ایستگاه‌های آنلاین: ${osmStations.length}\n`+
-        `تعداد نهایی پس از حذف موارد تکراری: ${mergeStations(revStations,osmStations).length}\n`+
-        "پیش از سفر، فعال بودن ایستگاه و سازگاری کانکتور را بررسی کنید."
-      );
     }).catch(error=>{
       osmFinished=true;
+      osmError=error;
       console.warn("OSM lookup failed:",error);
-
-      if(thisRequest!==activeRequest)return;
-
-      renderStations(mergeStations(revStations,osmStations));
-
-      status(
-        `جست‌وجوی آنلاین ناموفق بود.\n`+
-        `ایستگاه‌های دریافت‌شده از REV: ${revStations.length}\n`+
-        "نتایج REV حفظ شده‌اند. می‌توانید بعداً دوباره تلاش کنید."
-      );
+      updateResults();
+      updateStatus();
     });
 
-    /* فقط پس از تکمیل هر دو درخواست، وضعیت نهایی را بررسی کن */
     await Promise.allSettled([revTask,osmTask]);
 
     if(thisRequest!==activeRequest)return;
 
-    const combined=mergeStations(revStations,osmStations);
-
-    if(revFinished&&osmFinished){
-      status(
-        `مسافت مسیر: ${km.toFixed(0)} کیلومتر.\n`+
-        `زمان رانندگی تخمینی: ${fmtDuration(route.duration)}.\n`+
-        `ایستگاه‌های REV: ${revStations.length}\n`+
-        `ایستگاه‌های آنلاین: ${osmStations.length}\n`+
-        `تعداد نهایی پس از حذف تکراری‌ها: ${combined.length}\n`+
-        "اطلاعات و فعال بودن ایستگاه‌ها را قبل از حرکت بررسی کنید."
-      );
-    }
+    updateResults();
+    updateStatus();
 
   }catch(error){
     if(thisRequest===activeRequest){
