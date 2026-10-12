@@ -208,16 +208,42 @@ function routeSamplePoints(routeCoords,spacingKm=20,maxPoints=80){
   }
   return samples;
 }
+function sampleRouteCoordinates(routeCoords,maxPoints=16){
+  // Reduce the number of coordinates sent to the Worker while preserving the
+  // route's full length and direction. Input/output format remains [lon, lat].
+  if(!Array.isArray(routeCoords)||routeCoords.length===0)return [];
+  if(routeCoords.length<=maxPoints)return routeCoords;
+  const points=routeCoords.map(c=>[Number(c[1]),Number(c[0])]); // [lat, lon] for distance calculations
+  const cumulative=[0];
+  for(let i=1;i<points.length;i++) cumulative[i]=cumulative[i-1]+haversine(points[i-1],points[i]);
+  const total=cumulative[cumulative.length-1];
+  if(!Number.isFinite(total)||total<=0){
+    const out=[];
+    for(let i=0;i<maxPoints;i++)out.push(routeCoords[Math.round(i*(routeCoords.length-1)/(maxPoints-1))]);
+    return out;
+  }
+  const out=[];let seg=1;
+  for(let n=0;n<maxPoints;n++){
+    const target=total*n/(maxPoints-1);
+    while(seg<cumulative.length-1&&cumulative[seg]<target)seg++;
+    const prev=seg-1,span=cumulative[seg]-cumulative[prev];
+    const t=span?(target-cumulative[prev])/span:0;
+    const lat=points[prev][0]+(points[seg][0]-points[prev][0])*t;
+    const lon=points[prev][1]+(points[seg][1]-points[prev][1])*t;
+    out.push([lon,lat]); // Worker expects [longitude, latitude]
+  }
+  return out;
+}
 async function queryOverpass(routeCoords,radiusKm){
-  // Call the dedicated Cloudflare Worker instead of contacting public Overpass
-  // endpoints directly from the browser. OSRM coordinates are [longitude, latitude].
+  // Use the dedicated Cloudflare Worker; never query public Overpass servers
+  // directly from the visitor's browser. Fewer evenly spaced points reduce load.
   const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),65000);
+  const timer=setTimeout(()=>controller.abort(),90000);
   try{
     const response=await fetch(ONLINE_STATIONS_API,{
       method:"POST", mode:"cors", cache:"no-store", signal:controller.signal,
       headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify({coords:routeCoords,radiusKm:Math.min(Number(radiusKm)||5,15)})
+      body:JSON.stringify({coords:sampleRouteCoordinates(routeCoords,16),radiusKm:Math.min(Number(radiusKm)||5,15)})
     });
     let payload;
     try{payload=await response.json();}
@@ -252,9 +278,11 @@ async function getIranStations(routeCoords,radiusKm){
     return combined.map(s=>({...s,routeDistance:distanceToRoute([s.lat,s.lon],routeCoords)}))
       .filter(s=>s.routeDistance<=radiusKm).sort((a,b)=>a.routeDistance-b.routeDistance);
   }catch(e){
-    console.warn("OpenStreetMap fallback unavailable:",e);
-    if(revStations.length)return revStations;
-    throw new Error("بانک شارژرهای REV خالی است و دریافت اطلاعات از OpenStreetMap هم ناموفق بود. جزئیات فنی در Console مرورگر ثبت شده است: روی صفحه راست‌کلیک کنید، Inspect و سپس Console را باز کنید.");
+    console.warn("REV online stations source unavailable:",e);
+    // Do not discard a successfully calculated route just because the external
+    // station provider is rate-limited or slow. Never invent station records.
+    window.revStationSourceWarning = e?.message || "منبع آنلاین شارژرها موقتاً در دسترس نیست.";
+    return revStations;
   }
 }
 function routeMetrics(routeCoords){
@@ -375,6 +403,7 @@ function renderStations(stations,routeCoords,routeKm,params){
   });
 }
 async function planTrip(){
+  window.revStationSourceWarning = "";
   $("planBtn").disabled=true;$("planBtn").textContent="در حال محاسبه…";
   routeLayer.clearLayers();stationLayer.clearLayers();$("results").innerHTML="<h2 style='margin-top:18px'>شارژرهای نزدیک مسیر</h2>";
   try{
@@ -406,7 +435,10 @@ async function planTrip(){
     const params={battery,soc,consumption,reserve,targetSoc,radius};
     renderStations(stations,coords,km,params);
     const plan=buildChargingPlan(stations,coords,km,params);
-    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد.\n${plan.message}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
+    const sourceNote = window.revStationSourceWarning
+      ? `\nهشدار منبع آنلاین: ${window.revStationSourceWarning}\nفهرست ایستگاه‌ها ممکن است ناقص باشد؛ صفر ایستگاه به معنی نبود شارژر واقعی نیست.`
+      : "";
+    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد.\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
   }catch(e){setStatus("مشکل: "+e.message);console.error(e);}
   finally{$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";}
 }
