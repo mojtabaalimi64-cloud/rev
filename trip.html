@@ -160,8 +160,15 @@ function normalizeRevStation(raw){
     power:Number(raw.power_kw??raw.power??raw.PowerKW)>0?Number(raw.power_kw??raw.power??raw.PowerKW):null,
     connectors:parseConnectors(raw.connectors??raw.connector_types),
     url:raw.source_url||raw.url||`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=16/${lat}/${lon}`,
-    source:raw.source||"REV"
+    source:raw.source||"REV",
+    updatedAt:raw.updated_at||raw.updatedAt||raw.last_updated||raw.lastUpdated||raw.modified_at||""
   };
+}
+function formatStationUpdatedAt(value){
+  if(!value)return "تاریخ به‌روزرسانی نامشخص";
+  const time=Date.parse(value);
+  if(!Number.isFinite(time))return "تاریخ به‌روزرسانی نامشخص";
+  return "آخرین به‌روزرسانی: "+new Date(time).toLocaleDateString("fa-IR");
 }
 function routeFilter(stations,routeCoords,radiusKm){
   return stations.filter(Boolean)
@@ -395,9 +402,9 @@ function renderStations(stations,routeCoords,routeKm,params){
   listStations.slice(0,50).forEach(s=>{
     const planned=plannedIds.has(String(s.id));
     const marker=L.circleMarker([s.lat,s.lon],{radius:planned?10:7,color:'#0b1016',weight:2,fillColor:planned?'#64b5ff':'#d7ff3f',fillOpacity:.98}).addTo(stationLayer);
-    marker.bindPopup(`<b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+' kW':'نامشخص'}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a>`);
+    marker.bindPopup(`<b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+' kW':'نامشخص'}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br>منبع: ${escapeHTML(s.source||"نامشخص")}<br>${escapeHTML(formatStationUpdatedAt(s.updatedAt))}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a>`);
     const item=document.createElement('div');item.className='station';
-    item.innerHTML=`<strong>${planned?'★ توقف پیشنهادی: ':''}${escapeHTML(s.name)}</strong><small>${escapeHTML(s.address||'نشانی کامل ثبت نشده')}</small><div><span class="pill">${s.routeDistance.toFixed(1)} کیلومتر فاصله از جاده</span><span class="pill">کیلومتر ${Math.round(s.routeKm??0)} مسیر</span><span class="pill">${s.power?s.power+' kW':'توان نامشخص'}</span><span class="pill">${escapeHTML(s.status)}</span></div><div class="sub">${escapeHTML(s.connectors.join('، ')||'نوع کانکتور نامشخص')}${s.operator?' · '+escapeHTML(s.operator):''}</div><div style="margin-top:6px"><a href="${s.url}" target="_blank" rel="noopener" style="color:#64b5ff">مشاهده جزئیات</a> · <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lon}#map=16/${s.lat}/${s.lon}" target="_blank" rel="noopener" style="color:#64b5ff">نمایش روی نقشه</a></div>`;
+    item.innerHTML=`<strong>${planned?'★ توقف پیشنهادی: ':''}${escapeHTML(s.name)}</strong><small>${escapeHTML(s.address||'نشانی کامل ثبت نشده')}</small><div><span class="pill">${s.routeDistance.toFixed(1)} کیلومتر فاصله از جاده</span><span class="pill">کیلومتر ${Math.round(s.routeKm??0)} مسیر</span><span class="pill">${s.power?s.power+' kW':'توان نامشخص'}</span><span class="pill">${escapeHTML(s.status)}</span></div><div class="sub">${escapeHTML(s.connectors.join('، ')||'نوع کانکتور نامشخص')}${s.operator?' · '+escapeHTML(s.operator):''}</div><div class="sub">${escapeHTML(s.source||"منبع نامشخص")} · ${escapeHTML(formatStationUpdatedAt(s.updatedAt))}</div><div style="margin-top:6px"><a href="${s.url}" target="_blank" rel="noopener" style="color:#64b5ff">مشاهده جزئیات</a> · <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lon}#map=16/${s.lat}/${s.lon}" target="_blank" rel="noopener" style="color:#64b5ff">نمایش روی نقشه</a></div>`;
     el.appendChild(item);
     item.addEventListener('click',()=>{map.setView([s.lat,s.lon],14);marker.openPopup();});
   });
