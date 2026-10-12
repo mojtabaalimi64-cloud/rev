@@ -82,11 +82,11 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px
 /*
  * REV EV Trip Planner
  * Route: public OSRM routing service.
- * Charging stations: REV Cloudflare D1 API first, then REV Online API (server-side Overpass).
+ * Charging stations: REV Cloudflare D1 API first, then dedicated REV Online Stations Worker.
  * No private API keys are embedded in this public page.
  */
 const REV_API = "https://rev-api.mojtaba-alimi64.workers.dev";
-const REV_ONLINE_API = "https://rev-online-api.mojtaba-alimi64.workers.dev";
+const ONLINE_STATIONS_API = "https://rev-online-api.mojtaba-alimi64.workers.dev/api/online-stations";
 const map = L.map("map").setView([32.4, 53.7], 5);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -209,19 +209,15 @@ function routeSamplePoints(routeCoords,spacingKm=20,maxPoints=80){
   return samples;
 }
 async function queryOverpass(routeCoords,radiusKm){
-  // Send route coordinates to the dedicated Cloudflare Worker. The browser no
-  // longer calls public Overpass endpoints directly, avoiding browser-side CORS
-  // and timeout issues. OSRM route coordinates are [longitude, latitude].
+  // Call the dedicated Cloudflare Worker instead of contacting public Overpass
+  // endpoints directly from the browser. OSRM coordinates are [longitude, latitude].
   const controller=new AbortController();
   const timer=setTimeout(()=>controller.abort(),65000);
   try{
-    const response=await fetch(REV_ONLINE_API+"/api/online-stations",{
-      method:"POST",
-      mode:"cors",
-      cache:"no-store",
-      signal:controller.signal,
+    const response=await fetch(ONLINE_STATIONS_API,{
+      method:"POST", mode:"cors", cache:"no-store", signal:controller.signal,
       headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify({coords:routeCoords,radiusKm})
+      body:JSON.stringify({coords:routeCoords,radiusKm:Math.min(Number(radiusKm)||5,15)})
     });
     let payload;
     try{payload=await response.json();}
@@ -230,7 +226,12 @@ async function queryOverpass(routeCoords,radiusKm){
       throw new Error(payload?.error||`سرویس آنلاین REV با خطای HTTP ${response.status} پاسخ داد.`);
     }
     if(!Array.isArray(payload.data)) throw new Error("فهرست ایستگاه‌های سرویس آنلاین معتبر نیست.");
-    return routeFilter(payload.data.map(normalizeRevStation).filter(Boolean),routeCoords,radiusKm);
+    const normalized=payload.data.map(raw=>{
+      const s=normalizeRevStation(raw);
+      if(!s)return null;
+      return {...s,source:raw.source||payload.source||"OpenStreetMap",url:raw.source_url||raw.url||s.url};
+    }).filter(Boolean);
+    return routeFilter(normalized,routeCoords,Math.min(Number(radiusKm)||5,15));
   }catch(e){
     if(e?.name==="AbortError") throw new Error("پاسخ سرویس آنلاین ایستگاه‌ها بیش از حد طول کشید. دوباره تلاش کنید.");
     throw e;
