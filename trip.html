@@ -77,8 +77,9 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px
  */
 const REV_API = "https://rev-api.mojtaba-alimi64.workers.dev";
 const OVERPASS_ENDPOINTS = [
+  "https://overpass.kumi.systems/api/interpreter",
   "https://overpass-api.de/api/interpreter",
-  "https://overpass.kumi.systems/api/interpreter"
+  "https://overpass.private.coffee/api/interpreter"
 ];
 const map = L.map("map").setView([32.4, 53.7], 5);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
@@ -166,7 +167,14 @@ async function getRevStations(routeCoords,radiusKm){
   const r=await fetch(REV_API+"/api/stations",{method:"GET",cache:"no-store",headers:{"Accept":"application/json"}});
   if(!r.ok)throw new Error("Cloudflare stations API HTTP "+r.status);
   const payload=await r.json();
-  const rows=Array.isArray(payload)?payload:(Array.isArray(payload.data)?payload.data:(Array.isArray(payload.stations)?payload.stations:[]));
+  // Accept several common Worker response shapes.
+  const candidates=[payload,payload?.data,payload?.result,payload?.data?.data];
+  let rows=[];
+  for(const item of candidates){
+    if(Array.isArray(item)){rows=item;break;}
+    if(Array.isArray(item?.stations)){rows=item.stations;break;}
+    if(Array.isArray(item?.results)){rows=item.results;break;}
+  }
   return routeFilter(rows.map(normalizeRevStation),routeCoords,radiusKm);
 }
 function routeSamplePoints(routeCoords,spacingKm=20,maxPoints=80){
@@ -195,34 +203,62 @@ function routeSamplePoints(routeCoords,spacingKm=20,maxPoints=80){
   return samples;
 }
 async function queryOverpass(routeCoords,radiusKm){
-  // Overlapping search circles help avoid missing chargers between route samples.
-  const samples=routeSamplePoints(routeCoords,Math.max(5,Math.min(20,radiusKm*1.2)),80);
-  const around=samples.map(([lat,lon])=>`node(around:${Math.round(radiusKm*1000)},${lat.toFixed(5)},${lon.toFixed(5)})[amenity=charging_station];way(around:${Math.round(radiusKm*1000)},${lat.toFixed(5)},${lon.toFixed(5)})[amenity=charging_station];relation(around:${Math.round(radiusKm*1000)},${lat.toFixed(5)},${lon.toFixed(5)})[amenity=charging_station];`).join("\n");
-  const query=`[out:json][timeout:40];(${around});out center tags;`;
-  let lastError=null;
-  for(const endpoint of OVERPASS_ENDPOINTS){
-    try{
-      const response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","Accept":"application/json"},body:"data="+encodeURIComponent(query)});
-      if(!response.ok)throw new Error("Overpass HTTP "+response.status);
-      const payload=await response.json();
-      const seen=new Set();
-      const rows=(payload.elements||[]).filter(el=>{
-        const key=String(el.type)+":"+String(el.id);
-        if(seen.has(key))return false;
-        seen.add(key);return true;
-      }).map(el=>{
-        const tags=el.tags||{}, center=el.center||{};
-        const lat=Number(el.lat??center.lat),lon=Number(el.lon??center.lon);
-        if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
-        const connectorTags=Object.entries(tags).filter(([k,v])=>/^socket:/i.test(k)&&v&&v!=="no").map(([k,v])=>k.replace(/^socket:/i,"")+": "+v);
-        const powerRaw=tags["charging_station:output"]||tags["socket:output"]||"";
-        const powerMatch=String(powerRaw).match(/[0-9]+(?:\.[0-9]+)?/);
-        return {id:`osm-${el.type}-${el.id}`,name:tags.name||tags.operator||"ایستگاه شارژ (OpenStreetMap)",address:[tags["addr:city"],tags["addr:street"],tags["addr:housenumber"]].filter(Boolean).join("، "),lat,lon,operator:tags.operator||"",status:tags.access==="private"?"خصوصی":(tags.operational_status||"وضعیت نامشخص"),power:powerMatch?Number(powerMatch[0]):null,connectors:connectorTags,url:`https://www.openstreetmap.org/${el.type}/${el.id}`,source:"OpenStreetMap"};
-      }).filter(Boolean);
-      return routeFilter(rows,routeCoords,radiusKm);
-    }catch(e){lastError=e;}
+  // Query small batches: one very large Overpass request can be rejected (e.g. 406/429/504).
+  const samples=routeSamplePoints(routeCoords,Math.max(6,Math.min(18,radiusKm*1.25)),80);
+  const batches=[];
+  for(let i=0;i<samples.length;i+=4)batches.push(samples.slice(i,i+4));
+  const found=new Map();
+  const errors=[];
+  let successfulBatches=0;
+  for(const batch of batches){
+    const around=batch.map(([lat,lon])=>{
+      const r=Math.round(radiusKm*1000), a=lat.toFixed(5), o=lon.toFixed(5);
+      return `node(around:${r},${a},${o})[amenity=charging_station];way(around:${r},${a},${o})[amenity=charging_station];relation(around:${r},${a},${o})[amenity=charging_station];`;
+    }).join("\n");
+    const query=`[out:json][timeout:30];(${around});out center tags;`;
+    let batchOK=false;
+    for(const endpoint of OVERPASS_ENDPOINTS){
+      // Try POST first, then GET. Some public Overpass instances reject one method.
+      for(const method of ["POST","GET"]){
+        const controller=new AbortController();
+        const timer=setTimeout(()=>controller.abort(),40000);
+        try{
+          let url=endpoint, options={method,mode:"cors",cache:"no-store",signal:controller.signal,headers:{"Accept":"application/json"}};
+          if(method==="POST"){
+            options.headers["Content-Type"]="application/x-www-form-urlencoded;charset=UTF-8";
+            options.body="data="+encodeURIComponent(query);
+          }else{
+            url+=`?data=${encodeURIComponent(query)}`;
+          }
+          const response=await fetch(url,options);
+          if(!response.ok)throw new Error(`${new URL(endpoint).hostname} ${method} HTTP ${response.status}`);
+          const payload=await response.json();
+          if(!Array.isArray(payload.elements))throw new Error(`${new URL(endpoint).hostname}: پاسخ JSON فاقد elements است`);
+          successfulBatches++;
+          for(const el of payload.elements){
+            const key=String(el.type)+":"+String(el.id);
+            if(found.has(key))continue;
+            const tags=el.tags||{}, center=el.center||{};
+            const lat=Number(el.lat??center.lat),lon=Number(el.lon??center.lon);
+            if(!Number.isFinite(lat)||!Number.isFinite(lon))continue;
+            const connectorTags=Object.entries(tags).filter(([k,v])=>/^socket:/i.test(k)&&v&&v!=="no").map(([k,v])=>k.replace(/^socket:/i,"")+": "+v);
+            const powerRaw=tags["charging_station:output"]||tags["socket:output"]||"";
+            const powerMatch=String(powerRaw).match(/[0-9]+(?:\.[0-9]+)?/);
+            found.set(key,{id:`osm-${el.type}-${el.id}`,name:tags.name||tags.operator||"ایستگاه شارژ (OpenStreetMap)",address:[tags["addr:city"],tags["addr:street"],tags["addr:housenumber"]].filter(Boolean).join("، "),lat,lon,operator:tags.operator||"",status:tags.access==="private"?"خصوصی":(tags.operational_status||"وضعیت نامشخص"),power:powerMatch?Number(powerMatch[0]):null,connectors:connectorTags,url:`https://www.openstreetmap.org/${el.type}/${el.id}`,source:"OpenStreetMap"});
+          }
+          batchOK=true;
+          break;
+        }catch(e){errors.push(String(e?.message||e));}
+        finally{clearTimeout(timer);}
+      }
+      if(batchOK)break;
+    }
   }
-  throw lastError||new Error("سرویس OpenStreetMap در دسترس نیست.");
+  if(!successfulBatches){
+    const detail=[...new Set(errors)].slice(0,4).join("؛ ");
+    throw new Error("هیچ‌یک از درخواست‌های OpenStreetMap موفق نشد. "+(detail||"خطای نامشخص در ارتباط با سرویس نقشه."));
+  }
+  return routeFilter([...found.values()],routeCoords,radiusKm);
 }
 async function getIranStations(routeCoords,radiusKm){
   let revStations=[];
@@ -241,7 +277,7 @@ async function getIranStations(routeCoords,radiusKm){
   }catch(e){
     console.warn("OpenStreetMap fallback unavailable:",e);
     if(revStations.length)return revStations;
-    throw new Error("داده‌ای از بانک شارژرهای REV دریافت نشد و سرویس جایگزین OpenStreetMap هم در دسترس نیست. بعداً دوباره تلاش کنید.");
+    throw new Error("بانک شارژرهای REV خالی است و دریافت اطلاعات از OpenStreetMap هم ناموفق بود. جزئیات فنی در Console مرورگر ثبت شده است: روی صفحه راست‌کلیک کنید، Inspect و سپس Console را باز کنید.");
   }
 }
 function fmtDuration(seconds){
