@@ -341,7 +341,100 @@ function route(){
   });
 }
 addEventListener('hashchange',route);
-fetch('content.json?'+Date.now()).then(r=>r.json()).then(c=>{SHOP_ENABLED=!!c.shop;PODCAST_NAME=c.podcast||PODCAST_NAME;NEWS=c.news||[];ARTICLES=c.articles||[];EPISODES=c.episodes||[];CONTACT=c.contact||{};PIMG=c.partImages||{};PRODUCTS=c.products||[];SHOPINFO=c.shopInfo||{};ABOUT=c.about||'';CARS=c.cars||[];CARSINFO=c.carsInfo||{};applyTheme(c.theme);if(/^G-[A-Z0-9]{4,}$/.test(c.gaId||'')){const g=document.createElement('script');g.async=1;g.src='https://www.googletagmanager.com/gtag/js?id='+c.gaId;document.head.appendChild(g);window.dataLayer=window.dataLayer||[];window.gtag=function(){dataLayer.push(arguments)};gtag('js',new Date());gtag('config',c.gaId)}}).catch(()=>{}).finally(route);
+
+const REV_CONTENT_API =
+  'https://rev-api.mojtaba-alimi64.workers.dev/api/content';
+
+async function loadRevContent() {
+  let c = null;
+  let source = '';
+
+  // اولویت اول: اطلاعات ذخیره‌شده در Cloudflare D1
+  try {
+    const response = await fetch(REV_CONTENT_API, {
+      method: 'GET',
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error('Cloudflare API status: ' + response.status);
+    }
+
+    const result = await response.json();
+
+    if (
+      result.success &&
+      result.data &&
+      typeof result.data === 'object' &&
+      !Array.isArray(result.data)
+    ) {
+      c = result.data;
+      source = 'Cloudflare D1';
+    } else {
+      throw new Error('Cloudflare content is empty or invalid');
+    }
+  } catch (error) {
+    console.warn('Cloudflare API unavailable:', error);
+  }
+
+  // اولویت دوم: نسخه پشتیبان فعلی سایت
+  if (!c) {
+    try {
+      const response = await fetch('content.json?' + Date.now(), {
+        cache: 'no-store'
+      });
+
+      if (!response.ok) {
+        throw new Error('content.json status: ' + response.status);
+      }
+
+      c = await response.json();
+      source = 'content.json fallback';
+    } catch (error) {
+      console.error('Could not load REV content:', error);
+    }
+  }
+
+  if (c) {
+    SHOP_ENABLED = !!c.shop;
+    PODCAST_NAME = c.podcast || PODCAST_NAME;
+    NEWS = c.news || [];
+    ARTICLES = c.articles || [];
+    EPISODES = c.episodes || [];
+    CONTACT = c.contact || {};
+    PIMG = c.partImages || {};
+    PRODUCTS = c.products || [];
+    SHOPINFO = c.shopInfo || {};
+    ABOUT = c.about || '';
+    CARS = c.cars || [];
+    CARSINFO = c.carsInfo || {};
+
+    applyTheme(c.theme);
+
+    if (/^G-[A-Z0-9]{4,}$/.test(c.gaId || '')) {
+      const g = document.createElement('script');
+      g.async = true;
+      g.src =
+        'https://www.googletagmanager.com/gtag/js?id=' + c.gaId;
+      document.head.appendChild(g);
+
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function () {
+        dataLayer.push(arguments);
+      };
+
+      gtag('js', new Date());
+      gtag('config', c.gaId);
+    }
+
+    console.info('REV content source:', source);
+  }
+
+  route();
+}
+
+loadRevContent();
+
 </script>
 </body>
 </html>
