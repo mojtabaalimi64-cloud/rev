@@ -44,6 +44,8 @@ ol{padding-inline-start:20px;color:var(--muted);font-size:14px;margin-top:10px}
 <script>
 const OWNER='mojtabaalimi64-cloud', REPO='rev', FILE='content.json';
 const API=`https://api.github.com/repos/${OWNER}/${REPO}/contents/`;
+const WORKER='https://rev-api.mojtaba-alimi64.workers.dev';
+const LIVE_CONTENT='https://mojtabaalimi64-cloud.github.io/rev/content.json';
 const PARTS={battery:'باتری',motor:'موتور',charging:'شارژ',electronics:'اینورتر و برق',software:'نرم‌افزار و هوش مصنوعی'};
 const TYPES={
  articles:{label:'مقالات',one:'مقاله',fields:[['title','عنوان','text'],['part','بخش','part'],['date','تاریخ (مثلاً ۱۴۰۵/۰۷/۲۰)','text'],['image','تصویر شاخص مقاله','img'],['excerpt','خلاصه کوتاه','area'],['body','متن کامل','body']]},
@@ -56,55 +58,69 @@ const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label]
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
 const CONTACT=[['email','ایمیل'],['phone','تلفن'],['telegram','تلگرام (نام کاربری یا لینک)'],['instagram','اینستاگرام (نام کاربری یا لینک)'],['youtube','یوتیوب (لینک کامل)'],['x','ایکس (نام کاربری یا لینک)'],['address','آدرس'],['note','متن کوتاه پایین صفحه‌ی تماس']];
-let tok=localStorage.getItem('rev_tok')||'', c=null, sha='', tab='articles', edit=null, dirty=false, note='', prev={};
+let tok=sessionStorage.getItem('rev_admin_token')||'', gitTok=sessionStorage.getItem('rev_github_token')||'', c=null, sha='', tab='articles', edit=null, dirty=false, note='', prev={};
 const root=document.getElementById('root'), $=id=>document.getElementById(id);
 const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-const H=()=>({Authorization:'Bearer '+tok,Accept:'application/vnd.github+json'});
-const api=(m,b)=>fetch(API+FILE,{method:m,headers:H(),body:b&&JSON.stringify(b)});
+const H=()=>({Authorization:'Bearer '+tok,Accept:'application/json','Content-Type':'application/json'});
+const api=(m,b)=>fetch(WORKER+'/api/admin/content',{method:m,headers:H(),body:b===undefined?undefined:JSON.stringify(b)});
+const GH=()=>({Authorization:'Bearer '+gitTok,Accept:'application/vnd.github+json'});
 function msg(t){note=t;const e=$('msg');if(e)e.textContent=t}
 
 async function load(){
-  msg('در حال بارگذاری...');
+  msg('در حال بارگذاری اطلاعات...');
   try{
     const r=await api('GET');
-    if(r.status===401||r.status===403){tok='';localStorage.removeItem('rev_tok');note='توکن نامعتبر است یا دسترسی کافی ندارد.';return draw()}
-    if(r.status===404){c={};sha=''}
-    else if(!r.ok) throw 0;
-    else{const j=await r.json();sha=j.sha;c=JSON.parse(decodeURIComponent(escape(atob(j.content.replace(/\n/g,'')))))}
+    if(r.status===401||r.status===403){tok='';sessionStorage.removeItem('rev_admin_token');note='رمز مدیریتی Cloudflare نادرست است.';return draw()}
+    if(!r.ok) throw new Error('API '+r.status);
+    const j=await r.json();
+    if(j.success && j.data && typeof j.data==='object'){
+      c=j.data;
+      note='اطلاعات از دیتابیس Cloudflare بارگذاری شد.';
+    }else{
+      // First-time migration: seed the editor from the current public content.json.
+      const old=await fetch(LIVE_CONTENT+'?v='+Date.now(),{cache:'no-store'});
+      if(!old.ok) throw new Error('Could not load existing content.json');
+      c=await old.json();
+      note='اطلاعات از نسخه فعلی سایت بارگذاری شد. برای انتقال آن به دیتابیس، پس از بررسی روی «انتشار تغییرات» بزنید.';
+    }
     c.theme={...THEME0,...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.carsInfo=c.carsInfo||{};c.about=c.about||'';
     ['news','articles','episodes','products','cars'].forEach(k=>c[k]=c[k]||[]);
-    note='';draw();
-  }catch(e){msg('اتصال به گیت‌هاب برقرار نشد. اینترنت را بررسی و دوباره تلاش کنید.')}
+    draw();
+  }catch(e){msg('بارگذاری انجام نشد. اتصال Worker و نشانی content.json را بررسی کنید.');}
 }
 async function save(){
-  msg('در حال انتشار...');
-  const b={message:'به‌روزرسانی محتوا از پنل',content:btoa(unescape(encodeURIComponent(JSON.stringify(c,null,1))))};
-  if(sha)b.sha=sha;
+  msg('در حال ذخیره در دیتابیس Cloudflare...');
   try{
-    const r=await api('PUT',b);
-    if(r.ok){sha=(await r.json()).content.sha;dirty=false;draw();msg('منتشر شد. تا یکی دو دقیقه دیگر روی سایت دیده می‌شود.')}
-    else msg('ذخیره نشد (کد '+r.status+'). اگر ۴۰۹ است، صفحه را رفرش کنید.');
-  }catch(e){msg('ذخیره نشد؛ اتصال برقرار نیست.')}
+    const r=await api('PUT',c);
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.success){dirty=false;draw();msg('در دیتابیس Cloudflare ذخیره شد. برای نمایش تغییرات روی سایت، اتصال صفحه اصلی هم باید به API انجام شده باشد.');}
+    else if(r.status===401||r.status===403){tok='';sessionStorage.removeItem('rev_admin_token');c=null;note='رمز مدیریتی پذیرفته نشد؛ دوباره وارد شوید.';draw()}
+    else msg('ذخیره انجام نشد (کد '+r.status+'): '+(j.error||'خطای نامشخص'));
+  }catch(e){msg('ذخیره انجام نشد؛ اتصال Worker را بررسی کنید.');}
 }
 /* ---- تصویر: انتخاب، کوچک‌سازی و آپلود ---- */
 const choose=()=>new Promise(r=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>r(i.files[0]);i.click()});
 const shrink=f=>new Promise((res,rej)=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1400/im.width),cv=document.createElement('canvas');cv.width=im.width*s;cv.height=im.height*s;const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);res(cv.toDataURL('image/jpeg',.82))};im.onerror=rej;im.src=URL.createObjectURL(f)});
 async function upImage(){
   const f=await choose(); if(!f) return null;
-  msg('در حال آپلود تصویر...');
+  if(!gitTok){msg('برای آپلود تصویر، توکن GitHub را در بخش ورود پنل وارد کنید؛ یا فعلاً نشانی تصویر را دستی وارد کنید.');return null}
+  msg('در حال آپلود تصویر به مخزن GitHub...');
   try{
     const d=await shrink(f), p='images/'+Date.now().toString(36)+'.jpg';
-    const r=await fetch(API+p,{method:'PUT',headers:H(),body:JSON.stringify({message:'آپلود تصویر',content:d.split(',')[1]})});
-    if(!r.ok){msg('آپلود نشد (کد '+r.status+')');return null}
-    prev[p]=d;msg('تصویر آپلود شد. بعد از «انتشار تغییرات» روی سایت دیده می‌شود.');return p;
+    const r=await fetch(API+p,{method:'PUT',headers:GH(),body:JSON.stringify({message:'آپلود تصویر از پنل REV',content:d.split(',')[1]})});
+    if(!r.ok){msg('آپلود تصویر نشد (کد '+r.status+'). دسترسی توکن GitHub را بررسی کنید.');return null}
+    prev[p]=d;msg('تصویر در GitHub آپلود شد؛ بعد از «انتشار تغییرات» نشانی آن در دیتابیس ذخیره می‌شود.');return p;
   }catch(e){msg('این فایل به‌عنوان تصویر خوانده نشد.');return null}
 }
 /* ---- صفحه‌ها ---- */
 function login(){
-  root.innerHTML=`<div class="box"><h2>ورود</h2><p style="color:var(--muted)">توکن گیت‌هاب را وارد کنید. فقط روی همین مرورگر ذخیره می‌شود.</p>
-  <label for="t">توکن</label><input type="password" id="t" dir="ltr" autocomplete="off">
-  <p style="margin-top:12px"><button class="btn main" data-a="login">ورود</button></p><p id="msg">${esc(note)}</p>
-  <ol><li>گیت‌هاب ← Settings ← Developer settings ← Personal access tokens</li><li>توکن را با دسترسی نوشتن روی مخزن rev بسازید</li></ol></div>`;
+  root.innerHTML=`<div class="box"><h2>ورود به پنل مدیریت REV</h2><p style="color:var(--muted)">رمز مدیریتی Cloudflare را وارد کنید. این رمز فقط تا پایان نشست همین مرورگر نگه داشته می‌شود.</p>
+  <label for="t">رمز مدیریتی Cloudflare (ADMIN_TOKEN)</label><input type="password" id="t" dir="ltr" autocomplete="current-password">
+  <label for="gt">توکن GitHub برای آپلود تصویر (اختیاری)</label><input type="password" id="gt" dir="ltr" autocomplete="off" placeholder="برای آپلود تصاویر لازم است">
+  <p class="hint">توکن GitHub فعلاً فقط برای آپلود تصویر استفاده می‌شود. آن را در کد سایت ننویسید و از رایانه عمومی استفاده نکنید.</p>
+  <p style="margin-top:12px"><button class="btn main" data-a="login">ورود</button></p><p id="msg">${esc(note)}</p></div>`;
+  if($('t')) $('t').value=tok;
+  if($('gt')) $('gt').value=gitTok;
 }
 function list(){
   const t=TYPES[tab], items=c[tab];
@@ -189,8 +205,8 @@ root.addEventListener('change',e=>{
 root.addEventListener('click',async e=>{
   const b=e.target.closest('[data-a]'); if(!b) return;
   const a=b.dataset.a, i=+b.dataset.i;
-  if(a==='login'){tok=$('t').value.trim();if(!tok)return;localStorage.setItem('rev_tok',tok);c=null;draw()}
-  else if(a==='out'){localStorage.removeItem('rev_tok');tok='';c=null;note='';draw()}
+  if(a==='login'){tok=$('t').value.trim();gitTok=$('gt').value.trim();if(!tok){msg('رمز مدیریتی را وارد کنید.');return}sessionStorage.setItem('rev_admin_token',tok);if(gitTok)sessionStorage.setItem('rev_github_token',gitTok);else sessionStorage.removeItem('rev_github_token');c=null;draw()}
+  else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
   else if(a==='tab'){tab=b.dataset.k;edit=null;note='';draw()}
   else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:{part:'battery'}};draw()}
   else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
