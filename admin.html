@@ -54,7 +54,8 @@ const TYPES={
  ,products:{label:'فروشگاه',one:'محصول',fields:[['title','نام محصول','text'],['price','قیمت (فقط عدد، مثلاً 1500000)','text'],['image','تصویر محصول','img'],['desc','توضیحات کوتاه','area'],['url','لینک سفارش همین محصول (اختیاری)','text'],['stock','موجودی','stock']]}
  ,cars:{label:'خودروها',one:'خودرو',fields:[['title','نام خودرو (برند و مدل)','text'],['type','نوع بدنه','sel:sedan|سدان,suv|شاسی‌بلند,hatch|هاچ‌بک,crossover|کراس‌اور,other|سایر'],['market','وضعیت در بازار ایران','sel:iran|موجود در بازار ایران,import|وارداتی یا غیررسمی,none|فعلاً در بازار ایران نیست'],['price','قیمت به تومان (عدد کامل، مثلاً 2500000000)','text'],['priceDate','تاریخ قیمت (مثلاً ۱۴۰۵/۰۷/۲۰)','text'],['range','برد (کیلومتر، فقط عدد)','text'],['rangeStd','استاندارد اندازه‌گیری برد (WLTP، EPA، CLTC و...)','text'],['battery','ظرفیت باتری (کیلووات‌ساعت، فقط عدد)','text'],['power','توان (اسب‌بخار، فقط عدد)','text'],['accel','شتاب ۰ تا ۱۰۰ (ثانیه، فقط عدد)','text'],['dc','حداکثر شارژ DC (کیلووات، فقط عدد)','text'],['seats','تعداد صندلی (فقط عدد)','text'],['drive','سیستم محرک','sel:RWD|عقب‌رو,FWD|جلو‌رو,AWD|چهارچرخ‌محرک'],['connector','نوع کانکتور شارژ (مثلاً CCS2)','text'],['image','تصویر خودرو','img'],['pros','نقاط قوت (هر مورد در یک خط)','area'],['cons','نقاط ضعف (هر مورد در یک خط)','area'],['url','لینک بررسی کامل یا خرید (اختیاری)','text']]}
 };
-const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
+const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
+let stationsCache=null, stationEdit=null, stationBusy=false;
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
 const CONTACT=[['email','ایمیل'],['phone','تلفن'],['telegram','تلگرام (نام کاربری یا لینک)'],['instagram','اینستاگرام (نام کاربری یا لینک)'],['youtube','یوتیوب (لینک کامل)'],['x','ایکس (نام کاربری یا لینک)'],['address','آدرس'],['note','متن کوتاه پایین صفحه‌ی تماس']];
@@ -178,8 +179,45 @@ function draw(){
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
-  const body=edit?form():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
+  const body=tab==='stations'?stationPanel():edit?form():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
+}
+
+async function loadStations(){
+  if(stationBusy)return; stationBusy=true; note='در حال دریافت جایگاه‌ها از دیتابیس...'; draw();
+  try{const r=await fetch(WORKER+'/api/admin/stations',{headers:H(),cache:'no-store'});const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    stationsCache=Array.isArray(j.data)?j.data:[];note=`${stationsCache.length} جایگاه از دیتابیس دریافت شد.`;
+  }catch(e){note='دریافت جایگاه‌ها ناموفق بود: '+(e.message||'خطای اتصال');stationsCache=[]}
+  finally{stationBusy=false;if(tab==='stations')draw()}
+}
+function stationPanel(){
+  if(stationEdit)return stationForm();
+  if(stationsCache===null){loadStations();return `<div class="box">در حال بارگذاری جایگاه‌ها...</div>`}
+  const rows=stationsCache.map((s,i)=>`<div class="row"><div><b>${esc(s.name||'بدون نام')}</b><small>${esc(s.address||'بدون آدرس')} · ${Number(s.latitude).toFixed(5)}, ${Number(s.longitude).toFixed(5)} · ${esc(s.power_kw??'؟')} kW · ${esc(s.status||'unknown')}</small></div><div><button class="btn" data-a="station-edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="station-delete" data-i="${i}">حذف</button></div></div>`).join('');
+  return `<div class="box"><h3>مدیریت جایگاه‌های شارژ</h3><p class="hint">اطلاعات این بخش مستقیماً در جدول stations ذخیره می‌شود و از مسیر عمومی برنامه‌ریز سفر خوانده می‌شود.</p><p style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button class="btn main" data-a="station-new">ثبت جایگاه جدید</button><button class="btn" data-a="station-import">ورود گروهی CSV</button><button class="btn" data-a="station-template">دانلود قالب CSV</button><button class="btn" data-a="station-refresh">به‌روزرسانی فهرست</button></p><input id="station-csv" type="file" accept=".csv,text/csv" hidden><p class="hint" style="margin-top:8px">ستون‌های CSV: name, address, latitude, longitude, connectors, power_kw, status, source_url, source_id. فایل UTF-8 باشد؛ مختصات اعشاری وارد کنید.</p></div>${rows||'<div class="box">هنوز جایگاهی در دیتابیس ثبت نشده است.</div>'}`;
+}
+function stationForm(){
+  const s=stationEdit.item||{}; const f=(k,l,type='text',ph='')=>`<label for="st_${k}">${l}</label><input id="st_${k}" type="${type}" value="${esc(s[k]??'')}" placeholder="${ph}" ${type==='text'?'':''}>`;
+  return `<div class="box"><h3>${stationEdit.isNew?'ثبت جایگاه جدید':'ویرایش جایگاه'}</h3>${f('name','نام جایگاه')}${f('address','آدرس')}${f('latitude','عرض جغرافیایی','number','مثلاً 35.6892')}${f('longitude','طول جغرافیایی','number','مثلاً 51.3890')}${f('power_kw','توان شارژ (kW)','number','مثلاً 60')}<label for="st_connectors">کانکتورها (با ویرگول جدا کنید)</label><input id="st_connectors" value="${esc(Array.isArray(s.connectors)?s.connectors.join(', '):(s.connectors||''))}" placeholder="CCS2, Type 2"><label for="st_status">وضعیت</label><select id="st_status"><option value="unknown" ${(!s.status||s.status==='unknown')?'selected':''}>نامشخص</option><option value="operational" ${s.status==='operational'?'selected':''}>فعال</option><option value="offline" ${s.status==='offline'?'selected':''}>غیرفعال</option><option value="planned" ${s.status==='planned'?'selected':''}>در دست احداث</option></select>${f('source_url','لینک منبع یا صفحه جایگاه')}${f('source_id','شناسه منبع (اختیاری)')}<p class="hint" style="margin-top:8px">شناسه: ${esc(s.id||'پس از ثبت ساخته می‌شود')} · منبع: ${esc(s.source||'rev')}</p><p style="margin-top:16px"><button class="btn main" data-a="station-save">ذخیره جایگاه</button> <button class="btn" data-a="station-cancel">انصراف</button></p></div>`;
+}
+function stationFormValues(){
+  const val=k=>document.getElementById('st_'+k)?.value.trim()||'';
+  const s={name:val('name'),address:val('address'),latitude:Number(val('latitude')),longitude:Number(val('longitude')),power_kw:val('power_kw')===''?null:Number(val('power_kw')),connectors:val('connectors').split(/[,،;|]/).map(x=>x.trim()).filter(Boolean),status:val('status')||'unknown',source_url:val('source_url'),source_id:val('source_id'),source:stationEdit.item?.source||'rev'};
+  if(stationEdit.item?.id)s.id=stationEdit.item.id; return s;
+}
+function parseCSV(text){
+  const rows=[];let row=[],cell='',quoted=false;const firstLine=text.split(/\r?\n/,1)[0]||'';const delimiter=firstLine.includes(',')?',':firstLine.includes(';')?';':'\t';
+  for(let i=0;i<text.length;i++){const ch=text[i];if(ch==='"'&&quoted&&text[i+1]==='"'){cell+='"';i++}else if(ch==='"'){quoted=!quoted}else if(ch===delimiter&&!quoted){row.push(cell.trim());cell=''}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell.trim());if(row.some(Boolean))rows.push(row);row=[];cell=''}else cell+=ch}
+  row.push(cell.trim());if(row.some(Boolean))rows.push(row);if(rows.length<2)throw new Error('فایل باید یک ردیف عنوان و دست‌کم یک ردیف داده داشته باشد.');
+  const keyMap={name:['name','title','station_name','نام','نام جایگاه'],address:['address','آدرس'],latitude:['latitude','lat','عرض جغرافیایی','عرض'],longitude:['longitude','lon','lng','طول جغرافیایی','طول'],connectors:['connectors','connector_types','کانکتورها','کانکتور'],power_kw:['power_kw','power','توان','توان شارژ'],status:['status','وضعیت'],source_url:['source_url','url','لینک','لینک منبع'],source_id:['source_id','شناسه منبع'],id:['id','شناسه'],source:['source','منبع']};
+  const headers=rows[0].map(h=>h.trim().toLowerCase());const idx={};for(const [k,aliases] of Object.entries(keyMap)){idx[k]=headers.findIndex(h=>aliases.includes(h))}
+  if(idx.name<0||idx.latitude<0||idx.longitude<0)throw new Error('ستون‌های name، latitude و longitude الزامی‌اند.');
+  return rows.slice(1).map(r=>{const o={};for(const k of Object.keys(keyMap)){if(idx[k]>=0)o[k]=r[idx[k]]??''}if(o.connectors)o.connectors=o.connectors.split(/[,،;|]/).map(x=>x.trim()).filter(Boolean);if(o.power_kw==='')o.power_kw=null;if(o.latitude!=='')o.latitude=Number(o.latitude);if(o.longitude!=='')o.longitude=Number(o.longitude);if(o.power_kw!==null&&o.power_kw!==undefined)o.power_kw=Number(o.power_kw);o.source=o.source||'rev';o.status=o.status||'unknown';return o}).filter(o=>o.name||o.latitude||o.longitude);
+}
+function downloadStationTemplate(){
+  const csv='name,address,latitude,longitude,connectors,power_kw,status,source_url,source_id\n';
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='rev-stations-template.csv';a.click();URL.revokeObjectURL(a.href);
 }
 /* ---- رویدادها ---- */
 function wrap(a,b,ph){const el=$('f_body'),s=el.selectionStart,e=el.selectionEnd;el.setRangeText(a+(el.value.slice(s,e)||ph)+b,s,e,'end');el.focus()}
@@ -202,12 +240,16 @@ root.addEventListener('change',e=>{
   if(e.target.id==='sh'){c.shop=e.target.checked;dirty=true}
   if(e.target.id==='tc')wrap('{'+e.target.value+'|','}','متن رنگی');
 });
+root.addEventListener('change',async e=>{
+  if(e.target.id==='station-csv'&&e.target.files?.[0]){const file=e.target.files[0];try{const text=await file.text();const rows=parseCSV(text);if(!rows.length){msg('هیچ ردیف معتبری در فایل پیدا نشد.');return}if(!confirm(`${rows.length} ردیف برای ورود آماده است. موارد هم‌مختصات/هم‌شناسه به‌روزرسانی می‌شوند. ادامه می‌دهید؟`))return;msg('در حال ورود گروهی...');const r=await fetch(WORKER+'/api/admin/stations/bulk',{method:'POST',headers:H(),body:JSON.stringify({stations:rows})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationsCache=null;note=`ورود گروهی موفق بود؛ ${j.count} ردیف پردازش شد.`;await loadStations()}catch(err){msg('ورود CSV ناموفق بود: '+(err.message||'خطای فایل'))}finally{e.target.value=''}}
+});
+
 root.addEventListener('click',async e=>{
   const b=e.target.closest('[data-a]'); if(!b) return;
   const a=b.dataset.a, i=+b.dataset.i;
   if(a==='login'){tok=$('t').value.trim();gitTok=$('gt').value.trim();if(!tok){msg('رمز مدیریتی را وارد کنید.');return}sessionStorage.setItem('rev_admin_token',tok);if(gitTok)sessionStorage.setItem('rev_github_token',gitTok);else sessionStorage.removeItem('rev_github_token');c=null;draw()}
   else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
-  else if(a==='tab'){tab=b.dataset.k;edit=null;note='';draw()}
+  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations()}
   else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:{part:'battery'}};draw()}
   else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
   else if(a==='del'){if(confirm('این مورد حذف شود؟')){c[tab].splice(i,1);dirty=true;draw()}}
@@ -234,6 +276,20 @@ root.addEventListener('click',async e=>{
     if(edit.i<0)c[tab].unshift(it);else c[tab][edit.i]=it;
     edit=null;dirty=true;draw();
   }
+  else if(a==='station-refresh'){stationsCache=null;loadStations()}
+  else if(a==='station-new'){stationEdit={isNew:true,item:{source:'rev',status:'unknown'}};draw()}
+  else if(a==='station-edit'){stationEdit={isNew:false,item:{...stationsCache[i]}};draw()}
+  else if(a==='station-cancel'){stationEdit=null;draw()}
+  else if(a==='station-save'){
+    const s=stationFormValues();
+    if(!s.name){msg('نام جایگاه الزامی است.');return}
+    if(!Number.isFinite(s.latitude)||s.latitude < -90||s.latitude > 90||!Number.isFinite(s.longitude)||s.longitude < -180||s.longitude > 180){msg('مختصات جغرافیایی معتبر وارد کنید.');return}
+    if(s.power_kw!==null&&(!Number.isFinite(s.power_kw)||s.power_kw<0)){msg('توان شارژ باید عدد مثبت یا خالی باشد.');return}
+    try{const isNew=stationEdit.isNew;const endpoint=isNew?WORKER+'/api/admin/stations':WORKER+'/api/admin/stations/'+encodeURIComponent(s.id);const r=await fetch(endpoint,{method:isNew?'POST':'PUT',headers:H(),body:JSON.stringify(s)});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationEdit=null;stationsCache=null;note=j.message||'ذخیره شد.';await loadStations()}catch(e){msg('ذخیره جایگاه انجام نشد: '+(e.message||'خطای اتصال'))}
+  }
+  else if(a==='station-delete'){const s=stationsCache[i];if(s&&confirm('جایگاه «'+s.name+'» حذف شود؟')){try{const r=await fetch(WORKER+'/api/admin/stations/'+encodeURIComponent(s.id),{method:'DELETE',headers:H()});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationsCache=null;note='جایگاه حذف شد.';await loadStations()}catch(e){msg('حذف انجام نشد: '+(e.message||'خطای اتصال'))}}}
+  else if(a==='station-import')$('station-csv').click()
+  else if(a==='station-template')downloadStationTemplate()
   else if(a==='pub')save();
 });
 draw();
