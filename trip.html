@@ -10,6 +10,7 @@
 *{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.7}
 .wrap{max-width:1200px;margin:auto;padding:22px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
 .logo{font-weight:900;letter-spacing:2px;color:var(--accent);font-size:28px}.sub{color:var(--muted);font-size:13px}
+.head-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}.back-link{display:inline-flex;align-items:center;gap:7px;background:#263746;color:var(--text);text-decoration:none;border:1px solid #3b5061;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:bold;white-space:nowrap;transition:background .2s,border-color .2s}.back-link:hover{background:#344a5c;border-color:var(--accent)}
 .layout{display:grid;grid-template-columns:350px 1fr;gap:16px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
 h1{font-size:23px;margin:0 0 4px}h2{font-size:17px;margin:0 0 12px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
@@ -25,14 +26,17 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px
 .results{margin-top:14px}.station{border-top:1px solid var(--line);padding:12px 0}.station strong{display:block}.station small{color:var(--muted)}
 .pill{display:inline-block;font-size:11px;border:1px solid #4a5b69;border-radius:99px;padding:2px 7px;margin:4px 3px 0 0;color:#d9e4eb}
 .warning{font-size:12px;color:#ffd18a;margin-top:10px}
-@media(max-width:850px){.layout{grid-template-columns:1fr}.wrap{padding:12px}#map{height:430px}.head{align-items:flex-start}.stats{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.wrap{padding:12px}#map{height:430px}.head{align-items:flex-start;flex-direction:column}.head-actions{width:100%;justify-content:space-between}.stats{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
 <div class="wrap">
   <header class="head">
     <div><div class="logo">REV</div><div class="sub">برنامه‌ریز سفر با خودروی برقی — نسخه آزمایشی ایران</div></div>
-    <div class="sub">Route planner / EV charging</div>
+    <div class="head-actions">
+      <div class="sub">Route planner / EV charging</div>
+      <a class="back-link" href="https://mojtabaalimi64-cloud.github.io/rev/" aria-label="بازگشت به صفحه اصلی سایت REV"><span aria-hidden="true">→</span> بازگشت به سایت REV</a>
+    </div>
   </header>
   <div class="layout">
     <aside class="panel">
@@ -165,30 +169,48 @@ async function getRevStations(routeCoords,radiusKm){
   const rows=Array.isArray(payload)?payload:(Array.isArray(payload.data)?payload.data:(Array.isArray(payload.stations)?payload.stations:[]));
   return routeFilter(rows.map(normalizeRevStation),routeCoords,radiusKm);
 }
-function routeSamplePoints(routeCoords,spacingKm=100,maxPoints=18){
+function routeSamplePoints(routeCoords,spacingKm=20,maxPoints=80){
+  // Sample evenly along the entire route. The previous implementation sampled
+  // only up to 18 points, leaving large gaps on long trips.
   if(!routeCoords.length)return [];
-  const samples=[[routeCoords[0][1],routeCoords[0][0]]];
-  let accumulated=0;
-  for(let i=1;i<routeCoords.length;i++){
-    const a=[routeCoords[i-1][1],routeCoords[i-1][0]],b=[routeCoords[i][1],routeCoords[i][0]];
-    accumulated+=haversine(a,b);
-    if(accumulated>=spacingKm){samples.push(b);accumulated=0;if(samples.length>=maxPoints-1)break;}
+  const points=routeCoords.map(c=>[Number(c[1]),Number(c[0])]); // [lat, lon]
+  if(points.length===1)return [points[0]];
+  const cumulative=[0];
+  for(let i=1;i<points.length;i++) cumulative[i]=cumulative[i-1]+haversine(points[i-1],points[i]);
+  const total=cumulative[cumulative.length-1];
+  if(!Number.isFinite(total)||total===0)return [points[0],points[points.length-1]];
+  const count=Math.min(maxPoints,Math.max(2,Math.ceil(total/Math.max(1,spacingKm))+1));
+  const samples=[];
+  let seg=1;
+  for(let n=0;n<count;n++){
+    const target=total*n/(count-1);
+    while(seg<cumulative.length-1&&cumulative[seg]<target)seg++;
+    const prev=seg-1, span=cumulative[seg]-cumulative[prev];
+    const t=span?(target-cumulative[prev])/span:0;
+    samples.push([
+      points[prev][0]+(points[seg][0]-points[prev][0])*t,
+      points[prev][1]+(points[seg][1]-points[prev][1])*t
+    ]);
   }
-  const last=[routeCoords[routeCoords.length-1][1],routeCoords[routeCoords.length-1][0]];
-  if(haversine(samples[samples.length-1],last)>5)samples.push(last);
-  return samples.slice(0,maxPoints);
+  return samples;
 }
 async function queryOverpass(routeCoords,radiusKm){
-  const samples=routeSamplePoints(routeCoords,Math.max(60,radiusKm*4),18);
-  const around=samples.map(([lat,lon])=>`node(around:${Math.round(radiusKm*1000)},${lat},${lon})[amenity=charging_station];way(around:${Math.round(radiusKm*1000)},${lat},${lon})[amenity=charging_station];relation(around:${Math.round(radiusKm*1000)},${lat},${lon})[amenity=charging_station];`).join("\n");
-  const query=`[out:json][timeout:25];(${around});out center tags;`;
+  // Overlapping search circles help avoid missing chargers between route samples.
+  const samples=routeSamplePoints(routeCoords,Math.max(5,Math.min(20,radiusKm*1.2)),80);
+  const around=samples.map(([lat,lon])=>`node(around:${Math.round(radiusKm*1000)},${lat.toFixed(5)},${lon.toFixed(5)})[amenity=charging_station];way(around:${Math.round(radiusKm*1000)},${lat.toFixed(5)},${lon.toFixed(5)})[amenity=charging_station];relation(around:${Math.round(radiusKm*1000)},${lat.toFixed(5)},${lon.toFixed(5)})[amenity=charging_station];`).join("\n");
+  const query=`[out:json][timeout:40];(${around});out center tags;`;
   let lastError=null;
   for(const endpoint of OVERPASS_ENDPOINTS){
     try{
       const response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","Accept":"application/json"},body:"data="+encodeURIComponent(query)});
       if(!response.ok)throw new Error("Overpass HTTP "+response.status);
       const payload=await response.json();
-      const rows=(payload.elements||[]).map(el=>{
+      const seen=new Set();
+      const rows=(payload.elements||[]).filter(el=>{
+        const key=String(el.type)+":"+String(el.id);
+        if(seen.has(key))return false;
+        seen.add(key);return true;
+      }).map(el=>{
         const tags=el.tags||{}, center=el.center||{};
         const lat=Number(el.lat??center.lat),lon=Number(el.lon??center.lon);
         if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
@@ -229,7 +251,7 @@ function fmtDuration(seconds){
 function renderStations(stations){
   const el=$("results");
   el.innerHTML="<h2 style='margin-top:18px'>شارژرهای نزدیک مسیر ("+stations.length+")</h2>";
-  if(!stations.length){el.innerHTML+="<div class='sub'>در داده‌های دریافت‌شده، ایستگاهی در محدوده انتخابی پیدا نشد. این به معنی نبود شارژر در دنیای واقعی نیست.</div>";return;}
+  if(!stations.length){el.innerHTML+="<div class='sub'>در بانک REV یا داده‌های عمومی OpenStreetMap ایستگاهی در شعاع انتخاب‌شده پیدا نشد. برای جست‌وجوی گسترده‌تر، فاصله قابل‌قبول را روی ۲۰ یا ۴۰ کیلومتر بگذارید. پوشش داده‌های عمومی شارژر در ایران ممکن است ناقص باشد؛ این نتیجه به معنی نبود شارژر واقعی نیست.</div>";return;}
   stations.slice(0,50).forEach(s=>{
     const marker=L.circleMarker([s.lat,s.lon],{radius:7,color:"#0b1016",weight:2,fillColor:"#d7ff3f",fillOpacity:.95}).addTo(stationLayer);
     marker.bindPopup(`<b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+" kW":"نامشخص"}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a>`);
