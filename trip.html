@@ -3,343 +3,274 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>برنامه‌ریزی سفر و ایستگاه شارژ | REV</title>
-<meta name="description" content="نزدیک‌ترین ایستگاه شارژ را پیدا کن و برای سفر با خودروی برقی یا هیبریدی، محل توقف‌ها را برنامه‌ریزی کن.">
-<meta name="theme-color" content="#080B0D">
+<title>برنامه‌ریز سفر خودروی برقی | REV</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--ink:#080B0D;--ink-2:#121A1F;--paper:#F5F7F8;--card:#fff;--line:#DDE3E6;--muted:#5B666D;--teal-d:#00806F;--green:#39FF88;--text:#080B0D;
---font:"Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,system-ui,sans-serif}
-*{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--paper);color:var(--text);line-height:1.9;font-size:17px}
-a{color:inherit;text-decoration:none}
-button,input,select{font:inherit;color:inherit}
-button{cursor:pointer}
-:focus-visible{outline:3px solid var(--green);outline-offset:3px;border-radius:6px}
-.wrap{width:min(100% - 32px,1000px);margin-inline:auto}
-header{background:var(--ink);color:#fff}
-.bar{display:flex;justify-content:space-between;align-items:center;min-height:60px}
-.brand{font-weight:900;font-size:24px;letter-spacing:.06em;direction:ltr}
-.back{color:#C3CBD0;font-size:15px}
-h1{font-size:clamp(26px,5vw,40px);line-height:1.4;margin:28px 0 6px}
-.lead{color:var(--muted);max-width:60ch;margin-bottom:20px}
-.tabs{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap}
-.tab{padding:6px 20px;border-radius:999px;border:1px solid var(--line);background:#fff;font-weight:700}
-.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
-.box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:14px}
-.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
-label{display:flex;flex-direction:column;gap:4px;font-size:14px;font-weight:700}
-input,select{border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff;width:100%}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.row input{flex:1;min-width:150px}
-.btn{background:var(--green);color:var(--ink);font-weight:700;border:0;border-radius:999px;padding:8px 24px}
-.btn.alt{background:#fff;border:1px solid var(--line);font-weight:500;padding:6px 16px}
-.btn:disabled{opacity:.5;cursor:not-allowed}
-.sub{font-size:13px;color:var(--muted);margin-top:4px;min-height:20px}
-.sec-t{font-size:18px;font-weight:800;margin:0 0 10px}
-.cards{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));margin-top:12px}
-.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:4px}
-.card h3{font-size:17px;line-height:1.6}
-.tag{align-self:flex-start;font-size:13px;font-weight:700;color:var(--teal-d);background:#DDFBE9;padding:0 12px;border-radius:999px}
-.tag.o{background:#FAEEDA;color:#633806}
-.meta{color:var(--muted);font-size:14px}
-.num{font-size:24px;font-weight:800;line-height:1.4}
-.sum{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-top:12px}
-.sum div{background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 14px}
-.warn{background:#FAEEDA;color:#633806;border-radius:12px;padding:10px 14px;margin-top:10px;font-size:15px}
-.ok{background:#DDFBE9;color:#00583E;border-radius:12px;padding:10px 14px;margin-top:10px;font-size:15px}
-.lk{display:flex;gap:12px;flex-wrap:wrap;font-size:14px;margin-top:4px}.lk a{color:var(--teal-d);text-decoration:underline}
-#map{height:380px;border-radius:14px;border:1px solid var(--line);margin:14px 0;direction:ltr}
-details{margin-top:10px}summary{cursor:pointer;font-size:14px;color:var(--muted)}
-footer{padding:20px 0 40px;color:var(--muted);font-size:14px}
+:root{--bg:#0b1016;--panel:#121a23;--line:#263442;--text:#eef4f8;--muted:#9eafbd;--accent:#d7ff3f;--blue:#64b5ff;--danger:#ff8d8d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.7}
+.wrap{max-width:1200px;margin:auto;padding:22px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.logo{font-weight:900;letter-spacing:2px;color:var(--accent);font-size:28px}.sub{color:var(--muted);font-size:13px}
+.layout{display:grid;grid-template-columns:350px 1fr;gap:16px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+h1{font-size:23px;margin:0 0 4px}h2{font-size:17px;margin:0 0 12px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
+input,select{width:100%;background:#0c131b;color:var(--text);border:1px solid #344454;border-radius:9px;padding:11px;font:inherit;outline:none}
+input:focus,select:focus{border-color:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px;font-weight:bold}
+.primary{background:var(--accent);color:#10150a;width:100%;margin-top:16px}.secondary{background:#263746;color:var(--text)}
+#map{height:610px;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.status{margin-top:12px;background:#0c131b;border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--muted);font-size:13px;white-space:pre-wrap}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{background:#0c131b;border:1px solid var(--line);padding:10px;border-radius:10px}.stat b{display:block;font-size:20px;color:var(--accent)}.stat span{font-size:12px;color:var(--muted)}
+.results{margin-top:14px}.station{border-top:1px solid var(--line);padding:12px 0}.station strong{display:block}.station small{color:var(--muted)}
+.pill{display:inline-block;font-size:11px;border:1px solid #4a5b69;border-radius:99px;padding:2px 7px;margin:4px 3px 0 0;color:#d9e4eb}
+.warning{font-size:12px;color:#ffd18a;margin-top:10px}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.wrap{padding:12px}#map{height:430px}.head{align-items:flex-start}.stats{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
 <body>
-<header><div class="wrap bar"><a class="brand" href="./">REV</a><a class="back" href="./">← بازگشت به صفحه‌ی اول</a></div></header>
-<main class="wrap">
-<h1>برنامه‌ریزی سفر و ایستگاه شارژ</h1>
-<p class="lead">نزدیک‌ترین ایستگاه شارژ را پیدا کن، یا برای سفر با خودروی برقی و هیبریدی بگو کجا توقف کنی. مسیر و ایستگاه‌ها از نقشه‌ی آزاد OpenStreetMap و سرویس‌های رایگان آن گرفته می‌شوند.</p>
-
-<div class="tabs"><button class="tab on" data-t="t1">نزدیک‌ترین ایستگاه شارژ</button><button class="tab" data-t="t2">برنامه‌ریزی سفر</button></div>
-
-<section id="t1" class="box">
-  <p class="sec-t">موقعیت شما</p>
-  <div class="row"><button class="btn alt" id="n_me" type="button">استفاده از موقعیت فعلی من</button><span class="meta">یا</span>
-  <input id="n_q" placeholder="نام شهر، محله یا آدرس"><button class="btn alt" id="n_b" type="button">جستجو</button></div>
-  <select id="n_r" hidden style="margin-top:8px"></select><p class="sub" id="n_s"></p>
-  <details><summary>تنظیمات جستجو</summary><label style="margin-top:8px">عبارت جستجوی دلخواه (اختیاری)<input id="term" placeholder="خالی بگذارید تا خودکار انتخاب شود"></label></details>
-  <p style="margin-top:12px"><button class="btn" id="find" type="button">نزدیک‌ترین ایستگاه‌ها را پیدا کن</button></p>
-  <div id="nout"></div>
-</section>
-
-<section id="t2" class="box" hidden>
-  <p class="sec-t">خودرو</p>
-  <div class="grid">
-    <label>نوع خودرو<select id="veh"><option value="ev">برقی (EV)</option><option value="phev">هیبرید پلاگین‌دار (PHEV)</option><option value="hev">هیبرید معمولی (HEV)</option></select></label>
-    <label>انتخاب از خودروهای سایت<select id="car"><option value="">دلخواه (وارد کردن دستی)</option></select></label>
-    <label><span id="lbRange">برد برقی در شرایط سفر (کیلومتر)</span><input id="range" inputmode="numeric" placeholder="مثلاً ۳۰۰"></label>
-    <label id="phrow" hidden>برد کل با بنزین (کیلومتر)<input id="tot" inputmode="numeric" placeholder="مثلاً ۸۰۰"></label>
-    <label><span id="lbStart">شارژ باتری فعلی (٪)</span><input id="start" inputmode="numeric" value="90"></label>
-    <label>حداقل ذخیره هنگام رسیدن به توقف (٪)<input id="reserve" inputmode="numeric" value="10"></label>
-    <label id="chrow">شارژ تا چند درصد در هر توقف<input id="chto" inputmode="numeric" value="80"></label>
+<div class="wrap">
+  <header class="head">
+    <div><div class="logo">REV</div><div class="sub">برنامه‌ریز سفر با خودروی برقی — نسخه آزمایشی ایران</div></div>
+    <div class="sub">Route planner / EV charging</div>
+  </header>
+  <div class="layout">
+    <aside class="panel">
+      <h1>برنامه‌ریزی سفر</h1>
+      <div class="sub">مبدأ و مقصد را وارد کنید تا مسیر و شارژرهای ثبت‌شده در محدوده مسیر نمایش داده شوند.</div>
+      <label for="origin">مبدأ</label><input id="origin" placeholder="مثلاً تهران، میدان آزادی" value="تهران">
+      <label for="destination">مقصد</label><input id="destination" placeholder="مثلاً اصفهان، میدان نقش جهان" value="اصفهان">
+      <div class="grid2">
+        <div><label for="battery">ظرفیت باتری (kWh)</label><input id="battery" type="number" min="10" max="250" value="60"></div>
+        <div><label for="soc">شارژ اولیه (%)</label><input id="soc" type="number" min="5" max="100" value="90"></div>
+      </div>
+      <div class="grid2">
+        <div><label for="consumption">مصرف (kWh/100km)</label><input id="consumption" type="number" min="5" max="50" step="0.5" value="18"></div>
+        <div><label for="reserve">ذخیره مقصد (%)</label><input id="reserve" type="number" min="5" max="40" value="15"></div>
+      </div>
+      <label for="radius">فاصله قابل‌قبول شارژر از مسیر</label>
+      <select id="radius"><option value="5">۵ کیلومتر</option><option value="10" selected>۱۰ کیلومتر</option><option value="20">۲۰ کیلومتر</option><option value="40">۴۰ کیلومتر</option></select>
+      <button class="primary" id="planBtn">محاسبه مسیر و یافتن شارژرها</button>
+      <div class="status" id="status" aria-live="polite">برای شروع، دکمه محاسبه مسیر را بزنید.</div>
+      <div class="stats">
+        <div class="stat"><b id="distance">—</b><span>مسافت (km)</span></div>
+        <div class="stat"><b id="duration">—</b><span>زمان تقریبی</span></div>
+        <div class="stat"><b id="range">—</b><span>برد تخمینی (km)</span></div>
+      </div>
+      <div class="warning">داده‌های شارژر از بانک REV و در صورت نیاز OpenStreetMap دریافت می‌شوند. اطلاعات زنده‌بودن، اشغال بودن یا فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.</div>
+      <div class="results" id="results"><h2 style="margin-top:18px">شارژرهای نزدیک مسیر</h2><div class="sub">پس از محاسبه مسیر، فهرست اینجا نمایش داده می‌شود.</div></div>
+    </aside>
+    <main class="panel"><div id="map" role="img" aria-label="نقشه مسیر سفر و ایستگاه‌های شارژ"></div></main>
   </div>
-  <details><summary>تنظیمات پیشرفته (برای تخمین زمان شارژ)</summary>
-    <div class="grid" style="margin-top:8px"><label>ظرفیت باتری (کیلووات‌ساعت)<input id="bat" inputmode="decimal"></label>
-    <label>توان شارژ مؤثر ایستگاه‌ها (کیلووات)<input id="pow" inputmode="decimal" value="40"></label></div>
-    <p class="sub">زمان شارژ حدودی است و با فرض ۷۰٪ توان اعلام‌شده محاسبه می‌شود. برد واقعی بزرگراه معمولاً کمتر از برد رسمی است؛ عدد برد را محتاطانه وارد کنید.</p></details>
-  <p class="sec-t" style="margin-top:16px">مسیر</p>
-  <div class="grid">
-    <div><div class="row"><input id="o_q" placeholder="مبدأ (شهر یا آدرس)"><button class="btn alt" id="o_b" type="button">جستجو</button><button class="btn alt" id="o_me" type="button">موقعیت من</button></div><select id="o_r" hidden style="margin-top:6px"></select><p class="sub" id="o_s"></p></div>
-    <div><div class="row"><input id="d_q" placeholder="مقصد (شهر یا آدرس)"><button class="btn alt" id="d_b" type="button">جستجو</button></div><select id="d_r" hidden style="margin-top:6px"></select><p class="sub" id="d_s"></p></div>
-  </div>
-  <p style="margin-top:12px"><button class="btn" id="go" type="button">برنامه‌ریزی کن</button></p>
-  <div id="pout"></div>
-</section>
-
-<div id="map" hidden></div>
-<footer>داده‌ی نقشه و ایستگاه‌ها: © مشارکت‌کنندگان <a href="https://www.openstreetmap.org/copyright" style="text-decoration:underline">OpenStreetMap</a> (ODbL) · مسیریابی: OSRM · جستجوی مکان: Nominatim. این اطلاعات را داوطلبان ثبت می‌کنند و ممکن است ناقص یا قدیمی باشد؛ سرویس‌های رایگان در ساعات شلوغ ممکن است کند باشند. پیش از سفر، فعال بودن و نوع کانکتور ایستگاه را (با تماس یا اپ شارژ) بررسی کنید. برد واقعی خودرو با سرعت، دما، شیب و بار تغییر می‌کند. این برنامه یک راهنماست و جایگزین تصمیم راننده نیست.</footer>
-</main>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
-const COUNTRY='ir'; // جستجوی مکان فقط در ایران؛ برای همه‌ی دنیا خالی بگذارید
-const $=id=>document.getElementById(id);
-const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-const fa2en=s=>String(s??'').replace(/[۰-۹]/g,d=>'۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g,d=>'٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/٫/g,'.').replace(/[,٬،\s]/g,'');
-const NUM=v=>{const n=parseFloat(fa2en(v));return isFinite(n)?n:null};
-const fnum=n=>Number(n).toLocaleString('fa-IR',{maximumFractionDigits:0});
-const fmtT=s=>{const m=Math.round(s/60),h=Math.floor(m/60);return h?fnum(h)+' ساعت'+(m%60?' و '+fnum(m%60)+' دقیقه':''):fnum(m)+' دقیقه'};
-const warn=t=>`<div class="warn">${esc(t)}</div>`;
-const errMsg=e=>e instanceof TypeError?'اتصال برقرار نشد. اینترنت را بررسی کنید؛ اگر ادامه داشت، ممکن است شبکه‌ی شما به این سرویس‌ها دسترسی نداشته باشد.':(e.message||'خطای ناشناخته');
-
-/* ---------- ابزار کمکی: فاصله‌ی زمانی بین درخواست‌ها و کش ---------- */
-const sleep=ms=>new Promise(r=>setTimeout(r,ms)),last={};
-async function gap(k,ms){const w=(last[k]||0)+ms-Date.now();last[k]=Math.max(Date.now(),(last[k]||0)+ms);if(w>0)await sleep(w)}
-async function memo(key,fn){try{const v=sessionStorage.getItem(key);if(v)return JSON.parse(v)}catch(_){}const r=await fn();try{sessionStorage.setItem(key,JSON.stringify(r))}catch(_){}return r}
-
-/* ---------- جستجوی مکان: Nominatim (رایگان، OpenStreetMap) ---------- */
-async function nom(path,params){
-  await gap('nom',1100);
-  const r=await fetch('https://nominatim.openstreetmap.org'+path+'?'+new URLSearchParams({format:'jsonv2','accept-language':'fa',...params}));
-  if(r.status===429)throw new Error('تعداد درخواست‌ها به سرویس جستجو زیاد شد؛ چند ثانیه صبر کنید و دوباره امتحان کنید.');
-  if(!r.ok)throw new Error('سرویس جستجوی مکان پاسخ نداد ('+r.status+').');
-  return r.json();
+/*
+ * REV EV Trip Planner
+ * Route: public OSRM routing service.
+ * Charging stations: REV Cloudflare D1 API first, OpenStreetMap Overpass fallback.
+ * No private API keys are embedded in this public page.
+ */
+const REV_API = "https://rev-api.mojtaba-alimi64.workers.dev";
+const OVERPASS_ENDPOINTS = [
+  "https://overpass-api.de/api/interpreter",
+  "https://overpass.kumi.systems/api/interpreter"
+];
+const map = L.map("map").setView([32.4, 53.7], 5);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+const routeLayer = L.layerGroup().addTo(map);
+const stationLayer = L.layerGroup().addTo(map);
+let lastRoute = null;
+const $ = id => document.getElementById(id);
+function setStatus(message){ $("status").textContent = message; }
+function num(id, fallback){ const n=Number($(id).value); return Number.isFinite(n)&&n>0?n:fallback; }
+function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function geocode(place){
+  const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ir&q="+encodeURIComponent(place);
+  const r=await fetch(url,{headers:{"Accept":"application/json"}});
+  if(!r.ok) throw new Error("خطا در پیدا کردن مکان: "+place);
+  const data=await r.json();
+  if(!data.length) throw new Error("مکان پیدا نشد: "+place+"؛ نام شهر یا نشانی دقیق‌تری وارد کنید.");
+  return [Number(data[0].lat),Number(data[0].lon)];
 }
-const search=term=>memo('s:'+term,async()=>{
-  const p={q:term,limit:6};if(COUNTRY)p.countrycodes=COUNTRY;
-  return (await nom('/search',p)).map(x=>({title:(x.name||x.display_name.split(',')[0]),address:x.display_name,lat:+x.lat,lng:+x.lon}));
-});
-async function placeName(p){
-  try{const j=await memo('r:'+p.lat.toFixed(2)+','+p.lng.toFixed(2),()=>nom('/reverse',{lat:p.lat,lon:p.lng,zoom:10}));const a=j.address||{};return a.city||a.town||a.village||a.county||a.state||j.name||''}catch(e){return ''}
+async function getRoute(start,end){
+  const coords=`${start[1]},${start[0]};${end[1]},${end[0]}`;
+  const url=`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error("سرویس مسیریابی پاسخ نداد.");
+  const data=await r.json();
+  if(data.code!=="Ok"||!data.routes?.length) throw new Error("مسیر جاده‌ای پیدا نشد.");
+  return data.routes[0];
 }
-
-/* ---------- مسیریابی: OSRM (رایگان، OpenStreetMap) ---------- */
-const OSRM=['https://router.project-osrm.org','https://routing.openstreetmap.de/routed-car'];
-async function osrm(path){
-  let err=null;
-  for(const b of OSRM){
-    try{
-      await gap('osrm',1100);
-      const r=await fetch(b+path);
-      if(!r.ok){err=new Error('سرویس مسیریابی پاسخ نداد ('+r.status+').');continue}
-      const j=await r.json();
-      if(j.code==='Ok')return j;
-      if(j.code==='NoRoute'){const e=new Error('مسیر رانندگی بین این دو نقطه پیدا نشد.');e.final=true;throw e}
-      err=new Error('سرویس مسیریابی خطا داد ('+j.code+').');
-    }catch(e){if(e.final)throw e;err=e}
+function haversine(a,b){
+  const rad=x=>x*Math.PI/180, R=6371;
+  const dLat=rad(b[0]-a[0]),dLon=rad(b[1]-a[1]);
+  const x=Math.sin(dLat/2)**2+Math.cos(rad(a[0]))*Math.cos(rad(b[0]))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+function pointSegmentDistanceKm(p,a,b){
+  // Local equirectangular approximation for point-to-segment distance.
+  const lat0=(p[0]+a[0]+b[0])/3*Math.PI/180;
+  const xy=q=>[q[1]*111.32*Math.cos(lat0),q[0]*110.57];
+  const P=xy(p),A=xy(a),B=xy(b),dx=B[0]-A[0],dy=B[1]-A[1];
+  const den=dx*dx+dy*dy;
+  const t=den?Math.max(0,Math.min(1,((P[0]-A[0])*dx+(P[1]-A[1])*dy)/den)):0;
+  return Math.hypot(P[0]-(A[0]+t*dx),P[1]-(A[1]+t*dy));
+}
+function distanceToRoute(point, routeCoords){
+  let min=Infinity;
+  for(let i=1;i<routeCoords.length;i++){
+    const a=[routeCoords[i-1][1],routeCoords[i-1][0]],b=[routeCoords[i][1],routeCoords[i][0]];
+    min=Math.min(min,pointSegmentDistanceKm(point,a,b));
+    if(min<0.3) break;
   }
-  throw err||new Error('اتصال به سرویس مسیریابی برقرار نشد.');
+  return min;
 }
-const R=6371,rad=x=>x*Math.PI/180;
-const hav=(a,b)=>{const s=Math.sin(rad(b.lat-a.lat)/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(rad(b.lng-a.lng)/2)**2;return 2*R*Math.asin(Math.sqrt(s))};
-function decode(str){let i=0,la=0,ln=0,o=[];while(i<str.length){let b,sh=0,r=0;do{b=str.charCodeAt(i++)-63;r|=(b&31)<<sh;sh+=5}while(b>=32);la+=(r&1)?~(r>>1):(r>>1);sh=0;r=0;do{b=str.charCodeAt(i++)-63;r|=(b&31)<<sh;sh+=5}while(b>=32);ln+=(r&1)?~(r>>1):(r>>1);o.push({lat:la/1e5,lng:ln/1e5})}return o}
-async function route(o,d){
-  const j=await osrm(`/route/v1/driving/${o.lng},${o.lat};${d.lng},${d.lat}?overview=full&geometries=polyline&steps=false`);
-  const r=(j.routes||[])[0];if(!r||!r.geometry)throw new Error('مسیری بین این دو نقطه پیدا نشد.');
-  const pts=decode(r.geometry);
-  if(pts.length<2)throw new Error('مسیر دریافت‌شده خالی است.');
-  const cum=[0];for(let i=1;i<pts.length;i++)cum[i]=cum[i-1]+hav(pts[i-1],pts[i]);
-  const poly=cum[cum.length-1];let km=(r.distance||0)/1000,sec=r.duration||0;
-  if(km>0&&km/poly>.9&&km/poly<1.2){const k=km/poly;for(let i=0;i<cum.length;i++)cum[i]*=k}else km=poly;
-  if(!sec)sec=km/70*3600;
-  return {pts,cum,km,sec};
-}
-/* مسافت و زمان جاده‌ای چند مقصد با یک درخواست */
-async function roadTimes(c,its){
-  try{
-    const co=[c,...its].map(p=>p.lng+','+p.lat).join(';');
-    const j=await osrm(`/table/v1/driving/${co}?sources=0&destinations=${its.map((_,i)=>i+1).join(';')}&annotations=distance,duration`);
-    its.forEach((x,i)=>{const d=j.distances&&j.distances[0]&&j.distances[0][i],t=j.durations&&j.durations[0]&&j.durations[0][i];if(d!=null)x.km=d/1000;if(t!=null)x.sec=t});
-  }catch(e){}
-}
-const pointAt=(rt,d)=>{let i=0;while(i<rt.cum.length-1&&rt.cum[i]<d)i++;return rt.pts[i]};
-const project=(rt,p)=>{let bi=0,bd=1e9;for(let i=0;i<rt.pts.length;i++){const d=hav(rt.pts[i],p);if(d<bd){bd=d;bi=i}}return{cd:rt.cum[bi],off:bd}};
-
-/* ---------- ایستگاه‌ها: Overpass (داده‌ی OpenStreetMap) ---------- */
-const OVP=['https://overpass-api.de/api/interpreter','https://overpass.kumi.systems/api/interpreter','https://overpass.private.coffee/api/interpreter'];
-async function overpass(q){
-  for(const u of OVP){
-    try{
-      await gap('ovp',1200);
-      const r=await fetch(u,{method:'POST',body:'data='+encodeURIComponent(q),headers:{'Content-Type':'application/x-www-form-urlencoded'}});
-      if(!r.ok)continue;
-      const j=await r.json();
-      if(j.remark&&!(j.elements||[]).length)continue;
-      return j.elements||[];
-    }catch(e){}
+function parseConnectors(value){
+  if(Array.isArray(value)) return value.map(x=>typeof x==='string'?x:(x?.title||x?.name||x?.type||'')).filter(Boolean);
+  if(typeof value==='string'){
+    try{const j=JSON.parse(value);if(Array.isArray(j))return parseConnectors(j)}catch{}
+    return value.split(/[,،;|]/).map(x=>x.trim()).filter(Boolean);
   }
-  throw new Error('دریافت اطلاعات ایستگاه‌ها از OpenStreetMap ممکن نشد. چند دقیقه بعد دوباره امتحان کنید.');
+  return [];
 }
-const AMEN={ev:'charging_station',fuel:'fuel'};
-const SOCK={'socket:type2':'Type 2','socket:type2_combo':'CCS2','socket:ccs':'CCS','socket:chademo':'CHAdeMO','socket:type1':'Type 1','socket:type1_combo':'CCS1','socket:tesla_supercharger':'Tesla','socket:schuko':'Schuko'};
-function desc(kind,t){
-  const bits=[];
-  if(kind==='ev'){
-    const sk=Object.keys(SOCK).filter(k=>t[k]&&t[k]!=='no').map(k=>SOCK[k]);
-    if(sk.length)bits.push('کانکتور: '+sk.join('، '));
-    if(t.capacity)bits.push('ظرفیت: '+t.capacity+' جایگاه');
-    if(t.operator)bits.push('اپراتور: '+t.operator);
-    if(t.fee==='no')bits.push('رایگان');
-  }else{
-    if(t.brand||t.operator)bits.push(t.brand||t.operator);
-    if(t['fuel:cng']==='yes')bits.push('CNG');
-  }
-  if(t.opening_hours)bits.push('ساعت کار: '+t.opening_hours);
-  return {title:t['name:fa']||t.name||t['name:en']||t.brand||t.operator||(kind==='ev'?'ایستگاه شارژ':'جایگاه سوخت'),address:[t['addr:street'],t['addr:city']].filter(Boolean).join('، '),info:bits.join(' · ')};
-}
-const findPOIs=(kind,p,rk)=>memo('o:'+kind+p.lat.toFixed(2)+','+p.lng.toFixed(2)+','+rk,async()=>{
-  const els=await overpass(`[out:json][timeout:25];nwr["amenity"="${AMEN[kind]}"](around:${rk*1000},${p.lat.toFixed(5)},${p.lng.toFixed(5)});out center tags;`);
-  return els.map(e=>{const la=e.lat??(e.center&&e.center.lat),ln=e.lon??(e.center&&e.center.lon);return la==null||ln==null?null:{...desc(kind,e.tags||{}),lat:la,lng:ln}}).filter(Boolean);
-});
-/* برنامه‌ریز: توقف‌ها را طوری می‌چیند که هر پیمایش از حد مجاز برد تجاوز نکند */
-async function plan(rt,o){
-  const rk=o.kind==='ev'?20:8,maxOff=o.kind==='ev'?12:5;
-  const stops=[];let pos=0,soc=o.start,lim=o.range*(soc-o.reserve)/100,guard=0;
-  while(rt.km-pos>lim&&guard++<12){
-    if(o.step)o.step(stops.length+1);
-    let pick=null;
-    for(const f of [.9,.75,.6]){
-      const p=pointAt(rt,pos+lim*f);
-      let cs=await findPOIs(o.kind,p,rk);
-      cs=cs.map(c=>({...c,...project(rt,c)})).filter(c=>c.off<=maxOff&&c.cd>pos+lim*.35&&c.cd<=pos+lim*.97);
-      if(cs.length){cs.sort((a,b)=>b.cd-a.cd||a.off-b.off);pick=cs[0];break}
-    }
-    if(!pick){const cd=pos+lim*.85,p=pointAt(rt,cd);pick={...p,cd,off:0,approx:true,title:'نزدیک '+(await placeName(p)||'این نقطه از مسیر'),address:'',info:''}}
-    const arrive=soc-(pick.cd-pos)/o.range*100;
-    let mins=null;
-    if(o.kind==='ev'&&o.battery&&o.power)mins=Math.max(5,((o.chargeTo-arrive)/100*o.battery)/(o.power*.7)*60);
-    if(o.kind==='fuel')mins=10;
-    stops.push({...pick,leg:pick.cd-pos,arrive,mins});
-    pos=pick.cd;soc=o.chargeTo;lim=o.range*(soc-o.reserve)/100;
-  }
-  return {stops,finalSoc:soc-(rt.km-pos)/o.range*100,incomplete:rt.km-pos>lim};
-}
-
-/* ---------- نقشه: Leaflet + کاشی‌های OpenStreetMap ---------- */
-let MAP=null,LAYER=null;
-function loadMap(){return new Promise(res=>{
-  if(MAP)return res(MAP);
-  const l=document.createElement('link');l.rel='stylesheet';l.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css';document.head.appendChild(l);
-  const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js';
-  s.onload=()=>{try{$('map').hidden=false;MAP=L.map('map').setView([32.4,53.7],5);L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'}).addTo(MAP);LAYER=L.layerGroup().addTo(MAP);res(MAP)}catch(e){$('map').hidden=true;res(null)}};
-  s.onerror=()=>res(null);document.head.appendChild(s)})}
-async function draw(pts,marks){
-  const m=await loadMap();if(!m)return;
-  try{
-    LAYER.clearLayers();const all=[];m.invalidateSize();
-    if(pts){const ll=pts.map(p=>[p.lat,p.lng]);L.polyline(ll,{color:'#00806F',weight:5}).addTo(LAYER);all.push(...ll)}
-    marks.forEach(k=>{L.circleMarker([k.lat,k.lng],{radius:8,color:'#080B0D',weight:2,fillColor:k.c||'#39FF88',fillOpacity:1}).bindPopup(esc(k.t)).addTo(LAYER);all.push([k.lat,k.lng])});
-    if(all.length)m.fitBounds(all,{padding:[30,30]});
-  }catch(e){}
-}
-
-/* ---------- انتخاب مکان ---------- */
-const S={};
-function here(){return new Promise((res,rej)=>navigator.geolocation?navigator.geolocation.getCurrentPosition(p=>res({lat:p.coords.latitude,lng:p.coords.longitude}),()=>rej(new Error('دسترسی به موقعیت مکانی داده نشد. اجازه‌ی مرورگر را بررسی کنید یا مکان را جستجو کنید.')),{enableHighAccuracy:true,timeout:15000}):rej(new Error('این مرورگر موقعیت مکانی را پشتیبانی نمی‌کند.')))}
-function bindPicker(id){
-  const q=$(id+'_q'),r=$(id+'_r'),st=$(id+'_s');
-  const go=async()=>{
-    const t=q.value.trim();if(!t)return;st.textContent='در حال جستجو...';
-    try{
-      const it=await search(t);
-      if(!it.length){st.textContent='نتیجه‌ای پیدا نشد؛ عبارت دقیق‌تری بنویسید.';r.hidden=true;return}
-      r._it=it;r.innerHTML=it.map((x,i)=>`<option value="${i}">${esc(x.address)}</option>`).join('');
-      r.hidden=it.length<2;S[id]=it[0];st.textContent='انتخاب‌شده: '+S[id].title;
-      r.onchange=()=>{S[id]=r._it[+r.value];st.textContent='انتخاب‌شده: '+S[id].title};
-    }catch(e){st.textContent=errMsg(e)}
+function normalizeRevStation(raw){
+  const lat=Number(raw.latitude??raw.lat??raw.Latitude), lon=Number(raw.longitude??raw.lon??raw.lng??raw.Longitude);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return null;
+  return {
+    id:String(raw.id??raw.source_id??raw.ID??`${lat},${lon}`),
+    name:raw.name||raw.title||raw.station_name||"ایستگاه شارژ",
+    address:raw.address||raw.AddressInfo?.AddressLine1||"",
+    lat,lon,
+    operator:raw.operator||raw.operator_name||"",
+    status:raw.status||raw.status_name||"وضعیت نامشخص",
+    power:Number(raw.power_kw??raw.power??raw.PowerKW)>0?Number(raw.power_kw??raw.power??raw.PowerKW):null,
+    connectors:parseConnectors(raw.connectors??raw.connector_types),
+    url:raw.source_url||raw.url||`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=16/${lat}/${lon}`,
+    source:raw.source||"REV"
   };
-  $(id+'_b').onclick=go;q.onkeydown=e=>{if(e.key==='Enter'){e.preventDefault();go()}};
-  const me=$(id+'_me');
-  if(me)me.onclick=async()=>{st.textContent='در حال گرفتن موقعیت...';try{const p=await here();S[id]={...p,title:'موقعیت فعلی من'};st.textContent='انتخاب‌شده: موقعیت فعلی شما';r.hidden=true}catch(e){st.textContent=e.message}};
 }
-['n','o','d'].forEach(bindPicker);
-
-/* ---------- نزدیک‌ترین ایستگاه ---------- */
-const links=x=>`<div class="lk"><a href="geo:${x.lat},${x.lng}?q=${x.lat},${x.lng}">باز کردن در برنامه‌ی نقشه</a><a href="https://www.openstreetmap.org/?mlat=${x.lat}&mlon=${x.lng}#map=15/${x.lat}/${x.lng}" target="_blank" rel="noopener">OpenStreetMap</a><a href="https://www.google.com/maps/dir/?api=1&destination=${x.lat},${x.lng}" target="_blank" rel="noopener">Google Maps</a></div>`;
-$('find').onclick=async()=>{
-  const out=$('nout');let c=S.n;
-  try{
-    if(!c){out.innerHTML='<p class="sub">در حال گرفتن موقعیت شما...</p>';const p=await here();c=S.n={...p,title:'موقعیت من'}}
-    out.innerHTML='<p class="sub">در حال جستجوی ایستگاه‌ها در داده‌ی OpenStreetMap...</p>';
-    let it=[],used=0;
-    for(const rk of [10,30,80]){it=await findPOIs('ev',c,rk);used=rk;if(it.length)break}
-    if(!it.length){out.innerHTML=warn('تا شعاع ۸۰ کیلومتری این موقعیت، ایستگاه شارژی در داده‌ی OpenStreetMap ثبت نشده است. ممکن است ایستگاه‌های این منطقه هنوز روی نقشه‌ی آزاد ثبت نشده باشند.');return}
-    it.forEach(x=>x.air=hav(c,x));it=it.sort((a,b)=>a.air-b.air).slice(0,5);
-    out.innerHTML='<p class="sub">در حال محاسبه‌ی مسافت جاده‌ای...</p>';
-    await roadTimes(c,it);
-    it.sort((a,b)=>(a.km??a.air*1.3)-(b.km??b.air*1.3));
-    out.innerHTML=(used>10?warn('در شعاع ۱۰ کیلومتری ایستگاهی ثبت نشده بود؛ نتایج تا شعاع '+fnum(used)+' کیلومتر جستجو شده‌اند.'):'')+`<div class="cards">${it.map((x,i)=>`<div class="card"><span class="tag">${i?'گزینه‌ی '+fnum(i+1):'نزدیک‌ترین'}</span><h3>${esc(x.title)}</h3>${x.address?`<p class="meta">${esc(x.address)}</p>`:''}${x.info?`<p class="meta">${esc(x.info)}</p>`:''}<div class="num">${x.km!=null?fnum(x.km)+' کیلومتر':'حدود '+fnum(x.air)+' کیلومتر (فاصله‌ی هوایی)'}</div>${x.sec?`<p class="meta">حدود ${fmtT(x.sec)} رانندگی</p>`:''}${links(x)}</div>`).join('')}</div>`;
-    draw(null,[{...c,t:'موقعیت شما',c:'#fff'},...it.map(x=>({...x,t:x.title}))]);
-  }catch(e){out.innerHTML=warn(errMsg(e))}
-};
-
-/* ---------- برنامه‌ریزی سفر ---------- */
-let CARS=[];
-function vt(){const v=$('veh').value;$('phrow').hidden=v!=='phev';$('chrow').hidden=v==='hev';$('lbRange').textContent=v==='hev'?'برد کل با یک باک پر (کیلومتر)':'برد برقی در شرایط سفر (کیلومتر)';$('lbStart').textContent=v==='hev'?'میزان سوخت فعلی (٪)':'شارژ باتری فعلی (٪)'}
-$('veh').onchange=vt;
-$('car').onchange=()=>{const c=CARS[+$('car').value];if(!c)return;$('range').value=Math.round(NUM(c.range)*.8);if(NUM(c.battery))$('bat').value=NUM(c.battery);if(NUM(c.dc))$('pow').value=Math.min(NUM(c.dc),50);$('veh').value='ev';vt()};
-$('go').onclick=async()=>{
-  const out=$('pout'),v=$('veh').value;
-  if(!S.o||!S.d){out.innerHTML=warn('ابتدا مبدأ و مقصد را جستجو و انتخاب کنید.');return}
-  const range=NUM($('range').value),start=NUM($('start').value),reserve=NUM($('reserve').value),chargeTo=v==='hev'?100:NUM($('chto').value);
-  if(!range||range<20)return out.innerHTML=warn('برد خودرو را به کیلومتر وارد کنید.');
-  if(start==null||start<5||start>100)return out.innerHTML=warn('درصد شارژ (یا سوخت) فعلی باید بین ۵ تا ۱۰۰ باشد.');
-  if(reserve==null||reserve<0||reserve>=start)return out.innerHTML=warn('حداقل ذخیره باید کمتر از شارژ فعلی باشد.');
-  if(chargeTo<=reserve+10)return out.innerHTML=warn('«شارژ تا چند درصد» باید دست‌کم ۱۰٪ بیشتر از حداقل ذخیره باشد.');
-  const step=n=>out.innerHTML=`<p class="sub">در حال پیدا کردن ایستگاه برای توقف ${fnum(n)}... (ممکن است چند ثانیه طول بکشد)</p>`;
-  const opt={range,start,reserve,chargeTo,battery:NUM($('bat').value),power:NUM($('pow').value),step};
-  try{
-    out.innerHTML='<p class="sub">در حال گرفتن مسیر...</p>';
-    const rt=await route(S.o,S.d);
-    let ev=null,fuel=null;
-    if(v!=='hev')ev=await plan(rt,{...opt,kind:'ev'});
-    if(v==='hev')fuel=await plan(rt,{...opt,kind:'fuel'});
-    const tot=NUM($('tot').value);
-    if(v==='phev'&&tot&&rt.km>tot*.9)fuel=await plan(rt,{range:tot,start:100,reserve:10,chargeTo:100,kind:'fuel',step});
-    show(rt,v,ev,fuel,opt);
-  }catch(e){out.innerHTML=warn(errMsg(e))}
-};
-const stopCard=(s,i,kind,optional,chargeTo)=>`<div class="card"><span class="tag${s.approx||optional?' o':''}">${kind==='ev'?'توقف شارژ':'توقف سوخت'} ${fnum(i+1)}${optional?' (اختیاری)':''}</span><h3>${esc(s.title)}</h3>${s.address?`<p class="meta">${esc(s.address)}</p>`:''}${s.info?`<p class="meta">${esc(s.info)}</p>`:''}<p class="meta">کیلومتر ${fnum(s.cd)} از مبدأ · ${fnum(s.leg)} کیلومتر از توقف قبلی${s.off>.5?' · حدود '+fnum(s.off)+' کیلومتر دور از مسیر':''}</p>${kind==='ev'?`<p>رسیدن با حدود ${fnum(Math.max(s.arrive,0))}٪ شارژ، شارژ تا ${fnum(chargeTo)}٪${s.mins?' · حدود '+fmtT(s.mins*60):''}</p>`:`<p>رسیدن با حدود ${fnum(Math.max(s.arrive,0))}٪ سوخت</p>`}${s.approx?'<div class="warn">ایستگاه ثبت‌شده‌ای در این بخش از مسیر در OpenStreetMap پیدا نشد؛ این نقطه تقریبی است. پیش از رسیدن، ایستگاه این ناحیه را از اپ‌های شارژ یا با تماس تلفنی بررسی کنید.</div>':links(s)}</div>`;
-function show(rt,v,ev,fuel,opt){
-  const main=ev||fuel,kind=ev?'ev':'fuel',optional=v==='phev'&&!!ev;
-  const stops=main.stops,extra=stops.reduce((a,s)=>a+(s.mins||0)*60+(s.off||0)*2/50*3600,0);
-  let h=`<div class="sum"><div><span class="meta">مسافت کل</span><div class="num">${fnum(rt.km)} کیلومتر</div></div><div><span class="meta">زمان رانندگی</span><div class="num">${fmtT(rt.sec)}</div></div><div><span class="meta">تعداد توقف</span><div class="num">${fnum(stops.length)}</div></div><div><span class="meta">زمان کل با توقف‌ها</span><div class="num">${fmtT(rt.sec+extra)}</div></div></div>`;
-  if(!stops.length)h+=`<div class="ok">${v==='hev'?'با این میزان سوخت':'با این شارژ'} بدون توقف به مقصد می‌رسید؛ هنگام رسیدن حدود ${fnum(main.finalSoc)}٪ ${kind==='ev'?'شارژ':'سوخت'} باقی می‌ماند.</div>`;
-  else h+=`<div class="cards">${stops.map((s,i)=>stopCard(s,i,kind,optional,opt.chargeTo)).join('')}</div><div class="ok">هنگام رسیدن به مقصد حدود ${fnum(main.finalSoc)}٪ ${kind==='ev'?'شارژ':'سوخت'} باقی می‌ماند.</div>`;
-  if(optional)h=`<div class="ok">چون خودروی شما بنزین هم دارد، توقف‌های شارژ زیر اختیاری‌اند و فقط برای کم کردن مصرف بنزین هستند.</div>`+h;
-  if(fuel&&ev){h+=`<p class="sec-t" style="margin-top:16px">سوخت‌گیری پیشنهادی</p><div class="cards">${fuel.stops.map((s,i)=>stopCard(s,i,'fuel',false,100)).join('')}</div>`}
-  if(main.incomplete)h+=warn('با این برد، رسیدن به مقصد با توقف‌های محدود ممکن نشد؛ برد یا درصد شارژ را بیشتر کنید.');
-  $('pout').innerHTML=h;
-  const marks=[{...S.o,t:'مبدأ',c:'#fff'},{...S.d,t:'مقصد',c:'#080B0D'},...stops.map((s,i)=>({lat:s.lat,lng:s.lng,t:(s.title||'توقف')+' (توقف '+(i+1)+')',c:s.approx?'#EF9F27':'#39FF88'}))];
-  draw(rt.pts,marks);
+function routeFilter(stations,routeCoords,radiusKm){
+  return stations.filter(Boolean)
+    .map(s=>({...s,routeDistance:distanceToRoute([s.lat,s.lon],routeCoords)}))
+    .filter(s=>s.routeDistance<=radiusKm)
+    .sort((a,b)=>a.routeDistance-b.routeDistance);
 }
-
-/* ---------- راه‌اندازی ---------- */
-document.querySelectorAll('.tab').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('on',x===b));['t1','t2'].forEach(t=>$(t).hidden=t!==b.dataset.t)});
-fetch('content.json?'+Date.now()).then(r=>r.json()).then(c=>{
-  CARS=(c.cars||[]).filter(x=>NUM(x.range));
-  $('car').innerHTML+=CARS.map((x,i)=>`<option value="${i}">${esc(x.title)}</option>`).join('');
-  const t=c.theme||{},s=document.documentElement.style,hex=/^#[0-9a-fA-F]{6}$/;
-  [['accent','--green'],['dark','--ink'],['paper','--paper'],['text','--text']].forEach(([k,v])=>hex.test(t[k]||'')&&s.setProperty(v,t[k]));
-}).catch(()=>{});
-vt();
+async function getRevStations(routeCoords,radiusKm){
+  const r=await fetch(REV_API+"/api/stations",{method:"GET",cache:"no-store",headers:{"Accept":"application/json"}});
+  if(!r.ok)throw new Error("Cloudflare stations API HTTP "+r.status);
+  const payload=await r.json();
+  const rows=Array.isArray(payload)?payload:(Array.isArray(payload.data)?payload.data:(Array.isArray(payload.stations)?payload.stations:[]));
+  return routeFilter(rows.map(normalizeRevStation),routeCoords,radiusKm);
+}
+function routeSamplePoints(routeCoords,spacingKm=100,maxPoints=18){
+  if(!routeCoords.length)return [];
+  const samples=[[routeCoords[0][1],routeCoords[0][0]]];
+  let accumulated=0;
+  for(let i=1;i<routeCoords.length;i++){
+    const a=[routeCoords[i-1][1],routeCoords[i-1][0]],b=[routeCoords[i][1],routeCoords[i][0]];
+    accumulated+=haversine(a,b);
+    if(accumulated>=spacingKm){samples.push(b);accumulated=0;if(samples.length>=maxPoints-1)break;}
+  }
+  const last=[routeCoords[routeCoords.length-1][1],routeCoords[routeCoords.length-1][0]];
+  if(haversine(samples[samples.length-1],last)>5)samples.push(last);
+  return samples.slice(0,maxPoints);
+}
+async function queryOverpass(routeCoords,radiusKm){
+  const samples=routeSamplePoints(routeCoords,Math.max(60,radiusKm*4),18);
+  const around=samples.map(([lat,lon])=>`node(around:${Math.round(radiusKm*1000)},${lat},${lon})[amenity=charging_station];way(around:${Math.round(radiusKm*1000)},${lat},${lon})[amenity=charging_station];relation(around:${Math.round(radiusKm*1000)},${lat},${lon})[amenity=charging_station];`).join("\n");
+  const query=`[out:json][timeout:25];(${around});out center tags;`;
+  let lastError=null;
+  for(const endpoint of OVERPASS_ENDPOINTS){
+    try{
+      const response=await fetch(endpoint,{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","Accept":"application/json"},body:"data="+encodeURIComponent(query)});
+      if(!response.ok)throw new Error("Overpass HTTP "+response.status);
+      const payload=await response.json();
+      const rows=(payload.elements||[]).map(el=>{
+        const tags=el.tags||{}, center=el.center||{};
+        const lat=Number(el.lat??center.lat),lon=Number(el.lon??center.lon);
+        if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
+        const connectorTags=Object.entries(tags).filter(([k,v])=>/^socket:/i.test(k)&&v&&v!=="no").map(([k,v])=>k.replace(/^socket:/i,"")+": "+v);
+        const powerRaw=tags["charging_station:output"]||tags["socket:output"]||"";
+        const powerMatch=String(powerRaw).match(/[0-9]+(?:\.[0-9]+)?/);
+        return {id:`osm-${el.type}-${el.id}`,name:tags.name||tags.operator||"ایستگاه شارژ (OpenStreetMap)",address:[tags["addr:city"],tags["addr:street"],tags["addr:housenumber"]].filter(Boolean).join("، "),lat,lon,operator:tags.operator||"",status:tags.access==="private"?"خصوصی":(tags.operational_status||"وضعیت نامشخص"),power:powerMatch?Number(powerMatch[0]):null,connectors:connectorTags,url:`https://www.openstreetmap.org/${el.type}/${el.id}`,source:"OpenStreetMap"};
+      }).filter(Boolean);
+      return routeFilter(rows,routeCoords,radiusKm);
+    }catch(e){lastError=e;}
+  }
+  throw lastError||new Error("سرویس OpenStreetMap در دسترس نیست.");
+}
+async function getIranStations(routeCoords,radiusKm){
+  let revStations=[];
+  try{revStations=await getRevStations(routeCoords,radiusKm);}catch(e){console.warn("REV station API unavailable:",e);}
+  // Use REV-managed data as the primary source. Supplement it with OSM so a small
+  // internal database does not incorrectly imply that no chargers exist.
+  try{
+    const osmStations=await queryOverpass(routeCoords,radiusKm);
+    const combined=[...revStations];
+    for(const s of osmStations){
+      const duplicate=combined.some(x=>haversine([x.lat,x.lon],[s.lat,s.lon])<0.15);
+      if(!duplicate)combined.push(s);
+    }
+    return combined.map(s=>({...s,routeDistance:distanceToRoute([s.lat,s.lon],routeCoords)}))
+      .filter(s=>s.routeDistance<=radiusKm).sort((a,b)=>a.routeDistance-b.routeDistance);
+  }catch(e){
+    console.warn("OpenStreetMap fallback unavailable:",e);
+    if(revStations.length)return revStations;
+    throw new Error("داده‌ای از بانک شارژرهای REV دریافت نشد و سرویس جایگزین OpenStreetMap هم در دسترس نیست. بعداً دوباره تلاش کنید.");
+  }
+}
+function fmtDuration(seconds){
+  const mins=Math.round(seconds/60), h=Math.floor(mins/60),m=mins%60;
+  return h?`${h} ساعت و ${m} دقیقه`:`${m} دقیقه`;
+}
+function renderStations(stations){
+  const el=$("results");
+  el.innerHTML="<h2 style='margin-top:18px'>شارژرهای نزدیک مسیر ("+stations.length+")</h2>";
+  if(!stations.length){el.innerHTML+="<div class='sub'>در داده‌های دریافت‌شده، ایستگاهی در محدوده انتخابی پیدا نشد. این به معنی نبود شارژر در دنیای واقعی نیست.</div>";return;}
+  stations.slice(0,50).forEach(s=>{
+    const marker=L.circleMarker([s.lat,s.lon],{radius:7,color:"#0b1016",weight:2,fillColor:"#d7ff3f",fillOpacity:.95}).addTo(stationLayer);
+    marker.bindPopup(`<b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+" kW":"نامشخص"}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a>`);
+    const item=document.createElement("div");item.className="station";
+    item.innerHTML=`<strong>${escapeHTML(s.name)}</strong><small>${escapeHTML(s.address||"نشانی کامل ثبت نشده")}</small><div><span class="pill">${s.routeDistance.toFixed(1)} کیلومتر از مسیر</span><span class="pill">${s.power?s.power+" kW":"توان نامشخص"}</span><span class="pill">${escapeHTML(s.status)}</span></div><div class="sub">${escapeHTML(s.connectors.join("، ")||"نوع کانکتور نامشخص")}${s.operator?" · "+escapeHTML(s.operator):""}</div><div style="margin-top:6px"><a href="${s.url}" target="_blank" rel="noopener" style="color:#64b5ff">مشاهده جزئیات</a> · <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lon}#map=16/${s.lat}/${s.lon}" target="_blank" rel="noopener" style="color:#64b5ff">نمایش روی نقشه</a></div>`;
+    el.appendChild(item);
+    item.addEventListener("click",()=>{map.setView([s.lat,s.lon],14);marker.openPopup();});
+  });
+}
+async function planTrip(){
+  $("planBtn").disabled=true;$("planBtn").textContent="در حال محاسبه…";
+  routeLayer.clearLayers();stationLayer.clearLayers();$("results").innerHTML="<h2 style='margin-top:18px'>شارژرهای نزدیک مسیر</h2>";
+  try{
+    const origin=$("origin").value.trim(), destination=$("destination").value.trim();
+    if(!origin||!destination) throw new Error("مبدأ و مقصد را وارد کنید.");
+    setStatus("در حال پیدا کردن مبدأ و مقصد…");
+    const [start,end]=await Promise.all([geocode(origin),geocode(destination)]);
+    setStatus("در حال محاسبه مسیر جاده‌ای…");
+    const route=await getRoute(start,end);lastRoute=route;
+    const coords=route.geometry.coordinates;
+    const latlngs=coords.map(c=>[c[1],c[0]]);
+    L.marker(start).addTo(routeLayer).bindPopup("مبدأ");
+    L.marker(end).addTo(routeLayer).bindPopup("مقصد");
+    L.polyline(latlngs,{color:"#d7ff3f",weight:5,opacity:.9}).addTo(routeLayer);
+    map.fitBounds(L.latLngBounds(latlngs),{padding:[25,25]});
+    const km=route.distance/1000, hours=route.duration;
+    $("distance").textContent=km.toFixed(0);
+    $("duration").textContent=fmtDuration(hours);
+    const battery=num("battery",60),soc=num("soc",90),consumption=num("consumption",18),reserve=num("reserve",15);
+    const range=battery*(soc-reserve)/100/consumption*100;
+    $("range").textContent=range.toFixed(0);
+    setStatus(`مسیر محاسبه شد: ${km.toFixed(0)} کیلومتر.\nبرد تخمینی تا رسیدن به ذخیره ${reserve}%: حدود ${range.toFixed(0)} کیلومتر.\nدر حال دریافت شارژرهای ثبت‌شده نزدیک مسیر…`);
+    if(km>range) setStatus(`هشدار: مسافت سفر از برد تخمینی خودرو (${range.toFixed(0)} کیلومتر) بیشتر است؛ احتمالاً به شارژ بین‌راهی نیاز دارید.\nدر حال دریافت شارژرهای ثبت‌شده نزدیک مسیر…`);
+    const radius=num("radius",10);
+    const stations=await getIranStations(coords,radius);
+    renderStations(stations);
+    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد.\nاطلاعات زنده‌بودن یا فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
+  }catch(e){setStatus("مشکل: "+e.message);console.error(e);}
+  finally{$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";}
+}
+$("planBtn").addEventListener("click",planTrip);
 </script>
 </body>
 </html>
