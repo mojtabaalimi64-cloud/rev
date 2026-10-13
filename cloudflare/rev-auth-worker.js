@@ -59,6 +59,17 @@ function sameOrigin(request, env) {
   const origin=request.headers.get("Origin");
   return !!origin && allowedOrigins(env).includes(origin);
 }
+async function rateLimited(request, env, action, maxAttempts, windowSeconds=60) {
+  const ip=request.headers.get("CF-Connecting-IP") || "unknown";
+  const bucket=Math.floor(Date.now()/(windowSeconds*1000));
+  const key=await sha256(action+":"+ip+":"+bucket);
+  const expires=new Date((bucket+1)*windowSeconds*1000).toISOString();
+  await env.DB.prepare("DELETE FROM rev_auth_rate_limits WHERE expires_at < ?").bind(new Date().toISOString()).run();
+  await env.DB.prepare("INSERT INTO rev_auth_rate_limits(bucket_key,attempt_count,expires_at) VALUES(?,1,?) ON CONFLICT(bucket_key) DO UPDATE SET attempt_count=attempt_count+1")
+    .bind(key,expires).run();
+  const row=await env.DB.prepare("SELECT attempt_count FROM rev_auth_rate_limits WHERE bucket_key=?").bind(key).first();
+  return Number(row?.attempt_count||0)>maxAttempts;
+}
 async function enabled(env) {
   const r=await env.DB.prepare("SELECT enabled FROM rev_auth_settings WHERE id=1").first();
   return Number(r?.enabled||0)===1;
@@ -112,6 +123,7 @@ export default {
     return response(request,env,{success:true,enabled:body.enabled});
    }
    if(path==="/api/auth/register" && method==="POST") {
+    if(await rateLimited(request,env,"register",3)) return response(request,env,{success:false,error:"تعداد درخواست‌ها زیاد است؛ یک دقیقه دیگر تلاش کنید."},429);
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
     if(!await enabled(env)) return response(request,env,{success:false,error:"ثبت‌نام و ورود فعلاً غیرفعال است."},403);
     if(!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL)) return response(request,env,{success:false,error:"ارسال ایمیل هنوز راه‌اندازی نشده است."},503);
@@ -143,6 +155,7 @@ export default {
     return response(request,env,{success:true,message:"ایمیل تأیید شد؛ اکنون می‌توانید وارد شوید."});
    }
    if(path==="/api/auth/login" && method==="POST") {
+    if(await rateLimited(request,env,"login",8)) return response(request,env,{success:false,error:"تلاش‌های ورود بیش از حد است؛ یک دقیقه دیگر تلاش کنید."},429);
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
     if(!await enabled(env)) return response(request,env,{success:false,error:"ورود و ثبت‌نام فعلاً غیرفعال است."},403);
     const b=await request.json().catch(()=>null), email=normalizedEmail(b?.email), password=b?.password;
