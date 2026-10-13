@@ -63,7 +63,7 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px
       <label for="targetSoc">شارژ هدف در توقف‌های بین‌راهی (%)</label>
       <input id="targetSoc" type="number" min="30" max="100" value="80">
       <label for="radius">فاصله قابل‌قبول شارژر از مسیر</label>
-      <select id="radius"><option value="5">۵ کیلومتر</option><option value="10" selected>۱۰ کیلومتر</option><option value="20">۲۰ کیلومتر</option><option value="40">۴۰ کیلومتر</option></select>
+      <select id="radius"><option value="5">۵ کیلومتر</option><option value="10" selected>۱۰ کیلومتر</option></select>
       <button class="primary" id="planBtn">محاسبه مسیر و یافتن شارژرها</button>
       <div class="status" id="status" aria-live="polite">برای شروع، دکمه محاسبه مسیر را بزنید.</div>
       <div class="stats">
@@ -250,7 +250,7 @@ async function queryOverpass(routeCoords,radiusKm){
     const response=await fetch(ONLINE_STATIONS_API,{
       method:"POST", mode:"cors", cache:"no-store", signal:controller.signal,
       headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify({coords:sampleRouteCoordinates(routeCoords,16),radiusKm:Math.min(Number(radiusKm)||5,15)})
+      body:JSON.stringify({coords:sampleRouteCoordinates(routeCoords,16),radiusKm:Math.min(Number(radiusKm)||5,10)})
     });
     let payload;
     try{payload=await response.json();}
@@ -269,7 +269,7 @@ async function queryOverpass(routeCoords,radiusKm){
       return {...s,source:raw.source||payload.source||(payload.cached?"کش REV":"OpenStreetMap"),url:raw.source_url||raw.url||s.url,
         updatedAt:raw.updated_at||raw.updatedAt||payload.cached_at||s.updatedAt};
     }).filter(Boolean);
-    return routeFilter(normalized,routeCoords,Math.min(Number(radiusKm)||5,15));
+    return routeFilter(normalized,routeCoords,Math.min(Number(radiusKm)||5,10));
   }catch(e){
     if(e?.name==="AbortError") throw new Error("پاسخ سرویس آنلاین ایستگاه‌ها بیش از حد طول کشید. دوباره تلاش کنید.");
     throw e;
