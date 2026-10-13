@@ -45,6 +45,7 @@ ol{padding-inline-start:20px;color:var(--muted);font-size:14px;margin-top:10px}
 const OWNER='mojtabaalimi64-cloud', REPO='rev', FILE='content.json';
 const API=`https://api.github.com/repos/${OWNER}/${REPO}/contents/`;
 const WORKER='https://rev-api.mojtaba-alimi64.workers.dev';
+const AUTH_WORKER='https://rev-auth-api.mojtaba-alimi64.workers.dev';
 const LIVE_CONTENT='https://mojtabaalimi64-cloud.github.io/rev/content.json';
 const PARTS={battery:'باتری',motor:'موتور',charging:'شارژ',electronics:'اینورتر و برق',software:'نرم‌افزار و هوش مصنوعی'};
 const TYPES={
@@ -160,7 +161,12 @@ function look(){
   <div class="box"><h3>تصویر بالای صفحه‌ی هر بخش</h3>${Object.entries(PARTS).map(([k,n])=>`<label>${n}</label>${imgField('pi_'+k,c.partImages[k]||'',`data-pi="${k}"`)}`).join('')}</div>`;
 }
 const contactTab=()=>`<div class="box"><h3>راه‌های ارتباطی</h3><p class="hint">فقط موردهایی که پر کنید در سایت نمایش داده می‌شوند.</p>${CONTACT.map(([k,l])=>`<label for="c_${k}">${l}</label><input type="text" id="c_${k}" data-c="${k}" value="${esc(c.contact[k])}" ${k!=='address'&&k!=='note'?'dir="ltr"':''}>`).join('')}</div>`;
-const settings=()=>`<div class="box"><label for="pn">نام پادکست</label><input type="text" id="pn" value="${esc(c.podcast)}">
+const settings=()=>`<div class="box"><h3>حساب کاربران REV</h3>
+  <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="auth-enabled"> فعال بودن ورود و ثبت‌نام کاربران</label>
+  <p class="hint" id="auth-status">برای دریافت وضعیت، ابتدا Worker احراز هویت REV باید راه‌اندازی شده باشد. تا پیش از تنظیم سرویس ایمیل، فعال‌سازی امکان‌پذیر نیست.</p>
+  <button class="btn main" data-a="auth-save">ذخیره وضعیت ورود و ثبت‌نام</button>
+  <p class="hint">این گزینه از طریق API امن و با رمز مدیریتی ذخیره می‌شود؛ خاموش بودن آن، مسیرهای ثبت‌نام و ورود کاربران عادی را می‌بندد و ورود مدیر سایت را تغییر نمی‌دهد.</p></div>
+  <div class="box"><label for="pn">نام پادکست</label><input type="text" id="pn" value="${esc(c.podcast)}">
   <label for="ga">شناسه‌ی گوگل آنالیتیکس (اختیاری، مثل G-XXXXXXXX)</label><input type="text" id="ga" data-g="1" dir="ltr" value="${esc(c.gaId)}"><p class="hint">با این شناسه می‌توانید تعداد بازدید و منبع بازدیدکنندگان را ببینید.</p></div>`;
 const shopBox=()=>{const s=c.shopInfo;return `<div class="box"><h3>تنظیمات فروشگاه</h3>
  <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="sh" ${c.shop?'checked':''}> نمایش فروشگاه در منوی سایت</label>
@@ -183,6 +189,32 @@ function draw(){
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
 }
 
+async function loadAuthSettings(){
+  const status=$('auth-status'), toggle=$('auth-enabled');
+  if(status)status.textContent='در حال بررسی وضعیت سرویس احراز هویت...';
+  try{
+    const r=await fetch(AUTH_WORKER+'/api/admin/auth-settings',{headers:H(),cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    if(toggle)toggle.checked=Number(j.data?.enabled)===1;
+    if(status)status.textContent=Number(j.data?.enabled)===1?'وضعیت فعلی: فعال':'وضعیت فعلی: غیرفعال';
+  }catch(e){
+    if(status)status.textContent='سرویس هنوز در دسترس نیست. پس از ساخت Worker با نام rev-auth-api و اتصال آن به دیتابیس rev-db، دوباره بررسی کنید.';
+  }
+}
+async function saveAuthSettings(){
+  const status=$('auth-status'), toggle=$('auth-enabled');
+  if(!toggle)return;
+  if(status)status.textContent='در حال ذخیره وضعیت...';
+  try{
+    const r=await fetch(AUTH_WORKER+'/api/admin/auth-settings',{method:'POST',headers:H(),body:JSON.stringify({enabled:toggle.checked})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    if(status)status.textContent=j.enabled?'ورود و ثبت‌نام فعال شد.':'ورود و ثبت‌نام غیرفعال شد.';
+  }catch(e){
+    if(status)status.textContent='ذخیره نشد: '+(e.message||'سرویس احراز هویت هنوز راه‌اندازی نشده است.');
+  }
+}
 async function loadStations(){
   if(stationBusy)return; stationBusy=true; note='در حال دریافت جایگاه‌ها از دیتابیس...'; draw();
   try{const r=await fetch(WORKER+'/api/admin/stations',{headers:H(),cache:'no-store'});const j=await r.json().catch(()=>({}));
@@ -283,7 +315,7 @@ root.addEventListener('click',async e=>{
   const a=b.dataset.a, i=+b.dataset.i;
   if(a==='login'){tok=$('t').value.trim();gitTok=$('gt').value.trim();if(!tok){msg('رمز مدیریتی را وارد کنید.');return}sessionStorage.setItem('rev_admin_token',tok);if(gitTok)sessionStorage.setItem('rev_github_token',gitTok);else sessionStorage.removeItem('rev_github_token');c=null;draw()}
   else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
-  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations()}
+  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations();if(tab==='set')loadAuthSettings()}
   else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:{part:'battery'}};draw()}
   else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
   else if(a==='del'){if(confirm('این مورد حذف شود؟')){c[tab].splice(i,1);dirty=true;draw()}}
@@ -330,6 +362,7 @@ root.addEventListener('click',async e=>{
   else if(a==='station-delete'){const s=stationsCache[i];if(s&&confirm('جایگاه «'+s.name+'» حذف شود؟')){try{const r=await fetch(WORKER+'/api/admin/stations/'+encodeURIComponent(s.id),{method:'DELETE',headers:H()});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationsCache=null;note='جایگاه حذف شد.';await loadStations()}catch(e){msg('حذف انجام نشد: '+(e.message||'خطای اتصال'))}}}
   else if(a==='station-import')$('station-csv').click()
   else if(a==='station-template')downloadStationTemplate()
+  else if(a==='auth-save')saveAuthSettings();
   else if(a==='pub')save();
 });
 draw();
