@@ -259,10 +259,15 @@ async function queryOverpass(routeCoords,radiusKm){
       throw new Error(payload?.error||`سرویس آنلاین REV با خطای HTTP ${response.status} پاسخ داد.`);
     }
     if(!Array.isArray(payload.data)) throw new Error("فهرست ایستگاه‌های سرویس آنلاین معتبر نیست.");
+    // Cached fallback is returned by the Worker when public map providers fail.
+    window.revStationCacheNote = payload.cached
+      ? (payload.stale ? "از نسخه ذخیره‌شده قبلی استفاده شد؛ ممکن است اطلاعات قدیمی باشد." : "از نسخه ذخیره‌شده استفاده شد.")
+      : "";
     const normalized=payload.data.map(raw=>{
       const s=normalizeRevStation(raw);
       if(!s)return null;
-      return {...s,source:raw.source||payload.source||"OpenStreetMap",url:raw.source_url||raw.url||s.url};
+      return {...s,source:raw.source||payload.source||(payload.cached?"کش REV":"OpenStreetMap"),url:raw.source_url||raw.url||s.url,
+        updatedAt:raw.updated_at||raw.updatedAt||payload.cached_at||s.updatedAt};
     }).filter(Boolean);
     return routeFilter(normalized,routeCoords,Math.min(Number(radiusKm)||5,15));
   }catch(e){
@@ -411,6 +416,7 @@ function renderStations(stations,routeCoords,routeKm,params){
 }
 async function planTrip(){
   window.revStationSourceWarning = "";
+  window.revStationCacheNote = "";
   $("planBtn").disabled=true;$("planBtn").textContent="در حال محاسبه…";
   routeLayer.clearLayers();stationLayer.clearLayers();$("results").innerHTML="<h2 style='margin-top:18px'>شارژرهای نزدیک مسیر</h2>";
   try{
@@ -444,7 +450,7 @@ async function planTrip(){
     const plan=buildChargingPlan(stations,coords,km,params);
     const sourceNote = window.revStationSourceWarning
       ? `\nهشدار منبع آنلاین: ${window.revStationSourceWarning}\nفهرست ایستگاه‌ها ممکن است ناقص باشد؛ صفر ایستگاه به معنی نبود شارژر واقعی نیست.`
-      : "";
+      : (window.revStationCacheNote ? `\n${window.revStationCacheNote}` : "");
     setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد.\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
   }catch(e){setStatus("مشکل: "+e.message);console.error(e);}
   finally{$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";}
