@@ -163,7 +163,7 @@ export default {
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
     const raw=(request.headers.get("Cookie")||"").split(";").map(x=>x.trim()).find(x=>x.startsWith(COOKIE_NAME+"="))?.slice(COOKIE_NAME.length+1);
     if(raw) await env.DB.prepare("UPDATE rev_sessions SET revoked_at=? WHERE session_token_hash=? AND revoked_at IS NULL").bind(new Date().toISOString(),await sha256(decodeURIComponent(raw))).run();
-    return response(request,env,{success:true},{"Set-Cookie":clearCookie()});
+    return response(request,env,{success:true},200,{"Set-Cookie":clearCookie()});
    }
    return response(request,env,{success:false,error:"Not found"},404);
   } catch(e) {
