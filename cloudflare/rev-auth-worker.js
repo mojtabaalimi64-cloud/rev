@@ -1,0 +1,174 @@
+/**
+ * REV Auth Worker — separate from the existing rev-api Worker.
+ * Bind D1 database rev-db as DB.
+ * Secrets: ADMIN_TOKEN, RESEND_API_KEY
+ * Variables: ALLOWED_ORIGINS, SITE_URL, EMAIL_FROM
+ * Keep registration disabled until domain, email DNS and Resend sender are verified.
+ */
+const DEFAULT_ORIGIN = "https://mojtabaalimi64-cloud.github.io";
+const COOKIE_NAME = "__Host-rev_session";
+const SESSION_DAYS = 7;
+const VERIFY_MINUTES = 30;
+const PBKDF2_ITERATIONS = 310000;
+
+function allowedOrigins(env) {
+  return (env.ALLOWED_ORIGINS || DEFAULT_ORIGIN).split(",").map(s => s.trim()).filter(Boolean);
+}
+function corsHeaders(request, env) {
+  const origin = request.headers.get("Origin") || "";
+  const ok = allowedOrigins(env).includes(origin);
+  return {
+    "Vary": "Origin",
+    ...(ok ? {"Access-Control-Allow-Origin": origin, "Access-Control-Allow-Credentials":"true"} : {}),
+    "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+    "Access-Control-Allow-Headers": "Content-Type,Authorization",
+    "Access-Control-Max-Age": "86400"
+  };
+}
+function response(request, env, data, status=200, extra={}) {
+  return new Response(JSON.stringify(data), {status, headers: {
+    "Content-Type":"application/json; charset=utf-8",
+    "Cache-Control":"no-store",
+    ...corsHeaders(request, env), ...extra
+  }});
+}
+function cookie(token, maxAge) {
+  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=${maxAge}`;
+}
+function clearCookie() {
+  return `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=Lax; Max-Age=0`;
+}
+function b64url(bytes) {
+  let s=""; for (const b of new Uint8Array(bytes)) s+=String.fromCharCode(b);
+  return btoa(s).replace(/\+/g,"-").replace(/\//g,"_").replace(/=+$/,"");
+}
+function randomToken(n=32) { const b=new Uint8Array(n); crypto.getRandomValues(b); return b64url(b); }
+async function sha256(s) {
+  const d=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));
+  return [...new Uint8Array(d)].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+async function passwordHash(password, salt, iterations=PBKDF2_ITERATIONS) {
+  const key=await crypto.subtle.importKey("raw",new TextEncoder().encode(password),"PBKDF2",false,["deriveBits"]);
+  const bits=await crypto.subtle.deriveBits({name:"PBKDF2",hash:"SHA-256",salt:Uint8Array.from(atob(salt.replace(/-/g,"+").replace(/_/g,"/")),c=>c.charCodeAt(0)),iterations},key,256);
+  return b64url(bits);
+}
+function validEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length<=254; }
+function normalizedEmail(s) { return String(s||"").trim().toLowerCase(); }
+function passwordValid(s) { return typeof s==="string" && s.length>=12 && s.length<=128; }
+function sameOrigin(request, env) {
+  const origin=request.headers.get("Origin");
+  return !!origin && allowedOrigins(env).includes(origin);
+}
+async function enabled(env) {
+  const r=await env.DB.prepare("SELECT enabled FROM rev_auth_settings WHERE id=1").first();
+  return Number(r?.enabled||0)===1;
+}
+async function admin(request, env) {
+  const h=request.headers.get("Authorization")||"";
+  return !!env.ADMIN_TOKEN && h==="Bearer "+env.ADMIN_TOKEN;
+}
+async function sendVerification(env,email,token) {
+  if(!env.RESEND_API_KEY || !env.EMAIL_FROM || !env.SITE_URL) throw new Error("EMAIL_NOT_CONFIGURED");
+  const url=env.SITE_URL.replace(/\/$/,"")+"/verify-email.html?token="+encodeURIComponent(token)+"&email="+encodeURIComponent(email);
+  const res=await fetch("https://api.resend.com/emails",{
+    method:"POST",
+    headers:{"Authorization":"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json"},
+    body:JSON.stringify({from:env.EMAIL_FROM,to:[email],subject:"تأیید ایمیل حساب REV",text:"برای تأیید ایمیل حساب REV، این پیوند را در مرورگر باز کنید. پیوند تا ۳۰ دقیقه معتبر است:\n\n"+url+"\n\nاگر شما این درخواست را نداده‌اید، این ایمیل را نادیده بگیرید."})
+  });
+  if(!res.ok) throw new Error("EMAIL_SEND_FAILED");
+}
+async function createSession(request,env,userId) {
+  const raw=randomToken(32), now=new Date(), exp=new Date(now.getTime()+SESSION_DAYS*86400000);
+  await env.DB.prepare("INSERT INTO rev_sessions (id,user_id,session_token_hash,created_at,expires_at,revoked_at) VALUES (?,?,?,?,?,NULL)")
+    .bind(crypto.randomUUID(),userId,await sha256(raw),now.toISOString(),exp.toISOString()).run();
+  return response(request,env,{success:true,user:{id:userId}},200,{"Set-Cookie":cookie(raw,SESSION_DAYS*86400)});
+}
+async function currentUser(request,env) {
+  const raw=(request.headers.get("Cookie")||"").split(";").map(x=>x.trim()).find(x=>x.startsWith(COOKIE_NAME+"="))?.slice(COOKIE_NAME.length+1);
+  if(!raw) return null;
+  const hash=await sha256(decodeURIComponent(raw));
+  return await env.DB.prepare("SELECT u.id,u.display_name,u.email_normalized,u.email_verified_at,u.phone_verified_at,u.account_status,u.role FROM rev_sessions s JOIN rev_users u ON u.id=s.user_id WHERE s.session_token_hash=? AND s.revoked_at IS NULL AND s.expires_at>? AND u.account_status='active' AND u.email_verified_at IS NOT NULL LIMIT 1")
+    .bind(hash,new Date().toISOString()).first();
+}
+export default {
+ async fetch(request,env) {
+  const url=new URL(request.url), path=url.pathname, method=request.method;
+  if(method==="OPTIONS") return new Response(null,{status:204,headers:corsHeaders(request,env)});
+  try {
+   if(path==="/api/health" && method==="GET") return response(request,env,{success:true,service:"REV Auth",database:"configured"});
+   if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL)});
+   if(path==="/api/admin/auth-settings" && method==="GET") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    const r=await env.DB.prepare("SELECT enabled,updated_at,updated_by FROM rev_auth_settings WHERE id=1").first();
+    return response(request,env,{success:true,data:r||{enabled:0}});
+   }
+   if(path==="/api/admin/auth-settings" && method==="POST") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    const body=await request.json().catch(()=>null);
+    if(!body || typeof body.enabled!=="boolean") return response(request,env,{success:false,error:"enabled must be boolean"},400);
+    if(body.enabled && !(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL)) return response(request,env,{success:false,error:"ایمیل هنوز تنظیم نشده است؛ فعال‌سازی ممکن نیست."},409);
+    await env.DB.prepare("INSERT INTO rev_auth_settings(id,enabled,updated_at,updated_by) VALUES(1,?,?,?) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled,updated_at=excluded.updated_at,updated_by=excluded.updated_by")
+      .bind(body.enabled?1:0,new Date().toISOString(),"admin").run();
+    return response(request,env,{success:true,enabled:body.enabled});
+   }
+   if(path==="/api/auth/register" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    if(!await enabled(env)) return response(request,env,{success:false,error:"ثبت‌نام و ورود فعلاً غیرفعال است."},403);
+    if(!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL)) return response(request,env,{success:false,error:"ارسال ایمیل هنوز راه‌اندازی نشده است."},503);
+    const b=await request.json().catch(()=>null), email=normalizedEmail(b?.email), name=String(b?.displayName||"").trim().slice(0,80), password=b?.password;
+    if(!validEmail(email)||!name||!passwordValid(password)) return response(request,env,{success:false,error:"نام، ایمیل معتبر و رمز عبور حداقل ۱۲ کاراکتری لازم است."},400);
+    const old=await env.DB.prepare("SELECT id FROM rev_users WHERE email_normalized=? LIMIT 1").bind(email).first();
+    if(old) return response(request,env,{success:false,error:"اگر امکان ثبت‌نام با این ایمیل وجود داشته باشد، راهنمای ادامه ارسال می‌شود."},409);
+    const id=crypto.randomUUID(), now=new Date().toISOString(), salt=randomToken(16), hash=await passwordHash(password,salt);
+    await env.DB.prepare("INSERT INTO rev_users(id,display_name,email_normalized,account_status,role,created_at,updated_at) VALUES(?,?,?,'pending','member',?,?)").bind(id,name,email,now,now).run();
+    await env.DB.prepare("INSERT INTO rev_password_credentials(user_id,password_hash,password_salt,hash_algorithm,iterations,created_at,updated_at) VALUES(?,?,?,'PBKDF2-SHA256',?,?,?)").bind(id,hash,salt,PBKDF2_ITERATIONS,now,now).run();
+    const token=randomToken(32), tokenHash=await sha256(token), exp=new Date(Date.now()+VERIFY_MINUTES*60000).toISOString();
+    await env.DB.prepare("INSERT INTO rev_verification_challenges(id,user_id,channel,destination_normalized,purpose,token_hash,attempts,max_attempts,created_at,expires_at,consumed_at,request_window_key) VALUES(?,?, 'email',?,'verify_email',?,0,5,?,?,NULL,?)")
+      .bind(crypto.randomUUID(),id,email,tokenHash,now,exp,email).run();
+    try { await sendVerification(env,email,token); }
+    catch(e) { await env.DB.prepare("DELETE FROM rev_users WHERE id=?").bind(id).run(); return response(request,env,{success:false,error:"ارسال ایمیل ناموفق بود؛ تنظیمات سرویس ایمیل را بررسی کنید."},503); }
+    return response(request,env,{success:true,message:"حساب ساخته شد؛ ایمیل خود را برای تأیید بررسی کنید."},201);
+   }
+   if(path==="/api/auth/verify-email" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    const b=await request.json().catch(()=>null), token=String(b?.token||"");
+    if(!token || token.length>200) return response(request,env,{success:false,error:"پیوند تأیید نامعتبر است."},400);
+    const ch=await env.DB.prepare("SELECT id,user_id FROM rev_verification_challenges WHERE channel='email' AND purpose='verify_email' AND token_hash=? AND consumed_at IS NULL AND expires_at>? AND attempts<max_attempts LIMIT 1").bind(await sha256(token),new Date().toISOString()).first();
+    if(!ch) return response(request,env,{success:false,error:"پیوند منقضی یا نامعتبر است."},400);
+    const now=new Date().toISOString();
+    await env.DB.batch([
+      env.DB.prepare("UPDATE rev_verification_challenges SET consumed_at=? WHERE id=?").bind(now,ch.id),
+      env.DB.prepare("UPDATE rev_users SET email_verified_at=?,account_status='active',updated_at=? WHERE id=? AND account_status='pending'").bind(now,now,ch.user_id)
+    ]);
+    return response(request,env,{success:true,message:"ایمیل تأیید شد؛ اکنون می‌توانید وارد شوید."});
+   }
+   if(path==="/api/auth/login" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    if(!await enabled(env)) return response(request,env,{success:false,error:"ورود و ثبت‌نام فعلاً غیرفعال است."},403);
+    const b=await request.json().catch(()=>null), email=normalizedEmail(b?.email), password=b?.password;
+    if(!validEmail(email)||typeof password!=="string"||password.length>128) return response(request,env,{success:false,error:"ایمیل یا رمز عبور نادرست است."},400);
+    const u=await env.DB.prepare("SELECT u.id,u.account_status,u.email_verified_at,c.password_hash,c.password_salt,c.iterations FROM rev_users u JOIN rev_password_credentials c ON c.user_id=u.id WHERE u.email_normalized=? LIMIT 1").bind(email).first();
+    if(!u) { await passwordHash(password,randomToken(16)); return response(request,env,{success:false,error:"ایمیل یا رمز عبور نادرست است."},401); }
+    const candidate=await passwordHash(password,u.password_salt,Number(u.iterations)||PBKDF2_ITERATIONS);
+    if(candidate!==u.password_hash) return response(request,env,{success:false,error:"ایمیل یا رمز عبور نادرست است."},401);
+    if(!u.email_verified_at||u.account_status!=="active") return response(request,env,{success:false,error:"ابتدا ایمیل خود را تأیید کنید."},403);
+    await env.DB.prepare("UPDATE rev_users SET last_login_at=?,updated_at=? WHERE id=?").bind(new Date().toISOString(),new Date().toISOString(),u.id).run();
+    return await createSession(request,env,u.id);
+   }
+   if(path==="/api/auth/me" && method==="GET") {
+    const u=await currentUser(request,env);
+    return u?response(request,env,{success:true,user:u}):response(request,env,{success:false,user:null},401);
+   }
+   if(path==="/api/auth/logout" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    const raw=(request.headers.get("Cookie")||"").split(";").map(x=>x.trim()).find(x=>x.startsWith(COOKIE_NAME+"="))?.slice(COOKIE_NAME.length+1);
+    if(raw) await env.DB.prepare("UPDATE rev_sessions SET revoked_at=? WHERE session_token_hash=? AND revoked_at IS NULL").bind(new Date().toISOString(),await sha256(decodeURIComponent(raw))).run();
+    return response(request,env,{success:true},{"Set-Cookie":clearCookie()});
+   }
+   return response(request,env,{success:false,error:"Not found"},404);
+  } catch(e) {
+   const message=e?.message||"Internal error";
+   return response(request,env,{success:false,error:message==="EMAIL_NOT_CONFIGURED"?"Email provider is not configured":"Internal server error"},500);
+  }
+ }
+};
