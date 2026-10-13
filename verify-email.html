@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>تأیید ایمیل | REV</title>
+<style>
+:root{color-scheme:light;--ink:#080B0D;--green:#39FF88;--paper:#F5F7F8;--line:#DDE3E6;--muted:#5B666D}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font-family:Tahoma,Arial,sans-serif;line-height:1.9;display:grid;place-items:center;min-height:100vh;padding:20px}
+main{width:min(100%,520px);background:white;border:1px solid var(--line);border-radius:18px;padding:28px;box-shadow:0 10px 32px #080b0d0d}
+h1{font-size:24px;margin-top:0}p{color:var(--muted)}a,button{display:inline-block;border:0;border-radius:9px;background:var(--ink);color:white;padding:10px 18px;text-decoration:none;font:inherit;cursor:pointer}
+#status{margin:18px 0;font-weight:700}
+</style></head>
+<body><main><h1>تأیید ایمیل حساب REV</h1><p>برای فعال‌سازی حساب، پیوند تأیید ایمیل را بررسی می‌کنیم.</p><div id="status">در حال بررسی پیوند…</div><a href="./">بازگشت به سایت REV</a></main>
+<script>
+const AUTH_API='https://rev-auth-api.mojtaba-alimi64.workers.dev';
+const status=document.getElementById('status');
+(async()=>{
+ const token=new URLSearchParams(location.search).get('token');
+ if(!token){status.textContent='پیوند تأیید معتبر نیست یا کد آن وجود ندارد.';return}
+ try{
+  const r=await fetch(AUTH_API+'/api/auth/verify-email',{method:'POST',headers:{'Content-Type':'application/json'},credentials:'include',body:JSON.stringify({token})});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.success)throw new Error(j.error||'تأیید ایمیل انجام نشد.');
+  status.textContent=j.message||'ایمیل شما تأیید شد. اکنون می‌توانید وارد شوید.';
+ }catch(e){status.textContent=e.message||'خطا در ارتباط با سرویس تأیید ایمیل. پس از راه‌اندازی دامنه و سرویس، دوباره تلاش کنید.'}
+})();
+</script></body></html>
