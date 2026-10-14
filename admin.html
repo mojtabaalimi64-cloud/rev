@@ -101,6 +101,7 @@ const OWNER='mojtabaalimi64-cloud', REPO='rev', FILE='content.json';
 const API=`https://api.github.com/repos/${OWNER}/${REPO}/contents/`;
 const WORKER='https://rev-api.mojtaba-alimi64.workers.dev';
 const AUTH_WORKER='https://rev-auth-api.mojtaba-alimi64.workers.dev';
+const RATING_WORKER='https://rev-ratings-api.mojtaba-alimi64.workers.dev';
 const LIVE_CONTENT='https://mojtabaalimi64-cloud.github.io/rev/content.json';
 const PARTS={battery:'باتری',motor:'موتور',charging:'شارژ',electronics:'اینورتر و برق',software:'نرم‌افزار و هوش مصنوعی'};
 const TYPES={
@@ -114,8 +115,8 @@ const TYPES={
  ,serviceCenters:{label:'تعمیرگاه‌های مجاز خودرو برقی',one:'تعمیرگاه',fields:[['title','نام تعمیرگاه','text'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا صفحه رزرو','text'],['brands','برندهای تحت پوشش (با ویرگول جدا کنید)','text'],['services','خدمات (مثلاً عیب‌یابی، باتری، موتور، اینورتر، نرم‌افزار)','area'],['authorization','مرجع/مدرک مجوز و شماره آن','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری (مثلاً شنبه تا چهارشنبه ۹ تا ۱۸؛ پنجشنبه ۹ تا ۱۳)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (در صورت وجود داده)','text'],['satisfactionCount','تعداد رأی‌های رضایت کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
  ,partsStores:{label:'فروشگاه‌های قطعات خودرو برقی',one:'فروشگاه قطعات',fields:[['title','نام فروشگاه','text'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا لینک سفارش','text'],['brands','برندها و مدل‌های سازگار (با ویرگول جدا کنید)','text'],['products','دسته‌های قطعات (باتری، شارژر، اینورتر، موتور، کابل و...)','area'],['authorization','مرجع/مدرک نمایندگی یا مجوز','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری فروشگاه (روزها و بازه زمانی)','area'],['deliveryHours','ساعات ارسال/تحویل (اختیاری)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (اختیاری)','text'],['satisfactionCount','تعداد امتیازهای ثبت‌شده کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
 };
-const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',ratings:'امتیازها و سابقه',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
-let stationsCache=null, stationEdit=null, stationBusy=false, ratingsCache=null, ratingsBusy=false;
+const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',ratings:'امتیازها و سابقه','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
+let stationsCache=null, stationEdit=null, stationBusy=false, ratingsCache=null, ratingsBusy=false, ratingSearchValue='', ratingSelected=null, ratingOverride=null, ratingSaveBusy=false;
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
 const CONTACT=[['email','ایمیل'],['phone','تلفن'],['telegram','تلگرام (نام کاربری یا لینک)'],['instagram','اینستاگرام (نام کاربری یا لینک)'],['youtube','یوتیوب (لینک کامل)'],['x','ایکس (نام کاربری یا لینک)'],['address','آدرس'],['note','متن کوتاه پایین صفحه‌ی تماس']];
@@ -322,11 +323,59 @@ function ratingsPanel(){
   };
   return '<div class="box"><h3>امتیازها و سابقه</h3><p class="hint">سوابق ناشناس ذخیره می‌شوند؛ برای هر دسته حداکثر ۱۰۰۰ رأی آخر نمایش داده می‌شود. رأی ایستگاه‌ها جدا از فروشگاه‌ها و تعمیرگاه‌هاست.</p><button class="btn" data-a="ratings-refresh" style="margin-top:10px">تازه‌سازی سابقه</button></div>'+renderGroup('store','فروشگاه‌ها و تعمیرگاه‌ها')+renderGroup('station','ایستگاه‌های شارژ');
 }
+function ratingTargets(){
+  const out=[];
+  (c?.partsStores||[]).forEach(x=>out.push({...x,_targetType:'store',_kind:'فروشگاه قطعات'}));
+  (c?.serviceCenters||[]).forEach(x=>out.push({...x,_targetType:'store',_kind:'تعمیرگاه مجاز'}));
+  (Array.isArray(stationsCache)?stationsCache:[]).forEach(x=>out.push({...x,_targetType:'station',_kind:'ایستگاه شارژ',title:x.name||x.title,id:String(x.id),address:x.address||x.location||'',phone:x.phone||''}));
+  return out.map(x=>{
+    const raw=String(x.id||((x.title||x.name||'پروفایل')+'|'+(x.address||''))).slice(0,240);
+    const prefix=x._kind==='تعمیرگاه مجاز'?'RP':x._targetType==='station'?'CH':'ST';
+    const suffix=raw.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(-10).padStart(4,'0');
+    return {...x,_targetId:raw,_publicCode:x.publicCode||('REV-'+prefix+'-'+suffix)};
+  });
+}
+function ratingSearchResults(){
+  const q=ratingSearchValue.trim().toLocaleLowerCase();
+  if(!q)return [];
+  return ratingTargets().filter(x=>[x._publicCode,x.id,x.title,x.name,x.address,x.phone,x._kind].some(v=>String(v||'').toLocaleLowerCase().includes(q))).slice(0,80);
+}
+function ratingsAdminPanel(){
+  const results=ratingSearchResults();
+  const selected=ratingSelected;
+  const resultHtml=results.map((x,i)=>'<button type="button" class="row" style="width:100%;text-align:right;cursor:pointer" data-a="rating-select" data-i="'+i+'"><span><b>'+esc(x.title||x.name||'بدون نام')+'</b><small>'+esc(x._kind)+' · '+esc(x._publicCode)+' · '+esc(x.address||'نشانی ثبت نشده')+'</small></span><small>'+esc(x.phone||'شماره ثبت نشده')+'</small></button>').join('');
+  return '<div class="box"><h3>جست‌وجوی پروفایل</h3><p class="hint">با شناسه اختصاصی، نام، نشانی یا شماره تماس جست‌وجو کنید. برای نمایش ایستگاه‌های شارژ، فهرست از دیتابیس بارگذاری می‌شود.</p><label for="rating-search">شناسه یا مشخصات کسب‌وکار</label><input id="rating-search" data-rating-search value="'+esc(ratingSearchValue)+'" placeholder="مثلاً REV-CH-123456 یا نام فروشگاه"><button class="btn main" style="margin-top:10px" data-a="rating-search">جست‌وجو</button><button class="btn" style="margin-top:10px" data-a="rating-clear">پاک‌کردن</button></div>'+
+  (ratingSearchValue.trim()?'<div class="box"><h3>نتایج جست‌وجو</h3>'+(resultHtml||'<p class="hint">موردی پیدا نشد. عبارت جست‌وجو را کوتاه‌تر کنید.</p>')+'</div>':'')+
+  (selected?'<div class="box"><h3>ویرایش رضایت کاربران</h3><p class="hint">پروفایل انتخاب‌شده: '+esc(selected.title||selected.name||'بدون نام')+' · '+esc(selected._kind)+'</p><label>شناسه اختصاصی</label><input id="rating-code" value="'+esc(ratingOverride?.public_code||selected._publicCode)+'"><label>شناسه داخلی پروفایل</label><input id="rating-id" value="'+esc(selected._targetId)+'" readonly><label>نام پروفایل</label><input id="rating-name" value="'+esc(selected.title||selected.name||'')+'"><label>شماره تماس صاحب کسب‌وکار</label><input id="rating-phone" value="'+esc(selected.phone||'')+'"><div class="grid2"><div><label>میانگین رضایت (۰ تا ۵)</label><input id="rating-average" type="number" min="0" max="5" step="0.1" value="'+esc(ratingOverride?.manual_average??selected.satisfactionScore??0)+'"></div><div><label>تعداد رأی‌ها</label><input id="rating-count" type="number" min="0" step="1" value="'+esc(ratingOverride?.manual_count??selected.satisfactionCount??0)+'"></div></div><p class="hint" style="margin-top:8px">این مقادیر از طریق سرویس مدیریتی ثبت می‌شوند؛ فقط ادمینِ احراز هویت‌شده می‌تواند آن‌ها را تغییر دهد.</p><button class="btn main" style="margin-top:12px" data-a="rating-save" '+(ratingSaveBusy?'disabled':'')+'>'+(ratingSaveBusy?'در حال ذخیره…':'ذخیره رضایت و تعداد رأی')+'</button></div>':'');
+}
+async function selectRatingTarget(target){
+  ratingSelected=target;ratingOverride=null;draw();
+  try{
+    const r=await fetch(RATING_WORKER+'/api/admin/overrides?search='+encodeURIComponent(target._publicCode),{headers:H(),cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.success){ratingOverride=(j.items||[]).find(x=>x.target_type===target._targetType&&String(x.target_id)===String(target._targetId))||null;draw();}
+  }catch(e){console.warn('Could not load rating override',e)}
+}
+async function saveManualRating(){
+  if(!ratingSelected)return;
+  const average=Number($('rating-average')?.value),count=Number($('rating-count')?.value);
+  if(!Number.isFinite(average)||average<0||average>5||!Number.isInteger(count)||count<0){msg('میانگین باید بین ۰ تا ۵ و تعداد رأی باید عدد صحیح نامنفی باشد.');return}
+  const body={type:ratingSelected._targetType,id:ratingSelected._targetId,publicCode:$('rating-code')?.value.trim()||ratingSelected._publicCode,displayName:$('rating-name')?.value.trim()||'',ownerPhone:$('rating-phone')?.value.trim()||'',average,count};
+  ratingSaveBusy=true;draw();
+  try{
+    const r=await fetch(RATING_WORKER+'/api/admin/overrides',{method:'PUT',headers:H(),body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    ratingOverride={target_type:body.type,target_id:body.id,public_code:body.publicCode,display_name:body.displayName,owner_phone:body.ownerPhone,manual_average:average,manual_count:count};
+    msg('میانگین رضایت و تعداد رأی‌ها ذخیره شد.');draw();
+  }catch(e){msg('ذخیره انجام نشد: '+(e.message||'سرویس امتیازدهی را بررسی کنید.'))}
+  finally{ratingSaveBusy=false;draw()}
+}
 function draw(){
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
-  const body=tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
+  const body=tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
 }
 
@@ -440,6 +489,7 @@ function collect(){
 }
 root.addEventListener('input',e=>{
   const t=e.target,d=t.dataset;
+  if(d.ratingSearch){ratingSearchValue=t.value;return}
   if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true}
   else if(d.c){c.contact[d.c]=t.value.trim();dirty=true}
   else if(d.s){c.shopInfo[d.s]=t.value;dirty=true}
@@ -461,7 +511,7 @@ root.addEventListener('click',async e=>{
   const a=b.dataset.a, i=+b.dataset.i;
   if(a==='login'){tok=$('t').value.trim();gitTok=$('gt').value.trim();if(!tok){msg('رمز مدیریتی را وارد کنید.');return}sessionStorage.setItem('rev_admin_token',tok);if(gitTok)sessionStorage.setItem('rev_github_token',gitTok);else sessionStorage.removeItem('rev_github_token');c=null;draw()}
   else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
-  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations();if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores'||tab==='stations')loadRatings();if(tab==='set')loadAuthSettings()}
+  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations'||tab==='rating-admin')loadStations();if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores'||tab==='stations')loadRatings();if(tab==='set')loadAuthSettings()}
   else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:(tab==='serviceCenters'||tab==='partsStores')?{status:'pending'}:tab==='ads'?{position:'left',enabled:'yes',order:'10'}:tab==='techSections'?{part:'battery',enabled:'yes',order:'10'}:{part:'battery'}};draw()}
   else if(a==='verify-toggle'){
     const k=b.dataset.k, idx=Number(b.dataset.i);
@@ -505,6 +555,10 @@ root.addEventListener('click',async e=>{
     edit=null;dirty=true;draw();
   }
   else if(a==='ratings-refresh'){ratingsCache=null;loadRatings()}
+  else if(a==='rating-search'){ratingSearchValue=$('rating-search')?.value||ratingSearchValue;ratingSelected=null;ratingOverride=null;draw()}
+  else if(a==='rating-clear'){ratingSearchValue='';ratingSelected=null;ratingOverride=null;draw()}
+  else if(a==='rating-select'){const target=ratingSearchResults()[i];if(target)await selectRatingTarget(target)}
+  else if(a==='rating-save'){await saveManualRating()}
   else if(a==='station-refresh'){stationsCache=null;loadStations()}
   else if(a==='station-new'){stationEdit={isNew:true,item:{source:'rev',status:'unknown'}};draw()}
   else if(a==='station-edit'){stationEdit={isNew:false,item:{...stationsCache[i]}};draw()}
