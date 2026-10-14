@@ -198,8 +198,8 @@ const TYPES={
  ,serviceCenters:{label:'تعمیرگاه‌های مجاز خودرو برقی',one:'تعمیرگاه',fields:[['title','نام تعمیرگاه','text'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا صفحه رزرو','text'],['brands','برندهای تحت پوشش (با ویرگول جدا کنید)','text'],['services','خدمات (مثلاً عیب‌یابی، باتری، موتور، اینورتر، نرم‌افزار)','area'],['authorization','مرجع/مدرک مجوز و شماره آن','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری (مثلاً شنبه تا چهارشنبه ۹ تا ۱۸؛ پنجشنبه ۹ تا ۱۳)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (در صورت وجود داده)','text'],['satisfactionCount','تعداد رأی‌های رضایت کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
  ,partsStores:{label:'فروشگاه‌های قطعات خودرو برقی',one:'فروشگاه قطعات',fields:[['title','نام فروشگاه','text'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا لینک سفارش','text'],['brands','برندها و مدل‌های سازگار (با ویرگول جدا کنید)','text'],['products','دسته‌های قطعات (باتری، شارژر، اینورتر، موتور، کابل و...)','area'],['authorization','مرجع/مدرک نمایندگی یا مجوز','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری فروشگاه (روزها و بازه زمانی)','area'],['deliveryHours','ساعات ارسال/تحویل (اختیاری)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (اختیاری)','text'],['satisfactionCount','تعداد امتیازهای ثبت‌شده کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
 };
-const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',users:'مدیریت کاربران',ratings:'امتیازها و سابقه','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
-let stationsCache=null, stationEdit=null, stationBusy=false, stationSearchValue='', stationSortValue='name', usersCache=[], usersSearchValue='', usersSortValue='created_at', usersOrder='desc', usersPage=1, usersBusy=false, usersDebounce=null, ratingsCache=null, ratingsBusy=false, ratingSearchValue='', ratingSelected=null, ratingOverride=null, ratingSaveBusy=false, listSearchValue='', listSortValue='default', ratingSortValue='name';
+const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',users:'مدیریت کاربران',ratings:'امتیازها و سابقه','station-reports':'گزارش خطای جایگاه‌ها','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
+let stationsCache=null, stationEdit=null, stationBusy=false, stationSearchValue='', stationSortValue='name', usersCache=[], usersSearchValue='', usersSortValue='created_at', usersOrder='desc', usersPage=1, usersBusy=false, usersDebounce=null, ratingsCache=null, ratingsBusy=false, stationReportsCache=null, stationReportsBusy=false, stationReportsError='', ratingSearchValue='', ratingSelected=null, ratingOverride=null, ratingSaveBusy=false, listSearchValue='', listSortValue='default', ratingSortValue='name';
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
 const CONTACT=[['email','ایمیل'],['phone','تلفن'],['telegram','تلگرام (نام کاربری یا لینک)'],['instagram','اینستاگرام (نام کاربری یا لینک)'],['youtube','یوتیوب (لینک کامل)'],['x','ایکس (نام کاربری یا لینک)'],['address','آدرس'],['note','متن کوتاه پایین صفحه‌ی تماس']];
@@ -565,11 +565,25 @@ function fixDropdownContrast(){
     }
   });
 }
+async function loadStationReports(){
+  if(stationReportsBusy)return;stationReportsBusy=true;stationReportsError='';
+  try{const r=await fetch(RATING_WORKER+'/api/admin/station-reports?limit=500',{headers:H(),cache:'no-store'});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationReportsCache=Array.isArray(j.items)?j.items:[];}
+  catch(e){stationReportsCache=[];stationReportsError=e.message||'خطای اتصال به سرویس گزارش‌ها'}
+  finally{stationReportsBusy=false;if(tab==='station-reports')draw()}
+}
+function stationReportsPanel(){
+  if(stationReportsCache===null){loadStationReports();return '<div class="box">در حال دریافت گزارش‌های کاربران...</div>'}
+  const typeNames={not_found:'جایگاه در محل وجود ندارد',not_working:'خراب یا غیرفعال',connector_wrong:'کانکتور اشتباه',power_wrong:'توان اشتباه',location_wrong:'موقعیت یا نشانی اشتباه',duplicate:'جایگاه تکراری',other:'سایر موارد'};
+  const statusNames={new:'جدید',in_review:'در حال بررسی',resolved:'بررسی و رسیدگی شد',invalid:'نامعتبر'},statusColors={new:'#fff0c2',in_review:'#dcecff',resolved:'#dff7e8',invalid:'#ffe5e1'};
+  const reports=stationReportsCache.map(r=>{const date=r.created_at?new Date(r.created_at).toLocaleString('fa-IR'):'نامشخص';return '<div class="box" style="margin-top:10px"><div class="row"><div><h3>'+esc(r.station_name||'ایستگاه بدون نام')+'</h3><small>'+esc(typeNames[r.report_type]||r.report_type||'گزارش نامشخص')+'</small></div><span class="pill" style="background:'+statusColors[r.status]+';color:#142027">'+esc(statusNames[r.status]||r.status)+'</span></div><p class="hint">شناسه جایگاه: <code dir="ltr">'+esc(r.station_id)+'</code> · گزارش #'+esc(r.id)+' · '+esc(date)+'</p><p style="white-space:pre-wrap;margin:8px 0">'+esc(r.details||'بدون توضیح تکمیلی')+'</p>'+(r.admin_note?'<p class="hint">یادداشت مدیر: '+esc(r.admin_note)+'</p>':'')+'<div class="row" style="flex-wrap:wrap;gap:6px"><button class="btn" data-a="station-report-status" data-id="'+esc(r.id)+'" data-status="in_review">در حال بررسی</button><button class="btn main" data-a="station-report-status" data-id="'+esc(r.id)+'" data-status="resolved">رسیدگی شد</button><button class="btn red" data-a="station-report-status" data-id="'+esc(r.id)+'" data-status="invalid">نامعتبر</button><button class="btn" data-a="station-report-status" data-id="'+esc(r.id)+'" data-status="new">بازگشایی</button></div></div>'}).join('');
+  const newCount=stationReportsCache.filter(r=>r.status==='new').length;
+  return '<div class="box"><div class="row"><div><h3>گزارش خطای جایگاه‌ها</h3><p class="hint">گزارش‌های کاربران برنامه‌ریز سفر؛ فقط مدیر می‌تواند جزئیات را ببیند و وضعیت را تغییر دهد.</p></div><button class="btn" data-a="station-reports-refresh">به‌روزرسانی</button></div><p class="hint">کل گزارش‌های دریافت‌شده: <b>'+stationReportsCache.length.toLocaleString('fa-IR')+'</b> · گزارش‌های جدید: <b>'+newCount.toLocaleString('fa-IR')+'</b></p>'+(stationReportsError?'<p class="hint" style="color:#b42318">خطا: '+esc(stationReportsError)+'</p>':'')+'</div>'+(reports||'<div class="box">هنوز گزارشی ثبت نشده است.</div>');
+}
 function draw(){
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
-  const body=tab==='users'?usersPanel():tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
+  const body=tab==='users'?usersPanel():tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='station-reports'?stationReportsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
   applyAdminAppearance();
   fixDropdownContrast();
@@ -758,7 +772,7 @@ root.addEventListener('click',async e=>{
   const a=b.dataset.a, i=+b.dataset.i;
   if(a==='login'){tok=$('t').value.trim();gitTok=$('gt').value.trim();if(!tok){msg('رمز مدیریتی را وارد کنید.');return}sessionStorage.setItem('rev_admin_token',tok);if(gitTok)sessionStorage.setItem('rev_github_token',gitTok);else sessionStorage.removeItem('rev_github_token');c=null;draw()}
   else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
-  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations'||tab==='rating-admin')loadStations();if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores'||tab==='stations')loadRatings();if(tab==='set')loadAuthSettings();if(tab==='users')loadUsers()}
+  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations'||tab==='rating-admin')loadStations();if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores'||tab==='stations')loadRatings();if(tab==='station-reports')loadStationReports();if(tab==='set')loadAuthSettings();if(tab==='users')loadUsers()}
   else if(a==='users-prev'){usersPage=Math.max(1,usersPage-1);loadUsers()}
   else if(a==='users-next'){usersPage++;loadUsers()}
   else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:(tab==='serviceCenters'||tab==='partsStores')?{status:'pending'}:tab==='ads'?{position:'left',enabled:'yes',order:'10'}:tab==='techSections'?{part:'battery',enabled:'yes',order:'10'}:{part:'battery'}};draw()}
@@ -822,6 +836,15 @@ root.addEventListener('click',async e=>{
       if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
       msg('درخواست ارسال پیامک ثبت شد.');
     }catch(err){msg('ارسال پیامک انجام نشد: '+(err.message||'تنظیمات ملی پیامک را بررسی کنید.'))}
+  }
+  else if(a==='station-reports-refresh'){stationReportsCache=null;loadStationReports()}
+  else if(a==='station-report-status'){
+    const id=Number(b.dataset.id),status=b.dataset.status;
+    if(!Number.isSafeInteger(id)||!['new','in_review','resolved','invalid'].includes(status)){msg('شناسه یا وضعیت گزارش نامعتبر است.');return}
+    const report=(stationReportsCache||[]).find(x=>Number(x.id)===id),adminNote=prompt('یادداشت مدیر (اختیاری):',report?.admin_note||'');
+    if(adminNote===null)return;
+    try{const r=await fetch(RATING_WORKER+'/api/admin/station-reports/'+id,{method:'PUT',headers:H(),body:JSON.stringify({status,admin_note:adminNote})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationReportsCache=null;msg(j.message||'وضعیت گزارش ذخیره شد.');await loadStationReports()}
+    catch(err){msg('ذخیره وضعیت گزارش ناموفق بود: '+(err.message||'خطای اتصال'))}
   }
   else if(a==='station-refresh'){stationsCache=null;loadStations()}
   else if(a==='station-new'){stationEdit={isNew:true,item:{source:'rev',status:'unknown'}};draw()}
