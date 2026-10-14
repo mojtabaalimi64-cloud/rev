@@ -1108,8 +1108,11 @@ async function planTrip(){
       $("range").textContent=Math.round(totalRange);
       $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">حالت هیبرید</span></div><div class="weather-summary">برآورد مصرف سوخت در این نسخه بر اساس مصرف واردشده است؛ اثر آب‌وهوا بر مصرف بنزین هنوز در محاسبه هزینه اعمال نمی‌شود.</div>';
       $("results").innerHTML='<h2 style="margin-top:10px">برنامه انرژی خودرو</h2><div class="station"><strong>'+ (vehicleType==="phev"?"هیبرید شارژی (PHEV)":vehicleType==="hev"?"هیبرید معمولی (HEV)":"هیبرید ملایم (MHEV)")+'</strong><div class="sub">مسافت سفر: '+km.toFixed(0)+' کیلومتر</div><div class="sub">مسافت برقی برآوردی: '+electricKm.toFixed(0)+' کیلومتر</div><div class="sub">مسافت با بنزین: '+fuelKm.toFixed(0)+' کیلومتر</div><div class="sub">بنزین موردنیاز: '+liters.toFixed(1)+' لیتر · هزینه تقریبی: '+Math.round(cost).toLocaleString("fa-IR")+' تومان</div><div class="sub">برد تقریبی با باک پر'+(vehicleType==="phev"?" به‌علاوه برد برقی":"")+': '+Math.round(totalRange)+' کیلومتر</div></div><div class="sub">برای HEV و MHEV توقف شارژ عمومی در برنامه الزامی نیست. برای PHEV، شارژ بین‌راهی می‌تواند مصرف بنزین واقعی را کاهش دهد؛ این برآورد فرض می‌کند پس از شارژ اولیه، در طول مسیر شارژ مجدد انجام نمی‌شود.</div>';
-      await renderFuelStations(coords,num("radius",10));
-      await renderBusinessDirectory(coords,num("radius",10));
+      // Fuel-station and business overlays are optional: never let a slow external
+      // directory service make an otherwise successful hybrid route look broken.
+      const hybridRadius=num("radius",10);
+      renderFuelStations(coords,hybridRadius).catch(e=>console.warn("REV fuel layer:",e));
+      renderBusinessDirectory(coords,hybridRadius).catch(e=>console.warn("REV business layer:",e));
       if($("timelineSlider"))$("timelineSlider").disabled=true;
       if($("timelineDetails"))$("timelineDetails").textContent="شبیه‌ساز شارژ باتری در حالت هیبریدی غیرفعال است؛ محاسبه زمان سفر و راهنمای مسیر در دسترس است.";
       setStatus("مسیر محاسبه شد: "+km.toFixed(0)+" کیلومتر · زمان رانندگی تخمینی: "+fmtDuration(hours)+".\nمصرف بنزین برآوردی: "+liters.toFixed(1)+" لیتر · هزینه تقریبی: "+Math.round(cost).toLocaleString("fa-IR")+" تومان.\nاین برآورد به مصرف واقعی خودرو، ترافیک، سبک رانندگی و قیمت سوخت واردشده وابسته است.");
