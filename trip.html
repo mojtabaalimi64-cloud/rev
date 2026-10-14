@@ -84,6 +84,26 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#121d27;color:#eef4f8}
 .leaflet-popup-content a{color:#d7ff3f}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.wrap{padding:12px}#map{height:430px}.head{align-items:flex-start;flex-direction:column}.head-actions{width:100%;justify-content:space-between}.stats{grid-template-columns:repeat(3,1fr)}}
+ 
+/* Route playback timeline */
+.timeline-panel{margin-top:18px;padding:18px;border:1px solid #304452;border-radius:18px;background:linear-gradient(135deg,#14212b,#0c151d);box-shadow:0 14px 38px #0002}
+.timeline-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.timeline-head h2{margin:0;font-size:18px}
+.timeline-track-wrap{position:relative;margin:26px 8px 12px;height:42px;display:flex;align-items:center}
+.timeline-track{height:8px;width:100%;border-radius:99px;background:#344653;position:relative;overflow:hidden}
+.timeline-progress{height:100%;width:0;background:linear-gradient(90deg,#64b5ff,#d7ff3f);border-radius:99px}
+.timeline-car{position:absolute;top:50%;left:0;transform:translate(-50%,-55%);width:44px;height:36px;display:grid;place-items:center;font-size:28px;filter:drop-shadow(0 4px 6px #0009);pointer-events:none;transition:left .05s linear;z-index:2}
+.timeline-range{position:absolute;inset:-8px 0;width:100%;height:58px;opacity:.01;cursor:ew-resize;margin:0!important;z-index:3}
+.timeline-endpoints{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;gap:10px}
+.timeline-readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.timeline-metric{background:#0b141c;border:1px solid #2b3c49;border-radius:12px;padding:12px;min-width:0}
+.timeline-metric span{display:block;color:var(--muted);font-size:12px}
+.timeline-metric strong{display:block;font-size:17px;color:var(--accent);overflow-wrap:anywhere}
+.timeline-details{margin-top:12px;padding:13px;border-radius:12px;border:1px solid #2b414f;background:#0d1821;font-size:13px}
+.timeline-details .muted{color:var(--muted)}
+.timeline-legend{font-size:11px;color:var(--muted);margin-top:8px}
+@media(max-width:650px){.timeline-readout{grid-template-columns:repeat(2,minmax(0,1fr))}.timeline-panel{padding:13px}.timeline-car{font-size:24px}}
+
 </style>
 </head>
 <body>
@@ -134,6 +154,25 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
     </main>
   </div>
 </div>
+ 
+  <section class="timeline-panel" id="timelinePanel" aria-live="polite">
+    <div class="timeline-head"><h2>حرکت روی مسیر · شبیه‌ساز سفر</h2><span class="sub" id="timelineProgressText">ابتدا مسیر را محاسبه کنید</span></div>
+    <div class="timeline-track-wrap" id="timelineTrackWrap">
+      <div class="timeline-track"><div class="timeline-progress" id="timelineProgress"></div></div>
+      <div class="timeline-car" id="timelineCar" aria-hidden="true">🚙</div>
+      <input class="timeline-range" id="timelineSlider" type="range" min="0" max="100" value="0" step="0.25" aria-label="جابجایی خودرو در طول مسیر" disabled>
+    </div>
+    <div class="timeline-endpoints"><span id="timelineOrigin">مبدأ</span><span id="timelineDestination">مقصد</span></div>
+    <div class="timeline-readout">
+      <div class="timeline-metric"><span>موقعیت روی مسیر</span><strong id="timelineKm">—</strong></div>
+      <div class="timeline-metric"><span>زمان تخمینی عبور</span><strong id="timelineTime">—</strong></div>
+      <div class="timeline-metric"><span>شارژ تخمینی باتری</span><strong id="timelineSoc">—</strong></div>
+      <div class="timeline-metric"><span>وضعیت هوا و باد</span><strong id="timelineWeather">—</strong></div>
+    </div>
+    <div class="timeline-details" id="timelineDetails">پس از محاسبه مسیر، با کشیدن نشانگر خودرو روی نوار، وضعیت تخمینی همان نقطه و ساعت را بررسی کنید.</div>
+    <div class="timeline-legend">زمان و شارژ برآوردی‌اند و به سرعت واقعی، ترافیک، شیوه رانندگی و مدت توقف شارژ وابسته‌اند. حرکت نشانگر، اطلاعات مسیر را تغییر نمی‌دهد.</div>
+  </section>
+
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 /*
@@ -645,6 +684,81 @@ async function getRouteWeather(routeCoords,routeKm,routeDurationSeconds,departur
   return {samples:results,adjustedConsumption:baseConsumption*avgFactor,avgFactor,departure,arrival};
 }
 
+
+let revTimeline = {coords:null,routeKm:0,durationSeconds:0,departure:null,weatherSamples:[],battery:60,soc:90,consumption:18,stops:[],stationList:[],carMarker:null};
+function timelinePointAt(coords,targetKm){
+  if(!coords||coords.length<2)return null;
+  let traveled=0;
+  for(let i=1;i<coords.length;i++){
+    const a=[coords[i-1][1],coords[i-1][0]],b=[coords[i][1],coords[i][0]];
+    const seg=haversine(a,b);
+    if(traveled+seg>=targetKm){
+      const t=seg?(targetKm-traveled)/seg:0;
+      return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+    }
+    traveled+=seg;
+  }
+  const last=coords[coords.length-1];return [last[1],last[0]];
+}
+function timelineBatteryAt(km){
+  const st=[...revTimeline.stops].sort((a,b)=>a.routeKm-b.routeKm);
+  let atKm=0,soc=revTimeline.soc;
+  for(const stop of st){
+    if(km<stop.routeKm){
+      soc-=(km-atKm)*revTimeline.consumption/revTimeline.battery*100;
+      return Math.max(0,Math.min(100,soc));
+    }
+    soc-=(stop.routeKm-atKm)*revTimeline.consumption/revTimeline.battery*100;
+    soc=Number(stop.targetSoc)||soc;
+    atKm=stop.routeKm;
+  }
+  soc-=(km-atKm)*revTimeline.consumption/revTimeline.battery*100;
+  return Math.max(0,Math.min(100,soc));
+}
+function updateTimeline(){
+  if(!revTimeline.coords||!revTimeline.departure)return;
+  const slider=$("timelineSlider"),fraction=Number(slider.value)/100;
+  const km=revTimeline.routeKm*fraction,point=timelinePointAt(revTimeline.coords,km);
+  const eta=new Date(revTimeline.departure.getTime()+revTimeline.durationSeconds*fraction*1000);
+  const soc=timelineBatteryAt(km);
+  $("timelineProgress").style.width=(fraction*100)+"%";
+  $("timelineCar").style.left=(fraction*100)+"%";
+  $("timelineProgressText").textContent=Math.round(fraction*100)+"٪ از مسیر";
+  $("timelineKm").textContent=Math.round(km)+" از "+Math.round(revTimeline.routeKm)+" km";
+  $("timelineTime").textContent=eta.toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"});
+  $("timelineSoc").textContent=Math.round(soc)+"٪";
+  $("timelineSoc").style.color=soc<=15?"#ff8d8d":"var(--accent)";
+  if(point&&revTimeline.carMarker)revTimeline.carMarker.setLatLng(point);
+  const samples=revTimeline.weatherSamples||[];
+  let wx=null;
+  if(samples.length)wx=samples.reduce((best,x)=>Math.abs(x.routeKm-km)<Math.abs(best.routeKm-km)?x:best,samples[0]);
+  $("timelineWeather").textContent=wx?(Math.round(wx.weather.temperature)+"° · باد "+Math.round(wx.weather.windSpeed)+" km/h"):"در دسترس نیست";
+  const upcoming=revTimeline.stationList.filter(x=>x.routeKm>=km).sort((a,b)=>a.routeKm-b.routeKm)[0];
+  const nextStop=revTimeline.stops.filter(x=>x.routeKm>=km).sort((a,b)=>a.routeKm-b.routeKm)[0];
+  let detail="<b>زمان تخمینی:</b> "+eta.toLocaleString("fa-IR",{dateStyle:"full",timeStyle:"short"})+" · <b>شارژ تخمینی:</b> "+Math.round(soc)+"٪.";
+  if(wx){
+    const rel=wx.wind.headwind>3?"باد روبه‌رو":wx.wind.headwind< -3?"باد پشت":"باد جانبی/متغیر";
+    detail+="<br><b>هوا:</b> "+escapeHTML(weatherDescription(wx.weather.code))+", دما "+Math.round(wx.weather.temperature)+"°C، احتمال بارش "+(Number.isFinite(wx.weather.precipProb)?Math.round(wx.weather.precipProb)+"٪":"نامشخص")+".";
+    detail+="<br><b>باد:</b> "+Math.round(wx.weather.windSpeed)+" km/h از "+escapeHTML(compassDirection(wx.weather.windDirection))+"؛ "+rel+"؛ تندباد "+(Number.isFinite(wx.weather.gust)?Math.round(wx.weather.gust)+" km/h":"نامشخص")+".";
+    detail+="<br><span class='muted'>نقطه پیش‌بینی نزدیک: کیلومتر "+Math.round(wx.routeKm)+" · ساعت "+new Date(wx.eta).toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit"})+"</span>";
+  }else detail+="<br><span class='muted'>برای این سفر داده هواشناسی ساعتی دریافت نشد؛ از نمایش مقادیر ساختگی خودداری شده است.</span>";
+  if(nextStop)detail+="<br><b>توقف شارژ پیشنهادی بعدی:</b> "+escapeHTML(nextStop.name)+"، حدود کیلومتر "+Math.round(nextStop.routeKm)+" (شارژ هدف "+Math.round(nextStop.targetSoc)+"٪).";
+  else if(upcoming)detail+="<br><b>ایستگاه ثبت‌شده بعدی:</b> "+escapeHTML(upcoming.name)+"، حدود کیلومتر "+Math.round(upcoming.routeKm)+".";
+  else detail+="<br><span class='muted'>ایستگاه ثبت‌شده دیگری در ادامه مسیر فهرست نشده است.</span>";
+  $("timelineDetails").innerHTML=detail;
+}
+function configureTimeline(data){
+  revTimeline={...revTimeline,...data};
+  $("timelineOrigin").textContent=$("origin").value.trim()||"مبدأ";
+  $("timelineDestination").textContent=$("destination").value.trim()||"مقصد";
+  $("timelineSlider").disabled=false;$("timelineSlider").value=0;
+  if(revTimeline.carMarker)routeLayer.removeLayer(revTimeline.carMarker);
+  const start=timelinePointAt(revTimeline.coords,0);
+  const carIcon=L.divIcon({className:"rev-map-car",html:"<span style='display:block;font-size:25px;line-height:30px;text-shadow:0 1px 5px #000'>🚙</span>",iconSize:[32,32],iconAnchor:[16,16]});
+  revTimeline.carMarker=L.marker(start,{icon:carIcon,zIndexOffset:1000}).addTo(routeLayer).bindPopup("موقعیت خودرو روی مسیر");
+  updateTimeline();
+}
+
 function fmtDuration(seconds){
   const mins=Math.round(seconds/60), h=Math.floor(mins/60),m=mins%60;
   return h?`${h} ساعت و ${m} دقیقه`:`${m} دقیقه`;
@@ -719,6 +833,8 @@ async function planTrip(){
     const params={battery,soc,consumption,reserve,targetSoc,radius};
     renderStations(stations,coords,km,params);
     const plan=buildChargingPlan(stations,coords,km,params);
+    const stationTimeline=stations.map(s=>({...s,...stationAlongRouteKm(s,routeMetrics(coords))}));
+    configureTimeline({coords,routeKm:km,durationSeconds:hours,departure:weatherAnalysis?.departure||new Date($("departure").value),weatherSamples:weatherAnalysis?.samples||[],battery,soc,consumption,stops:plan.stops||[],stationList:stationTimeline});
     const sourceNote = window.revStationSourceWarning
       ? `\nهشدار منبع آنلاین: ${window.revStationSourceWarning}\nفهرست ایستگاه‌ها ممکن است ناقص باشد؛ صفر ایستگاه به معنی نبود شارژر واقعی نیست.`
       : (window.revStationCacheNote ? `\n${window.revStationCacheNote}` : "");
@@ -727,6 +843,7 @@ async function planTrip(){
   finally{$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";}
 }
 initDepartureInput();
+$("timelineSlider").addEventListener("input",updateTimeline);
 $("planBtn").addEventListener("click",planTrip);
 </script>
 </body>
