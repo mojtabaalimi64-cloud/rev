@@ -1073,6 +1073,13 @@ async function loadStationRatings(stations){
     s._ratingScore=(avg*n+3.5*3)/(n+3);
   }));
 }
+let revStationReportVoterId=null;
+function stationReportVoterId(){
+  if(revStationReportVoterId)return revStationReportVoterId;
+  const key="rev_station_report_voter_v1";
+  try{let id=localStorage.getItem(key);if(!id){id=(crypto.randomUUID?crypto.randomUUID():"rev-report-"+Date.now()+"-"+Math.random().toString(16).slice(2));localStorage.setItem(key,id);}revStationReportVoterId=id;return id;}
+  catch(e){revStationReportVoterId="rev-report-"+Date.now()+"-"+Math.random().toString(16).slice(2)+"-"+Math.random().toString(16).slice(2);return revStationReportVoterId;}
+}
 function renderStations(stations,routeCoords,routeKm,params){
   const el=$('results');el.innerHTML='';
   const metrics=routeMetrics(routeCoords);
@@ -1097,7 +1104,38 @@ function renderStations(stations,routeCoords,routeKm,params){
     const ratingBox=document.createElement("div");
     ratingBox.addEventListener("click",event=>event.stopPropagation());
     item.appendChild(ratingBox);
-    if(window.REVRating)window.REVRating.mount(ratingBox,"station",String(s.id||((s.source||"station")+":"+(s.name||"")+":"+(s.lat??"")+","+(s.lon??""))).slice(0,240));
+    const reportBox=document.createElement("details");
+    reportBox.className="station-report-box";
+    reportBox.style.cssText="margin-top:10px;padding:9px 11px;border:1px solid #394650;border-radius:10px;background:#0c131b;color:#e9f0f4";
+    reportBox.innerHTML=`<summary style="cursor:pointer;font-size:13px;font-weight:700">گزارش مشکل در اطلاعات این جایگاه</summary>
+      <form class="station-report-form" style="display:grid;gap:8px;margin-top:10px">
+        <label style="font-size:12px">نوع مشکل
+          <select name="report_type" required style="display:block;width:100%;margin-top:4px;padding:8px;border-radius:8px;background:#101a22;color:#f5f7f8;border:1px solid #52616b">
+            <option value="not_found">جایگاه در محل وجود ندارد</option><option value="not_working">جایگاه خراب یا غیرفعال است</option><option value="connector_wrong">نوع کانکتور اشتباه است</option><option value="power_wrong">توان شارژ اشتباه است</option><option value="location_wrong">موقعیت یا نشانی اشتباه است</option><option value="duplicate">جایگاه تکراری است</option><option value="other">سایر موارد</option>
+          </select>
+        </label>
+        <label style="font-size:12px">توضیح تکمیلی (اختیاری)
+          <textarea name="details" maxlength="600" rows="2" placeholder="مثلاً جایگاه جابه‌جا شده یا شارژر خاموش است" style="display:block;width:100%;margin-top:4px;padding:8px;border-radius:8px;background:#101a22;color:#f5f7f8;border:1px solid #52616b;resize:vertical"></textarea>
+        </label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="submit" style="padding:7px 12px;border:0;border-radius:8px;background:#39ff88;color:#080b0d;font-weight:800;cursor:pointer">ارسال گزارش</button><span class="station-report-message" role="status" style="font-size:12px;color:#b7c4cb"></span></div>
+      </form>`;
+    item.appendChild(reportBox);
+    const reportForm=reportBox.querySelector("form"),reportMessage=reportBox.querySelector(".station-report-message"),reportSubmit=reportForm.querySelector('button[type="submit"]');
+    const reportId=String(s._revRatingId||s.id||((s.source||"station")+":"+(s.name||"")+":"+(s.lat??"")+","+(s.lon??""))).slice(0,240);
+    const reportKey="rev_station_report_sent_v1:"+reportId;
+    try{if(localStorage.getItem(reportKey)==="1"){reportSubmit.disabled=true;reportMessage.textContent="از این مرورگر قبلاً برای این جایگاه گزارش ارسال شده است.";}}catch(e){}
+    reportForm.addEventListener("submit",async event=>{
+      event.preventDefault();event.stopPropagation();if(reportSubmit.disabled)return;
+      reportSubmit.disabled=true;reportMessage.textContent="در حال ارسال گزارش…";
+      try{
+        const response=await fetch("https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/station-reports",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({station_id:reportId,station_name:String(s.name||"ایستگاه شارژ").slice(0,180),report_type:reportForm.elements.report_type.value,details:reportForm.elements.details.value,voter:stationReportVoterId()})});
+        const result=await response.json().catch(()=>({}));
+        if(response.status===409){reportMessage.textContent="قبلاً برای این جایگاه گزارشی ثبت شده است.";return;}
+        if(!response.ok||!result.success)throw new Error(result.error||("HTTP "+response.status));
+        try{localStorage.setItem(reportKey,"1");}catch(e){}
+        reportMessage.textContent="گزارش ثبت شد؛ از اطلاع‌رسانی شما سپاسگزاریم.";reportForm.querySelector("select").disabled=true;reportForm.querySelector("textarea").disabled=true;
+      }catch(error){reportMessage.textContent=error.message||"ارسال گزارش ناموفق بود.";reportSubmit.disabled=false;}
+    });
     item.addEventListener('click',()=>{map.setView([s.lat,s.lon],14);marker.openPopup();});
   });
 }
