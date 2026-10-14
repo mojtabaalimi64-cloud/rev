@@ -915,7 +915,19 @@ async function getRouteWeather(routeCoords,routeKm,routeDurationSeconds,departur
 
 let revTimeline = {coords:null,routeKm:0,durationSeconds:0,departure:null,weatherSamples:[],battery:60,soc:90,consumption:18,stops:[],stationList:[],carMarker:null,batteryMarker:null,vehicleType:"bev",electricKm:0,regenerationKwh:0};
 let timelinePlayback=null;
-function toggleTimelinePlayback(){const slider=$("timelineSlider"),btn=$("timelinePlayBtn");if(!slider||slider.disabled||!btn)return;if(timelinePlayback){clearInterval(timelinePlayback);timelinePlayback=null;btn.textContent="▶ ادامه حرکت";return;}if(Number(slider.value)>=100)slider.value=0;btn.textContent="Ⅱ توقف";timelinePlayback=setInterval(()=>{const next=Math.min(100,Number(slider.value)+0.5);slider.value=String(next);updateTimeline();if(next>=100){clearInterval(timelinePlayback);timelinePlayback=null;btn.textContent="↻ شروع دوباره";}},120);}
+function timelineMaxReachKm(){
+  if(revTimeline.vehicleType!=="bev")return revTimeline.routeKm;
+  const battery=Number(revTimeline.battery)||0,consumption=Number(revTimeline.consumption)||0,reserve=Number(revTimeline.reserve)||0;
+  if(battery<=0||consumption<=0)return 0;
+  const stops=[...(revTimeline.stops||[])].filter(s=>Number.isFinite(Number(s.routeKm))&&Number(s.routeKm)>0).sort((a,b)=>a.routeKm-b.routeKm);
+  let atKm=0,soc=Number(revTimeline.soc)||0;
+  for(const stop of stops){const stopKm=Math.min(revTimeline.routeKm,Number(stop.routeKm));if(stopKm<=atKm)continue;const need=(stopKm-atKm)*consumption/battery;if(need>soc-reserve)return Math.max(atKm,Math.min(stopKm,atKm+Math.max(0,soc-reserve)*battery/consumption));soc-=need;soc= Math.max(soc,Number(stop.targetSoc)||soc);atKm=stopKm;}
+  const need=(revTimeline.routeKm-atKm)*consumption/battery;
+  if(need>soc-reserve)return Math.max(atKm,Math.min(revTimeline.routeKm,atKm+Math.max(0,soc-reserve)*battery/consumption));
+  return revTimeline.routeKm;
+}
+function stopTimelinePlayback(message){if(timelinePlayback){clearInterval(timelinePlayback);timelinePlayback=null;}const btn=$("timelinePlayBtn");if(btn)btn.textContent=message||"↻ توقف خودرو";}
+function toggleTimelinePlayback(){const slider=$("timelineSlider"),btn=$("timelinePlayBtn");if(!slider||slider.disabled||!btn)return;if(timelinePlayback){clearInterval(timelinePlayback);timelinePlayback=null;btn.textContent="▶ ادامه حرکت";return;}const maxKm=timelineMaxReachKm(),maxFraction=revTimeline.routeKm>0?Math.min(100,100*maxKm/revTimeline.routeKm):0;if(Number(slider.value)>=maxFraction-0.001){if(maxFraction<99.999){btn.textContent="⛔ باتری کافی نیست";return;}slider.value=0;}btn.textContent="Ⅱ توقف";timelinePlayback=setInterval(()=>{const current=Number(slider.value),next=Math.min(maxFraction,current+0.5);slider.value=String(next);updateTimeline();if(next>=maxFraction-0.001){stopTimelinePlayback(maxFraction<99.999?"⛔ توقف؛ شارژ قابل‌استفاده تمام شد":"↻ پایان مسیر");}},120);}
 function timelinePointAt(coords,targetKm){
   if(!coords||coords.length<2)return null;
   let traveled=0;
@@ -968,15 +980,17 @@ function weatherRiskIcons(sample){
 function updateTimeline(){
   if(!revTimeline.coords||!revTimeline.departure)return;
   const slider=$("timelineSlider"),fraction=Number(slider.value)/100;
-  const km=revTimeline.routeKm*fraction,point=timelinePointAt(revTimeline.coords,km);
+  const maxReachKm=timelineMaxReachKm(),maxFraction=revTimeline.routeKm>0?Math.min(100,100*maxReachKm/revTimeline.routeKm):0;
+  if(revTimeline.vehicleType==="bev"&&fraction>maxFraction/100+0.00001){slider.value=String(maxFraction);return updateTimeline();}
+  const km=Math.min(revTimeline.routeKm*fraction,maxReachKm),point=timelinePointAt(revTimeline.coords,km);
   const eta=new Date(revTimeline.departure.getTime()+revTimeline.durationSeconds*fraction*1000);
   const hybrid=["phev","hev","mhev"].includes(revTimeline.vehicleType),electricKm=Number(revTimeline.electricKm)||0,regenerationKwh=Math.max(0,Number(revTimeline.regenerationKwh)||0),recoveredSoFar=regenerationKwh*fraction;
   const switchedToFuel=hybrid&&(revTimeline.vehicleType!=="phev"||(electricKm<revTimeline.routeKm&&km>=electricKm));
   const soc=hybrid?(switchedToFuel?0:Math.max(0,100*(electricKm-km)/Math.max(.1,electricKm))):timelineBatteryAt(km);
   $("timelineProgress").style.width=(fraction*100)+"%";
   $("timelineCar").style.left="auto";$("timelineCar").style.right="calc("+(fraction*100)+"% - 22px)";
-  $("timelineProgressText").textContent=Math.round(fraction*100)+"٪ از مسیر";
-  $("timelineKm").textContent=Math.round(km)+" از "+Math.round(revTimeline.routeKm)+" km";
+  $("timelineProgressText").textContent=Math.round(revTimeline.routeKm?km/revTimeline.routeKm*100:0)+"٪ از مسیر";
+  $("timelineKm").textContent=Math.round(km)+" از "+Math.round(revTimeline.routeKm)+" km"+(revTimeline.vehicleType==="bev"&&maxReachKm<revTimeline.routeKm-0.5?" · توقف به‌دلیل اتمام شارژ":"");
   $("timelineTime").textContent=eta.toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"});
   $("timelineSoc").textContent=hybrid?(revTimeline.vehicleType==="phev"?(switchedToFuel?"بنزین · برق تمام شد":"برق تا "+Math.round(electricKm-km)+" km"):"بازیابی +"+recoveredSoFar.toFixed(2)+" kWh"):(Math.round(soc)+"٪");
   $("timelineSoc").style.color=hybrid&&switchedToFuel?"#ffb45c":soc<=15?"#ff8d8d":"var(--accent)";
@@ -989,6 +1003,7 @@ function updateTimeline(){
   const upcoming=revTimeline.stationList.filter(x=>x.routeKm>=km).sort((a,b)=>a.routeKm-b.routeKm)[0];
   const nextStop=revTimeline.stops.filter(x=>x.routeKm>=km).sort((a,b)=>a.routeKm-b.routeKm)[0];
   let detail="<b>زمان تخمینی:</b> "+eta.toLocaleString("fa-IR",{dateStyle:"full",timeStyle:"short"})+(hybrid?(" · <b>وضعیت انرژی:</b> "+(switchedToFuel?"بنزین (برق اولیه تمام شده)":revTimeline.vehicleType==="phev"?"حرکت برقی تا حدود کیلومتر "+Math.round(electricKm):"هیبرید خودشارژ؛ مصرف اصلی بنزین")):(" · <b>شارژ تخمینی:</b> "+Math.round(soc)+"٪."));
+  if(revTimeline.vehicleType==="bev"&&maxReachKm<revTimeline.routeKm-0.5)detail+="<br><b style=\"color:#ff8d8d\">خودرو در کیلومتر "+Math.round(maxReachKm)+" متوقف می‌شود:</b> شارژ قابل‌استفاده برای ادامه مسیر کافی نیست. برای ادامه سفر باید در ایستگاه قابل‌دسترسی شارژ کنید."; 
   if(revTimeline.vehicleType==="hev"||revTimeline.vehicleType==="mhev")detail+="<br><b>برق بازیابی‌شده تخمینی تا این نقطه:</b> "+recoveredSoFar.toFixed(2)+" kWh از حدود "+regenerationKwh.toFixed(2)+" kWh در کل مسیر. این برآورد تقریبی است و به ترافیک، ترمزگیری، شیب و مدل خودرو بستگی دارد.";
   if(wx){
     const rel=wx.wind.headwind>3?"باد روبه‌رو":wx.wind.headwind< -3?"باد پشت":"باد جانبی/متغیر";
@@ -1211,7 +1226,7 @@ async function shareTrip(){
 }
 initDepartureInput();
 applySharedTripParams();
-$("timelineSlider").addEventListener("input",updateTimeline);
+$("timelineSlider").addEventListener("input",()=>{const maxKm=timelineMaxReachKm(),maxPct=revTimeline.routeKm>0?100*maxKm/revTimeline.routeKm:0;if(revTimeline.vehicleType==="bev"&&Number($("timelineSlider").value)>maxPct)$("timelineSlider").value=String(maxPct);updateTimeline();});
 $("timelinePlayBtn").addEventListener("click",toggleTimelinePlayback);
 $("planBtn").addEventListener("click",planTrip);
 $("shareTripBtn").addEventListener("click",shareTrip);
