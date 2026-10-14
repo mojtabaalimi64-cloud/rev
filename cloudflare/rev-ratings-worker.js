@@ -1,70 +1,84 @@
 /**
- * REV Ratings API — separate Worker; does not replace rev-api.
+ * REV Ratings Worker.
  * Bind D1 database rev-db as DB.
- * Set ALLOWED_ORIGINS=https://mojtabaalimi64-cloud.github.io
+ * Secrets: ADMIN_TOKEN
+ * Variable: ALLOWED_ORIGINS=https://mojtabaalimi64-cloud.github.io
+ * Deploy as rev-ratings-api. Never put ADMIN_TOKEN in site JavaScript.
  */
 const DEFAULT_ORIGIN = "https://mojtabaalimi64-cloud.github.io";
-function origins(env){return (env.ALLOWED_ORIGINS||DEFAULT_ORIGIN).split(",").map(x=>x.trim()).filter(Boolean);}
-function cors(req,env){
- const origin=req.headers.get("Origin")||"";
- return {Vary:"Origin",...(origins(env).includes(origin)?{"Access-Control-Allow-Origin":origin}:{}),
-  "Access-Control-Allow-Methods":"GET,POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type, Authorization",
-  "Access-Control-Max-Age":"86400"};
+const json = (data, status=200, headers={}) => new Response(JSON.stringify(data), {
+  status, headers: {"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",...headers}
+});
+function cors(request, env) {
+  const origin=request.headers.get("Origin")||"";
+  const allowed=(env.ALLOWED_ORIGINS||DEFAULT_ORIGIN).split(",").map(x=>x.trim()).filter(Boolean);
+  return {"Vary":"Origin",...(allowed.includes(origin)?{"Access-Control-Allow-Origin":origin}:{}),
+    "Access-Control-Allow-Methods":"GET,POST,PUT,OPTIONS",
+    "Access-Control-Allow-Headers":"Content-Type,Authorization","Access-Control-Max-Age":"86400"};
 }
-function json(req,env,data,status=200){return new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",...cors(req,env)}});}
+function reply(request,env,data,status=200){return json(data,status,cors(request,env));}
+function admin(request,env){return !!env.ADMIN_TOKEN && request.headers.get("Authorization")==="Bearer "+env.ADMIN_TOKEN;}
+function validTarget(type,id){return ["store","station"].includes(type)&&typeof id==="string"&&id.trim().length>0&&id.length<=240;}
 async function hash(s){const b=await crypto.subtle.digest("SHA-256",new TextEncoder().encode(s));return [...new Uint8Array(b)].map(x=>x.toString(16).padStart(2,"0")).join("");}
-function validType(t){return t==="station"||t==="store";}
-function validId(s){return typeof s==="string"&&s.trim().length>0&&s.length<=240&&!/[\u0000-\u001f]/.test(s);}
-async function rateLimited(req,env){
- const ip=req.headers.get("CF-Connecting-IP")||"unknown";
- const key=await hash(ip+":"+Math.floor(Date.now()/60000));
- await env.DB.prepare("DELETE FROM rev_rating_rate_limits WHERE expires_at < ?").bind(new Date(Date.now()-3600000).toISOString()).run();
- await env.DB.prepare("INSERT INTO rev_rating_rate_limits(bucket_key,attempt_count,expires_at) VALUES(?,1,?) ON CONFLICT(bucket_key) DO UPDATE SET attempt_count=attempt_count+1")
- .bind(key,new Date(Date.now()+120000).toISOString()).run();
- const row=await env.DB.prepare("SELECT attempt_count FROM rev_rating_rate_limits WHERE bucket_key=?").bind(key).first();
- return Number(row?.attempt_count||0)>8;
+async function limited(request,env){
+  const ip=request.headers.get("CF-Connecting-IP")||"unknown", bucket=Math.floor(Date.now()/60000), key=await hash(ip+":"+bucket);
+  const expires=new Date((bucket+1)*60000).toISOString();
+  await env.DB.prepare("DELETE FROM rev_rating_rate_limits WHERE expires_at < ?").bind(new Date().toISOString()).run();
+  await env.DB.prepare("INSERT INTO rev_rating_rate_limits(bucket_key,attempt_count,expires_at) VALUES(?,1,?) ON CONFLICT(bucket_key) DO UPDATE SET attempt_count=attempt_count+1").bind(key,expires).run();
+  const row=await env.DB.prepare("SELECT attempt_count FROM rev_rating_rate_limits WHERE bucket_key=?").bind(key).first();
+  return Number(row?.attempt_count||0)>30;
 }
-export default {async fetch(req,env){
- const url=new URL(req.url),path=url.pathname,method=req.method;
- if(method==="OPTIONS")return new Response(null,{status:204,headers:cors(req,env)});
- try{
-  if(path==="/api/health"&&method==="GET")return json(req,env,{success:true,service:"REV Ratings API"});
-  if(path==="/api/admin/ratings"&&method==="GET"){
-   const auth=req.headers.get("Authorization")||"";
-   const expected=env.ADMIN_TOKEN||"";
-   if(!expected||auth!=="Bearer "+expected)return json(req,env,{success:false,error:"دسترسی مدیر تأیید نشد."},401);
-   const type=url.searchParams.get("type")||"store";
-   if(type!=="store"&&type!=="station")return json(req,env,{success:false,error:"نوع سابقه نامعتبر است."},400);
-   const limit=Math.min(1000,Math.max(1,Number(url.searchParams.get("limit")||500)));
-   const result=await env.DB.prepare("SELECT target_id AS id, rating, created_at FROM rev_ratings WHERE target_type=? ORDER BY created_at DESC LIMIT ?").bind(type,limit).all();
-   return json(req,env,{success:true,type,items:result.results||[]});
-  }
-  if(path!=="/api/ratings")return json(req,env,{success:false,error:"Not found"},404);
-  if(method==="GET"){
-   const type=url.searchParams.get("type"),id=url.searchParams.get("id");
-   if(!validType(type)||!validId(id))return json(req,env,{success:false,error:"نوع یا شناسه نامعتبر است."},400);
-   const row=await env.DB.prepare("SELECT COUNT(*) AS count, ROUND(AVG(rating),1) AS average FROM rev_ratings WHERE target_type=? AND target_id=?").bind(type,id).first();
-   return json(req,env,{success:true,type,id,count:Number(row?.count||0),average:row?.average==null?null:Number(row.average)});
-  }
-  if(method==="POST"){
-   const origin=req.headers.get("Origin")||"";
-   if(!origins(env).includes(origin))return json(req,env,{success:false,error:"Origin نامعتبر است."},403);
-   if(await rateLimited(req,env))return json(req,env,{success:false,error:"تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره امتحان کنید."},429);
-   const body=await req.json();
-   const {type,id,rating,voter}=body||{};
-   if(!validType(type)||!validId(id)||!Number.isInteger(rating)||rating<1||rating>5||typeof voter!=="string"||!/^[a-z0-9-]{20,100}$/i.test(voter))
-    return json(req,env,{success:false,error:"اطلاعات امتیاز معتبر نیست."},400);
-   const voterHash=await hash(voter);
-   try{
-    await env.DB.prepare("INSERT INTO rev_ratings(target_type,target_id,voter_hash,rating,created_at) VALUES(?,?,?,?,?)")
-     .bind(type,id,voterHash,rating,new Date().toISOString()).run();
-   }catch(e){
-    if(String(e?.message||e).toLowerCase().includes("unique"))return json(req,env,{success:false,error:"با این مرورگر قبلاً برای این مورد امتیاز ثبت شده است."},409);
-    throw e;
+async function summary(env,type,id){
+  const override=await env.DB.prepare("SELECT public_code,display_name,manual_average,manual_count FROM rev_rating_overrides WHERE target_type=? AND target_id=?").bind(type,id).first();
+  if(override)return {success:true,average:Number(override.manual_average),count:Number(override.manual_count),manual:true,publicCode:override.public_code,displayName:override.display_name};
+  const r=await env.DB.prepare("SELECT AVG(rating) average,COUNT(*) count FROM rev_ratings WHERE target_type=? AND target_id=?").bind(type,id).first();
+  return {success:true,average:Number(r?.average||0),count:Number(r?.count||0),manual:false};
+}
+export default {
+ async fetch(request,env){
+  const url=new URL(request.url),path=url.pathname,method=request.method;
+  if(method==="OPTIONS")return new Response(null,{status:204,headers:cors(request,env)});
+  try{
+   if(path==="/api/health"&&method==="GET")return reply(request,env,{success:true,service:"REV Ratings",database:"configured"});
+   if(path==="/api/ratings"&&method==="GET"){
+    const type=url.searchParams.get("type"),id=url.searchParams.get("id");
+    if(!validTarget(type,id))return reply(request,env,{success:false,error:"نوع یا شناسه نامعتبر است."},400);
+    return reply(request,env,await summary(env,type,id));
    }
-   const row=await env.DB.prepare("SELECT COUNT(*) AS count, ROUND(AVG(rating),1) AS average FROM rev_ratings WHERE target_type=? AND target_id=?").bind(type,id).first();
-   return json(req,env,{success:true,type,id,count:Number(row?.count||0),average:Number(row?.average||0)});
-  }
-  return json(req,env,{success:false,error:"Method not allowed"},405);
- }catch(e){return json(req,env,{success:false,error:"خطای داخلی سرویس امتیازدهی."},500);}
-}};
+   if(path==="/api/ratings"&&method==="POST"){
+    if(await limited(request,env))return reply(request,env,{success:false,error:"درخواست‌های زیاد؛ کمی بعد دوباره تلاش کنید."},429);
+    const b=await request.json().catch(()=>null),type=String(b?.type||""),id=String(b?.id||""),rating=Number(b?.rating),voter=String(b?.voter||"");
+    if(!validTarget(type,id)||!Number.isInteger(rating)||rating<1||rating>5||voter.length<8||voter.length>300)return reply(request,env,{success:false,error:"اطلاعات رأی معتبر نیست."},400);
+    const exists=await env.DB.prepare("SELECT 1 ok FROM rev_ratings WHERE target_type=? AND target_id=? AND voter_hash=?").bind(type,id,await hash(voter)).first();
+    if(exists)return reply(request,env,{success:false,error:"برای این مورد قبلاً رأی ثبت شده است."},409);
+    await env.DB.prepare("INSERT INTO rev_ratings(target_type,target_id,voter_hash,rating,created_at) VALUES(?,?,?,?,?)").bind(type,id,await hash(voter),rating,new Date().toISOString()).run();
+    return reply(request,env,await summary(env,type,id),201);
+   }
+   if(path==="/api/admin/ratings"&&method==="GET"){
+    if(!admin(request,env))return reply(request,env,{success:false,error:"Unauthorized"},401);
+    const type=url.searchParams.get("type"),limit=Math.max(1,Math.min(1000,Number(url.searchParams.get("limit")||1000)));
+    if(!["store","station"].includes(type))return reply(request,env,{success:false,error:"نوع نامعتبر است."},400);
+    const r=await env.DB.prepare("SELECT target_id id,rating,created_at FROM rev_ratings WHERE target_type=? ORDER BY created_at DESC LIMIT ?").bind(type,limit).all();
+    return reply(request,env,{success:true,items:r.results||[]});
+   }
+   if(path==="/api/admin/overrides"&&method==="GET"){
+    if(!admin(request,env))return reply(request,env,{success:false,error:"Unauthorized"},401);
+    const search=(url.searchParams.get("search")||"").trim().slice(0,200);
+    const r=search
+      ? await env.DB.prepare("SELECT target_type,target_id,public_code,display_name,owner_phone,manual_average,manual_count,updated_at,updated_by FROM rev_rating_overrides WHERE public_code LIKE ? OR target_id LIKE ? OR display_name LIKE ? OR owner_phone LIKE ? ORDER BY updated_at DESC LIMIT 200").bind("%"+search+"%","%"+search+"%","%"+search+"%","%"+search+"%").all()
+      : await env.DB.prepare("SELECT target_type,target_id,public_code,display_name,owner_phone,manual_average,manual_count,updated_at,updated_by FROM rev_rating_overrides ORDER BY updated_at DESC LIMIT 1000").all();
+    return reply(request,env,{success:true,items:r.results||[]});
+   }
+   if(path==="/api/admin/overrides"&&method==="PUT"){
+    if(!admin(request,env))return reply(request,env,{success:false,error:"Unauthorized"},401);
+    const b=await request.json().catch(()=>null),type=String(b?.type||""),id=String(b?.id||""),code=String(b?.publicCode||"").trim(),name=String(b?.displayName||"").trim().slice(0,180),phone=String(b?.ownerPhone||"").trim().slice(0,40),avg=Number(b?.average),count=Number(b?.count);
+    if(!validTarget(type,id)||!/^REV-(ST|RP|CH)-[A-Z0-9-]{4,32}$/.test(code)||!Number.isFinite(avg)||avg<0||avg>5||!Number.isInteger(count)||count<0||count>100000000)return reply(request,env,{success:false,error:"شناسه، میانگین (۰ تا ۵) یا تعداد رأی معتبر نیست."},400);
+    const now=new Date().toISOString();
+    await env.DB.prepare("INSERT INTO rev_rating_overrides(target_type,target_id,public_code,display_name,owner_phone,manual_average,manual_count,updated_at,updated_by) VALUES(?,?,?,?,?,?,?,?,?) ON CONFLICT(target_type,target_id) DO UPDATE SET public_code=excluded.public_code,display_name=excluded.display_name,owner_phone=excluded.owner_phone,manual_average=excluded.manual_average,manual_count=excluded.manual_count,updated_at=excluded.updated_at,updated_by=excluded.updated_by")
+      .bind(type,id,code,name,phone,avg,count,now,"admin").run();
+    return reply(request,env,{success:true,override:{type,id,publicCode:code,displayName:name,ownerPhone:phone,average:avg,count,updatedAt:now}});
+   }
+   return reply(request,env,{success:false,error:"Not found"},404);
+  }catch(e){return reply(request,env,{success:false,error:"Internal server error"},500);}
+ }
+};
