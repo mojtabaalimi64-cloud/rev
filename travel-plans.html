@@ -10,4 +10,5 @@ plansEl.innerHTML=plans.map(p=>'<article class="card"><span class="muted">پلن
 try{const j=await req('/api/billing/me');if(j.subscription){accountEl.innerHTML='<strong style="color:var(--green)">اشتراک فعال: '+esc(j.subscription.plan_code)+'</strong><p>اعتبار تا: '+esc(new Date(j.subscription.ends_at).toLocaleDateString('fa-IR'))+'</p>'}else accountEl.textContent='اشتراک فعال ندارید.';if(j.orders?.length)accountEl.innerHTML+='<p>آخرین درخواست: '+esc(j.orders[0].status==='pending'?'در انتظار بررسی':j.orders[0].status==='approved'?'تأییدشده':j.orders[0].status==='rejected'?'ردشده':j.orders[0].status)+'</p>'}catch(e){accountEl.textContent='برای مشاهده وضعیت و ثبت درخواست، ابتدا وارد حساب شوید.'}}
 plansEl.addEventListener('click',async e=>{const b=e.target.closest('[data-buy]');if(!b)return;try{b.disabled=true;const j=await req('/api/billing/orders',{method:'POST',body:JSON.stringify({planCode:b.dataset.buy})});statusEl.textContent=j.message+'\nشناسه درخواست: '+j.order.id+'\nمبلغ: '+money(j.order.amountToman);await init()}catch(err){statusEl.textContent=err.message;if(/وارد حساب|login|session/i.test(err.message))statusEl.innerHTML=esc(err.message)+'<p><a href="./account.html">ورود یا ثبت‌نام</a></p>'}finally{b.disabled=false}});
 init();
-</script></body></html>
+</script><script src="./rev-site-settings.js?v=1" defer></script>
+</body></html>
