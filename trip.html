@@ -913,7 +913,7 @@ async function getRouteWeather(routeCoords,routeKm,routeDurationSeconds,departur
 }
 
 
-let revTimeline = {coords:null,routeKm:0,durationSeconds:0,departure:null,weatherSamples:[],battery:60,soc:90,consumption:18,stops:[],stationList:[],carMarker:null,batteryMarker:null,vehicleType:"bev",electricKm:0,regenerationKwh:0};
+let revTimeline = {coords:null,routeKm:0,durationSeconds:0,departure:null,weatherSamples:[],battery:60,soc:90,consumption:18,stops:[],stationList:[],carMarker:null,batteryMarker:null,vehicleType:"bev",electricKm:0,regenerationKwh:0,reserve:15};
 let timelinePlayback=null;
 function timelineMaxReachKm(){
   if(revTimeline.vehicleType!=="bev")return revTimeline.routeKm;
@@ -1184,7 +1184,7 @@ async function planTrip(){
     await renderBusinessDirectory(coords,radius);
     const plan=buildChargingPlan(stations,coords,km,params);
     const stationTimeline=stations.map(s=>({...s,...stationAlongRouteKm(s,routeMetrics(coords))}));
-    configureTimeline({coords,routeKm:km,durationSeconds:hours,departure:weatherAnalysis?.departure||new Date($("departure").value),weatherSamples:weatherAnalysis?.samples||[],battery,soc,consumption,stops:plan.stops||[],stationList:stationTimeline,vehicleType:"bev",electricKm:0});
+    configureTimeline({coords,routeKm:km,durationSeconds:hours,departure:weatherAnalysis?.departure||new Date($("departure").value),weatherSamples:weatherAnalysis?.samples||[],battery,soc,consumption,reserve,stops:plan.stops||[],stationList:stationTimeline,vehicleType:"bev",electricKm:0});
     $("timelineSoc").parentElement.querySelector("span").textContent="شارژ تخمینی باتری";
     const sourceNote = window.revStationSourceWarning
       ? `\nهشدار منبع آنلاین: ${window.revStationSourceWarning}\nفهرست ایستگاه‌ها ممکن است ناقص باشد؛ صفر ایستگاه به معنی نبود شارژر واقعی نیست.`
