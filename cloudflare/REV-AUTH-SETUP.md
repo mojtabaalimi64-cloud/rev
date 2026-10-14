@@ -80,9 +80,9 @@ New public pages:
 - `cloudflare/rev-business-portal-schema.sql`: additive D1 migration for `rev_business_profiles` and `rev_business_products`.
 
 ### Apply and deploy
-1. In D1 `rev-db`, apply `cloudflare/rev-business-portal-schema.sql` only after `rev_users` and auth tables exist (apply the community/auth schemas first if they have not already been applied).
+1. In D1 `rev-db`, ensure these additive schemas have been applied in this order: `cloudflare/rev-community-schema.sql` (creates `rev_users` and sessions), `cloudflare/rev-password-credentials-schema.sql` (password hashes), `cloudflare/rev-auth-schema.sql` (auth settings/rate limits), and then `cloudflare/rev-business-portal-schema.sql` (businesses/products). Re-running `CREATE TABLE IF NOT EXISTS` migrations is safe, but check existing tables first.
 2. Deploy the updated `cloudflare/rev-auth-worker.js` to the existing Worker `rev-auth-api` with the `DB` binding pointing to `rev-db`. Keep `ADMIN_TOKEN` only in Worker Secrets; never commit it.
-3. Test `/api/health`, then log in and test `/api/portal/me`. The public `/api/businesses` endpoint must return approved profiles only.
+3. Test `/api/health`, then test login and `/api/portal/me`. The public `/api/businesses` endpoint must return approved profiles only.
 4. Open `admin-businesses.html` from the admin panel to approve/reject business profiles and products. A store must be approved before its owner can submit products; submitted products remain private until approved.
 5. Keep public registration disabled until the email provider is configured and end-to-end registration/login/email verification has been tested.
 
