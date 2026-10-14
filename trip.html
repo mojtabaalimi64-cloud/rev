@@ -783,8 +783,14 @@ function makeEvMapIcon(soc,weatherIcons=[]){
 function weatherRiskIcons(sample){
  if(!sample||!sample.weather)return [];
  const w=sample.weather,out=[],code=Number(w.code),rain=Number(w.precipProb),precip=Number(w.precipitation),speed=Number(w.windSpeed),gust=Number(w.gust);
- if([71,73,75,77,85,86].includes(code))out.push({icon:'❄️',title:'برف پیش‌بینی‌شده'});
- else if([51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].includes(code)||((Number.isFinite(rain)&&rain>=50)||(Number.isFinite(precip)&&precip>=1)))out.push({icon:'🌧️',title:'باران یا بارش پیش‌بینی‌شده'});
+ // Always show the forecast condition beside the car, not only severe weather.
+ if([71,73,75,77,85,86].includes(code))out.push({icon:'❄️',title:'پیش‌بینی برف'});
+ else if([95,96,99].includes(code))out.push({icon:'⛈️',title:'پیش‌بینی رعدوبرق'});
+ else if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code)||((Number.isFinite(rain)&&rain>=50)||(Number.isFinite(precip)&&precip>=1)))out.push({icon:'🌧️',title:'پیش‌بینی بارش'});
+ else if([45,48].includes(code))out.push({icon:'🌫️',title:'پیش‌بینی مه'});
+ else if([1,2,3].includes(code))out.push({icon:'☁️',title:'پیش‌بینی هوای نیمه‌ابری یا ابری'});
+ else if(code===0)out.push({icon:'☀️',title:'پیش‌بینی آسمان صاف'});
+ else out.push({icon:'🌤️',title:'وضعیت هواشناسی'});
  if((Number.isFinite(speed)&&speed>=35)||(Number.isFinite(gust)&&gust>=55))out.push({icon:'💨',title:'باد شدید یا تندباد پیش‌بینی‌شده'});
  return out;
 }
