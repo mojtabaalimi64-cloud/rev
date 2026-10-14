@@ -199,7 +199,7 @@ const TYPES={
  ,partsStores:{label:'فروشگاه‌های قطعات خودرو برقی',one:'فروشگاه قطعات',fields:[['title','نام فروشگاه','text'],['image','تصویر فروشگاه','img'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا لینک سفارش','text'],['brands','برندها و مدل‌های سازگار (با ویرگول جدا کنید)','text'],['products','دسته‌های قطعات (باتری، شارژر، اینورتر، موتور، کابل و...)','area'],['authorization','مرجع/مدرک نمایندگی یا مجوز','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری فروشگاه (روزها و بازه زمانی)','area'],['deliveryHours','ساعات ارسال/تحویل (اختیاری)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (اختیاری)','text'],['satisfactionCount','تعداد امتیازهای ثبت‌شده کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
 };
 const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',users:'مدیریت کاربران',ratings:'امتیازها و سابقه','station-reports':'گزارش خطای جایگاه‌ها','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
-let stationsCache=null, stationEdit=null, stationBusy=false, stationSearchValue='', stationSortValue='name', usersCache=[], usersSearchValue='', usersSortValue='created_at', usersOrder='desc', usersPage=1, usersBusy=false, usersDebounce=null, ratingsCache=null, ratingsBusy=false, stationReportsCache=null, stationReportsBusy=false, stationReportsError='', ratingSearchValue='', ratingSelected=null, ratingOverride=null, ratingSaveBusy=false, listSearchValue='', listSortValue='default', ratingSortValue='name', ratingHistoryFilter='all';
+let stationsCache=null, stationEdit=null, stationBusy=false, stationSearchValue='', stationSortValue='name', usersCache=[], usersSearchValue='', usersSortValue='created_at', usersOrder='desc', usersPage=1, usersBusy=false, usersDebounce=null, ratingsCache=null, ratingsBusy=false, stationReportsCache=null, stationReportsBusy=false, stationReportsError='', ratingSearchValue='', ratingSelected=null, ratingOverride=null, ratingSaveBusy=false, listSearchValue='', listSortValue='default', ratingSortValue='name', ratingHistoryFilter='all', ratingOverridesCache=null, ratingOverridesBusy=false;
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
 const CONTACT=[['email','ایمیل'],['phone','تلفن'],['telegram','تلگرام (نام کاربری یا لینک)'],['instagram','اینستاگرام (نام کاربری یا لینک)'],['youtube','یوتیوب (لینک کامل)'],['x','ایکس (نام کاربری یا لینک)'],['address','آدرس'],['note','متن کوتاه پایین صفحه‌ی تماس']];
@@ -366,7 +366,8 @@ function list(){
      const votes=(ratingsCache||[]).filter(v=>v._type==='store'&&String(v.id||'')===String(it.id||''));
      const avg=votes.length?votes.reduce((sum,v)=>sum+Number(v.rating||0),0)/votes.length:null;
      const storedScore=it.satisfactionScore!==undefined&&it.satisfactionScore!==''&&it.satisfactionScore!==null?Number(it.satisfactionScore):null;
-     const score=avg!==null?avg:storedScore, count=avg!==null?votes.length:Number(it.satisfactionCount||0);
+     const manual=(ratingOverridesCache||[]).find(o=>o.target_type==='store'&&String(o.target_id)===String(it.id||((it.title||it.name||'فروشگاه')+'|'+(it.address||''))));
+     const score=manual?Number(manual.manual_average):(avg!==null?avg:storedScore), count=manual?Number(manual.manual_count):(avg!==null?votes.length:Number(it.satisfactionCount||0));
      const ratingBadge=score!==null&&Number.isFinite(score)?`<span style="display:inline-flex;align-items:center;gap:5px;margin:6px 6px 0 0;padding:4px 8px;border-radius:8px;background:#fff7df;color:#765300;font-size:12px;font-weight:700">★ ${score.toLocaleString('fa-IR',{maximumFractionDigits:1})}/۵ · ${count.toLocaleString('fa-IR')} رأی</span>`:`<span style="display:inline-flex;align-items:center;margin:6px 6px 0 0;padding:4px 8px;border-radius:8px;background:#f0f2f3;color:#606b70;font-size:12px">هنوز امتیازی ثبت نشده</span>`;
      if(tab==='serviceCenters'||tab==='partsStores')return `<tr class="admin-list-row" data-search="${esc(searchable({...it,_kind:tab}))}"><td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>${esc(it.title||it.name||'بدون نام')}</strong><span style="direction:ltr;font-size:12px;font-weight:900;color:#00806F;white-space:nowrap">${esc(it.publicCode||makeRevCode(tab==='serviceCenters'?'RP':'ST',it.id))}</span></div></td><td dir="ltr">${esc(it.id||'—')}</td><td>${esc(it.phone||'—')}</td><td>${esc(it.address||'—')}</td><td>${ratingBadge}</td><td><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" data-a="verify-toggle" data-k="${tab}" data-i="${i}" ${it.status==='verified'?'checked':''} style="width:18px;height:18px;accent-color:#00806f">${it.status==='verified'?'تأییدشده':'در انتظار'}</label></td><td><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></td></tr>`;
      return `<div class="row admin-list-row" data-search="${esc(searchable({ ...it, _kind:tab }))}"><div style="flex:1;min-width:220px"><b>${esc(it.title||it.name||'بدون نام')}</b><small>${esc(PARTS[it.part]||'')} ${esc(it.date||it.priceDate||it.price||'')}</small></div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`;
@@ -540,7 +541,8 @@ async function saveManualRating(){
     const j=await r.json().catch(()=>({}));
     if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
     ratingOverride={target_type:body.type,target_id:body.id,public_code:body.publicCode,display_name:body.displayName,owner_phone:body.ownerPhone,manual_average:average,manual_count:count};
-    msg('میانگین رضایت و تعداد رأی‌ها ذخیره شد.');draw();
+    ratingOverridesCache=null;
+    msg('میانگین رضایت و تعداد رأی‌ها ذخیره شد؛ امتیاز در تب مربوطه به‌روزرسانی می‌شود.');draw();
   }catch(e){msg('ذخیره انجام نشد: '+(e.message||'سرویس امتیازدهی را بررسی کنید.'))}
   finally{ratingSaveBusy=false;draw()}
 }
@@ -591,7 +593,19 @@ function stationReportsPanel(){
   const newCount=stationReportsCache.filter(r=>r.status==='new').length;
   return '<div class="box"><div class="row"><div><h3>گزارش خطای جایگاه‌ها</h3><p class="hint">گزارش‌های کاربران برنامه‌ریز سفر؛ فقط مدیر می‌تواند جزئیات را ببیند و وضعیت را تغییر دهد.</p></div><button class="btn" data-a="station-reports-refresh">به‌روزرسانی</button></div><p class="hint">کل گزارش‌های دریافت‌شده: <b>'+stationReportsCache.length.toLocaleString('fa-IR')+'</b> · گزارش‌های جدید: <b>'+newCount.toLocaleString('fa-IR')+'</b></p>'+(stationReportsError?'<p class="hint" style="color:#b42318">خطا: '+esc(stationReportsError)+'</p>':'')+'</div>'+(reports||'<div class="box">هنوز گزارشی ثبت نشده است.</div>');
 }
+async function loadRatingOverrides(){
+  if(ratingOverridesBusy)return;
+  ratingOverridesBusy=true;
+  try{
+    const r=await fetch(RATING_WORKER+'/api/admin/overrides',{headers:H(),cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    ratingOverridesCache=Array.isArray(j.items)?j.items:[];
+  }catch(e){ratingOverridesCache=[];console.warn('Could not load manual rating overrides',e)}
+  finally{ratingOverridesBusy=false;if(['stations','serviceCenters','partsStores','rating-admin'].includes(tab))draw()}
+}
 function draw(){
+  if(['stations','serviceCenters','partsStores','rating-admin'].includes(tab)&&ratingOverridesCache===null&&!ratingOverridesBusy)loadRatingOverrides();
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
@@ -713,7 +727,8 @@ function stationPanel(){
     const votes=(ratingsCache||[]).filter(v=>v._type==='station'&&String(v.id||'')===String(s.id||''));
     const avg=votes.length?votes.reduce((sum,v)=>sum+Number(v.rating||0),0)/votes.length:null;
     const stored=s.satisfactionScore!==null&&s.satisfactionScore!==undefined&&s.satisfactionScore!==''?Number(s.satisfactionScore):null;
-    const score=avg!==null?avg:stored, count=avg!==null?votes.length:Number(s.satisfactionCount||0);
+    const manual=(ratingOverridesCache||[]).find(o=>o.target_type==='station'&&String(o.target_id)===String(s.id||'')); 
+    const score=manual?Number(manual.manual_average):(avg!==null?avg:stored), count=manual?Number(manual.manual_count):(avg!==null?votes.length:Number(s.satisfactionCount||0));
     const rating=score!==null&&Number.isFinite(score)?`<span style="display:inline-flex;align-items:center;gap:5px;margin:6px 0;padding:4px 8px;border-radius:8px;background:#fff7df;color:#765300;font-size:12px;font-weight:700">★ رضایت کاربران: ${score.toLocaleString('fa-IR',{maximumFractionDigits:1})}/۵ · ${count.toLocaleString('fa-IR')} رأی</span>`:`<span style="display:inline-flex;margin:6px 0;padding:4px 8px;border-radius:8px;background:#f0f2f3;color:#606b70;font-size:12px">هنوز امتیازی ثبت نشده</span>`;
     const approval=s.approval_status||'pending';
     const approvalLabel=({pending:'در انتظار بررسی',approved:'تأییدشده',rejected:'ردشده'})[approval]||'در انتظار بررسی';
