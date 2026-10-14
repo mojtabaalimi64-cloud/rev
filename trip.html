@@ -91,9 +91,9 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 .timeline-head h2{margin:0;font-size:18px}
 .timeline-track-wrap{position:relative;margin:26px 8px 12px;height:42px;display:flex;align-items:center}
 .timeline-track{height:8px;width:100%;border-radius:99px;background:#344653;position:relative;overflow:hidden}
-.timeline-progress{height:100%;width:0;background:linear-gradient(90deg,#64b5ff,#d7ff3f);border-radius:99px}
+.timeline-progress{position:absolute;right:0;top:0;height:100%;width:0;background:linear-gradient(270deg,#64b5ff,#d7ff3f);border-radius:99px}
 .timeline-car{position:absolute;top:50%;left:0;transform:translate(-50%,-55%);width:44px;height:36px;display:grid;place-items:center;font-size:28px;filter:drop-shadow(0 4px 6px #0009);pointer-events:none;transition:left .05s linear;z-index:2}
-.timeline-range{position:absolute;inset:-8px 0;width:100%;height:58px;opacity:.01;cursor:ew-resize;margin:0!important;z-index:3}
+.timeline-range{position:absolute;inset:-8px 0;width:100%;height:58px;opacity:.01;cursor:ew-resize;margin:0!important;z-index:3;direction:rtl}
 .timeline-endpoints{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;gap:10px}
 .timeline-readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
 .timeline-metric{background:#0b141c;border:1px solid #2b3c49;border-radius:12px;padding:12px;min-width:0}
@@ -722,7 +722,7 @@ function updateTimeline(){
   const eta=new Date(revTimeline.departure.getTime()+revTimeline.durationSeconds*fraction*1000);
   const soc=timelineBatteryAt(km);
   $("timelineProgress").style.width=(fraction*100)+"%";
-  $("timelineCar").style.left=(fraction*100)+"%";
+  $("timelineCar").style.left="auto";$("timelineCar").style.right="calc("+(fraction*100)+"% - 22px)";
   $("timelineProgressText").textContent=Math.round(fraction*100)+"٪ از مسیر";
   $("timelineKm").textContent=Math.round(km)+" از "+Math.round(revTimeline.routeKm)+" km";
   $("timelineTime").textContent=eta.toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"});
