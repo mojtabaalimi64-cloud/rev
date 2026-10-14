@@ -673,16 +673,18 @@ async function getRouteWeather(routeCoords,routeKm,routeDurationSeconds,departur
   if(samples.length<2)throw new Error("نقاط کافی برای تحلیل هواشناسی مسیر وجود ندارد.");
   const segmentKm=routeKm/(samples.length-1);
   const speedKmh=routeKm/Math.max(0.1,routeDurationSeconds/3600);
-  const jobs=samples.map(async(point,i)=>{
-    const fraction=i/(samples.length-1);
+  const results=[];
+  // Limit concurrent calls to avoid Open-Meteo HTTP 429 responses.
+  for(let i=0;i<samples.length;i++){
+    if(i>0) await new Promise(resolve=>setTimeout(resolve,900));
+    const point=samples[i],fraction=i/(samples.length-1);
     const eta=new Date(departure.getTime()+routeDurationSeconds*fraction*1000);
     const weather=await fetchWeatherAt(point[0],point[1],eta);
     const prev=samples[Math.max(0,i-1)],next=samples[Math.min(samples.length-1,i+1)];
     const heading=bearingDegrees(prev,next);
     const wind=analyzeWind(weather,heading,speedKmh,baseConsumption);
-    return {lat:point[0],lon:point[1],routeKm:routeKm*fraction,eta,weather,wind};
-  });
-  const results=await Promise.all(jobs);
+    results.push({lat:point[0],lon:point[1],routeKm:routeKm*fraction,eta,weather,wind});
+  }
   // Weighted by distance between samples; endpoints count as half-segments.
   const weights=results.map((_,i)=>(i===0||i===results.length-1)?0.5:1);
   const avgFactor=results.reduce((sum,x,i)=>sum+x.wind.factor*weights[i],0)/weights.reduce((a,b)=>a+b,0);
