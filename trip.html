@@ -1131,6 +1131,20 @@ async function planTrip(){
     if(!origin||!destination) throw new Error("مبدأ و مقصد را وارد کنید.");
     setStatus("در حال پیدا کردن مبدأ و مقصد…");
     const [start,end]=await Promise.all([geocode(origin),geocode(destination)]);
+    // Reject identical/near-identical endpoints before routing or battery calculations.
+    // This prevents a zero-distance trip from being misreported as an empty-battery issue.
+    if(haversine(start,end)<0.5){
+      lastRoute=null;
+      routeLayer.clearLayers();stationLayer.clearLayers();
+      $("distance").textContent="—";$("duration").textContent="—";$("range").textContent="—";
+      $("results").innerHTML="<h2 style=\"margin-top:18px\">شارژرهای نزدیک مسیر</h2>";
+      $("directionsPanel").innerHTML="<div class=\"directions-head\"><h2>راهنمای مسیر</h2></div><div class=\"weather-summary warn\">مبدأ و مقصد یکسان هستند؛ دو نقطه متفاوت انتخاب کنید.</div>";
+      $("timelineSlider").disabled=true;$("timelineSlider").value="0";
+      $("timelineKm").textContent="—";$("timelineTime").textContent="—";$("timelineSoc").textContent="—";
+      stopTimelinePlayback("مبدأ و مقصد یکسان هستند");
+      setStatus("⚠️ مبدأ و مقصد یکسان هستند. برای محاسبه سفر، دو نقطه متفاوت انتخاب کنید.");
+      return;
+    }
     setStatus("در حال محاسبه مسیر جاده‌ای…");
     const route=await getRoute(start,end);lastRoute=route;renderDirections(route);
     const coords=route.geometry.coordinates;
