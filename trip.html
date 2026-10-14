@@ -1122,16 +1122,44 @@ function renderStations(stations,routeCoords,routeKm,params){
     item.appendChild(reportBox);
     // Let users open the existing report form directly from a charging-station map popup.
     marker.on("popupopen",event=>{
-      const button=event.popup.getElement()?.querySelector(".rev-map-report-button");
+      const popupEl=event.popup.getElement();
+      const button=popupEl?.querySelector(".rev-map-report-button");
       if(!button||button.dataset.bound==="1")return;
       button.dataset.bound="1";
       button.addEventListener("click",ev=>{
-        ev.preventDefault();
-        ev.stopPropagation();
-        reportBox.open=true;
-        reportBox.scrollIntoView({behavior:"smooth",block:"center"});
-        reportBox.querySelector("summary")?.focus({preventScroll:true});
-        map.closePopup();
+        ev.preventDefault();ev.stopPropagation();
+        let inlineForm=popupEl.querySelector(".rev-map-report-inline");
+        if(inlineForm){inlineForm.hidden=!inlineForm.hidden;return;}
+        inlineForm=document.createElement("form");
+        inlineForm.className="rev-map-report-inline";
+        inlineForm.style.cssText="display:grid;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #52616b;min-width:220px";
+        const typeLabel=document.createElement("label");
+        typeLabel.textContent="نوع گزارش";
+        typeLabel.style.cssText="display:grid;gap:4px;font-size:12px";
+        const typeSelect=document.createElement("select");
+        typeSelect.name="report_type";typeSelect.required=true;
+        typeSelect.style.cssText="width:100%;padding:7px;border-radius:7px;background:#101a22;color:#f5f7f8;border:1px solid #52616b";
+        [["not_found","جایگاه در محل وجود ندارد"],["not_working","جایگاه خراب یا غیرفعال است"],["connector_wrong","نوع کانکتور اشتباه است"],["power_wrong","توان شارژ اشتباه است"],["location_wrong","موقعیت یا نشانی اشتباه است"],["duplicate","جایگاه تکراری است"],["violation","تخلف، اطلاعات جعلی یا رفتار مشکوک"],["other","سایر موارد"]].forEach(([value,label])=>{const o=document.createElement("option");o.value=value;o.textContent=label;typeSelect.appendChild(o);});
+        typeLabel.appendChild(typeSelect);
+        const details=document.createElement("textarea");details.name="details";details.maxLength=600;details.rows=2;details.placeholder="توضیحات تکمیلی (اختیاری)";
+        details.style.cssText="width:100%;padding:7px;border-radius:7px;background:#101a22;color:#f5f7f8;border:1px solid #52616b;resize:vertical";
+        const submit=document.createElement("button");submit.type="submit";submit.textContent="ارسال گزارش";
+        submit.style.cssText="padding:7px 10px;border:0;border-radius:7px;background:#39ff88;color:#080b0d;font-weight:800;cursor:pointer";
+        const message=document.createElement("div");message.setAttribute("role","status");message.style.cssText="font-size:12px;color:#b7c4cb";
+        inlineForm.append(typeLabel,details,submit,message);button.insertAdjacentElement("afterend",inlineForm);
+        inlineForm.addEventListener("click",e=>e.stopPropagation());
+        inlineForm.addEventListener("submit",async e=>{
+          e.preventDefault();e.stopPropagation();if(submit.disabled)return;
+          const reportId=String(s._revRatingId||s.id||((s.source||"station")+":"+(s.name||"")+":"+(s.lat??"")+","+(s.lon??""))).slice(0,240);
+          submit.disabled=true;message.textContent="در حال ارسال گزارش…";
+          try{
+            const response=await fetch("https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/station-reports",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({station_id:reportId,station_name:String(s.name||"ایستگاه شارژ").slice(0,180),report_type:typeSelect.value,details:details.value,voter:stationReportVoterId()})});
+            const result=await response.json().catch(()=>({}));
+            if(response.ok&&result.success){message.textContent="گزارش با موفقیت ثبت شد.";message.style.color="#39ff88";submit.textContent="ثبت شد";}
+            else if(response.status===409){message.textContent="برای این ایستگاه قبلاً گزارشی ثبت کرده‌اید.";submit.disabled=true;}
+            else throw new Error(result.error||"ارسال گزارش ناموفق بود");
+          }catch(err){message.textContent=err.message||"خطا در ارسال گزارش؛ دوباره تلاش کنید.";submit.disabled=false;}
+        });
       });
     });
     const reportForm=reportBox.querySelector("form"),reportMessage=reportBox.querySelector(".station-report-message"),reportSubmit=reportForm.querySelector('button[type="submit"]');
