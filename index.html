@@ -122,6 +122,53 @@ footer{background:var(--ink);color:#C3CBD0;padding:36px 0;font-size:15px}
 .foot{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
 @media(max-width:760px){.hs span{display:none}.stage.zoom img{transform:scale(2.1)}.bar{flex-direction:column;align-items:stretch;gap:0;padding-top:8px}.nav{padding-bottom:8px}}
 @media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+
+/* REV landing page — map-inspired welcome screen */
+.start-page{background:#080d10;color:#f5f7f8}
+.start-hero{position:relative;isolation:isolate;min-height:570px;overflow:hidden;background:radial-gradient(ellipse at 75% 45%,rgba(0,128,111,.16),transparent 42%),#080d10}
+.start-map{position:absolute;inset:0 0 0 34%;opacity:.94;pointer-events:none;z-index:-1;mask-image:linear-gradient(90deg,transparent 0%,#000 25%,#000 88%,transparent 100%)}
+.start-map svg{width:100%;height:100%;object-fit:cover}
+.map-fade{position:absolute;inset:0;background:linear-gradient(90deg,#080d10 0%,rgba(8,13,16,.94) 8%,rgba(8,13,16,.55) 42%,rgba(8,13,16,.06) 100%),linear-gradient(0deg,#080d10 0%,transparent 35%)}
+.map-tag{position:absolute;right:18%;top:18%;display:flex;align-items:center;gap:9px;background:rgba(8,11,13,.8);border:1px solid rgba(57,255,136,.3);color:#dce8e7;padding:8px 14px;border-radius:999px;font-size:13px;backdrop-filter:blur(8px)}
+.live-dot{width:8px;height:8px;background:#39ff88;border-radius:50%;box-shadow:0 0 12px #39ff88}
+.start-content{padding:56px 0 44px;position:relative;z-index:1}
+.start-eyebrow{display:flex;align-items:center;gap:14px;color:#9eafb3;font-size:13px;letter-spacing:.04em}
+.start-logo{font-size:23px;font-weight:900;letter-spacing:.1em;color:#fff;direction:ltr}
+.start-logo span{color:#39ff88;font-size:19px}
+.start-content h1{font-size:clamp(36px,5.6vw,65px);line-height:1.35;font-weight:900;max-width:700px;margin-top:42px;letter-spacing:-.03em}
+.start-content h1 em{font-style:normal;color:#39ff88}
+.start-lead{max-width:520px;color:#c0cccf;margin-top:18px;font-size:17px;line-height:2}
+.start-actions{display:flex;align-items:center;gap:22px;flex-wrap:wrap;margin-top:26px}
+.start-primary{padding:11px 24px;box-shadow:0 8px 28px rgba(57,255,136,.12)}
+.start-primary span{font-size:20px;margin-inline-start:10px}
+.start-secondary{color:#e3ebeb;border-bottom:1px solid #536469;padding:8px 0;font-size:14px}
+.start-secondary:hover{color:#39ff88;border-color:#39ff88}
+.start-stats{display:flex;gap:32px;flex-wrap:wrap;margin-top:44px}
+.start-stats div{display:flex;flex-direction:column;gap:2px;border-inline-start:2px solid #2a4940;padding-inline-start:12px}
+.start-stats strong{font-size:15px;color:#fff}.start-stats span{font-size:12px;color:#91a1a5}
+.start-links{background:#f5f7f8;color:#080b0d}
+.start-section-head{display:flex;justify-content:space-between;align-items:end;gap:24px;margin-bottom:26px}
+.start-kicker{font-size:11px;letter-spacing:.13em;font-weight:800;color:#00806f;direction:ltr;display:block}
+.start-section-head h2{margin:8px 0 0;border:0;padding:0;font-size:clamp(26px,3.5vw,36px)}
+.start-section-head p{max-width:390px;color:#647078;font-size:14px}
+.start-card-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.start-card{display:flex;flex-direction:column;align-items:flex-start;min-height:230px;padding:22px;border:1px solid #dce3e5;border-radius:16px;background:#fff;transition:transform .2s,border-color .2s,box-shadow .2s}
+.start-card:hover{transform:translateY(-3px);border-color:#39c77b;box-shadow:0 12px 30px rgba(8,11,13,.06)}
+.start-card-feature{background:#0b1415;color:#f5f7f8;border-color:#0b1415}
+.start-card-icon{display:grid;place-items:center;width:40px;height:40px;border-radius:12px;background:#e2fbed;color:#00784d;font-size:25px;font-weight:700}
+.start-card-feature .start-card-icon{background:#39ff88;color:#080b0d}
+.start-card-label{font-size:11px;font-weight:800;color:#00806f;margin-top:18px}
+.start-card-feature .start-card-label{color:#39ff88}
+.start-card h3{font-size:18px;margin-top:5px;line-height:1.6}
+.start-card p{font-size:13px;color:#647078;line-height:1.9;margin-top:6px}
+.start-card-feature p{color:#bac8c9}
+.start-card-link{display:flex;gap:10px;align-items:center;margin-top:auto;padding-top:17px;font-size:13px;font-weight:800;color:#00784d}
+.start-card-feature .start-card-link{color:#39ff88}
+.start-bottom{margin-top:24px;padding:25px 28px;border-radius:16px;background:#e5eeeb;display:flex;justify-content:space-between;align-items:center;gap:20px}
+.start-bottom h3{font-size:20px;margin-top:5px}.start-bottom p{font-size:13px;color:#56656a;margin-top:4px}
+@media(max-width:760px){.start-hero{min-height:0}.start-map{inset:0 0 0 0;opacity:.65;mask-image:linear-gradient(180deg,#000 0%,#000 45%,transparent 95%)}.map-fade{background:linear-gradient(90deg,rgba(8,13,16,.78),rgba(8,13,16,.32)),linear-gradient(0deg,#080d10 0%,transparent 65%)}.map-tag{top:13%;right:8%;font-size:11px}.start-content{padding:34px 0 34px}.start-content h1{margin-top:48px;font-size:clamp(34px,9vw,48px)}.start-lead{font-size:15px}.start-stats{gap:18px;margin-top:30px}.start-section-head{display:block}.start-section-head p{margin-top:12px}.start-card-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.start-card{min-height:225px;padding:15px}.start-card h3{font-size:16px}.start-card p{font-size:12px}.start-bottom{align-items:flex-start;flex-direction:column;padding:22px}}
+@media(max-width:390px){.start-card-grid{grid-template-columns:1fr}.start-card{min-height:190px}.start-actions{gap:12px}.start-secondary{font-size:13px}}
+
 </style>
 
 <link rel="stylesheet" href="./rev-theme.css?v=1">
@@ -193,13 +240,13 @@ const fnum=n=>n==null?'—':Number(n).toLocaleString('fa-IR');
 const TYPE_FA={sedan:'سدان',suv:'شاسی‌بلند',hatch:'هاچ‌بک',crossover:'کراس‌اور',wagon:'استیشن',fastback:'فست‌بک',coupe:'کوپه',convertible:'کروک',pickup:'پیکاپ',van:'ون',minivan:'مینی‌ون',other:'سایر'},POWERTRAIN_FA={BEV:'تمام‌برقی (BEV)',PHEV:'هیبرید شارژی (PHEV)',HEV:'هیبرید معمولی (HEV)',MHEV:'هیبرید ملایم (MHEV)',FCEV:'پیل سوختی هیدروژنی (FCEV)',ICE:'بنزینی/دیزلی'},FUEL_FA={gasoline:'بنزین',diesel:'گازوئیل',hydrogen:'هیدروژن',other:'سایر/نامشخص'},MKT_FA={iran:'موجود در بازار ایران',import:'وارداتی/غیررسمی',none:'خارج از بازار ایران'},DRV_FA={RWD:'عقب‌رو',FWD:'جلو‌رو',AWD:'چهارچرخ‌محرک', '4WD':'چهارچرخ‌محرک دو دیفرانسیل'};
 const $ = s => document.querySelector(s), app = $('#app');
 const partKeys = Object.keys(PARTS);
-const navList=()=>{const n=[['#/','خانه'],['#/articles','مقالات'],['#/podcast','پادکست'],['safety-checklist.html','چک‌لیست ایمنی سفر'],['businesses.html','کسب‌وکارها'],['account.html','حساب کاربری']];if(SHOP_ENABLED)n.push(['#/shop','فروشگاه']);n.push(['#/contact','ارتباط با ما']);return n};
+const navList=()=>{const n=[['#/','شروع'],['trip.html','برنامه‌ریزی سفر'],['#/explore','کاوش فناوری'],['#/articles','مقالات'],['#/podcast','پادکست'],['news.html','اخبار'],['businesses.html','کسب‌وکارها'],['account.html','حساب کاربری']];if(SHOP_ENABLED)n.push(['#/shop','فروشگاه']);n.push(['#/contact','ارتباط با ما']);return n};
 
 const artCard = a => `<a class="card" href="#/a/${a.slug}">${a.image?`<img class="cover" src="${esc(a.image)}" alt="" loading="lazy">`:''}<span class="tag">${PARTS[a.part].name}</span><h3>${a.title}</h3><p>${a.excerpt}</p></a>`;
 const artGrid = list => list.length ? `<div class="grid">${list.map(artCard).join('')}</div>` : `<div class="empty">هنوز مقاله‌ای در این بخش منتشر نشده است.</div>`;
 const partHead = (t,p,back,img) => `<div class="phead"><div class="wrap">${back?'<a class="back" href="#/">بازگشت به خودرو</a><br>':''}<h1>${t}</h1><p>${p}</p>${img?`<img class="pimg" src="${esc(img)}" alt="">`:''}</div></div>`;
 
-function home(){
+function exploreHome(){
   const hs = partKeys.map(k=>{const p=PARTS[k];return `<button class="hs" data-k="${k}" style="left:${p.x}%;top:${p.y}%" aria-label="${p.name}"><i></i><span>${p.name}</span></button>`}).join('');
   const chips = partKeys.map(k=>`<a class="chip" href="#/s/${k}">${PARTS[k].name}</a>`).join('');
   return `<div class="hero"><div class="wrap">
@@ -216,6 +263,48 @@ function home(){
   <section class="blk"><div class="wrap"><h2>تازه‌ترین مقالات</h2>${artGrid(ARTICLES.slice(0,3))}</div></section>
   <section class="blk" style="padding-top:0"><div class="wrap"><div class="pod"><div><h2 style="color:#fff;margin:0 0 12px">${PODCAST_NAME}</h2><p>گفتگو با کسانی که آینده خودرو و تکنولوژی را می‌سازند.</p></div><a class="btn" href="#/podcast">درباره پادکست</a></div></div></section>`;
 }
+function home(){
+  return `<div class="start-page">
+    <section class="start-hero">
+      <div class="start-map" aria-hidden="true">
+        <svg viewBox="0 0 900 520" preserveAspectRatio="xMidYMid slice">
+          <defs><pattern id="mapgrid" width="44" height="44" patternUnits="userSpaceOnUse"><path d="M44 0H0V44" fill="none" stroke="#25343a" stroke-width="1"/></pattern><linearGradient id="routeglow" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#39ff88"/><stop offset="1" stop-color="#00d9c0"/></linearGradient></defs>
+          <rect width="900" height="520" fill="url(#mapgrid)"/>
+          <g fill="none" stroke="#26383d" stroke-width="2" opacity=".95">
+            <path d="M-30 90L180 130 270 70 420 120 550 75 720 120 930 40"/><path d="M-20 190L140 230 260 190 390 245 560 205 700 260 920 210"/><path d="M-20 330L160 290 280 350 430 315 570 375 740 330 920 370"/><path d="M60 -20L100 120 70 240 140 390 110 550"/><path d="M260 -20L300 110 260 230 340 370 300 550"/><path d="M480 -20L440 130 500 260 450 400 500 550"/><path d="M680 -20L640 130 710 250 670 400 740 550"/><path d="M830 -20L800 140 850 290 810 420 870 550"/>
+          </g>
+          <g fill="none" stroke="#3b5056" stroke-width="9" opacity=".7"><path d="M-30 410C150 330 160 190 330 210S540 420 690 300 820 100 940 130"/><path d="M190 -20C240 100 390 130 430 250S550 440 620 540"/></g>
+          <path d="M90 380C170 340 200 260 300 275S410 370 490 300 600 160 720 190 790 260 830 130" fill="none" stroke="#39ff88" stroke-width="4" stroke-linecap="round" stroke-dasharray="8 10" opacity=".24"/>
+          <path d="M90 380C170 340 200 260 300 275S410 370 490 300 600 160 720 190 790 260 830 130" fill="none" stroke="url(#routeglow)" stroke-width="3.5" stroke-linecap="round"/>
+          <g><circle cx="90" cy="380" r="17" fill="#39ff88" opacity=".15"/><circle cx="90" cy="380" r="7" fill="#39ff88"/><circle cx="490" cy="300" r="17" fill="#39ff88" opacity=".15"/><circle cx="490" cy="300" r="7" fill="#39ff88"/><circle cx="720" cy="190" r="17" fill="#39ff88" opacity=".15"/><circle cx="720" cy="190" r="7" fill="#39ff88"/><circle cx="830" cy="130" r="17" fill="#00d9c0" opacity=".16"/><circle cx="830" cy="130" r="8" fill="#00d9c0"/></g>
+          <g fill="#d7e3e5" font-family="Tahoma,sans-serif" font-size="15" opacity=".75"><text x="120" y="410">مبدأ</text><text x="515" y="330">شارژ</text><text x="745" y="220">توقف</text><text x="800" y="100">مقصد</text></g>
+        </svg>
+        <div class="map-fade"></div>
+        <div class="map-tag"><span class="live-dot"></span> مسیرت را هوشمندانه بساز</div>
+      </div>
+      <div class="wrap start-content">
+        <div class="start-eyebrow"><span class="start-logo">REV<span>⚡</span></span><span>حرکت به‌سوی آینده</span></div>
+        <h1>هر مسیر،<br><em>شروع یک آینده تازه است.</em></h1>
+        <p class="start-lead">راهنمای فارسی خودروهای برقی؛ از انتخاب و شناخت فناوری تا برنامه‌ریزی سفر و پیدا کردن ایستگاه‌های شارژ.</p>
+        <div class="start-actions"><a class="btn start-primary" href="trip.html">برنامه‌ریزی سفر <span aria-hidden="true">←</span></a><a class="start-secondary" href="#/explore">کشف دنیای خودروهای برقی</a></div>
+        <div class="start-stats"><div><strong>آگاهانه</strong><span>انتخاب خودرو</span></div><div><strong>هوشمندانه</strong><span>برنامه‌ریزی مسیر</span></div><div><strong>روشن‌تر</strong><span>شناخت فناوری</span></div></div>
+      </div>
+    </section>
+    <section class="start-links blk"><div class="wrap">
+      <div class="start-section-head"><div><span class="start-kicker">REV / EXPLORE</span><h2>از کجا شروع کنیم؟</h2></div><p>هر چیزی که برای شناخت و استفاده از خودروهای برقی نیاز داری، یک قدم با تو فاصله دارد.</p></div>
+      <div class="start-card-grid">
+        <a class="start-card start-card-feature" href="trip.html"><span class="start-card-icon">↗</span><span class="start-card-label">سفر و مسیر</span><h3>سفر برقی‌ات را برنامه‌ریزی کن</h3><p>مبدأ و مقصد را انتخاب کن، مسیر و توقف‌های شارژ را بررسی کن و با آمادگی بیشتری راه بیفت.</p><span class="start-card-link">شروع برنامه‌ریزی <b>←</b></span></a>
+        <a class="start-card" href="travel-plans.html"><span class="start-card-icon">⌁</span><span class="start-card-label">مسیر‌یابی</span><h3>برنامه‌های سفر من</h3><p>به برنامه‌ها و ابزارهای سفر REV دسترسی پیدا کن.</p><span class="start-card-link">مشاهده <b>←</b></span></a>
+        <a class="start-card" href="businesses.html"><span class="start-card-icon">⌖</span><span class="start-card-label">نقشه خدمات</span><h3>شارژ، فروشگاه و تعمیرگاه</h3><p>مراکز مرتبط با خودروهای برقی را پیدا کن و اطلاعات هر مرکز را ببین.</p><span class="start-card-link">جست‌وجوی مراکز <b>←</b></span></a>
+        <a class="start-card" href="#/explore"><span class="start-card-icon">ϟ</span><span class="start-card-label">دانش و فناوری</span><h3>خودروی برقی را بهتر بشناس</h3><p>از باتری و موتور تا شارژ، اینورتر و هوش مصنوعی.</p><span class="start-card-link">کاوش فناوری‌ها <b>←</b></span></a>
+        <a class="start-card" href="article-ev.html"><span class="start-card-icon">▤</span><span class="start-card-label">راهنمای خرید</span><h3>قبل از انتخاب، آگاه شو</h3><p>راهنماها و مطالب آموزشی برای تصمیم‌گیری دقیق‌تر.</p><span class="start-card-link">مطالعه مطالب <b>←</b></span></a>
+        <a class="start-card" href="news.html"><span class="start-card-icon">◉</span><span class="start-card-label">تازه‌ها</span><h3>اخبار خودرو و تکنولوژی</h3><p>تحولات خودروهای برقی و فناوری‌های آینده را دنبال کن.</p><span class="start-card-link">خواندن اخبار <b>←</b></span></a>
+      </div>
+      <div class="start-bottom"><div><span class="start-kicker">YOUR REV ACCOUNT</span><h3>تجربه‌ات را شخصی‌سازی کن</h3><p>به پنل کاربری برو و تنظیمات ظاهری و امکانات حساب خودت را مدیریت کن.</p></div><a class="btn" href="account.html">ورود به پنل کاربری</a></div>
+    </div></section>
+  </div>`;
+}
+
 function part(k){
   const p=PARTS[k], news=NEWS.filter(n=>n.part===k);
   return partHead(p.name,p.lead,true,PIMG[k])+`<section class="blk"><div class="wrap"><h2>فناوری‌ها</h2><div class="grid">${p.tech.map(t=>`<div class="card"><h3>${t[0]}</h3><p>${t[1]}</p></div>`).join('')}</div></div></section>
@@ -332,6 +421,7 @@ function route(){
   else if(r==='podcast') html=podcast();
   else if(r==='shop'&&SHOP_ENABLED) html=shop();
   else if(r==='contact') html=contact();
+  else if(r==='explore') html=exploreHome();
   else if(r==='about') html=about();
   else {html=home();key=''}
   app.innerHTML=html;
