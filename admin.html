@@ -236,7 +236,7 @@ async function load(){
       c=await old.json();
       note='اطلاعات از نسخه فعلی سایت بارگذاری شد. برای انتقال آن به دیتابیس، پس از بررسی روی «انتشار تغییرات» بزنید.';
     }
-    c.theme={...THEME0,...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.carsInfo=c.carsInfo||{};c.about=c.about||'';
+    c.theme={...THEME0,adminSize:13,tableSize:11,tableDensity:'compact',tableLines:'full',tableStripe:'yes',tableWidth:'scroll',...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.carsInfo=c.carsInfo||{};c.about=c.about||'';
     ['news','articles','episodes','products','cars','serviceCenters','partsStores','ads','techSections'].forEach(k=>c[k]=c[k]||[]);
     const assignedCodes=ensureBusinessIdentifiers(c);
     if(assignedCodes){dirty=true;note+=' برای '+assignedCodes+' موردِ شناسه‌گذاری/کد اختصاصی ایجاد شد؛ برای دائمی‌شدن آن‌ها روی «انتشار تغییرات» بزنید.';}
@@ -354,11 +354,19 @@ function form(){
 function look(){
   const t=c.theme;
   const col=(k,l)=>`<label>${l}</label><input type="color" data-t="${k}" value="${t[k]}">`;
-  return `<div class="box"><h3>رنگ‌ها و فونت</h3>${col('accent','رنگ اصلی (دکمه‌ها، نقطه‌ها، خط تیترها)')}${col('dark','زمینه‌ی تیره (هدر و بالای صفحه‌ها)')}${col('paper','زمینه‌ی روشن')}${col('text','رنگ متن')}
-  <label>فونت</label><select data-t="font">${Object.entries(FONTS).map(([k,n])=>`<option value="${k}" ${t.font===k?'selected':''}>${n}</option>`).join('')}</select>
-  <label>اندازه‌ی متن (۱۴ تا ۲۲)</label><input type="number" data-t="size" min="14" max="22" value="${t.size}">
-  <p class="hint">برای فونت وزیرمتن، فایل Vazirmatn.woff2 را داخل پوشه‌ی fonts مخزن آپلود کنید. بدون آن، فونت جایگزین استفاده می‌شود.</p>
-  <p style="margin-top:12px"><button class="btn" data-a="reset">بازگشت به رنگ‌های پیش‌فرض</button></p></div>
+  const selected=(k,v)=>String(t[k]??'')===String(v)?'selected':'';
+  return `<div class="box"><h3>رنگ‌ها و فونت سایت</h3>${col('accent','رنگ اصلی')}${col('dark','زمینه‌ی تیره')}${col('paper','زمینه‌ی روشن')}${col('text','رنگ متن')}
+  <label>فونت سایت</label><select data-t="font">${Object.entries(FONTS).map(([k,n])=>`<option value="${k}" ${t.font===k?'selected':''}>${n}</option>`).join('')}</select>
+  <label>اندازه‌ی متن سایت (۱۴ تا ۲۲)</label><input type="number" data-t="size" min="14" max="22" value="${t.size}">
+  <p class="hint">تنظیمات بعدی فقط ظاهر پنل مدیریت را تغییر می‌دهند.</p><p style="margin-top:12px"><button class="btn" data-a="reset">بازگشت رنگ‌ها به پیش‌فرض</button></p></div>
+  <div class="box"><h3>اندازه و نمایش جدول‌ها در پنل مدیریت</h3>
+  <label>اندازه‌ی نوشته‌های پنل</label><select data-t="adminSize"><option value="12" ${selected('adminSize',12)}>کوچک</option><option value="13" ${selected('adminSize',13)}>معمولی</option><option value="14" ${selected('adminSize',14)}>بزرگ</option><option value="15" ${selected('adminSize',15)}>خیلی بزرگ</option></select>
+  <label>اندازه‌ی نوشته‌های داخل جدول</label><select data-t="tableSize"><option value="10" ${selected('tableSize',10)}>خیلی کوچک</option><option value="11" ${selected('tableSize',11)}>کوچک</option><option value="12" ${selected('tableSize',12)}>معمولی</option><option value="13" ${selected('tableSize',13)}>بزرگ</option><option value="14" ${selected('tableSize',14)}>خیلی بزرگ</option></select>
+  <label>فاصله‌ی ردیف‌های جدول</label><select data-t="tableDensity"><option value="compact" ${selected('tableDensity','compact')}>فشرده</option><option value="normal" ${selected('tableDensity','normal')}>معمولی</option><option value="comfortable" ${selected('tableDensity','comfortable')}>بازتر و خواناتر</option></select>
+  <label>خط‌کشی جدول</label><select data-t="tableLines"><option value="full" ${selected('tableLines','full')}>خط عمودی و افقی</option><option value="row" ${selected('tableLines','row')}>فقط خط افقی بین ردیف‌ها</option><option value="none" ${selected('tableLines','none')}>بدون خط‌کشی</option></select>
+  <label>پس‌زمینه‌ی ردیف‌ها</label><select data-t="tableStripe"><option value="yes" ${selected('tableStripe','yes')}>ردیف‌های یکی‌درمیان رنگی</option><option value="no" ${selected('tableStripe','no')}>پس‌زمینه‌ی یکدست</option></select>
+  <label>جدول‌های عریض</label><select data-t="tableWidth"><option value="scroll" ${selected('tableWidth','scroll')}>حفظ ستون‌ها و اسکرول افقی در صورت نیاز</option><option value="fit" ${selected('tableWidth','fit')}>فشرده‌سازی ستون‌ها برای جا شدن در صفحه</option></select>
+  <p class="hint" style="margin-top:10px">تنظیمات فوراً پیش‌نمایش می‌شوند. برای ذخیره‌ی دائمی، بالای پنل «انتشار تغییرات» را بزنید.</p><p style="margin-top:12px"><button class="btn" data-a="reset-layout">بازگشت اندازه و جدول‌ها به پیش‌فرض</button></p></div>
   <div class="box"><h3>تصویر بالای صفحه‌ی هر بخش</h3>${Object.entries(PARTS).map(([k,n])=>`<label>${n}</label>${imgField('pi_'+k,c.partImages[k]||'',`data-pi="${k}"`)}`).join('')}</div>`;
 }
 const contactTab=()=>`<div class="box"><h3>راه‌های ارتباطی</h3><p class="hint">فقط موردهایی که پر کنید در سایت نمایش داده می‌شوند.</p>${CONTACT.map(([k,l])=>`<label for="c_${k}">${l}</label><input type="text" id="c_${k}" data-c="${k}" value="${esc(c.contact[k])}" ${k!=='address'&&k!=='note'?'dir="ltr"':''}>`).join('')}</div>`;
@@ -478,12 +486,24 @@ async function saveManualRating(){
   }catch(e){msg('ذخیره انجام نشد: '+(e.message||'سرویس امتیازدهی را بررسی کنید.'))}
   finally{ratingSaveBusy=false;draw()}
 }
+function applyAdminAppearance(){
+  if(!c)return;
+  const t=c.theme||{};
+  const adminSize=Math.max(12,Math.min(15,Number(t.adminSize)||13));
+  const tableSize=Math.max(10,Math.min(14,Number(t.tableSize)||11));
+  const density=t.tableDensity||'compact', lines=t.tableLines||'full', stripe=t.tableStripe||'yes', width=t.tableWidth||'scroll';
+  const pad=density==='comfortable'?11:density==='normal'?8:5;
+  let style=document.getElementById('rev-admin-appearance');
+  if(!style){style=document.createElement('style');style.id='rev-admin-appearance';document.head.appendChild(style)}
+  style.textContent='body{font-size:'+adminSize+'px!important} .box h3{font-size:'+(adminSize+2)+'px!important} table{font-size:'+tableSize+'px!important;table-layout:'+(width==='fit'?'fixed':'auto')+'!important;width:100%;border-collapse:collapse!important;border:'+(lines==='full'?'1px solid #cbd6da':'0')+'!important} table th,table td{padding:'+pad+'px!important;overflow-wrap:anywhere} table thead th{font-size:'+tableSize+'px!important;border-bottom:2px solid #9eafb4!important;border-left:'+(lines==='full'?'1px solid #d2dcdf':'0')+'!important} table tbody td{border-bottom:'+(lines==='none'?'0':'1px solid #d5dfe2')+'!important;border-left:'+(lines==='full'?'1px solid #e1e7e9':'0')+'!important} table tbody tr:nth-child(even){background:'+(stripe==='yes'?'#f5f8f8':'transparent')+'!important} table tbody tr:hover{background:#eaf6ef!important} '+(width==='fit'?'table{min-width:0!important}table th,table td{white-space:normal!important;word-break:break-word!important}':'');
+}
 function draw(){
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
   const body=tab==='users'?usersPanel():tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
+  applyAdminAppearance();
 }
 
 async function loadAuthSettings(){
@@ -614,7 +634,7 @@ root.addEventListener('input',e=>{
   if('stationSearch' in d){stationSearchValue=t.value;const pos=t.selectionStart;draw();const input=$('station-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
   if('listSearch' in d){listSearchValue=t.value;const q=normalizeSearch(listSearchValue.trim());let n=0;root.querySelectorAll('.admin-list-row').forEach(row=>{const show=!q||normalizeSearch(row.dataset.search||'').includes(q);row.hidden=!show;if(show)n++});const counter=$('list-count');if(counter)counter.textContent=n;return}
   if('ratingSearch' in d){ratingSearchValue=t.value;ratingSelected=null;ratingOverride=null;const pos=t.selectionStart;draw();const input=$('rating-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
-  if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true}
+  if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true;if(['adminSize','tableSize','tableDensity','tableLines','tableStripe','tableWidth'].includes(d.t))applyAdminAppearance()}
   else if(d.c){c.contact[d.c]=t.value.trim();dirty=true}
   else if(d.s){c.shopInfo[d.s]=t.value;dirty=true}
   else if(d.ci){c.carsInfo[d.ci]=t.value;dirty=true}
@@ -658,7 +678,8 @@ root.addEventListener('click',async e=>{
   else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
   else if(a==='del'){if(confirm('این مورد حذف شود؟')){c[tab].splice(i,1);dirty=true;draw()}}
   else if(a==='cancel'){edit=null;draw()}
-  else if(a==='reset'){c.theme={...THEME0};dirty=true;draw()}
+  else if(a==='reset'){c.theme={...THEME0,adminSize:13,tableSize:11,tableDensity:'compact',tableLines:'full',tableStripe:'yes',tableWidth:'scroll'};dirty=true;draw()}
+  else if(a==='reset-layout'){Object.assign(c.theme,{adminSize:13,tableSize:11,tableDensity:'compact',tableLines:'full',tableStripe:'yes',tableWidth:'scroll'});dirty=true;draw()}
   else if(a==='up'||a==='clr'){
     const id=b.dataset.id, inp=$(id), im=$('p_'+id);
     let p=''; if(a==='up'){p=await upImage(); if(!p)return}
