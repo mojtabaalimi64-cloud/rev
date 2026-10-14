@@ -602,8 +602,12 @@ async function loadStations(){
   let lastError=null;
   try{
     for(const path of ['/api/admin/stations','/api/stations']){
+      let timer=null;
       try{
-        const r=await fetch(WORKER+path,{headers:H(),cache:'no-store'});
+        const controller=new AbortController();
+        timer=setTimeout(()=>controller.abort(),8000);
+        const r=await fetch(WORKER+path,{headers:H(),cache:'no-store',signal:controller.signal});
+        clearTimeout(timer); timer=null;
         const j=await r.json().catch(()=>({}));
         if(!r.ok||!j.success)throw new Error((j.error||('HTTP '+r.status))+' ['+path+']');
         const rows=Array.isArray(j.data)?j.data:(Array.isArray(j.stations)?j.stations:null);
@@ -612,7 +616,12 @@ async function loadStations(){
         note=`${stationsCache.length} جایگاه از دیتابیس دریافت شد.`;
         lastError=null;
         break;
-      }catch(err){lastError=err}
+      }catch(err){
+        if(timer!==null)clearTimeout(timer);
+        lastError=err&&err.name==='AbortError'
+          ? new Error('پاسخ سرور پس از ۸ ثانیه نرسید ['+path+']')
+          : err;
+      }
     }
     if(lastError)throw lastError;
   }catch(e){note='دریافت جایگاه‌ها ناموفق بود: '+(e.message||'خطای اتصال')+'؛ مسیر API جایگاه‌ها در Worker باید بررسی شود.';stationsCache=[]}
