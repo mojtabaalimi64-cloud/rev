@@ -192,7 +192,7 @@ async function load(){
     c.theme={...THEME0,...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.carsInfo=c.carsInfo||{};c.about=c.about||'';
     ['news','articles','episodes','products','cars','serviceCenters','partsStores','ads','techSections'].forEach(k=>c[k]=c[k]||[]);
     const assignedCodes=ensureBusinessIdentifiers(c);
-    if(assignedCodes)note+=' برای '+assignedCodes+' موردِ شناسه‌گذاری/کد اختصاصی ایجاد شد؛ برای دائمی‌شدن آن‌ها روی «انتشار تغییرات» بزنید.';
+    if(assignedCodes){dirty=true;note+=' برای '+assignedCodes+' موردِ شناسه‌گذاری/کد اختصاصی ایجاد شد؛ برای دائمی‌شدن آن‌ها روی «انتشار تغییرات» بزنید.';}
     draw();
   }catch(e){msg('بارگذاری انجام نشد. اتصال Worker و نشانی content.json را بررسی کنید.');}
 }
