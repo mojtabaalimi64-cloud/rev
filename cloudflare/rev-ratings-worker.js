@@ -45,6 +45,10 @@ export default {
     if(!validTarget(type,id))return reply(request,env,{success:false,error:"نوع یا شناسه نامعتبر است."},400);
     return reply(request,env,await summary(env,type,id));
    }
+   if(path==="/api/ratings/overrides"&&method==="GET"){
+    const r=await env.DB.prepare("SELECT target_type,target_id,public_code,display_name,manual_average,manual_count,updated_at FROM rev_rating_overrides ORDER BY updated_at DESC LIMIT 2000").all();
+    return reply(request,env,{success:true,items:(r.results||[]).map(x=>({type:x.target_type,id:x.target_id,publicCode:x.public_code,displayName:x.display_name,average:Number(x.manual_average),count:Number(x.manual_count),updatedAt:x.updated_at}))});
+   }
    if(path==="/api/ratings"&&method==="POST"){
     if(await limited(request,env))return reply(request,env,{success:false,error:"درخواست‌های زیاد؛ کمی بعد دوباره تلاش کنید."},429);
     const b=await request.json().catch(()=>null),type=String(b?.type||""),id=String(b?.id||""),rating=Number(b?.rating),voter=String(b?.voter||"");
