@@ -421,6 +421,20 @@ async function queryOverpass(routeCoords,radiusKm){
 async function getIranStations(routeCoords,radiusKm){
   let revStations=[];
   try{revStations=await getRevStations(routeCoords,radiusKm);}catch(e){console.warn("REV station API unavailable:",e);}
+  // Load REV's public seed directory too, so curated records can be tested
+  // without waiting for a separate D1 import. These are sourced listings;
+  // their live availability should still be confirmed before a real trip.
+  try{
+    const response=await fetch("./content.json?v="+Date.now(),{cache:"no-store"});
+    if(response.ok){
+      const directory=await response.json();
+      const manual=Array.isArray(directory.stations)?directory.stations.map(normalizeRevStation).filter(Boolean):[];
+      for(const s of manual){
+        const duplicate=revStations.some(x=>haversine([x.lat,x.lon],[s.lat,s.lon])<0.15);
+        if(!duplicate)revStations.push(s);
+      }
+    }
+  }catch(e){console.warn("REV public station directory unavailable:",e);}
   // Use REV-managed data as the primary source. Supplement it with OSM so a small
   // internal database does not incorrectly imply that no chargers exist.
   try{
@@ -434,10 +448,9 @@ async function getIranStations(routeCoords,radiusKm){
       .filter(s=>s.routeDistance<=radiusKm).sort((a,b)=>a.routeDistance-b.routeDistance);
   }catch(e){
     console.warn("REV online stations source unavailable:",e);
-    // Do not discard a successfully calculated route just because the external
-    // station provider is rate-limited or slow. Never invent station records.
     window.revStationSourceWarning = e?.message || "منبع آنلاین شارژرها موقتاً در دسترس نیست.";
-    return revStations;
+    return revStations.map(s=>({...s,routeDistance:distanceToRoute([s.lat,s.lon],routeCoords)}))
+      .filter(s=>s.routeDistance<=radiusKm).sort((a,b)=>a.routeDistance-b.routeDistance);
   }
 }
 
