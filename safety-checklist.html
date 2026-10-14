@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080B0D">
+<title>چک‌لیست ایمنی سفر با خودروی برقی | REV</title>
+<style>
+:root{--bg:#080B0D;--panel:#121A1F;--line:#29363D;--text:#F5F7F8;--muted:#AAB5BA;--green:#39FF88;--teal:#00D9C0;--danger:#ff7777;--yellow:#ffe27a}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.9}.wrap{width:min(100% - 28px,920px);margin:auto}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:20px 0}.brand{font-weight:900;letter-spacing:2px;color:var(--green);font-size:25px}.link{display:inline-block;color:var(--text);text-decoration:none;background:#1d2a30;border:1px solid #3b4a50;padding:8px 13px;border-radius:10px;font-size:13px}.hero{padding:22px 0 12px}.eyebrow{color:var(--green);font-size:13px;font-weight:bold}h1{font-size:clamp(24px,4vw,38px);line-height:1.5;margin:6px 0 10px}p{margin:6px 0;color:var(--muted)}.notice{background:#20251d;border:1px solid #4c5032;border-radius:12px;padding:12px 15px;color:#fff0b8;font-size:13px;margin:18px 0}.scorebox{position:sticky;top:8px;z-index:3;display:grid;grid-template-columns:auto 1fr;gap:16px;align-items:center;background:#111a1f;border:1px solid #34434a;border-radius:16px;padding:14px 18px;margin:18px 0}.score{font-size:30px;font-weight:900;color:var(--green);min-width:84px;text-align:center}.bar{height:10px;background:#29363d;border-radius:20px;overflow:hidden;margin-top:8px}.bar span{display:block;height:100%;width:0;background:var(--green);transition:width .2s}.scoretitle{font-weight:bold}.small{font-size:12px;color:var(--muted)}.group{background:var(--panel);border:1px solid var(--line);border-radius:16px;margin:14px 0;padding:18px}.group h2{font-size:18px;margin:0 0 10px}.item{display:flex;gap:12px;align-items:flex-start;padding:12px 0;border-bottom:1px solid #263239;cursor:pointer}.item:last-child{border-bottom:0}.item input{accent-color:var(--green);width:20px;height:20px;flex:0 0 20px;margin:5px 0 0}.item strong{display:block;font-size:14px}.item small{display:block;color:var(--muted);font-size:12px;margin-top:3px}.tag{display:inline-block;font-size:10px;color:#ffc2c2;border:1px solid #754949;border-radius:5px;padding:0 6px;margin-inline-start:6px}.actions{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0 36px}.btn{border:0;border-radius:10px;padding:11px 18px;font-weight:bold;font-size:14px;cursor:pointer;background:var(--green);color:#08110b}.btn.secondary{background:#1b282e;color:var(--text);border:1px solid #394951}.result{border:1px solid #34434a;background:#111a1f;border-radius:16px;padding:18px;margin:18px 0}.result h2{margin:0 0 8px}.status{font-weight:bold}.status.good{color:var(--green)}.status.mid{color:var(--yellow)}.status.bad{color:var(--danger)}footer{color:#77858c;font-size:12px;padding:0 0 28px}a:focus-visible,button:focus-visible,input:focus-visible{outline:3px solid var(--teal);outline-offset:3px}@media(max-width:520px){.scorebox{grid-template-columns:1fr;gap:3px}.score{text-align:right}.head{align-items:flex-start}.group{padding:14px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="head"><a class="brand" href="index.html">REV</a><a class="link" href="index.html">بازگشت به صفحه اصلی</a></header>
+<section class="hero"><div class="eyebrow">پیش از حرکت · چک‌لیست کاربردی</div><h1>چک‌لیست ایمنی سفر با خودروی برقی و هیبریدی</h1><p>موارد زیر را قبل از سفر بررسی کنید. با علامت‌زدن هر مورد، شاخص آمادگی شما به‌روز می‌شود.</p></section>
+<div class="notice">این درصد، فقط میزان تکمیل چک‌لیست است و احتمال تصادف یا ایمنی واقعی سفر را اندازه‌گیری نمی‌کند. موارد مهم را حتماً بررسی کنید؛ در صورت مشاهده ایراد فنی، سفر را تا رفع آن به تعویق بیندازید.</div>
+<section class="scorebox" aria-live="polite"><div class="score" id="score">۰٪</div><div><div class="scoretitle" id="scoretitle">هنوز بررسی را شروع نکرده‌اید</div><div class="small" id="count">۰ از ۲۰ مورد انجام شده</div><div class="bar"><span id="bar"></span></div></div></section>
+<div id="checklist">
+<section class="group"><h2>۱. خودرو و تجهیزات ایمنی</h2>
+<label class="item"><input type="checkbox" data-critical="1"><span><strong>چراغ‌های جلو، عقب، ترمز و راهنما سالم‌اند <span class="tag">مهم</span></strong><small>در صورت خرابی چراغ‌های ضروری، پیش از حرکت آن را برطرف کنید.</small></span></label>
+<label class="item"><input type="checkbox" data-critical="1"><span><strong>لاستیک‌ها، فشار باد و آج آن‌ها بررسی شده‌اند <span class="tag">مهم</span></strong><small>ترک، برآمدگی، پنچری یا ساییدگی غیرعادی را جدی بگیرید.</small></span></label>
+<label class="item"><input type="checkbox" data-critical="1"><span><strong>ترمزها و هشدارهای داشبورد بررسی شده‌اند <span class="tag">مهم</span></strong><small>چراغ هشدار قرمز یا پیام خطای ایمنی را نادیده نگیرید.</small></span></label>
+<label class="item"><input type="checkbox"><span><strong>شیشه‌ها، آینه‌ها، برف‌پاک‌کن و مایع شیشه‌شوی آماده‌اند</strong><small>دید مناسب در باران، گردوغبار و تاریکی ضروری است.</small></span></label>
+<label class="item"><input type="checkbox"><span><strong>کمربند همه سرنشینان و صندلی کودک درست بسته می‌شوند</strong><small>بار و وسایل داخل کابین نیز محکم شده‌اند.</small></span></label>
+<label class="item"><input type="checkbox"><span><strong>جعبه کمک‌های اولیه، مثلث هشدار و وسایل ضروری همراه است</strong><small>چراغ‌قوه و وسایل متناسب با مسیر و فصل را نیز در نظر بگیرید.</small></span></label>
+</section>
+<section class="group"><h2>۲. باتری و شارژ</h2>
+<label class="item"><input type="checkbox" data-critical="1"><span><strong>شارژ باتری برای رسیدن به مقصد و جایگزین امن کافی است <span class="tag">مهم</span></strong><small>برای ترافیک، سرما، گرما، سربالایی و انحراف مسیر حاشیه اطمینان بگذارید.</small></span></label>
+<label class="item"><input type="checkbox"><span><strong>مسیر و ایستگاه‌های شارژ قابل استفاده بررسی شده‌اند</strong><small>سازگاری کانکتور، توان شارژ و وضعیت فعال بودن ایستگاه را بررسی کنید.</small></span></label>
+<label class="item"><input type="checkbox"><span><strong>روش پرداخت یا دسترسی به شارژر و اطلاعات تماس آماده است</strong><small>در صورت امکان، گزینه جایگزین برای ایستگاه خارج از سرویس داشته باشید.</small></span></label>
+<label class="item"><input type="checkbox" data-critical="1"><span><strong>کابل و درگاه شارژ آسیب، سوختگی یا آثار داغ‌شدگی ندارند <span class="tag">مهم</span></strong><small>از کابل یا تجهیزات معیوب و اتصالات نامطمئن استفاده نکنید.</small></span></label>
+<label class="item"><input type="checkbox"><span><strong>کابل شارژ و لوازم موردنیاز خودرو همراه است</strong><small>کابل را طوری حمل کنید که به آن فشار وارد نشود و مزاحم رانندگی نباشد.</small></span></label>
+</section>
+<section class="group"><h2>۳. مسیر، راننده و شرایط جوی</h2>
+<label class="item"><input type="checkbox" data-critical="1"><span><strong>هوا، هشدارهای مسیر و وضعیت جاده بررسی شده‌اند <span class="tag">مهم</span></strong><small>سیلاب، برف، یخ‌زدگی، گردوغبار یا گرمای شدید می‌تواند برنامه را تغییر دهد.</small></span></label>
+<label class="item"><input type="checkbox"><span><strong>زمان استراحت و توقف‌های مسیر مشخص شده‌اند</strong><small>در مسیرهای طولانی، خستگی را با توقف و استراحت مدیریت کنید.</small></span></label>
+<label class="item"><input type="checkbox" data-critical="1"><span><strong>راننده هوشیار است و تحت تأثیر الکل، مواد یا داروی خواب‌آور نیست <span class="tag">مهم</span></strong><small>در صورت خواب‌آلودگی یا کاهش تمرکز، رانندگی نکنید.</small></span></label>
+<label class="item"><input type="checkbox"><span><strong>گوشی، نقشه و راه ارتباطی اضطراری آماده‌اند</strong><small>مسیر را پیش از حرکت تنظیم کنید و هنگام رانندگی با گوشی کار نکنید.</small></span></label>
+<label class="item"><input type="checkbox"><span><strong>در مسیرهای دورافتاده، آب و ملزومات ضروری همراه است</strong><small>با توجه به دما، مدت سفر و پوشش شبکه برنامه‌ریزی کنید.</small></span></label>
+</section>
+<section class="group"><h2>۴. نکات ویژه خودروهای برقی و هیبریدی</h2>
+<label class="item"><input type="checkbox"><span><strong>حالت رانندگی و بازیابی انرژی متناسب با مسیر انتخاب شده است</strong><small>پیش از سرازیری یا مسیر لغزنده، رفتار خودرو و ترمزگیری را بشناسید.</small></span></label>
+<label class="item"><input type="checkbox"><span><strong>محدودیت‌های خودرو و هشدارهای دفترچه راهنما شناخته شده‌اند</strong><small>ظرفیت بار، یدک‌کشی و روش حمل خودرو در خرابی بین مدل‌ها متفاوت است.</small></span></label>
+<label class="item"><input type="checkbox" data-critical="1"><span><strong>هیچ نشانه‌ای از آسیب باتری، دود، بوی غیرعادی یا داغ‌شدن شدید وجود ندارد <span class="tag">مهم</span></strong><small>در صورت مشاهده این علائم، خودرو را ایمن متوقف کنید، از آن فاصله بگیرید و با امداد تماس بگیرید؛ به باتری آسیب‌دیده دست نزنید.</small></span></label>
+<label class="item"><input type="checkbox"><span><strong>شماره امداد جاده‌ای و روش درخواست کمک در دسترس است</strong><small>مطمئن شوید همه سرنشینان می‌دانند هنگام توقف اضطراری چه کنند.</small></span></label>
+</section>
+</div>
+<section class="result" id="result" aria-live="polite"><h2>نتیجه بررسی</h2><p id="resulttext">برای مشاهده شاخص آمادگی، موارد را بررسی و علامت بزنید.</p></section>
+<div class="actions"><button class="btn" id="finish">محاسبه درصد آمادگی</button><button class="btn secondary" id="reset" type="button">پاک‌کردن تیک‌ها</button><button class="btn secondary" id="print" type="button">چاپ / ذخیره PDF</button></div>
+<footer>REV · این چک‌لیست راهنمای عمومی است و جایگزین دفترچه راهنمای خودرو، بررسی تخصصی یا توصیه‌های امدادی نیست.</footer>
+</div>
+<script>
+(function(){
+const boxes=[...document.querySelectorAll('#checklist input[type="checkbox"]')];
+const fa=n=>Number(n).toLocaleString('fa-IR');
+const saved=(()=>{try{return JSON.parse(localStorage.getItem('rev-safety-checklist')||'[]')}catch(e){return []}})();
+boxes.forEach((b,i)=>{b.checked=saved.includes(i);b.addEventListener('change',update)});
+function update(){
+ let done=0,total=0,criticalDone=0,criticalTotal=0;
+ boxes.forEach(b=>{const w=b.dataset.critical==='1'?2:1;total+=w;if(b.checked){done+=w;if(w===2)criticalDone++}if(w===2)criticalTotal++});
+ const pct=Math.round(done/total*100);
+ document.getElementById('score').textContent=fa(pct)+'٪';
+ document.getElementById('count').textContent=fa(boxes.filter(b=>b.checked).length)+' از '+fa(boxes.length)+' مورد انجام شده';
+ document.getElementById('bar').style.width=pct+'%';
+ document.getElementById('scoretitle').textContent=pct===100?'همه موارد این چک‌لیست علامت خورده‌اند':pct>=75?'بخش زیادی از موارد بررسی شده‌اند':pct>=40?'برخی موارد بررسی شده‌اند':'بررسی را ادامه دهید';
+ const missing=boxes.filter(b=>b.dataset.critical==='1'&&!b.checked).length;
+ const text=document.getElementById('resulttext');
+ const status=pct===100&&missing===0?'good':missing>0?'bad':'mid';
+ document.getElementById('result').querySelector('h2').textContent='نتیجه بررسی';
+ text.className='status '+status;
+ text.textContent=missing>0?'هنوز '+fa(missing)+' مورد مهم ایمنی بررسی/تأیید نشده است. پیش از حرکت آن‌ها را بررسی کنید؛ اگر موردی واقعاً برقرار نیست یا ایراد فنی وجود دارد، حرکت نکنید.':pct===100?'تمام موارد چک‌لیست علامت خورده‌اند. این نتیجه تضمین‌کننده ایمنی سفر نیست؛ قضاوت نهایی به وضعیت واقعی خودرو و جاده بستگی دارد.':'موارد باقی‌مانده را بررسی کنید. درصد نمایش‌داده‌شده میزان تکمیل چک‌لیست است، نه احتمال ایمن بودن سفر.';
+ try{localStorage.setItem('rev-safety-checklist',JSON.stringify(boxes.map((b,i)=>b.checked?i:-1).filter(i=>i>=0)))}catch(e){}
+}
+document.getElementById('finish').addEventListener('click',()=>{update();document.getElementById('result').scrollIntoView({behavior:'smooth',block:'center'})});
+document.getElementById('reset').addEventListener('click',()=>{if(confirm('همه علامت‌ها پاک شوند؟')){boxes.forEach(b=>b.checked=false);update()}});
+document.getElementById('print').addEventListener('click',()=>window.print());
+update();
+})();
+</script>
+</body>
+</html>
