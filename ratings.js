@@ -17,7 +17,7 @@
     const controls=document.createElement("div");controls.style.cssText="display:flex;align-items:center;gap:5px;flex-wrap:wrap";el.appendChild(controls);
     const note=document.createElement("div");note.style.cssText="font-size:12px;color:var(--muted);margin-top:4px";el.appendChild(note);
     const voteKey="rev_public_rating_voted_v1:"+type+":"+id;
-    let voted=false,buttons=[];
+    let voted=false,manual=false,buttons=[];
     try{voted=localStorage.getItem(voteKey)==="1";}catch(e){}
     function stars(selected,disabled){
       controls.replaceChildren();buttons=[];
@@ -31,11 +31,13 @@
       try{
         const r=await fetch(API+"?type="+encodeURIComponent(type)+"&id="+encodeURIComponent(id),{cache:"no-store"});
         const d=await r.json();if(!r.ok||!d.success)throw Error();
-        summary.textContent=d.count?("★ "+Number(d.average).toLocaleString("fa-IR")+" از ۵ · "+Number(d.count).toLocaleString("fa-IR")+" رأی"):"هنوز رأیی ثبت نشده";
+        summary.textContent=(d.manual||d.count)?("★ "+Number(d.average).toLocaleString("fa-IR")+" از ۵ · "+Number(d.count).toLocaleString("fa-IR")+" رأی"):"هنوز رأیی ثبت نشده";
+        manual=!!d.manual;
+        if(manual){stars(Number(d.average)||0,true);note.textContent="این امتیاز و تعداد رأی توسط مدیریت REV تنظیم شده است؛ ثبت رأی عمومی برای این پروفایل غیرفعال است.";}
       }catch(e){summary.textContent="سرویس امتیازدهی پس از راه‌اندازی فعال می‌شود";}
     }
     async function vote(n){
-      if(voted)return;buttons.forEach(b=>b.disabled=true);note.textContent="در حال ثبت امتیاز…";
+      if(voted||manual)return;buttons.forEach(b=>b.disabled=true);note.textContent="در حال ثبت امتیاز…";
       try{
         const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:type,id:id,rating:n,voter:voterId()})});
         const d=await r.json();
