@@ -1,8 +1,8 @@
 /**
  * REV Auth Worker — separate from the existing rev-api Worker.
  * Bind D1 database rev-db as DB.
- * Secrets: ADMIN_TOKEN, RESEND_API_KEY
- * Variables: ALLOWED_ORIGINS, SITE_URL, EMAIL_FROM
+ * Secrets: ADMIN_TOKEN, RESEND_API_KEY, MELIPAYAMAK_USERNAME, MELIPAYAMAK_PASSWORD
+ * Variables: ALLOWED_ORIGINS, SITE_URL, EMAIL_FROM, MELIPAYAMAK_FROM
  * Keep registration disabled until domain, email DNS and Resend sender are verified.
  */
 const DEFAULT_ORIGIN = "https://mojtabaalimi64-cloud.github.io";
@@ -177,6 +177,30 @@ export default {
     const raw=(request.headers.get("Cookie")||"").split(";").map(x=>x.trim()).find(x=>x.startsWith(COOKIE_NAME+"="))?.slice(COOKIE_NAME.length+1);
     if(raw) await env.DB.prepare("UPDATE rev_sessions SET revoked_at=? WHERE session_token_hash=? AND revoked_at IS NULL").bind(new Date().toISOString(),await sha256(decodeURIComponent(raw))).run();
     return response(request,env,{success:true},200,{"Set-Cookie":clearCookie()});
+   }
+   if(path==="/api/admin/send-owner-code" && method==="POST") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    const b=await request.json().catch(()=>null);
+    const phone=String(b?.phone||"").replace(/[\\s()-]/g,"");
+    const code=String(b?.publicCode||"").trim();
+    const name=String(b?.displayName||"صاحب کسب‌وکار").trim().slice(0,80);
+    if(!/^09[0-9]{9}$/.test(phone) || !/^REV-(ST|RP|CH)-[A-Z0-9-]{4,32}$/.test(code))
+      return response(request,env,{success:false,error:"شماره همراه یا شناسه اختصاصی معتبر نیست."},400);
+    if(!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD&&env.MELIPAYAMAK_FROM))
+      return response(request,env,{success:false,error:"تنظیمات ملی پیامک کامل نیست؛ نام کاربری، رمز عبور و شماره فرستنده را در Secrets/Variables تنظیم کنید."},503);
+    if(await rateLimited(request,env,"owner-code-sms",5,3600))
+      return response(request,env,{success:false,error:"محدودیت ارسال پیامک فعال شد؛ یک ساعت دیگر تلاش کنید."},429);
+    const textMessage="REV | "+name+"\nشناسه اختصاصی پروفایل شما: "+code+"\nاین شناسه برای پیگیری پروفایل است و رمز ورود نیست.";
+    const form=new URLSearchParams({username:env.MELIPAYAMAK_USERNAME,password:env.MELIPAYAMAK_PASSWORD,to:phone,from:env.MELIPAYAMAK_FROM,text:textMessage,isflash:"false"});
+    const sms=await fetch("https://rest.payamak-panel.com/api/SendSMS/SendSMS",{method:"POST",headers:{"Content-Type":"application/x-www-form-urlencoded"},body:form.toString()});
+    const raw=await sms.text();
+    if(!sms.ok) return response(request,env,{success:false,error:"درخواست ارسال پیامک از ملی پیامک ناموفق بود."},502);
+    let result=raw;
+    try { result=JSON.parse(raw); } catch {}
+    const providerValue=typeof result==="number"?result:(typeof result==="string"&&/^-?\\d+$/.test(result.trim())?Number(result):Number(result?.Value??result?.value??result?.RetStatus??NaN));
+    if(Number.isFinite(providerValue)&&providerValue<=0)
+      return response(request,env,{success:false,error:"ملی پیامک پیامک را نپذیرفت؛ اعتبار پنل، شماره فرستنده و گزارش سرویس را بررسی کنید."},502);
+    return response(request,env,{success:true,message:"درخواست ارسال پیامک به ملی پیامک تحویل داده شد."});
    }
    return response(request,env,{success:false,error:"Not found"},404);
   } catch(e) {
