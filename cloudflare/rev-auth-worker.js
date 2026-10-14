@@ -122,6 +122,92 @@ export default {
       .bind(body.enabled?1:0,new Date().toISOString(),"admin").run();
     return response(request,env,{success:true,enabled:body.enabled});
    }
+   if(path==="/api/auth/recover" && method==="POST") {
+    if(await rateLimited(request,env,"recover",3)) return response(request,env,{success:false,error:"درخواست‌های بازیابی زیاد است؛ یک دقیقه دیگر تلاش کنید."},429);
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    if(!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL)) return response(request,env,{success:false,error:"سرویس ایمیل بازیابی هنوز پیکربندی نشده است."},503);
+    const b=await request.json().catch(()=>null), email=normalizedEmail(b?.email);
+    if(!validEmail(email)) return response(request,env,{success:false,error:"ایمیل معتبر وارد کنید."},400);
+    const u=await env.DB.prepare("SELECT id FROM rev_users WHERE email_normalized=? AND account_status='active' AND email_verified_at IS NOT NULL LIMIT 1").bind(email).first();
+    if(u){
+      const now=new Date().toISOString(), token=randomToken(32), exp=new Date(Date.now()+30*60000).toISOString();
+      await env.DB.prepare("UPDATE rev_verification_challenges SET consumed_at=? WHERE user_id=? AND purpose='recover' AND consumed_at IS NULL").bind(now,u.id).run();
+      await env.DB.prepare("INSERT INTO rev_verification_challenges(id,user_id,channel,destination_normalized,purpose,token_hash,attempts,max_attempts,created_at,expires_at,consumed_at,request_window_key) VALUES(?,?, 'email',?,'recover',?,0,5,?,?,NULL,?)").bind(crypto.randomUUID(),u.id,email,await sha256(token),now,exp,email).run();
+      const link=env.SITE_URL.replace(/\\/$/,"")+"/reset-password.html?token="+encodeURIComponent(token);
+      const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({from:env.EMAIL_FROM,to:[email],subject:"بازیابی رمز عبور REV",text:"برای تعیین رمز عبور جدید REV، این پیوند را تا ۳۰ دقیقه در مرورگر باز کنید:\\n\\n"+link+"\\n\\nاگر شما این درخواست را نداده‌اید، این پیام را نادیده بگیرید."})});
+      if(!mail.ok) return response(request,env,{success:false,error:"ارسال ایمیل بازیابی انجام نشد؛ تنظیمات ایمیل را بررسی کنید."},503);
+    }
+    return response(request,env,{success:true,message:"اگر حساب فعالی با این ایمیل وجود داشته باشد، راهنمای بازیابی ارسال می‌شود."});
+   }
+   if(path==="/api/auth/reset-password" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    if(await rateLimited(request,env,"reset-password",5)) return response(request,env,{success:false,error:"تلاش‌های زیاد؛ کمی بعد دوباره تلاش کنید."},429);
+    const b=await request.json().catch(()=>null), token=String(b?.token||""), password=b?.password;
+    if(!token||token.length>200||!passwordValid(password)) return response(request,env,{success:false,error:"پیوند معتبر و رمز عبور حداقل ۱۲ کاراکتری لازم است."},400);
+    const ch=await env.DB.prepare("SELECT id,user_id FROM rev_verification_challenges WHERE channel='email' AND purpose='recover' AND token_hash=? AND consumed_at IS NULL AND expires_at>? AND attempts<max_attempts LIMIT 1").bind(await sha256(token),new Date().toISOString()).first();
+    if(!ch) return response(request,env,{success:false,error:"پیوند بازیابی منقضی یا نامعتبر است؛ دوباره درخواست دهید."},400);
+    const salt=randomToken(16), hash=await passwordHash(password,salt), now=new Date().toISOString();
+    await env.DB.batch([
+      env.DB.prepare("UPDATE rev_password_credentials SET password_hash=?,password_salt=?,iterations=?,updated_at=? WHERE user_id=?").bind(hash,salt,PBKDF2_ITERATIONS,now,ch.user_id),
+      env.DB.prepare("UPDATE rev_verification_challenges SET consumed_at=? WHERE id=?").bind(now,ch.id),
+      env.DB.prepare("UPDATE rev_sessions SET revoked_at=? WHERE user_id=? AND revoked_at IS NULL").bind(now,ch.user_id)
+    ]);
+    return response(request,env,{success:true,message:"رمز عبور تغییر کرد. اکنون با رمز جدید وارد شوید."});
+   }
+   if(path==="/api/billing/plans" && method==="GET") {
+    return response(request,env,{success:true,plans:[
+      {code:"navigation_monthly",name:"مسیریاب REV — ماهانه",amountToman:99000,durationDays:30,features:["دسترسی به صفحه مسیریابی و راهنمای مسیر","نمایش مسیر برنامه‌ریزی‌شده در پروفایل راننده","ثبت سفر GPS در حساب شخصی"]},
+      {code:"navigation_yearly",name:"مسیریاب REV — سالانه",amountToman:990000,durationDays:365,features:["همه امکانات پلن ماهانه","دسترسی یک‌ساله"] }
+    ]});
+   }
+   if(path==="/api/billing/me" && method==="GET") {
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:false,error:"برای مشاهده اشتراک وارد حساب شوید."},401);
+    const now=new Date().toISOString();
+    const sub=await env.DB.prepare("SELECT id,plan_code,status,starts_at,ends_at,created_at FROM rev_user_subscriptions WHERE user_id=? AND status='active' AND starts_at<=? AND ends_at>? ORDER BY ends_at DESC LIMIT 1").bind(u.id,now,now).first();
+    const orders=await env.DB.prepare("SELECT id,plan_code,amount_toman,status,created_at,updated_at,reference,admin_note FROM rev_payment_orders WHERE user_id=? ORDER BY created_at DESC LIMIT 10").bind(u.id).all();
+    return response(request,env,{success:true,subscription:sub||null,orders:orders.results||[]});
+   }
+   if(path==="/api/navigation/access" && method==="GET") {
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:true,allowed:false,reason:"login"});
+    const now=new Date().toISOString();
+    const sub=await env.DB.prepare("SELECT plan_code,ends_at FROM rev_user_subscriptions WHERE user_id=? AND status='active' AND starts_at<=? AND ends_at>? AND plan_code IN ('navigation_monthly','navigation_yearly') ORDER BY ends_at DESC LIMIT 1").bind(u.id,now,now).first();
+    return response(request,env,{success:true,allowed:!!sub,subscription:sub||null,reason:sub?null:"plan_required"});
+   }
+   if(path==="/api/billing/orders" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:false,error:"برای درخواست پلن ابتدا وارد حساب شوید."},401);
+    const b=await request.json().catch(()=>null), code=String(b?.planCode||"");
+    const plans={navigation_monthly:{amount:99000,name:"مسیریاب REV — ماهانه"},navigation_yearly:{amount:990000,name:"مسیریاب REV — سالانه"}};
+    if(!plans[code]) return response(request,env,{success:false,error:"پلن انتخاب‌شده معتبر نیست."},400);
+    const id=crypto.randomUUID(),now=new Date().toISOString();
+    await env.DB.prepare("INSERT INTO rev_payment_orders(id,user_id,plan_code,amount_toman,status,created_at,updated_at,reference,admin_note,verified_by) VALUES(?,?,?,?, 'pending',?,?,NULL,NULL,NULL)").bind(id,u.id,code,plans[code].amount,now,now).run();
+    return response(request,env,{success:true,order:{id,planCode:code,amountToman:plans[code].amount,status:"pending"},message:"درخواست خرید ثبت شد؛ درگاه پرداخت آنلاین هنوز متصل نیست. دسترسی تا تأیید پرداخت توسط مدیریت فعال نمی‌شود."},201);
+   }
+   if(path.startsWith("/api/admin/billing/orders/") && path.endsWith("/review") && method==="POST") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    const id=path.split("/")[5], b=await request.json().catch(()=>null), status=String(b?.status||"");
+    if(!id||!["approved","rejected"].includes(status)) return response(request,env,{success:false,error:"شناسه یا وضعیت درخواست معتبر نیست."},400);
+    const order=await env.DB.prepare("SELECT id,user_id,plan_code,status FROM rev_payment_orders WHERE id=? LIMIT 1").bind(id).first();
+    if(!order) return response(request,env,{success:false,error:"درخواست پرداخت پیدا نشد."},404);
+    if(order.status!=="pending") return response(request,env,{success:false,error:"این درخواست قبلاً بررسی شده است."},409);
+    const now=new Date().toISOString(), note=String(b.note||"").slice(0,500), ref=String(b.reference||"").slice(0,120);
+    if(status==="approved"){
+      const days=order.plan_code==="navigation_yearly"?365:30;
+      const active=await env.DB.prepare("SELECT ends_at FROM rev_user_subscriptions WHERE user_id=? AND plan_code IN ('navigation_monthly','navigation_yearly') AND status='active' AND ends_at>? ORDER BY ends_at DESC LIMIT 1").bind(order.user_id,now).first();
+      const start=active?.ends_at&&active.ends_at>now?active.ends_at:now, end=new Date(Date.parse(start)+days*86400000).toISOString();
+      await env.DB.batch([
+        env.DB.prepare("UPDATE rev_payment_orders SET status='approved',updated_at=?,reference=?,admin_note=?,verified_by='admin' WHERE id=?").bind(now,ref,note,id),
+        env.DB.prepare("UPDATE rev_user_subscriptions SET status='expired',updated_at=? WHERE user_id=? AND status='active'").bind(now,order.user_id),
+        env.DB.prepare("INSERT INTO rev_user_subscriptions(id,user_id,plan_code,status,starts_at,ends_at,created_at,updated_at,source,payment_order_id) VALUES(?,?,?,'active',?,?,?,?, 'manual_review',?)").bind(crypto.randomUUID(),order.user_id,order.plan_code,start,end,now,now,id)
+      ]);
+    } else {
+      await env.DB.prepare("UPDATE rev_payment_orders SET status='rejected',updated_at=?,reference=?,admin_note=?,verified_by='admin' WHERE id=?").bind(now,ref,note,id).run();
+    }
+    return response(request,env,{success:true,status,message:status==="approved"?"اشتراک فعال شد.":"درخواست رد شد."});
+   }
    if(path==="/api/auth/register" && method==="POST") {
     if(await rateLimited(request,env,"register",3)) return response(request,env,{success:false,error:"تعداد درخواست‌ها زیاد است؛ یک دقیقه دیگر تلاش کنید."},429);
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
