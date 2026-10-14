@@ -3,25 +3,25 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>پیش‌نمایش بازطراحی ظاهری برنامه‌ریز سفر | REV</title>
+<title>برنامه‌ریز سفر خودروهای برقی | REV</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{--bg:#080b0d;--panel:#101619;--line:#263238;--text:#f3f7f8;--muted:#a5b4ba;--accent:#39ff88;--blue:#00806f;--danger:#ff8d8d}
-*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.7}
+:root{color-scheme:dark;--bg:#0f1115;--panel:#1a1e24;--panel2:#15191f;--line:rgba(255,255,255,.09);--text:#fff;--muted:#9ca3af;--accent:#00e699;--blue:#00c875;--danger:#ff646e}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Vazirmatn,Vazir,IRANSansX,Tahoma,sans-serif;line-height:1.7}
 .wrap{max-width:1200px;margin:auto;padding:22px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
 .logo{font-weight:900;letter-spacing:2px;color:var(--accent);font-size:28px}.sub{color:var(--muted);font-size:13px}
-.head-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}.back-link{display:inline-flex;align-items:center;gap:7px;background:#263746;color:var(--text);text-decoration:none;border:1px solid #3b5061;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:bold;white-space:nowrap;transition:background .2s,border-color .2s}.back-link:hover{background:#344a5c;border-color:var(--accent)}
+.head-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}.back-link{display:inline-flex;align-items:center;gap:7px;background:#252c34;color:var(--text);text-decoration:none;border:1px solid #3a424d;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:bold;white-space:nowrap;transition:background .2s,border-color .2s}.back-link:hover{background:#344a5c;border-color:var(--accent)}
 .layout{display:grid;grid-template-columns:350px 1fr;gap:16px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
 h1{font-size:23px;margin:0 0 4px}h2{font-size:17px;margin:0 0 12px}
 label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
-input,select{width:100%;background:#0c131b;color:var(--text);border:1px solid #344454;border-radius:9px;padding:11px;font:inherit;outline:none}
+input,select{width:100%;background:#10141a;color:var(--text);border:1px solid #39414b;border-radius:9px;padding:11px;font:inherit;outline:none}
 input:focus,select:focus{border-color:var(--accent)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-#electricFields,#fuelFields{margin-top:8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#101923}#fuelFields[hidden]{display:none}#electricFields label,#fuelFields label{margin-top:8px}#vehicleType{border-color:var(--accent);font-weight:700}
+#electricFields,#fuelFields{margin-top:8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#15191f}#fuelFields[hidden]{display:none}#electricFields label,#fuelFields label{margin-top:8px}#vehicleType{border-color:var(--accent);font-weight:700}
 button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px;font-weight:bold}
-.primary{background:var(--accent);color:#10150a;width:100%;margin-top:16px}.secondary{background:#263746;color:var(--text)}
+.primary{background:var(--accent);color:#10150a;width:100%;margin-top:16px}.secondary{background:#252c34;color:var(--text);border:1px solid #3a424d}
 #map{height:610px;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
-.status{margin-top:12px;background:#0c131b;border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--muted);font-size:13px;white-space:pre-wrap}
+.status{margin-top:12px;background:#15191f;border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--muted);font-size:13px;white-space:pre-wrap}
 .stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
 .stat{background:#0c131b;border:1px solid var(--line);padding:10px;border-radius:10px}.stat b{display:block;font-size:20px;color:var(--accent)}.stat span{font-size:12px;color:var(--muted)}
 .results{margin-top:14px}.station{border-top:1px solid var(--line);padding:12px 0}.station strong{display:block}.station small{color:var(--muted)}
