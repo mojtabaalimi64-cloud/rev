@@ -42,7 +42,7 @@ export default {async fetch(req,env){
    if(await rateLimited(req,env))return json(req,env,{success:false,error:"تعداد درخواست‌ها زیاد است؛ چند دقیقه بعد دوباره امتحان کنید."},429);
    const body=await req.json();
    const {type,id,rating,voter}=body||{};
-   if(!validType(type)||!validId(id)||!Number.isInteger(rating)||rating<1||rating>5||typeof voter!=="string"||!/^[a-f0-9-]{20,80}$/i.test(voter))
+   if(!validType(type)||!validId(id)||!Number.isInteger(rating)||rating<1||rating>5||typeof voter!=="string"||!/^[a-z0-9-]{20,100}$/i.test(voter))
     return json(req,env,{success:false,error:"اطلاعات امتیاز معتبر نیست."},400);
    const voterHash=await hash(voter);
    try{
