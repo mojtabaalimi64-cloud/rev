@@ -6,9 +6,9 @@ const OVERPASS_SERVERS = [
   "https://overpass.kumi.systems/api/interpreter"
 ];
 const MAX_ROUTE_SAMPLES = 16;
-const MAX_RADIUS_KM = 10;
+const MAX_RADIUS_KM = 50;
 const DEFAULT_RADIUS_KM = 5;
-const UPSTREAM_TIMEOUT_MS = 7000;
+const UPSTREAM_TIMEOUT_MS = 12000;
 const CACHE_MAX_ROWS = 5000;
 const CACHE_MAX_AGE_DAYS = 180;
 
