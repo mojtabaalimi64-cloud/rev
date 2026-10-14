@@ -1096,7 +1096,7 @@ function renderStations(stations,routeCoords,routeKm,params){
   listStations.slice(0,50).forEach(s=>{
     const planned=plannedIds.has(String(s.id));
     const marker=L.circleMarker([s.lat,s.lon],{radius:planned?10:7,color:'#0b1016',weight:2,fillColor:planned?'#64b5ff':'#d7ff3f',fillOpacity:.98}).addTo(stationLayer);
-    marker.bindPopup(`<div style="min-width:190px"><b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+' kW':'نامشخص'}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br>منبع: ${escapeHTML(s.source||"نامشخص")}<br>${escapeHTML(formatStationUpdatedAt(s.updatedAt))}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a><br><button type="button" class="rev-map-report-button" style="margin-top:9px;padding:7px 10px;border:0;border-radius:7px;background:#39ff88;color:#080b0d;font-weight:800;cursor:pointer">گزارش مشکل این جایگاه</button></div>`);
+    marker.bindPopup(`<div style="min-width:190px"><b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+' kW':'نامشخص'}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br>منبع: ${escapeHTML(s.source||"نامشخص")}<br>${escapeHTML(formatStationUpdatedAt(s.updatedAt))}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a><br><button type="button" class="rev-map-report-button" style="margin-top:9px;padding:7px 10px;border:0;border-radius:7px;background:#39ff88;color:#080b0d;font-weight:800;cursor:pointer">گزارش خرابی یا تخلف این جایگاه</button></div>`);
     const item=document.createElement('div');item.className='station';
     const ratingLabel=s._ratingCount?('★ '+s._ratingAverage.toFixed(1)+'/۵ · '+s._ratingCount+' رأی'):'بدون امتیاز';
     item.innerHTML=`<strong>${planned?'★ توقف پیشنهادی: ':''}${escapeHTML(s.name)} <span class="pill" style="display:inline-block">${escapeHTML(ratingLabel)}</span></strong><small>${escapeHTML(s.address||'نشانی کامل ثبت نشده')}</small><div><span class="pill">${s.routeDistance.toFixed(1)} کیلومتر فاصله از جاده</span><span class="pill">کیلومتر ${Math.round(s.routeKm??0)} مسیر</span><span class="pill">${s.power?s.power+' kW':'توان نامشخص'}</span><span class="pill">${escapeHTML(s.status)}</span></div><div class="sub">${escapeHTML(s.connectors.join('، ')||'نوع کانکتور نامشخص')}${s.operator?' · '+escapeHTML(s.operator):''}</div><div class="sub">${escapeHTML(s.source||"منبع نامشخص")} · ${escapeHTML(formatStationUpdatedAt(s.updatedAt))}</div><div style="margin-top:6px"><a href="${s.url}" target="_blank" rel="noopener" style="color:#64b5ff">مشاهده جزئیات</a> · <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lon}#map=16/${s.lat}/${s.lon}" target="_blank" rel="noopener" style="color:#64b5ff">نمایش روی نقشه</a></div>`;
@@ -1107,7 +1107,7 @@ function renderStations(stations,routeCoords,routeKm,params){
     const reportBox=document.createElement("details");
     reportBox.className="station-report-box";
     reportBox.style.cssText="margin-top:10px;padding:9px 11px;border:1px solid #394650;border-radius:10px;background:#0c131b;color:#e9f0f4";
-    reportBox.innerHTML=`<summary style="cursor:pointer;font-size:13px;font-weight:700">گزارش مشکل در اطلاعات این جایگاه</summary>
+    reportBox.innerHTML=`<summary style="cursor:pointer;font-size:13px;font-weight:700">ثبت گزارش خرابی، تخلف یا خطای اطلاعات</summary>
       <form class="station-report-form" style="display:grid;gap:8px;margin-top:10px">
         <label style="font-size:12px">نوع مشکل
           <select name="report_type" required style="display:block;width:100%;margin-top:4px;padding:8px;border-radius:8px;background:#101a22;color:#f5f7f8;border:1px solid #52616b">
@@ -1123,13 +1123,16 @@ function renderStations(stations,routeCoords,routeKm,params){
     // Let users open the existing report form directly from a charging-station map popup.
     marker.on("popupopen",event=>{
       const button=event.popup.getElement()?.querySelector(".rev-map-report-button");
-      if(!button)return;
-      button.addEventListener("click",()=>{
+      if(!button||button.dataset.bound==="1")return;
+      button.dataset.bound="1";
+      button.addEventListener("click",ev=>{
+        ev.preventDefault();
+        ev.stopPropagation();
         reportBox.open=true;
-        map.closePopup();
-        item.scrollIntoView({behavior:"smooth",block:"center"});
+        reportBox.scrollIntoView({behavior:"smooth",block:"center"});
         reportBox.querySelector("summary")?.focus({preventScroll:true});
-      },{once:true});
+        map.closePopup();
+      });
     });
     const reportForm=reportBox.querySelector("form"),reportMessage=reportBox.querySelector(".station-report-message"),reportSubmit=reportForm.querySelector('button[type="submit"]');
     const reportId=String(s._revRatingId||s.id||((s.source||"station")+":"+(s.name||"")+":"+(s.lat??"")+","+(s.lon??""))).slice(0,240);
