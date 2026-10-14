@@ -138,9 +138,11 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
         <div><label for="soc">شارژ اولیه (%)</label><input id="soc" type="number" min="5" max="100" value="90"></div>
       </div>
       <div class="grid2">
-        <div><label for="consumption">مصرف (kWh/100km)</label><input id="consumption" type="number" min="5" max="50" step="0.5" value="18"></div>
+        <div><label for="consumption">مصرف پایه (kWh/100km)</label><input id="consumption" type="number" min="5" max="50" step="0.5" value="18"></div>
         <div><label for="reserve">ذخیره ایمنی (%)</label><input id="reserve" type="number" min="5" max="40" value="15"></div>
       </div>
+      <label for="hvacMode">محاسبه اثر بخاری و کولر</label><select id="hvacMode"><option value="auto" selected>خودکار بر اساس دمای مسیر</option><option value="off">بدون اثر بخاری و کولر</option></select>
+      <div class="sub" style="margin-top:5px">در حالت خودکار، مصرف تقریبی تهویه بر اساس دمای پیش‌بینی‌شده و سرعت مسیر به مصرف پایه اضافه می‌شود.</div>
       <label for="targetSoc">شارژ هدف در توقف‌های بین‌راهی (%)</label>
       <input id="targetSoc" type="number" min="30" max="100" value="80">
       <label for="radius">فاصله قابل‌قبول شارژر از مسیر</label>
@@ -671,7 +673,14 @@ async function fetchWeatherAt(lat,lon,when){
   if(!Number.isFinite(result.windSpeed)||!Number.isFinite(result.windDirection))throw new Error("داده باد برای این زمان کامل نیست.");
   return result;
 }
-function analyzeWind(sample,heading,speedKmh,baseConsumption){
+function estimateHvacLoadKw(temperature,mode){
+  if(mode==="off"||!Number.isFinite(temperature))return 0;
+  // Approximate average cabin HVAC load; actual demand varies by vehicle and heat-pump type.
+  if(temperature<18)return Math.max(0.5,Math.min(3.0,0.5+(18-temperature)*0.12));
+  if(temperature>24)return Math.max(0.4,Math.min(2.0,0.4+(temperature-24)*0.13));
+  return 0;
+}
+function analyzeWind(sample,heading,speedKmh,baseConsumption,hvacMode="auto"){
   // wind_direction_10m is the direction the wind comes FROM.
   const delta=((sample.windDirection-heading+540)%360)-180;
   const headwind=sample.windSpeed*Math.cos(delta*Math.PI/180);
@@ -680,7 +689,10 @@ function analyzeWind(sample,heading,speedKmh,baseConsumption){
   // This is a planning estimate, not a vehicle-specific physical simulation.
   const aeroRatio=((vehicleSpeed+headwind)/vehicleSpeed)**2;
   const factor=Math.max(0.80,Math.min(1.50,1+0.30*(aeroRatio-1)));
-  return {headwind, factor, adjustedConsumption:baseConsumption*factor};
+  const vehicleConsumptionSpeed=Math.max(40,Math.min(110,speedKmh||80));
+  const hvacLoadKw=estimateHvacLoadKw(sample.temperature,hvacMode);
+  const hvacConsumption=hvacLoadKw*100/vehicleConsumptionSpeed;
+  return {headwind, factor, hvacLoadKw, hvacConsumption, adjustedConsumption:baseConsumption*factor+hvacConsumption};
 }
 function renderWeather(samples,baseConsumption,adjustedConsumption){
   const panel=$("weatherPanel");
@@ -689,11 +701,13 @@ function renderWeather(samples,baseConsumption,adjustedConsumption){
   const content=$("weatherContent");
   const factors=samples.map(s=>s.wind.factor);
   const avgFactor=factors.reduce((a,b)=>a+b,0)/Math.max(1,factors.length);
-  const pct=(avgFactor-1)*100;
+  const avgHvac=samples.reduce((sum,s)=>sum+(s.wind.hvacConsumption||0),0)/Math.max(1,samples.length);
+  const pct=(adjustedConsumption/baseConsumption-1)*100;
+  const windPct=(avgFactor-1)*100;
   const summary=document.createElement("div");
   summary.className="weather-summary"+(samples.some(s=>s.weather.precipProb>=60)||samples.some(s=>s.weather.gust>=45)?" warn":"");
   const effect=pct>1?("افزایش تخمینی مصرف "+pct.toFixed(1)+"٪"):pct< -1?("کاهش تخمینی مصرف "+Math.abs(pct).toFixed(1)+"٪"):"تغییر متوسط مصرف ناشی از باد ناچیز برآورد می‌شود";
-  summary.textContent=effect+" · مصرف مبنا "+baseConsumption.toFixed(1)+" و مصرف تعدیل‌شده "+adjustedConsumption.toFixed(1)+" کیلووات‌ساعت در ۱۰۰ کیلومتر.";
+  summary.textContent=effect+" · مصرف پایه "+baseConsumption.toFixed(1)+"، اثر متوسط باد "+(windPct>=0?"+":"")+windPct.toFixed(1)+"٪، سهم تخمینی بخاری/کولر "+avgHvac.toFixed(1)+" و مصرف نهایی "+adjustedConsumption.toFixed(1)+" kWh/100km.";
   content.appendChild(summary);
   const grid=document.createElement("div");grid.className="weather-grid";
   samples.forEach((s,i)=>{
@@ -709,12 +723,12 @@ function renderWeather(samples,baseConsumption,adjustedConsumption){
     const relative=s.wind.headwind>3?"باد روبه‌رو":s.wind.headwind< -3?"باد پشت":"باد جانبی/متغیر";
     wind.textContent="باد "+Math.round(s.weather.windSpeed)+" km/h از "+compassDirection(s.weather.windDirection)+" · "+relative;
     const gust=document.createElement("div");gust.className="weather-detail";
-    gust.textContent="تندباد: "+(Number.isFinite(s.weather.gust)?Math.round(s.weather.gust)+" km/h":"نامشخص")+" · اثر تخمینی باد: "+((s.wind.factor-1)*100>=0?"+":"")+((s.wind.factor-1)*100).toFixed(1)+"٪";
+    gust.textContent="تندباد: "+(Number.isFinite(s.weather.gust)?Math.round(s.weather.gust)+" km/h":"نامشخص")+" · اثر باد: "+((s.wind.factor-1)*100>=0?"+":"")+((s.wind.factor-1)*100).toFixed(1)+"٪ · بخاری/کولر: "+(s.wind.hvacLoadKw||0).toFixed(1)+" kW (حدود "+(s.wind.hvacConsumption||0).toFixed(1)+" kWh/100km)";
     card.append(heading,time,conditions,wind,gust);grid.appendChild(card);
   });
   content.appendChild(grid);
   const credit=document.createElement("div");credit.className="weather-credit";
-  credit.innerHTML='منبع پیش‌بینی: <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#64b5ff">Open-Meteo</a>. پیش‌بینی قطعی نیست. اثر باد با مدل ساده و تقریبی محاسبه شده و به شکل خودرو، سرعت واقعی، بادگیر بودن مسیر و سامانه گرمایش/سرمایش وابسته است؛ دما و بارش فعلاً نمایش داده می‌شوند اما ضریب مصرف جداگانه‌ای برای آن‌ها اعمال نشده است.';
+  credit.innerHTML='منبع پیش‌بینی: <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#64b5ff">Open-Meteo</a>. پیش‌بینی قطعی نیست. اثر باد و بار مصرفی بخاری/کولر با مدل ساده و تقریبی محاسبه می‌شود؛ مصرف واقعی به مدل خودرو، نوع پمپ حرارتی یا بخاری مقاومتی، تنظیم دمای کابین، سرعت و شرایط جاده وابسته است.';
   content.appendChild(credit);
   const more=document.createElement("button");more.type="button";more.className="weather-more";more.textContent="نمایش بیشتر";
   more.addEventListener("click",()=>{const expanded=panel.classList.toggle("weather-expanded");content.classList.toggle("weather-expanded",expanded);content.classList.toggle("weather-fade",!expanded);more.textContent=expanded?"نمایش کمتر":"نمایش بیشتر";});
@@ -743,13 +757,15 @@ async function getRouteWeather(routeCoords,routeKm,routeDurationSeconds,departur
     const weather=await fetchWeatherAt(point[0],point[1],eta);
     const prev=samples[Math.max(0,i-1)],next=samples[Math.min(samples.length-1,i+1)];
     const heading=bearingDegrees(prev,next);
-    const wind=analyzeWind(weather,heading,speedKmh,baseConsumption);
+    const wind=analyzeWind(weather,heading,speedKmh,baseConsumption,$("hvacMode")?.value||"auto");
     results.push({lat:point[0],lon:point[1],routeKm:routeKm*fraction,eta,weather,wind});
   }
   // Weighted by distance between samples; endpoints count as half-segments.
   const weights=results.map((_,i)=>(i===0||i===results.length-1)?0.5:1);
-  const avgFactor=results.reduce((sum,x,i)=>sum+x.wind.factor*weights[i],0)/weights.reduce((a,b)=>a+b,0);
-  return {samples:results,adjustedConsumption:baseConsumption*avgFactor,avgFactor,departure,arrival};
+  const weightTotal=weights.reduce((a,b)=>a+b,0);
+  const avgFactor=results.reduce((sum,x,i)=>sum+x.wind.factor*weights[i],0)/weightTotal;
+  const adjustedConsumption=results.reduce((sum,x,i)=>sum+x.wind.adjustedConsumption*weights[i],0)/weightTotal;
+  return {samples:results,adjustedConsumption,avgFactor,departure,arrival};
 }
 
 
@@ -936,7 +952,7 @@ async function planTrip(){
 }
 function applySharedTripParams(){
   const q=new URLSearchParams(window.location.search);
-  const fields={origin:"origin",destination:"destination",battery:"battery",soc:"soc",consumption:"consumption",reserve:"reserve",targetSoc:"targetSoc",radius:"radius",date:"departureJalali",time:"departureClock"};
+  const fields={origin:"origin",destination:"destination",battery:"battery",soc:"soc",consumption:"consumption",reserve:"reserve",targetSoc:"targetSoc",radius:"radius",hvac:"hvacMode",date:"departureJalali",time:"departureClock"};
   let applied=0;
   for(const [key,id] of Object.entries(fields)){
     const value=q.get(key),el=$(id);
@@ -944,6 +960,7 @@ function applySharedTripParams(){
     if(["origin","destination"].includes(key))el.value=value.slice(0,180);
     else if(key==="date"&&/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(value))el.value=value;
     else if(key==="time"&&/^([01]\d|2[0-3]):[0-5]\d$/.test(value))el.value=value;
+    else if(key==="hvac"&&["auto","off"].includes(value))el.value=value;
     else if(["battery","soc","consumption","reserve","targetSoc","radius"].includes(key)&&Number.isFinite(Number(value)))el.value=value;
     applied++;
   }
@@ -951,7 +968,7 @@ function applySharedTripParams(){
   if(applied)$("status").textContent="تنظیمات سفر از لینک اشتراکی بارگذاری شد. برای محاسبه مسیر، دکمه سبز را بزنید.";
 }
 function buildTripShareUrl(){
-  const q=new URLSearchParams({origin:$("origin").value.trim(),destination:$("destination").value.trim(),battery:$("battery").value,soc:$("soc").value,consumption:$("consumption").value,reserve:$("reserve").value,targetSoc:$("targetSoc").value,radius:$("radius").value,date:$("departureJalali").value.trim(),time:$("departureClock").value});
+  const q=new URLSearchParams({origin:$("origin").value.trim(),destination:$("destination").value.trim(),battery:$("battery").value,soc:$("soc").value,consumption:$("consumption").value,reserve:$("reserve").value,targetSoc:$("targetSoc").value,radius:$("radius").value,hvac:$("hvacMode").value,date:$("departureJalali").value.trim(),time:$("departureClock").value});
   return window.location.origin+window.location.pathname+"?"+q.toString();
 }
 async function shareTrip(){
