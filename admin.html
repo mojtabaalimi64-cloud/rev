@@ -411,7 +411,7 @@ async function loadStations(){
     if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
     stationsCache=Array.isArray(j.data)?j.data:[];note=`${stationsCache.length} جایگاه از دیتابیس دریافت شد.`;
   }catch(e){note='دریافت جایگاه‌ها ناموفق بود: '+(e.message||'خطای اتصال');stationsCache=[]}
-  finally{stationBusy=false;if(tab==='stations')draw()}
+  finally{stationBusy=false;if(tab==='stations'||tab==='rating-admin')draw()}
 }
 function stationDate(s){
   const raw=s?.updated_at||s?.updatedAt||s?.last_updated||'';
@@ -548,7 +548,7 @@ root.addEventListener('click',async e=>{
     if(tab==='serviceCenters'||tab==='partsStores'){
       const lat=Number(it.latitude),lon=Number(it.longitude);
       if(it.latitude!==''||it.longitude!=='')if(!Number.isFinite(lat)||lat < -90||lat > 90||!Number.isFinite(lon)||lon < -180||lon > 180){msg('مختصات باید معتبر باشد؛ برای نمایش روی نقشه هر دو مختصات را وارد کنید.');return}
-      it.category=tab==='serviceCenters'?'authorized_ev_service':'ev_parts_store';it.latitude=it.latitude===''?'':lat;it.longitude=it.longitude===''?'':lon;it.id=it.id||tab+'-'+Date.now().toString(36);
+      it.category=tab==='serviceCenters'?'authorized_ev_service':'ev_parts_store';it.latitude=it.latitude===''?'':lat;it.longitude=it.longitude===''?'':lon;it.id=it.id||tab+'-'+Date.now().toString(36);if(!it.publicCode){const prefix=tab==='serviceCenters'?'RP':'ST';const suffix=String(it.id).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(-10).padStart(4,'0');it.publicCode='REV-'+prefix+'-'+suffix;}
     }
     if(tab==='articles'&&!it.slug)it.slug='a'+Date.now().toString(36);
     if(edit.i<0)c[tab].unshift(it);else c[tab][edit.i]=it;
