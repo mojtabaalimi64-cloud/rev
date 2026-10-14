@@ -57,6 +57,10 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 .map-tag{font-size:11px;color:#d7ff3f;border:1px solid #48583c;background:#19231a;padding:4px 9px;border-radius:99px}
 .directions{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:15px;background:#0d151e}
 .weather-panel{margin-top:16px;padding:16px;border:1px solid #2d4654;border-radius:15px;background:linear-gradient(145deg,#10202b,#0d151e)}
+.weather-content{position:relative;overflow:hidden;max-height:260px;transition:max-height .25s ease}
+.weather-panel.weather-expanded .weather-content{max-height:5000px}
+.weather-content.weather-fade:not(.weather-expanded)::after{content:"";position:absolute;left:0;right:0;bottom:0;height:52px;background:linear-gradient(transparent,#0d1922);pointer-events:none}
+.weather-more{display:block;width:100%;margin-top:8px;padding:9px 12px;border:1px solid #405968;border-radius:10px;background:#172733;color:#d7ff3f;font:700 13px Tahoma,Arial,sans-serif;cursor:pointer}
 .weather-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
 .weather-card{padding:12px;border:1px solid #2b414f;border-radius:12px;background:#0d1821;min-width:0}
 .weather-card strong{display:block;font-size:13px;margin-bottom:5px}
@@ -680,7 +684,9 @@ function analyzeWind(sample,heading,speedKmh,baseConsumption){
 }
 function renderWeather(samples,baseConsumption,adjustedConsumption){
   const panel=$("weatherPanel");
-  panel.innerHTML='<div class="directions-head"><h2>هواشناسی و تحلیل باد در مسیر</h2><span class="sub">پیش‌بینی ساعتی</span></div>';
+  panel.classList.remove("weather-expanded");
+  panel.innerHTML='<div class="directions-head"><h2>هواشناسی و تحلیل باد در مسیر</h2><span class="sub">پیش‌بینی ساعتی</span></div><div class="weather-content weather-fade" id="weatherContent"></div>';
+  const content=$("weatherContent");
   const factors=samples.map(s=>s.wind.factor);
   const avgFactor=factors.reduce((a,b)=>a+b,0)/Math.max(1,factors.length);
   const pct=(avgFactor-1)*100;
@@ -688,7 +694,7 @@ function renderWeather(samples,baseConsumption,adjustedConsumption){
   summary.className="weather-summary"+(samples.some(s=>s.weather.precipProb>=60)||samples.some(s=>s.weather.gust>=45)?" warn":"");
   const effect=pct>1?("افزایش تخمینی مصرف "+pct.toFixed(1)+"٪"):pct< -1?("کاهش تخمینی مصرف "+Math.abs(pct).toFixed(1)+"٪"):"تغییر متوسط مصرف ناشی از باد ناچیز برآورد می‌شود";
   summary.textContent=effect+" · مصرف مبنا "+baseConsumption.toFixed(1)+" و مصرف تعدیل‌شده "+adjustedConsumption.toFixed(1)+" کیلووات‌ساعت در ۱۰۰ کیلومتر.";
-  panel.appendChild(summary);
+  content.appendChild(summary);
   const grid=document.createElement("div");grid.className="weather-grid";
   samples.forEach((s,i)=>{
     const card=document.createElement("div");card.className="weather-card";
@@ -706,10 +712,13 @@ function renderWeather(samples,baseConsumption,adjustedConsumption){
     gust.textContent="تندباد: "+(Number.isFinite(s.weather.gust)?Math.round(s.weather.gust)+" km/h":"نامشخص")+" · اثر تخمینی باد: "+((s.wind.factor-1)*100>=0?"+":"")+((s.wind.factor-1)*100).toFixed(1)+"٪";
     card.append(heading,time,conditions,wind,gust);grid.appendChild(card);
   });
-  panel.appendChild(grid);
+  content.appendChild(grid);
   const credit=document.createElement("div");credit.className="weather-credit";
   credit.innerHTML='منبع پیش‌بینی: <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#64b5ff">Open-Meteo</a>. پیش‌بینی قطعی نیست. اثر باد با مدل ساده و تقریبی محاسبه شده و به شکل خودرو، سرعت واقعی، بادگیر بودن مسیر و سامانه گرمایش/سرمایش وابسته است؛ دما و بارش فعلاً نمایش داده می‌شوند اما ضریب مصرف جداگانه‌ای برای آن‌ها اعمال نشده است.';
-  panel.appendChild(credit);
+  content.appendChild(credit);
+  const more=document.createElement("button");more.type="button";more.className="weather-more";more.textContent="نمایش بیشتر";
+  more.addEventListener("click",()=>{const expanded=panel.classList.toggle("weather-expanded");content.classList.toggle("weather-expanded",expanded);content.classList.toggle("weather-fade",!expanded);more.textContent=expanded?"نمایش کمتر":"نمایش بیشتر";});
+  panel.appendChild(more);
 }
 async function getRouteWeather(routeCoords,routeKm,routeDurationSeconds,departureValue,baseConsumption){
   if(!departureValue)throw new Error("تاریخ شمسی و ساعت حرکت را درست وارد کنید؛ نمونه تاریخ: ۱۴۰۵/۰۷/۲۲.");
