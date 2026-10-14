@@ -217,7 +217,7 @@ async function loadRatings(){
     if(!stationsRes.ok||!stations.success)throw new Error(stations.error||('ایستگاه‌ها: HTTP '+stationsRes.status));
     ratingsCache=[
       ...(Array.isArray(stores.items)?stores.items.map(x=>({...x,_type:'store'})):[]),
-      ...(Array.isArray(stations.items)?stations.items.map(x=>({...x,_type:'station'})):[]
+      ...(Array.isArray(stations.items)?stations.items.map(x=>({...x,_type:'station'})):[])
     ];
     note='سابقه '+ratingsCache.length+' رأی فروشگاه/تعمیرگاه و ایستگاه شارژ دریافت شد.';
   }catch(e){ratingsCache=[];note='دریافت سابقه امتیازها ناموفق بود: '+(e.message||'خطای اتصال')+'؛ رمز مدیر و انتشار Worker امتیازدهی را بررسی کنید.'}
