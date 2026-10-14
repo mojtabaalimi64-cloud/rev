@@ -110,6 +110,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 .timeline-legend{font-size:11px;color:var(--muted);margin-top:8px}
 @media(max-width:650px){.timeline-readout{grid-template-columns:repeat(2,minmax(0,1fr))}.timeline-panel{padding:13px}.timeline-car svg{width:38px;height:25px}}
 
+ .compact-disclosure{margin-top:12px;border:1px solid #2d4351;border-radius:12px;background:#0d151e;overflow:hidden}.compact-disclosure>summary{cursor:pointer;list-style:none;padding:11px 13px;color:var(--accent);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:10px}.compact-disclosure>summary::-webkit-details-marker{display:none}.compact-disclosure>summary:after{content:"＋";font-size:16px}.compact-disclosure[open]>summary:after{content:"−"}.disclosure-content{max-height:260px;overflow:auto;padding:0 12px 12px}.disclosure-content .results{margin-top:4px}.disclosure-content .directions{margin-top:0;padding:8px;background:transparent;border:0}.disclosure-content .direction-item{padding:8px 0}.disclosure-content .plan-box{margin:8px 0;padding:9px}.disclosure-content .station{padding:8px 6px}
 </style>
 </head>
 <body>
@@ -126,7 +127,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
       <h1>برنامه‌ریزی سفر</h1>
       <div class="sub">مبدأ، مقصد و مشخصات باتری را وارد کنید تا مسیر، شارژرهای ثبت‌شده و توقف‌های پیشنهادی محاسبه شوند.</div>
       <label for="origin">مبدأ</label><input id="origin" placeholder="مثلاً تهران، میدان آزادی" value="تهران">
-      <label for="destination">مقصد</label><input id="destination" placeholder="مثلاً اصفهان، میدان نقش جهان" value="اصفهان"><div class="grid2"><div><label for="departure">تاریخ و ساعت حرکت</label><input id="departure" type="datetime-local" required></div><div><label for="weatherModel">منبع هواشناسی</label><select id="weatherModel"><option value="auto" selected>پیش‌بینی خودکار</option></select></div></div><div class="sub" style="margin-top:6px">آب‌وهوا بر اساس زمان عبور تخمینی از نقاط مسیر دریافت می‌شود؛ باد به‌صورت خودکار تحلیل می‌شود.</div>
+      <label for="destination">مقصد</label><input id="destination" placeholder="مثلاً اصفهان، میدان نقش جهان" value="اصفهان"><div class="grid2"><div><label for="departureJalali">تاریخ حرکت (شمسی)</label><input id="departureJalali" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۷/۲۲" autocomplete="off" required><input id="departure" type="hidden"></div><div><label for="departureClock">ساعت حرکت</label><input id="departureClock" type="time" required><label for="weatherModel">منبع هواشناسی</label><select id="weatherModel"><option value="auto" selected>پیش‌بینی خودکار</option></select></div></div><div class="sub" style="margin-top:6px">آب‌وهوا بر اساس زمان عبور تخمینی از نقاط مسیر دریافت می‌شود؛ باد به‌صورت خودکار تحلیل می‌شود.</div>
       <div class="grid2">
         <div><label for="battery">ظرفیت باتری (kWh)</label><input id="battery" type="number" min="10" max="250" value="60"></div>
         <div><label for="soc">شارژ اولیه (%)</label><input id="soc" type="number" min="5" max="100" value="90"></div>
@@ -147,7 +148,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
         <div class="stat"><b id="range">—</b><span>برد تخمینی (km)</span></div>
       </div>
       <div class="warning">برنامه توقف بر اساس ظرفیت باتری، مصرف، شارژ اولیه و ذخیره ایمنی تخمین زده می‌شود. اطلاعات زنده‌بودن، اشغال بودن، توان و سازگاری کانکتور ایستگاه‌ها تضمین نمی‌شود؛ پیش از سفر بررسی کنید.</div>
-      <div class="results" id="results"><h2 style="margin-top:18px">شارژرهای نزدیک مسیر</h2><div class="sub">پس از محاسبه مسیر، فهرست اینجا نمایش داده می‌شود.</div></div>
+      <details class="compact-disclosure" id="resultsDetails"><summary>نمایش بیشتر · ایستگاه‌های شارژ و توقف‌ها</summary><div class="disclosure-content"><div class="results" id="results"><h2 style="margin-top:10px">شارژرهای نزدیک مسیر</h2><div class="sub">پس از محاسبه مسیر، فهرست اینجا نمایش داده می‌شود.</div></div></div></details>
     </aside>
     <main class="panel">
       <div class="map-heading"><h2>نقشه مسیر و ایستگاه‌های شارژ</h2><span class="map-tag">نقشه زنده · مسیر جاده‌ای</span></div>
@@ -170,10 +171,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
     <div class="timeline-legend">زمان و شارژ برآوردی‌اند و به سرعت واقعی، ترافیک، شیوه رانندگی و مدت توقف شارژ وابسته‌اند. حرکت نشانگر، اطلاعات مسیر را تغییر نمی‌دهد.</div>
   </section>
       <section class="weather-panel" id="weatherPanel" aria-live="polite"><div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در انتظار محاسبه مسیر</span></div><div class="sub">پس از تعیین زمان حرکت، باد، دما و بارش در طول مسیر بررسی می‌شود.</div></section>
-      <section class="directions" id="directionsPanel" aria-live="polite">
-        <div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub" id="directionsSummary">پس از محاسبه مسیر نمایش داده می‌شود</span></div>
-        <div class="sub">برای مشاهده مسیر و راهنمای پیچ‌ها، مبدأ و مقصد را وارد کنید.</div>
-      </section>
+      <details class="compact-disclosure" id="directionsDetails"><summary>نمایش بیشتر · راهنمای مسیر</summary><section class="directions disclosure-content" id="directionsPanel" aria-live="polite"><div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub" id="directionsSummary">پس از محاسبه مسیر نمایش داده می‌شود</span></div><div class="sub">برای مشاهده مسیر و راهنمای پیچ‌ها، مبدأ و مقصد را وارد کنید.</div></section></details>
     </main>
   </div>
 </div>
@@ -572,14 +570,47 @@ function localDateTimeValue(date){
   const pad=n=>String(n).padStart(2,"0");
   return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())+"T"+pad(date.getHours())+":"+pad(date.getMinutes());
 }
-function initDepartureInput(){
-  const input=$("departure");
-  if(!input.value){
-    const d=new Date(Date.now()+60*60*1000);
-    d.setMinutes(Math.ceil(d.getMinutes()/15)*15,0,0);
-    input.value=localDateTimeValue(d);
+function jalaliParts(date){
+  const parts=new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn",{year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(date);
+  const get=t=>Number(parts.find(p=>p.type===t)?.value);
+  return {year:get("year"),month:get("month"),day:get("day")};
+}
+function jalaliDateText(date){
+  const p=jalaliParts(date),pad=n=>String(n).padStart(2,"0");
+  return p.year+"/"+pad(p.month)+"/"+pad(p.day);
+}
+function parseJalaliDate(text){
+  const normalized=String(text||"").replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).trim();
+  const m=normalized.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/);
+  if(!m)return null;
+  const jy=Number(m[1]),jm=Number(m[2]),jd=Number(m[3]);
+  if(jm<1||jm>12||jd<1||jd>31)return null;
+  const target=jy+"-"+jm+"-"+jd;
+  const start=new Date(Date.UTC(jy+621,2,1));
+  for(let offset=-75;offset<310;offset++){
+    const d=new Date(start.getTime()+offset*86400000),p=jalaliParts(d);
+    if(p.year===jy&&p.month===jm&&p.day===jd)return {year:jy,month:jm,day:jd,date:d};
   }
-  input.min=localDateTimeValue(new Date(Date.now()-5*60*1000));
+  return null;
+}
+function syncDepartureInput(){
+  const parsed=parseJalaliDate($("departureJalali").value);
+  const time=$("departureClock").value;
+  if(!parsed||!time){$("departure").value="";return false;}
+  const [h,m]=time.split(":").map(Number);
+  const d=new Date(parsed.date.getTime());
+  d.setHours(h,m,0,0);
+  $("departure").value=localDateTimeValue(d);
+  return true;
+}
+function initDepartureInput(){
+  const d=new Date(Date.now()+60*60*1000);
+  d.setMinutes(Math.ceil(d.getMinutes()/15)*15,0,0);
+  $("departureJalali").value=jalaliDateText(d);
+  $("departureClock").value=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
+  syncDepartureInput();
+  $("departureJalali").addEventListener("change",syncDepartureInput);
+  $("departureClock").addEventListener("change",syncDepartureInput);
 }
 async function fetchWeatherAt(lat,lon,when){
   const date=when.toISOString().slice(0,10);
@@ -665,7 +696,7 @@ function renderWeather(samples,baseConsumption,adjustedConsumption){
   panel.appendChild(credit);
 }
 async function getRouteWeather(routeCoords,routeKm,routeDurationSeconds,departureValue,baseConsumption){
-  if(!departureValue)throw new Error("تاریخ و ساعت حرکت را انتخاب کنید.");
+  if(!departureValue)throw new Error("تاریخ شمسی و ساعت حرکت را درست وارد کنید؛ نمونه تاریخ: ۱۴۰۵/۰۷/۲۲.");
   const departure=new Date(departureValue);
   if(!Number.isFinite(departure.getTime()))throw new Error("تاریخ و ساعت حرکت معتبر نیست.");
   if(departure.getTime()<Date.now()-5*60*1000)throw new Error("زمان حرکت نمی‌تواند در گذشته باشد.");
@@ -808,6 +839,7 @@ async function planTrip(){
   window.revStationSourceWarning = "";
   window.revStationCacheNote = "";
   $("planBtn").disabled=true;$("planBtn").textContent="در حال محاسبه…";
+  if(!syncDepartureInput()){setStatus("تاریخ شمسی یا ساعت حرکت معتبر نیست. تاریخ را مانند ۱۴۰۵/۰۷/۲۲ وارد کنید.");$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";return;}
   routeLayer.clearLayers();stationLayer.clearLayers();$("results").innerHTML="<h2 style='margin-top:18px'>شارژرهای نزدیک مسیر</h2>";$("directionsPanel").innerHTML='<div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub">در حال محاسبه…</span></div>';
   try{
     const origin=$("origin").value.trim(), destination=$("destination").value.trim();
