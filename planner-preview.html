@@ -1,0 +1,1418 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>برنامه‌ریز سفر خودرو برقی | REV</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--bg:#0b1016;--panel:#121a23;--line:#263442;--text:#eef4f8;--muted:#9eafbd;--accent:#d7ff3f;--blue:#64b5ff;--danger:#ff8d8d}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font-family:Tahoma,Arial,sans-serif;line-height:1.7}
+.wrap{max-width:1200px;margin:auto;padding:22px}.head{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:18px}
+.logo{font-weight:900;letter-spacing:2px;color:var(--accent);font-size:28px}.sub{color:var(--muted);font-size:13px}
+.head-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end}.back-link{display:inline-flex;align-items:center;gap:7px;background:#263746;color:var(--text);text-decoration:none;border:1px solid #3b5061;border-radius:10px;padding:9px 13px;font-size:13px;font-weight:bold;white-space:nowrap;transition:background .2s,border-color .2s}.back-link:hover{background:#344a5c;border-color:var(--accent)}
+.layout{display:grid;grid-template-columns:350px 1fr;gap:16px}.panel{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px}
+h1{font-size:23px;margin:0 0 4px}h2{font-size:17px;margin:0 0 12px}
+label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
+input,select{width:100%;background:#0c131b;color:var(--text);border:1px solid #344454;border-radius:9px;padding:11px;font:inherit;outline:none}
+input:focus,select:focus{border-color:var(--accent)}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#electricFields,#fuelFields{margin-top:8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#101923}#fuelFields[hidden]{display:none}#electricFields label,#fuelFields label{margin-top:8px}#vehicleType{border-color:var(--accent);font-weight:700}
+button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px;font-weight:bold}
+.primary{background:var(--accent);color:#10150a;width:100%;margin-top:16px}.secondary{background:#263746;color:var(--text)}
+#map{height:610px;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
+.status{margin-top:12px;background:#0c131b;border:1px solid var(--line);border-radius:10px;padding:10px;color:var(--muted);font-size:13px;white-space:pre-wrap}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:12px}
+.stat{background:#0c131b;border:1px solid var(--line);padding:10px;border-radius:10px}.stat b{display:block;font-size:20px;color:var(--accent)}.stat span{font-size:12px;color:var(--muted)}
+.results{margin-top:14px}.station{border-top:1px solid var(--line);padding:12px 0}.station strong{display:block}.station small{color:var(--muted)}
+.plan-box{margin:14px 0;padding:13px;border:1px solid #53633a;background:#151e17;border-radius:12px}
+.plan-box h2{margin:0 0 8px;color:var(--accent)}
+.plan-stop{padding:10px 0;border-top:1px solid #354331}
+.plan-stop strong{display:block}
+.plan-meta{font-size:12px;color:var(--muted)}
+.plan-alert{color:#ffd18a;font-size:13px}
+.plan-ok{color:#d7ff3f;font-size:13px}
+
+.pill{display:inline-block;font-size:11px;border:1px solid #4a5b69;border-radius:99px;padding:2px 7px;margin:4px 3px 0 0;color:#d9e4eb}
+.warning{font-size:12px;color:#ffd18a;margin-top:10px}
+body{background:radial-gradient(ellipse at 85% -10%,#1b3442 0,transparent 38%),linear-gradient(160deg,#0a1016,#0d151d 55%,#0a1016)}
+.wrap{max-width:1440px;padding:24px}
+.head{padding:18px 20px;border:1px solid #263b49;border-radius:18px;background:linear-gradient(120deg,rgba(18,29,39,.96),rgba(13,22,31,.86));box-shadow:0 12px 34px #0002}
+.logo{font-size:32px;letter-spacing:3px;text-shadow:0 0 22px #d7ff3f22}
+.sub{line-height:1.8}
+.layout{grid-template-columns:minmax(310px,370px) minmax(0,1fr);align-items:start;gap:18px}
+.panel{background:linear-gradient(155deg,rgba(19,29,39,.98),rgba(14,22,30,.98));border-color:#2a3b49;border-radius:18px;box-shadow:0 14px 38px #0002}
+aside.panel{position:relative;overflow:hidden}
+aside.panel:before{content:"";position:absolute;top:0;right:0;left:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),#64b5ff,transparent)}
+h1{font-size:24px;letter-spacing:-.3px}
+label{color:#b7c6d2;font-weight:600}
+input,select{transition:border-color .2s,box-shadow .2s,background .2s}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px #d7ff3f15;background:#101b25}
+button{transition:transform .18s,filter .18s,opacity .18s}
+button:hover{filter:brightness(1.06);transform:translateY(-1px)}
+button:disabled{opacity:.65;cursor:wait;transform:none}
+.primary{min-height:48px;box-shadow:0 7px 22px #d7ff3f14}
+#map{height:min(68vh,720px);min-height:480px;border-radius:15px;border-color:#314656;box-shadow:inset 0 0 0 1px #ffffff06}
+.map-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.map-heading h2{margin:0;font-size:18px}
+.map-tag{font-size:11px;color:#d7ff3f;border:1px solid #48583c;background:#19231a;padding:4px 9px;border-radius:99px}
+.directions{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:15px;background:#0d151e}
+.weather-panel{margin-top:16px;padding:16px;border:1px solid #2d4654;border-radius:15px;background:linear-gradient(145deg,#10202b,#0d151e)}
+.weather-content{position:relative;overflow:hidden;max-height:260px;transition:max-height .25s ease}
+.weather-panel.weather-expanded .weather-content{max-height:5000px}
+.weather-content.weather-fade:not(.weather-expanded)::after{content:"";position:absolute;left:0;right:0;bottom:0;height:52px;background:linear-gradient(transparent,#0d1922);pointer-events:none}
+.weather-more{display:block;width:100%;margin-top:8px;padding:9px 12px;border:1px solid #405968;border-radius:10px;background:#172733;color:#d7ff3f;font:700 13px Tahoma,Arial,sans-serif;cursor:pointer}
+.weather-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.weather-card{padding:12px;border:1px solid #2b414f;border-radius:12px;background:#0d1821;min-width:0}
+.weather-card strong{display:block;font-size:13px;margin-bottom:5px}
+.weather-card .weather-time{font-size:11px;color:var(--muted)}
+.weather-card .weather-wind{font-size:13px;color:#d7ff3f;margin-top:6px}
+.weather-card .weather-detail{font-size:12px;color:#b8c8d3}
+.weather-summary{padding:12px;border-radius:11px;background:#17251c;border:1px solid #3d5439;margin:10px 0;font-size:13px}
+.weather-summary.warn{background:#281f14;border-color:#66502b;color:#ffd18a}
+.weather-credit{font-size:11px;color:var(--muted);margin-top:12px}
+.map-layers{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;margin:0 0 10px;padding:10px 12px;background:#0c131b;border:1px solid var(--line);border-radius:12px}.map-layers>strong{font-size:12px;color:var(--muted)}.map-layer-toggle{display:inline-flex;align-items:center;gap:7px;margin:0;color:var(--text);font-size:13px;cursor:pointer;white-space:nowrap}.map-layer-toggle input{width:17px;height:17px;margin:0;accent-color:var(--accent)}.layer-dot{width:9px;height:9px;border-radius:50%;display:inline-block}.station-dot{background:#d7ff3f}.business-dot{background:#c084fc}@media(max-width:560px){.map-layers{align-items:flex-start;flex-direction:column;gap:9px}.map-layer-toggle{white-space:normal}}
+@media(max-width:520px){.weather-grid{grid-template-columns:1fr}}
+.directions-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.directions-head h2{margin:0}
+.direction-item{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:start;padding:12px 0;border-top:1px solid #263542}
+.direction-icon{display:grid;place-items:center;width:32px;height:32px;border:1px solid #3c5060;background:#142330;border-radius:10px;color:var(--accent);font-size:17px}
+.direction-main{font-size:13px;font-weight:700}
+.direction-road{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:2px}
+.direction-meta{font-size:11px;color:#a9bac7;white-space:nowrap}
+.stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.stat{border-color:#263847;background:linear-gradient(145deg,#101b25,#0b131b)}
+.stat b{font-size:22px}
+.station{cursor:pointer;transition:background .18s;padding:13px 9px;border-radius:10px}
+.station:hover{background:#172430}
+.pill{border-color:#354b5a;background:#111d27}
+.plan-box{background:linear-gradient(145deg,#151f19,#111a17);border-color:#4b5c39}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#121d27;color:#eef4f8}
+.leaflet-popup-content a{color:#d7ff3f}
+@media(max-width:850px){.layout{grid-template-columns:1fr}.wrap{padding:12px}#map{height:430px}.head{align-items:flex-start;flex-direction:column}.head-actions{width:100%;justify-content:space-between}.stats{grid-template-columns:repeat(3,1fr)}}
+ 
+.rev-weather-badge{display:inline-flex;align-items:center;justify-content:center;margin-left:3px;font:16px/1 Tahoma,Arial,sans-serif;vertical-align:middle;filter:drop-shadow(0 1px 1px #0008)}
+/* EV position marker with live estimated battery */
+.rev-map-car{background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none!important}
+.rev-ev-marker{position:relative;width:150px;height:76px;pointer-events:none;overflow:visible}
+.rev-ev-charge{position:absolute;left:50%;top:0;transform:translateX(-50%);display:block;min-width:82px;max-width:145px;box-sizing:border-box;padding:5px 9px;border-radius:9px;background:#101820;color:#d7ff3f;border:2px solid #d7ff3f;font:800 13px/1.25 Tahoma,Arial,sans-serif;text-align:center;white-space:nowrap;box-shadow:0 3px 10px #000b}
+.rev-ev-charge.low{color:#ff8d8d;border-color:#ff8d8d}
+.rev-ev-vehicle{position:absolute;left:41px;bottom:0;width:68px;height:43px;filter:drop-shadow(0 3px 5px #0009)}
+/* Route playback timeline */
+.timeline-panel{display:block!important;visibility:visible!important;opacity:1!important;position:relative;z-index:5;width:100%;box-sizing:border-box;margin:14px 0 18px;padding:18px;border:1px solid #304452;border-radius:18px;background:linear-gradient(135deg,#14212b,#0c151d);box-shadow:0 14px 38px #0002}
+.timeline-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.timeline-head h2{margin:0;font-size:18px}
+.timeline-track-wrap{position:relative;margin:26px 8px 12px;height:42px;display:flex;align-items:center;isolation:isolate}
+.timeline-track{height:8px;width:100%;border-radius:99px;background:#344653;position:relative;overflow:hidden}
+.timeline-progress{position:absolute;right:0;top:0;height:100%;width:0;background:linear-gradient(270deg,#64b5ff,#d7ff3f);border-radius:99px}
+.timeline-car{position:absolute;top:50%;left:0;transform:translate(-50%,-55%);width:48px;height:38px;display:grid;place-items:center;filter:drop-shadow(0 4px 6px #0009);pointer-events:none;transition:left .05s linear;z-index:2}
+.timeline-range{position:absolute;inset:-8px 0;width:100%;height:58px;opacity:.01;cursor:ew-resize;margin:0!important;z-index:3;direction:rtl;appearance:none;-webkit-appearance:none}
+.timeline-endpoints{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;gap:10px}
+.timeline-readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
+.timeline-metric{background:#0b141c;border:1px solid #2b3c49;border-radius:12px;padding:12px;min-width:0}
+.timeline-metric span{display:block;color:var(--muted);font-size:12px}
+.timeline-metric strong{display:block;font-size:17px;color:var(--accent);overflow-wrap:anywhere}
+.timeline-details{margin-top:12px;padding:13px;border-radius:12px;border:1px solid #2b414f;background:#0d1821;font-size:13px}
+.timeline-details .muted{color:var(--muted)}
+.timeline-legend{font-size:11px;color:var(--muted);margin-top:8px}
+@media(max-width:650px){.timeline-readout{grid-template-columns:repeat(2,minmax(0,1fr))}.timeline-panel{padding:13px}.timeline-car svg{width:38px;height:25px}}
+
+ .compact-disclosure{margin-top:12px;border:1px solid #2d4351;border-radius:12px;background:#0d151e;overflow:hidden}.compact-disclosure>summary{cursor:pointer;list-style:none;padding:11px 13px;color:var(--accent);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:10px}.compact-disclosure>summary::-webkit-details-marker{display:none}.compact-disclosure>summary:after{content:"＋";font-size:16px}.compact-disclosure[open]>summary:after{content:"−"}.disclosure-content{max-height:260px;overflow:auto;padding:0 12px 12px}.disclosure-content .results{margin-top:4px}.disclosure-content .directions{margin-top:0;padding:8px;background:transparent;border:0}.disclosure-content .direction-item{padding:8px 0}.disclosure-content .plan-box{margin:8px 0;padding:9px}.disclosure-content .station{padding:8px 6px}
+.datePickerWrap{display:flex;gap:6px;align-items:stretch}.datePickerWrap input{flex:1;min-width:0}.pickerButton{min-width:44px;padding:8px 12px;border:1px solid #344454;border-radius:10px;background:#182530;color:var(--text);font-size:20px;cursor:pointer}.calendarDialog{width:min(340px,calc(100vw - 32px));border:1px solid #344454;border-radius:16px;padding:16px;background:#121a23;color:var(--text);box-shadow:0 16px 50px #0008}.calendarDialog::backdrop{background:#0009}.calendarHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.calendarHeader button,.calendarActions button,.timeDialogActions button{border:1px solid #344454;border-radius:8px;padding:6px 10px;background:#1b2a36;color:var(--text);cursor:pointer}.calendarGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}.calendarGrid span{font-size:12px;color:var(--muted);padding:5px 0}.calendarGrid button{border:1px solid transparent;border-radius:8px;padding:7px 0;background:transparent;color:var(--text);cursor:pointer}.calendarGrid button.selected{background:var(--accent);color:#10150a}.calendarGrid button.today{border-color:var(--accent)}.calendarActions,.timeDialogActions{display:flex;justify-content:space-between;gap:8px;margin-top:12px}.timeDialog input{font-size:24px;text-align:center;width:100%}
+
+/* REV visual-only redesign preview: original HTML, IDs, scripts and integrations retained */
+:root{--bg:#06111b;--panel:#0c1b29;--line:#20394c;--text:#edf7ff;--muted:#9bb4c7;--accent:#14dfc1;--blue:#5dbbff;--danger:#ff8d8d}
+html{background:#06111b}
+body{background:radial-gradient(ellipse at 12% 0%,#103149 0,transparent 35%),linear-gradient(135deg,#06111b,#091725 58%,#07121c);color:var(--text);font-family:Tahoma,Arial,sans-serif}
+.wrap{max-width:1800px;padding:18px 22px}
+.head{position:relative;padding:12px 18px;margin-bottom:14px;border:1px solid #1d3b50;border-radius:15px;background:linear-gradient(110deg,#0c1d2c,#0a1724);box-shadow:0 12px 34px #0003}
+.logo{font-size:34px;color:#14dfc1;text-shadow:0 0 22px #14dfc126;letter-spacing:1px}
+.sub{color:#9bb4c7}
+.layout{grid-template-columns:minmax(330px,390px) minmax(0,1fr);gap:14px;align-items:start}
+.panel{padding:17px;background:linear-gradient(150deg,#0e2030,#0a1723);border:1px solid #20394c;border-radius:15px;box-shadow:0 12px 30px #0002}
+aside.panel:before{background:linear-gradient(90deg,transparent,#14dfc1,#5dbbff,transparent)}
+h1{font-size:23px;color:#f2f8fc}
+h2{font-size:17px}
+label{font-size:12px;color:#b3c8d8}
+input,select{background:#081521;color:#edf7ff;border-color:#29475d;border-radius:10px;min-height:43px}
+input:focus,select:focus{border-color:#14dfc1;box-shadow:0 0 0 3px #14dfc11a;background:#0b1c2a}
+button{border-radius:10px}
+.primary{background:linear-gradient(110deg,#14dfc1,#12cbbd);color:#03221f;box-shadow:0 7px 22px #14dfc11c;min-height:48px}
+.secondary,.back-link{background:#132a3b;color:#eaf6ff;border:1px solid #2a4a60}
+.back-link:hover{background:#18384a;border-color:#14dfc1}
+#map{height:min(76vh,850px);min-height:540px;border:1px solid #24475d;border-radius:13px;box-shadow:0 12px 32px #0003}
+.map-heading h2{color:#edf7ff}
+.map-tag{color:#14dfc1;border-color:#24594f;background:#0d2829}
+.map-layers,.directions,.compact-disclosure,.timeline-details{background:#091824;border-color:#20394c}
+.stat,.timeline-metric,.weather-card{background:linear-gradient(145deg,#0d2030,#081521);border-color:#20394c}
+.stat b,.timeline-metric strong{color:#14dfc1}
+.stats{gap:9px}
+.stat{padding:12px}
+.station:hover{background:#122a3a}
+.plan-box{background:linear-gradient(145deg,#102b2a,#0c201f);border-color:#23635b}
+.plan-box h2,.plan-ok{color:#14dfc1}
+.plan-stop{border-color:#23453f}
+.pill{background:#102534;border-color:#2a4a5e}
+.weather-panel{background:linear-gradient(145deg,#0c2231,#091824);border-color:#24475d}
+.weather-card .weather-wind{color:#14dfc1}
+.weather-summary{background:#102b27;border-color:#24574c}
+.weather-summary.warn{background:#281f14;border-color:#66502b}
+.map-layer-toggle input{accent-color:#14dfc1}
+.direction-icon{color:#14dfc1;border-color:#245467;background:#102636}
+.timeline-panel{background:linear-gradient(135deg,#0d2231,#081521);border-color:#24475d}
+.timeline-track{background:#294052}
+.timeline-progress{background:linear-gradient(270deg,#5dbbff,#14dfc1)}
+.timeline-metric{padding:11px}
+.compact-disclosure>summary{color:#14dfc1}
+.pickerButton,.calendarDialog{background:#0e2030;border-color:#29475d;color:#edf7ff}
+.calendarHeader button,.calendarActions button,.timeDialogActions button{background:#142b3c;border-color:#29475d;color:#edf7ff}
+.calendarGrid button.selected{background:#14dfc1;color:#03221f}
+.calendarGrid button.today{border-color:#14dfc1}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#0c1b29;color:#edf7ff}
+.leaflet-popup-content a{color:#14dfc1}
+.rev-ev-charge{color:#14dfc1;border-color:#14dfc1;background:#0b1c2a}
+.rev-ev-charge.low{color:#ff8d8d;border-color:#ff8d8d}
+@media(min-width:1100px){.layout{grid-template-columns:minmax(340px,390px) minmax(0,1fr)}}
+@media(max-width:850px){.wrap{padding:10px}.head{padding:14px}.layout{grid-template-columns:minmax(0,1fr)}#map{height:55vh;min-height:390px}.logo{font-size:30px}.panel{padding:14px}}
+@media(max-width:520px){.wrap{padding:8px}.head{border-radius:12px}.head-actions{gap:8px}.back-link{white-space:normal;font-size:12px;padding:8px 10px}#map{height:48vh;min-height:330px}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.stat{padding:8px}.stat b{font-size:17px}.stat span{font-size:11px}.timeline-readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="head">
+    <div><div class="logo">REV</div><div class="sub">برنامه‌ریز سفر با خودروی برقی — نسخه آزمایشی ایران</div></div>
+    <div class="head-actions">
+      <div class="sub">Route planner / EV charging</div>
+      <a class="back-link" href="https://mojtabaalimi64-cloud.github.io/rev/" aria-label="بازگشت به صفحه اصلی سایت REV"><span aria-hidden="true">→</span> بازگشت به سایت REV</a><a class="back-link" href="./driver-profile.html">پروفایل راننده و ثبت سفر GPS</a>
+    </div>
+  </header>
+  <div class="layout">
+    <aside class="panel">
+      <h1>برنامه‌ریزی سفر</h1>
+      <div class="sub">مبدأ، مقصد و مشخصات باتری را وارد کنید تا مسیر، شارژرهای ثبت‌شده و توقف‌های پیشنهادی محاسبه شوند.</div>
+      <label for="origin">مبدأ</label><input id="origin" placeholder="مثلاً تهران، میدان آزادی" value="">
+      <label for="destination">مقصد</label><input id="destination" placeholder="مثلاً اصفهان، میدان نقش جهان" value=""><div class="grid2"><div><label for="departureJalali">تاریخ حرکت (شمسی)</label><div class="datePickerWrap"><input id="departureJalali" type="text" placeholder="انتخاب تاریخ شمسی" autocomplete="off" required readonly aria-haspopup="dialog"><button type="button" id="openDatePicker" class="pickerButton" aria-label="باز کردن تقویم">▦</button></div><input id="departure" type="hidden"></div><div><label for="departureClock">ساعت حرکت</label><input id="departureClock" type="time" required aria-label="ساعت حرکت"><label for="weatherModel">منبع هواشناسی</label><select id="weatherModel"><option value="auto" selected>پیش‌بینی خودکار</option></select></div></div><dialog id="calendarDialog" class="calendarDialog" aria-label="تقویم شمسی"><div class="calendarHeader"><button type="button" id="prevMonth" aria-label="ماه قبل">‹</button><strong id="calendarTitle">انتخاب تاریخ</strong><button type="button" id="nextMonth" aria-label="ماه بعد">›</button></div><div class="calendarGrid" id="calendarGrid"></div><div class="calendarActions"><button type="button" id="calendarToday">امروز</button><button type="button" id="calendarCancel">انصراف</button></div></dialog><div class="sub" style="margin-top:6px">آب‌وهوا بر اساس زمان عبور تخمینی از نقاط مسیر دریافت می‌شود؛ باد به‌صورت خودکار تحلیل می‌شود.</div>
+      <label for="vehicleType">نوع خودرو</label>
+      <select id="vehicleType">
+        <option value="bev" selected>تمام‌برقی (BEV)</option>
+        <option value="phev">هیبرید شارژی (PHEV) — برق + بنزین</option>
+        <option value="hev">هیبرید معمولی (HEV) — بنزین + شارژ خودکار</option>
+        <option value="mhev">هیبرید ملایم (MHEV) — بنزین + کمک برقی</option>
+      </select>
+      <div class="sub" id="vehicleHelp" style="margin-top:5px">برای خودروی تمام‌برقی، برنامه‌ریز مصرف باتری و توقف‌های شارژ را محاسبه می‌کند.</div>
+      <section id="electricFields">
+        <div class="grid2">
+          <div><label for="battery">ظرفیت باتری (kWh)</label><input id="battery" type="number" min="10" max="250" value="60"></div>
+          <div><label for="soc">شارژ اولیه (%)</label><input id="soc" type="number" min="5" max="100" value="90"></div>
+        </div>
+        <div class="grid2">
+          <div><label for="consumption">مصرف برق (kWh/100km)</label><input id="consumption" type="number" min="5" max="50" step="0.5" value="18"></div>
+          <div><label for="reserve">ذخیره ایمنی باتری (%)</label><input id="reserve" type="number" min="5" max="40" value="15"></div>
+        </div>
+        <label for="hvacMode">محاسبه اثر بخاری و کولر</label><select id="hvacMode"><option value="auto" selected>خودکار بر اساس دمای مسیر</option><option value="off">بدون اثر بخاری و کولر</option></select>
+        <label for="targetSoc">شارژ هدف در توقف‌های بین‌راهی (%)</label><input id="targetSoc" type="number" min="30" max="100" value="80">
+      </section>
+      <section id="fuelFields" hidden>
+        <div class="grid2">
+          <div><label for="fuelConsumption">مصرف بنزین (لیتر/۱۰۰ کیلومتر)</label><input id="fuelConsumption" type="number" min="2" max="20" step="0.1" value="5.5"></div>
+          <div><label for="fuelPrice">قیمت هر لیتر بنزین (تومان)</label><input id="fuelPrice" type="number" min="0" step="100" value="3000"></div>
+        </div>
+        <div class="grid2" id="tankFields">
+          <div><label for="fuelTank">ظرفیت باک (لیتر)</label><input id="fuelTank" type="number" min="10" max="120" value="45"></div>
+          <div id="phevRangeField"><label for="electricRange">برد برقی مستقل PHEV (کیلومتر)</label><input id="electricRange" type="number" min="0" max="250" value="60"></div>
+        </div>
+        <div class="grid2" id="phevBatteryFields">
+          <div><label for="phevBattery">ظرفیت باتری PHEV (kWh)</label><input id="phevBattery" type="number" min="2" max="100" value="18"></div>
+          <div><label for="phevSoc">شارژ اولیه باتری PHEV (%)</label><input id="phevSoc" type="number" min="0" max="100" value="90"></div>
+        </div>
+        <div class="sub">برای هیبرید شارژی، بخش برقی و بنزینی جداگانه برآورد می‌شوند. در هیبرید معمولی و ملایم، شارژر عمومی برای ادامه سفر الزامی نیست.</div>
+      </section>
+      <label for="radius">فاصله قابل‌قبول شارژر از مسیر</label>
+      <select id="radius"><option value="5">۵ کیلومتر</option><option value="10">۱۰ کیلومتر</option><option value="20">۲۰ کیلومتر</option><option value="30">۳۰ کیلومتر</option><option value="50" selected>۵۰ کیلومتر</option></select><div class="sub" style="margin-top:6px">این محدوده برای ایستگاه‌های شارژ، تعمیرگاه‌ها و فروشگاه‌های ثبت‌شده اعمال می‌شود. پوشش داده‌ها به اطلاعات در دسترس بستگی دارد.</div>
+      <button class="primary" id="planBtn">محاسبه مسیر و یافتن شارژرها</button>
+      <button class="secondary" id="shareTripBtn" type="button" style="width:100%;margin-top:8px">اشتراک‌گذاری این سفر</button>
+      <div class="status" id="status" aria-live="polite">برای شروع، دکمه محاسبه مسیر را بزنید.</div>
+      <div class="stats">
+        <div class="stat"><b id="distance">—</b><span>مسافت (km)</span></div>
+        <div class="stat"><b id="duration">—</b><span>زمان تقریبی</span></div>
+        <div class="stat"><b id="range">—</b><span>برد تخمینی (km)</span></div>
+      </div>
+      <div class="warning">برنامه توقف بر اساس ظرفیت باتری، مصرف، شارژ اولیه و ذخیره ایمنی تخمین زده می‌شود. اطلاعات زنده‌بودن، اشغال بودن، توان و سازگاری کانکتور ایستگاه‌ها تضمین نمی‌شود؛ پیش از سفر بررسی کنید.</div>
+      <details class="compact-disclosure" id="resultsDetails"><summary>نمایش بیشتر · ایستگاه‌های شارژ و توقف‌ها</summary><div class="disclosure-content"><div class="results" id="results"><h2 style="margin-top:10px">شارژرهای نزدیک مسیر</h2><div class="sub">پس از محاسبه مسیر، فهرست اینجا نمایش داده می‌شود.</div></div></div></details>
+    </aside>
+    <main class="panel">
+      <div class="map-heading"><h2>نقشه مسیر و ایستگاه‌ها</h2><span class="map-tag">نقشه زنده · مسیر جاده‌ای</span></div>
+      <div class="map-layers" role="group" aria-label="نمایش لایه‌های نقشه"><strong>نمایش روی نقشه:</strong><label class="map-layer-toggle"><input id="toggleStations" type="checkbox" checked><span class="layer-dot station-dot"></span> ایستگاه‌های شارژ و سوخت</label><label class="map-layer-toggle"><input id="toggleBusinesses" type="checkbox" checked><span class="layer-dot business-dot"></span> تعمیرگاه‌ها و فروشگاه‌ها</label></div>
+      <div id="map" role="img" aria-label="نقشه مسیر سفر و ایستگاه‌ها"></div>
+  <section class="timeline-panel" id="timelinePanel" aria-live="polite">
+    <div class="timeline-head"><h2>حرکت روی مسیر · شبیه‌ساز سفر</h2><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button type="button" class="secondary" id="timelinePlayBtn" disabled>▶ شروع حرکت</button><span class="sub" id="timelineProgressText">ابتدا مسیر را محاسبه کنید</span></div></div>
+    <div class="timeline-track-wrap" id="timelineTrackWrap">
+      <div class="timeline-track"><div class="timeline-progress" id="timelineProgress"></div></div>
+      <div class="timeline-car" id="timelineCar" aria-hidden="true"><svg viewBox="0 0 64 34" width="42" height="27" role="img" aria-label="خودروی برقی"><path d="M10 22 14 12Q15 9 19 9h22q4 0 6 4l5 9v5H10z" fill="#d7ff3f" stroke="#14212b" stroke-width="2"/><path d="m19 11-3 8h29l-4-8z" fill="#8bd7ff"/><circle cx="19" cy="27" r="5" fill="#101820" stroke="#d7ff3f" stroke-width="2"/><circle cx="45" cy="27" r="5" fill="#101820" stroke="#d7ff3f" stroke-width="2"/><path d="M26 13h8v4h-8z" fill="#fff"/><path d="M53 17h5v4h-5z" fill="#d7ff3f"/></svg></div>
+      <input class="timeline-range" id="timelineSlider" type="range" min="0" max="100" value="0" step="0.25" aria-label="جابجایی خودرو در طول مسیر" disabled>
+    </div>
+    <div class="timeline-endpoints"><span id="timelineOrigin">مبدأ</span><span id="timelineDestination">مقصد</span></div>
+    <div class="timeline-readout">
+      <div class="timeline-metric"><span>موقعیت روی مسیر</span><strong id="timelineKm">—</strong></div>
+      <div class="timeline-metric"><span>زمان تخمینی عبور</span><strong id="timelineTime">—</strong></div>
+      <div class="timeline-metric"><span>شارژ تخمینی باتری</span><strong id="timelineSoc">—</strong></div>
+      <div class="timeline-metric"><span>وضعیت هوا و باد</span><strong id="timelineWeather">—</strong></div>
+    </div>
+    <div class="timeline-details" id="timelineDetails">پس از محاسبه مسیر، با کشیدن نشانگر خودرو روی نوار، وضعیت تخمینی همان نقطه و ساعت را بررسی کنید.</div>
+    <div class="timeline-legend">زمان و شارژ برآوردی‌اند و به سرعت واقعی، ترافیک، شیوه رانندگی و مدت توقف شارژ وابسته‌اند. حرکت نشانگر، اطلاعات مسیر را تغییر نمی‌دهد.</div>
+  </section>
+      <section class="weather-panel" id="weatherPanel" aria-live="polite"><div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در انتظار محاسبه مسیر</span></div><div class="sub">پس از تعیین زمان حرکت، باد، دما و بارش در طول مسیر بررسی می‌شود.</div></section>
+  
+      <details class="compact-disclosure" id="businessDetails"><summary>نمایش بیشتر · تعمیرگاه‌های مجاز و فروشگاه‌های قطعات</summary><div class="disclosure-content"><div class="sub" style="margin:8px 0">نارنجی: تعمیرگاه مجاز · بنفش: فروشگاه قطعات</div><div id="businessDirectory"></div></div></details>
+    <details class="compact-disclosure" id="directionsDetails"><summary>نمایش بیشتر · راهنمای مسیر</summary><section class="directions disclosure-content" id="directionsPanel" aria-live="polite"><div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub" id="directionsSummary">پس از محاسبه مسیر نمایش داده می‌شود</span></div><div class="sub">برای مشاهده مسیر و راهنمای پیچ‌ها، مبدأ و مقصد را وارد کنید.</div></section></details>
+    </main>
+  </div>
+</div>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="ratings.js"></script>
+<script>
+/*
+ * REV EV Trip Planner
+ * Route: public OSRM routing service.
+ * Charging stations: REV Cloudflare D1 API first, then dedicated REV Online Stations Worker.
+ * No private API keys are embedded in this public page.
+ */
+const REV_API = "https://rev-api.mojtaba-alimi64.workers.dev";
+const ONLINE_STATIONS_API = "https://rev-online-api.mojtaba-alimi64.workers.dev/api/online-stations";
+const map = L.map("map").setView([32.4, 53.7], 5);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+  maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+}).addTo(map);
+const routeLayer = L.layerGroup().addTo(map);
+const stationLayer = L.layerGroup().addTo(map);
+const businessLayer = L.layerGroup().addTo(map);
+function setMapLayerVisibility(layer,visible){if(visible){if(!map.hasLayer(layer))layer.addTo(map)}else if(map.hasLayer(layer)){map.removeLayer(layer)}}
+
+let lastRoute = null;
+const $ = id => document.getElementById(id);
+const toggleStations=$("toggleStations");
+const toggleBusinesses=$("toggleBusinesses");
+if(toggleStations)toggleStations.addEventListener("change",()=>setMapLayerVisibility(stationLayer,toggleStations.checked));
+if(toggleBusinesses)toggleBusinesses.addEventListener("change",()=>setMapLayerVisibility(businessLayer,toggleBusinesses.checked));
+function setStatus(message){ $("status").textContent = message; }
+function num(id, fallback){ const n=Number($(id).value); return Number.isFinite(n)&&n>0?n:fallback; }
+function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
+async function geocode(place){
+  const url = "https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ir&q="+encodeURIComponent(place);
+  const r=await fetch(url,{headers:{"Accept":"application/json"}});
+  if(!r.ok) throw new Error("خطا در پیدا کردن مکان: "+place);
+  const data=await r.json();
+  if(!data.length) throw new Error("مکان پیدا نشد: "+place+"؛ نام شهر یا نشانی دقیق‌تری وارد کنید.");
+  return [Number(data[0].lat),Number(data[0].lon)];
+}
+async function getRoute(start,end){
+  const coords=`${start[1]},${start[0]};${end[1]},${end[0]}`;
+  const url=`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`;
+  const r=await fetch(url);
+  if(!r.ok) throw new Error("سرویس مسیریابی پاسخ نداد.");
+  const data=await r.json();
+  if(data.code!=="Ok"||!data.routes?.length) throw new Error("مسیر جاده‌ای پیدا نشد.");
+  return data.routes[0];
+}
+function haversine(a,b){
+  const rad=x=>x*Math.PI/180, R=6371;
+  const dLat=rad(b[0]-a[0]),dLon=rad(b[1]-a[1]);
+  const x=Math.sin(dLat/2)**2+Math.cos(rad(a[0]))*Math.cos(rad(b[0]))*Math.sin(dLon/2)**2;
+  return 2*R*Math.asin(Math.sqrt(x));
+}
+function pointSegmentDistanceKm(p,a,b){
+  // Local equirectangular approximation for point-to-segment distance.
+  const lat0=(p[0]+a[0]+b[0])/3*Math.PI/180;
+  const xy=q=>[q[1]*111.32*Math.cos(lat0),q[0]*110.57];
+  const P=xy(p),A=xy(a),B=xy(b),dx=B[0]-A[0],dy=B[1]-A[1];
+  const den=dx*dx+dy*dy;
+  const t=den?Math.max(0,Math.min(1,((P[0]-A[0])*dx+(P[1]-A[1])*dy)/den)):0;
+  return Math.hypot(P[0]-(A[0]+t*dx),P[1]-(A[1]+t*dy));
+}
+function distanceToRoute(point, routeCoords){
+  let min=Infinity;
+  for(let i=1;i<routeCoords.length;i++){
+    const a=[routeCoords[i-1][1],routeCoords[i-1][0]],b=[routeCoords[i][1],routeCoords[i][0]];
+    min=Math.min(min,pointSegmentDistanceKm(point,a,b));
+    if(min<0.3) break;
+  }
+  return min;
+}
+function parseConnectors(value){
+  if(Array.isArray(value)) return value.map(x=>typeof x==='string'?x:(x?.title||x?.name||x?.type||'')).filter(Boolean);
+  if(typeof value==='string'){
+    try{const j=JSON.parse(value);if(Array.isArray(j))return parseConnectors(j)}catch{}
+    return value.split(/[,،;|]/).map(x=>x.trim()).filter(Boolean);
+  }
+  return [];
+}
+function normalizeRevStation(raw){
+  const lat=Number(raw.latitude??raw.lat??raw.Latitude), lon=Number(raw.longitude??raw.lon??raw.lng??raw.Longitude);
+  if(!Number.isFinite(lat)||!Number.isFinite(lon)||Math.abs(lat)>90||Math.abs(lon)>180)return null;
+  return {
+    id:String(raw.id??raw.source_id??raw.ID??`${lat},${lon}`),
+    name:raw.name||raw.title||raw.station_name||"ایستگاه شارژ",
+    address:raw.address||raw.AddressInfo?.AddressLine1||"",
+    lat,lon,
+    operator:raw.operator||raw.operator_name||"",
+    status:raw.status||raw.status_name||"وضعیت نامشخص",
+    power:Number(raw.power_kw??raw.power??raw.PowerKW)>0?Number(raw.power_kw??raw.power??raw.PowerKW):null,
+    connectors:parseConnectors(raw.connectors??raw.connector_types),
+    url:raw.source_url||raw.url||`https://www.openstreetmap.org/?mlat=${lat}&mlon=${lon}#map=16/${lat}/${lon}`,
+    source:raw.source||"REV",
+    updatedAt:raw.updated_at||raw.updatedAt||raw.last_updated||raw.lastUpdated||raw.modified_at||""
+  };
+}
+function formatStationUpdatedAt(value){
+  if(!value)return "تاریخ به‌روزرسانی نامشخص";
+  const time=Date.parse(value);
+  if(!Number.isFinite(time))return "تاریخ به‌روزرسانی نامشخص";
+  return "آخرین به‌روزرسانی: "+new Date(time).toLocaleDateString("fa-IR");
+}
+function routeFilter(stations,routeCoords,radiusKm){
+  return stations.filter(Boolean)
+    .map(s=>({...s,routeDistance:distanceToRoute([s.lat,s.lon],routeCoords)}))
+    .filter(s=>s.routeDistance<=radiusKm)
+    .sort((a,b)=>a.routeDistance-b.routeDistance);
+}
+async function getRevStations(routeCoords,radiusKm){
+  const r=await fetch(REV_API+"/api/stations",{method:"GET",cache:"no-store",headers:{"Accept":"application/json"}});
+  if(!r.ok)throw new Error("Cloudflare stations API HTTP "+r.status);
+  const payload=await r.json();
+  // Accept several common Worker response shapes.
+  const candidates=[payload,payload?.data,payload?.result,payload?.data?.data];
+  let rows=[];
+  for(const item of candidates){
+    if(Array.isArray(item)){rows=item;break;}
+    if(Array.isArray(item?.stations)){rows=item.stations;break;}
+    if(Array.isArray(item?.results)){rows=item.results;break;}
+  }
+  return routeFilter(rows.map(normalizeRevStation),routeCoords,radiusKm);
+}
+function routeSamplePoints(routeCoords,spacingKm=20,maxPoints=80){
+  // Sample evenly along the entire route. The previous implementation sampled
+  // only up to 18 points, leaving large gaps on long trips.
+  if(!routeCoords.length)return [];
+  const points=routeCoords.map(c=>[Number(c[1]),Number(c[0])]); // [lat, lon]
+  if(points.length===1)return [points[0]];
+  const cumulative=[0];
+  for(let i=1;i<points.length;i++) cumulative[i]=cumulative[i-1]+haversine(points[i-1],points[i]);
+  const total=cumulative[cumulative.length-1];
+  if(!Number.isFinite(total)||total===0)return [points[0],points[points.length-1]];
+  const count=Math.min(maxPoints,Math.max(2,Math.ceil(total/Math.max(1,spacingKm))+1));
+  const samples=[];
+  let seg=1;
+  for(let n=0;n<count;n++){
+    const target=total*n/(count-1);
+    while(seg<cumulative.length-1&&cumulative[seg]<target)seg++;
+    const prev=seg-1, span=cumulative[seg]-cumulative[prev];
+    const t=span?(target-cumulative[prev])/span:0;
+    samples.push([
+      points[prev][0]+(points[seg][0]-points[prev][0])*t,
+      points[prev][1]+(points[seg][1]-points[prev][1])*t
+    ]);
+  }
+  return samples;
+}
+function sampleRouteCoordinates(routeCoords,maxPoints=16){
+  // Reduce the number of coordinates sent to the Worker while preserving the
+  // route's full length and direction. Input/output format remains [lon, lat].
+  if(!Array.isArray(routeCoords)||routeCoords.length===0)return [];
+  if(routeCoords.length<=maxPoints)return routeCoords;
+  const points=routeCoords.map(c=>[Number(c[1]),Number(c[0])]); // [lat, lon] for distance calculations
+  const cumulative=[0];
+  for(let i=1;i<points.length;i++) cumulative[i]=cumulative[i-1]+haversine(points[i-1],points[i]);
+  const total=cumulative[cumulative.length-1];
+  if(!Number.isFinite(total)||total<=0){
+    const out=[];
+    for(let i=0;i<maxPoints;i++)out.push(routeCoords[Math.round(i*(routeCoords.length-1)/(maxPoints-1))]);
+    return out;
+  }
+  const out=[];let seg=1;
+  for(let n=0;n<maxPoints;n++){
+    const target=total*n/(maxPoints-1);
+    while(seg<cumulative.length-1&&cumulative[seg]<target)seg++;
+    const prev=seg-1,span=cumulative[seg]-cumulative[prev];
+    const t=span?(target-cumulative[prev])/span:0;
+    const lat=points[prev][0]+(points[seg][0]-points[prev][0])*t;
+    const lon=points[prev][1]+(points[seg][1]-points[prev][1])*t;
+    out.push([lon,lat]); // Worker expects [longitude, latitude]
+  }
+  return out;
+}
+async function queryOverpass(routeCoords,radiusKm){
+  // Use the dedicated Cloudflare Worker; never query public Overpass servers
+  // directly from the visitor's browser. Fewer evenly spaced points reduce load.
+  const controller=new AbortController();
+  const timer=setTimeout(()=>controller.abort(),90000);
+  try{
+    const response=await fetch(ONLINE_STATIONS_API,{
+      method:"POST", mode:"cors", cache:"no-store", signal:controller.signal,
+      headers:{"Content-Type":"application/json","Accept":"application/json"},
+      body:JSON.stringify({coords:sampleRouteCoordinates(routeCoords,Number(radiusKm)>10?10:16),radiusKm:Math.min(Number(radiusKm)||5,50)})
+    });
+    let payload;
+    try{payload=await response.json();}
+    catch{throw new Error("پاسخ سرویس آنلاین REV قابل خواندن نیست.");}
+    if(!response.ok||payload?.success!==true){
+      throw new Error(payload?.error||`سرویس آنلاین REV با خطای HTTP ${response.status} پاسخ داد.`);
+    }
+    if(!Array.isArray(payload.data)) throw new Error("فهرست ایستگاه‌های سرویس آنلاین معتبر نیست.");
+    // Cached fallback is returned by the Worker when public map providers fail.
+    window.revStationCacheNote = payload.cached
+      ? (payload.stale ? "از نسخه ذخیره‌شده قبلی استفاده شد؛ ممکن است اطلاعات قدیمی باشد." : "از نسخه ذخیره‌شده استفاده شد.")
+      : "";
+    const normalized=payload.data.map(raw=>{
+      const s=normalizeRevStation(raw);
+      if(!s)return null;
+      return {...s,source:raw.source||payload.source||(payload.cached?"کش REV":"OpenStreetMap"),url:raw.source_url||raw.url||s.url,
+        updatedAt:raw.updated_at||raw.updatedAt||payload.cached_at||s.updatedAt};
+    }).filter(Boolean);
+    return routeFilter(normalized,routeCoords,Math.min(Number(radiusKm)||5,50));
+  }catch(e){
+    if(e?.name==="AbortError") throw new Error("پاسخ سرویس آنلاین ایستگاه‌ها بیش از حد طول کشید. دوباره تلاش کنید.");
+    throw e;
+  }finally{clearTimeout(timer);}
+}
+async function getIranStations(routeCoords,radiusKm){
+  let revStations=[];
+  try{revStations=await getRevStations(routeCoords,radiusKm);}catch(e){console.warn("REV station API unavailable:",e);}
+  // Load REV's public seed directory too, so curated records can be tested
+  // without waiting for a separate D1 import. These are sourced listings;
+  // their live availability should still be confirmed before a real trip.
+  try{
+    const response=await fetch("./content.json?v="+Date.now(),{cache:"no-store"});
+    if(response.ok){
+      const directory=await response.json();
+      const manual=Array.isArray(directory.stations)?directory.stations.map(normalizeRevStation).filter(Boolean):[];
+      for(const s of manual){
+        const duplicate=revStations.some(x=>haversine([x.lat,x.lon],[s.lat,s.lon])<0.15);
+        if(!duplicate)revStations.push(s);
+      }
+    }
+  }catch(e){console.warn("REV public station directory unavailable:",e);}
+  // Use REV-managed data as the primary source. Supplement it with OSM so a small
+  // internal database does not incorrectly imply that no chargers exist.
+  try{
+    const osmStations=await queryOverpass(routeCoords,radiusKm);
+    const combined=[...revStations];
+    for(const s of osmStations){
+      const duplicate=combined.some(x=>haversine([x.lat,x.lon],[s.lat,s.lon])<0.15);
+      if(!duplicate)combined.push(s);
+    }
+    return combined.map(s=>({...s,routeDistance:distanceToRoute([s.lat,s.lon],routeCoords)}))
+      .filter(s=>s.routeDistance<=radiusKm).sort((a,b)=>a.routeDistance-b.routeDistance);
+  }catch(e){
+    console.warn("REV online stations source unavailable:",e);
+    window.revStationSourceWarning = e?.message || "منبع آنلاین شارژرها موقتاً در دسترس نیست.";
+    return revStations.map(s=>({...s,routeDistance:distanceToRoute([s.lat,s.lon],routeCoords)}))
+      .filter(s=>s.routeDistance<=radiusKm).sort((a,b)=>a.routeDistance-b.routeDistance);
+  }
+}
+
+
+async function renderFuelStations(routeCoords,radiusKm){
+  // Petrol stations are map markers only; they are not charging stops or a fuel-stop plan.
+  // Keep the Overpass query small enough to avoid timeouts, and try the backup
+  // provider when the primary responds successfully but has no matching records.
+  const sampled=sampleRouteCoordinates(routeCoords,Number(radiusKm)>10?12:20);
+  if(sampled.length<2)return 0;
+  const radiusKmEffective=Math.max(2,Math.min(50,Number(radiusKm)||5));
+  const radiusMeters=radiusKmEffective*1000;
+  const query='[out:json][timeout:30];('+sampled.map(p=>'nwr(around:'+radiusMeters+','+Number(p[1]).toFixed(5)+','+Number(p[0]).toFixed(5)+')[amenity=fuel];').join('')+');out center tags;';
+  const endpoints=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
+  let elements=[],lastError=null,hadValidResponse=false;
+  for(const endpoint of endpoints){
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);
+    try{
+      const response=await fetch(endpoint,{method:"POST",mode:"cors",cache:"no-store",signal:controller.signal,headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","Accept":"application/json"},body:"data="+encodeURIComponent(query)});
+      if(!response.ok)throw new Error("HTTP "+response.status);
+      const payload=await response.json();
+      if(!Array.isArray(payload.elements))throw new Error("پاسخ جایگاه‌های سوخت معتبر نیست");
+      hadValidResponse=true;
+      elements.push(...payload.elements);
+      // Empty data from one mirror is not proof that the other mirror is empty too.
+      if(payload.elements.length)break;
+    }catch(e){lastError=e;}
+    finally{clearTimeout(timer);}
+  }
+  if(!hadValidResponse){
+    console.warn("REV fuel station map unavailable:",lastError);
+    return 0;
+  }
+  const seen=new Set();
+  const stations=elements.map(el=>{
+    const lat=Number(el.lat??el.center?.lat),lon=Number(el.lon??el.center?.lon);
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
+    const key=lat.toFixed(4)+","+lon.toFixed(4);
+    if(seen.has(key))return null;seen.add(key);
+    const offRoute=distanceToRoute([lat,lon],routeCoords);
+    if(offRoute>radiusKmEffective)return null;
+    return {lat,lon,name:el.tags?.name||el.tags?.brand||el.tags?.operator||"جایگاه سوخت",brand:el.tags?.brand||"",operator:el.tags?.operator||"",offRoute,kind:el.type,id:el.id};
+  }).filter(Boolean).sort((a,b)=>a.offRoute-b.offRoute);
+  stations.slice(0,150).forEach(s=>{
+    const marker=L.circleMarker([s.lat,s.lon],{radius:8,color:"#20140a",weight:2,fillColor:"#ff9f43",fillOpacity:1}).addTo(stationLayer);
+    marker.bindPopup('<b>⛽ '+escapeHTML(s.name)+'</b><br>جایگاه سوخت در نزدیکی مسیر<br>فاصله مستقیم از مسیر: '+s.offRoute.toFixed(1)+' کیلومتر<br>'+(s.operator?'اپراتور: '+escapeHTML(s.operator)+'<br>':'')+'<a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+s.lat+'&mlon='+s.lon+'#map=16/'+s.lat+'/'+s.lon+'">مشاهده در OpenStreetMap</a>');
+  });
+  console.info("REV fuel stations shown on map:",stations.length);
+  if(!stations.length)window.revFuelStationWarning="در داده‌های نقشه، جایگاه ثبت‌شده‌ای در شعاع "+radiusKmEffective+" کیلومتری مسیر پیدا نشد.";
+  else window.revFuelStationWarning="";
+  return stations.length;
+}
+async function renderBusinessDirectory(routeCoords,radiusKm){
+ businessLayer.clearLayers();const box=$('businessDirectory');if(!box)return;box.innerHTML='<div class="sub">در حال بررسی فهرست تعمیرگاه‌ها و فروشگاه‌های قطعات…</div>';
+ try{const response=await fetch('./content.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('فهرست عمومی در دسترس نیست');const data=await response.json();
+ const entries=[...(Array.isArray(data.serviceCenters)?data.serviceCenters.map(x=>({...x,_category:'تعمیرگاه مجاز',_key:'serviceCenters'})):[]),...(Array.isArray(data.partsStores)?data.partsStores.map(x=>({...x,_category:'فروشگاه قطعات',_key:'partsStores'})):[])];const metrics=routeMetrics(routeCoords);
+ const near=entries.map(x=>({...x,lat:Number(x.latitude??x.lat),lon:Number(x.longitude??x.lon)})).filter(x=>(x.status==='verified'||x.testProfile===true)&&Number.isFinite(x.lat)&&Number.isFinite(x.lon)&&x.lat>=-90&&x.lat<=90&&x.lon>=-180&&x.lon<=180).map(x=>({...x,...stationAlongRouteKm({lat:x.lat,lon:x.lon},metrics),_ratingId:String(x.id||((x.title||x.name||"فروشگاه")+"|"+(x.address||""))).slice(0,240)})).filter(x=>x.offRouteKm<=Math.min(50,Number(radiusKm)||5));
+ // Ratings contribute to ordering, with Bayesian smoothing so one vote has limited influence.
+ await Promise.all(near.slice(0,30).map(async x=>{try{const rr=await fetch("https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/ratings?type=store&id="+encodeURIComponent(x._ratingId),{cache:"no-store"});const jj=await rr.json();if(rr.ok&&jj.success){x._ratingCount=Number(jj.count)||0;x._ratingAverage=jj.average==null?null:Number(jj.average);const n=x._ratingCount,avg=x._ratingAverage===null?3.5:x._ratingAverage;x._ratingScore=(avg*n+3.5*3)/(n+3);}else{x._ratingCount=0;x._ratingAverage=null;x._ratingScore=3.5;}}catch(e){x._ratingCount=0;x._ratingAverage=null;x._ratingScore=3.5;}}));
+ near.sort((a,b)=>(b._ratingScore-a._ratingScore)||((a.offRouteKm-b.offRouteKm)*0.15)||a.routeKm-b.routeKm);
+ near.forEach(x=>{const color=x._key==='serviceCenters'?'#ff9f43':'#c084fc';const marker=L.circleMarker([x.lat,x.lon],{radius:8,color:'#101820',weight:2,fillColor:color,fillOpacity:1}).addTo(businessLayer);const profile=x.profileSlug?'<br><a href="./businesses.html?id='+encodeURIComponent(x.profileSlug)+'">مشاهده پروفایل REV</a>':'';const link=x.website?'<br><a target="_blank" rel="noopener" href="'+escapeHTML(x.website)+'">وب‌سایت / سفارش</a>':'';marker.bindPopup((x.image?'<img src="'+escapeHTML(x.image)+'" alt="" style="display:block;width:190px;max-height:120px;object-fit:cover;border-radius:8px;margin-bottom:7px">':'')+'<b>'+escapeHTML(x.title||x.name)+'</b><br>'+escapeHTML(x._category)+(x.testProfile?'<br><b>پروفایل آزمایشی REV</b>':'')+'<br>'+escapeHTML(x.address||'نشانی ثبت نشده')+'<br>★ '+(x._ratingAverage==null?'بدون امتیاز':Number(x._ratingAverage).toLocaleString('fa-IR',{maximumFractionDigits:1})+'/۵ · '+Number(x._ratingCount||0).toLocaleString('fa-IR')+' رأی')+'<br>'+escapeHTML(x.phone||'شماره تماس ثبت نشده')+profile+link)});
+ if(!near.length){box.innerHTML='<div class="sub">فعلاً کسب‌وکار تأییدشده‌ای در فهرست عمومی REV و در شعاع انتخاب‌شده از مسیر ثبت نشده است. فقط موارد تأییدشده نمایش داده می‌شوند.</div>';return}
+ box.innerHTML=near.map((x,i)=>'<div class="station">'+(x.image?'<img src="'+escapeHTML(x.image)+'" alt="'+escapeHTML(x.title||x.name)+'" loading="lazy" style="width:100%;max-height:170px;object-fit:cover;border-radius:9px;margin-bottom:8px">':'')+'<strong>'+(i===0?'★ پیشنهاد برتر · ':'')+escapeHTML(x._category)+' · '+escapeHTML(x.title||x.name)+(x.testProfile?' <span class="pill">تست REV</span>':'')+' <span class="pill" style="display:inline-block">'+(x._ratingCount?('★ '+(x._ratingAverage==null?'—':x._ratingAverage.toFixed(1))+'/۵ · '+x._ratingCount+' رأی'):'بدون امتیاز')+'</span></strong><small>'+escapeHTML(x.address||'نشانی ثبت نشده')+'</small><div class="sub">'+escapeHTML(x.phone||'شماره تماس ثبت نشده')+' · فاصله از مسیر '+x.offRouteKm.toFixed(1)+' کیلومتر</div>'+(x.website?'<a target="_blank" rel="noopener" href="'+escapeHTML(x.website)+'">وب‌سایت / سفارش</a>':'')+(x.profileSlug?' · <a href="./businesses.html?id='+encodeURIComponent(x.profileSlug)+'">پروفایل</a>':'')+'</div>').join('');
+ near.forEach((x,i)=>{const item=box.querySelectorAll(".station")[i];if(!item)return;const ratingBox=document.createElement("div");ratingBox.addEventListener("click",event=>event.stopPropagation());item.appendChild(ratingBox);if(window.REVRating)window.REVRating.mount(ratingBox,"store",x._ratingId);});
+ }catch(e){box.innerHTML='<div class="sub">فهرست تعمیرگاه‌ها و فروشگاه‌ها بارگذاری نشد. '+escapeHTML(e.message||'')+'</div>'}
+}
+
+function routeMetrics(routeCoords){
+  const points=routeCoords.map(c=>[Number(c[1]),Number(c[0])]);
+  const cumulative=[0];
+  for(let i=1;i<points.length;i++) cumulative[i]=cumulative[i-1]+haversine(points[i-1],points[i]);
+  return {points,cumulative,total:cumulative[cumulative.length-1]||0};
+}
+function stationAlongRouteKm(station,metrics){
+  const p=[station.lat,station.lon];
+  let best=Infinity,bestKm=0;
+  for(let i=1;i<metrics.points.length;i++){
+    const a=metrics.points[i-1],b=metrics.points[i];
+    const lat0=(p[0]+a[0]+b[0])/3*Math.PI/180;
+    const xy=q=>[q[1]*111.32*Math.cos(lat0),q[0]*110.57];
+    const P=xy(p),A=xy(a),B=xy(b),dx=B[0]-A[0],dy=B[1]-A[1];
+    const den=dx*dx+dy*dy;
+    const t=den?Math.max(0,Math.min(1,((P[0]-A[0])*dx+(P[1]-A[1])*dy)/den)):0;
+    const dist=Math.hypot(P[0]-(A[0]+t*dx),P[1]-(A[1]+t*dy));
+    if(dist<best){
+      best=dist;
+      bestKm=metrics.cumulative[i-1]+(metrics.cumulative[i]-metrics.cumulative[i-1])*t;
+    }
+  }
+  return {routeKm:bestKm,offRouteKm:best};
+}
+function buildChargingPlan(stations,routeCoords,routeKm,params){
+  const {battery,soc,consumption,reserve,targetSoc,radius}=params;
+  const metrics=routeMetrics(routeCoords);
+  const usableRange=pct=>Math.max(0,(pct-reserve)/100*battery/consumption*100);
+  const candidates=stations.map(s=>({...s,...stationAlongRouteKm(s,metrics)}))
+    .filter(s=>s.routeKm>2&&s.routeKm<routeKm-2&&s.offRouteKm<=radius+0.5)
+    .sort((a,b)=>a.routeKm-b.routeKm);
+  if(routeKm<=usableRange(soc)) return {status:'ok',message:`با شارژ اولیه ${soc}%، برد محاسباتی برای رسیدن به مقصد کافی است؛ توقف شارژ اجباری برآورد نمی‌شود.`,stops:[],candidates};
+  if(!candidates.length) return {status:'alert',message:'مسافت از برد قابل‌استفاده بیشتر است، اما شارژر میانی در داده‌های فعلی پیدا نشد. اطلاعات نقشه ممکن است ناقص باشد؛ این نتیجه به معنی نبود شارژر واقعی نیست.',stops:[],candidates};
+  const stops=[];
+  let currentKm=0,currentSoc=soc;
+  const remaining=[...candidates];
+  for(let iteration=0;iteration<20;iteration++){
+    const range=usableRange(currentSoc);
+    if(routeKm-currentKm<=range) break;
+    const reachable=remaining.filter(st=>st.routeKm>currentKm+2&&st.routeKm-currentKm<=range+0.1);
+    if(!reachable.length){
+      return {status:'alert',message:`از کیلومتر ${Math.round(currentKm)} به بعد، با شارژ فعلی و ذخیره ${reserve}% شارژر ثبت‌شده‌ای در برد قابل‌دسترسی پیدا نشد. ادامه مسیر را ایمن فرض نکنید.`,stops,candidates};
+    }
+    const nextRange=usableRange(targetSoc);
+    // Prefer the furthest reachable station from which the destination or at least
+    // another listed station is reachable after charging to targetSoc.
+    let chosen=null;
+    const viable=reachable.filter(st=>{
+      const destinationReachable=routeKm-st.routeKm<=nextRange;
+      const nextStationReachable=remaining.some(n=>n.routeKm>st.routeKm+2&&n.routeKm-st.routeKm<=nextRange+0.1);
+      return destinationReachable||nextStationReachable;
+    });
+    if(viable.length){
+      // Ratings only influence the choice among stations that preserve route feasibility.
+      chosen=viable.sort((a,b)=>{
+        const sa=(Number(a._ratingScore)||3.5)+0.2*(a.routeKm/Math.max(routeKm,1));
+        const sb=(Number(b._ratingScore)||3.5)+0.2*(b.routeKm/Math.max(routeKm,1));
+        return sb-sa;
+      })[0];
+    }
+    if(!chosen) chosen=reachable[reachable.length-1];
+    const legKm=chosen.routeKm-currentKm;
+    const arrivalSoc=currentSoc-(legKm*consumption/battery);
+    // The range test should protect reserve, but report an alert if data rounding or
+    // route geometry causes the calculated arrival SOC to fall below reserve.
+    if(arrivalSoc<reserve-0.5) return {status:'alert',message:'به‌دلیل فاصله ایستگاه‌ها یا خطای داده مسیر، رسیدن به ایستگاه بعدی با ذخیره ایمنی قابل تأیید نیست.',stops,candidates};
+    const energyToTarget=Math.max(0,(targetSoc-arrivalSoc)/100*battery);
+    const effectivePower=chosen.power>0?chosen.power*0.7:null;
+    const chargeMinutes=effectivePower?Math.round(energyToTarget/effectivePower*60):null;
+    stops.push({...chosen,legKm,arrivalSoc,targetSoc,energyToTarget,chargeMinutes});
+    currentKm=chosen.routeKm;
+    currentSoc=targetSoc;
+    for(let i=remaining.length-1;i>=0;i--) if(remaining[i].routeKm<=currentKm+2) remaining.splice(i,1);
+    if(iteration===19) return {status:'alert',message:'تعداد توقف‌های محاسباتی از حد مجاز گذشت؛ داده مسیر یا ایستگاه‌ها را بررسی کنید.',stops,candidates};
+  }
+  const reached=routeKm-currentKm<=usableRange(currentSoc)+0.1;
+  return {status:reached?'ok':'alert',message:reached?`برآورد اولیه: ${stops.length} توقف شارژ با هدف ${targetSoc}% و ذخیره ایمنی ${reserve}%.`:'با ایستگاه‌های پیدا‌شده، رسیدن به مقصد با ذخیره ایمنی قابل تأیید نیست. ممکن است پوشش شارژرها ناقص باشد.',stops,candidates};
+}
+function renderChargingPlan(plan){
+  const box=document.createElement('section');box.className='plan-box';
+  const heading=document.createElement('h2');heading.textContent='برنامه پیشنهادی توقف و شارژ';box.appendChild(heading);
+  const intro=document.createElement('div');intro.className=plan.status==='ok'?'plan-ok':'plan-alert';intro.textContent=plan.message;box.appendChild(intro);
+  plan.stops.forEach((s,i)=>{
+    const item=document.createElement('div');item.className='plan-stop';
+    const time=s.chargeMinutes==null?'زمان شارژ قابل برآورد نیست؛ توان ایستگاه ثبت نشده':`زمان شارژ تقریبی ${s.chargeMinutes} دقیقه`;
+    item.innerHTML=`<strong>توقف ${i+1}: ${escapeHTML(s.name)}</strong>
+      <div class="plan-meta">حدود کیلومتر ${Math.round(s.routeKm)} مسیر · ${s.legKm.toFixed(0)} کیلومتر از توقف قبلی · ${s.routeDistance.toFixed(1)} کیلومتر فاصله مستقیم از جاده</div>
+      <div class="plan-meta">شارژ هنگام رسیدن: حدود ${Math.round(s.arrivalSoc)}٪ · هدف شارژ: ${s.targetSoc}٪ · انرژی نظری موردنیاز: ${s.energyToTarget.toFixed(1)} kWh</div>
+      <div class="plan-meta">${time}${s.power?` · توان ثبت‌شده ${s.power} kW` : ''}</div>
+      <div class="plan-meta">زمان شارژ، در صورت نمایش، با فرض میانگین ۷۰٪ توان نامی تخمین زده شده؛ زمان واقعی می‌تواند بیشتر باشد.</div>`;
+    box.appendChild(item);
+  });
+  const note=document.createElement('div');note.className='plan-meta';note.style.marginTop='8px';
+  note.textContent='این برنامه فقط برآورد انرژی بر اساس مسیر و داده‌های موجود است. فعال بودن شارژر، سازگاری کانکتور، ترافیک، آب‌وهوا، سرعت و مصرف واقعی تضمین نمی‌شود؛ پیش از حرکت وضعیت ایستگاه‌ها را بررسی کنید.';
+  box.appendChild(note);return box;
+}
+
+function maneuverText(step){
+  const m=step?.maneuver||{}, type=m.type||"", mod=m.modifier||"";
+  const names={
+    "depart":"حرکت از مبدأ","arrive":"رسیدن به مقصد","turn":"پیچیدن",
+    "new name":"ادامه در مسیر","continue":"ادامه مسیر","merge":"ادغام با مسیر",
+    "on ramp":"ورود به رمپ","off ramp":"خروج از رمپ","fork":"انتخاب شاخه مسیر",
+    "end of road":"انتهای مسیر","roundabout":"ورود به میدان","rotary":"عبور از میدان",
+    "roundabout turn":"خروج از میدان","notification":"ادامه مسیر","exit roundabout":"خروج از میدان"
+  };
+  const directions={"left":"به چپ","slight left":"اندکی به چپ","sharp left":"به چپ تند","right":"به راست","slight right":"اندکی به راست","sharp right":"به راست تند","straight":"مستقیم","uturn":"دوربرگردان"};
+  let text=names[type]||"ادامه مسیر";
+  if(directions[mod]) text += " " + directions[mod];
+  if(type==="roundabout"||type==="rotary"){
+    if(m.exit) text += "، خروجی شماره "+m.exit;
+  }
+  return text;
+}
+function maneuverSymbol(step){
+  const m=step?.maneuver||{}, type=m.type||"", mod=m.modifier||"";
+  if(type==="arrive") return "⚑";
+  if(type==="depart") return "●";
+  if(type.includes("roundabout")||type==="rotary") return "⟳";
+  if(mod.includes("left")) return "↰";
+  if(mod.includes("right")) return "↱";
+  if(mod==="uturn"||type==="turnaround") return "↶";
+  return "↑";
+}
+function renderDirections(route){
+  const panel=$("directionsPanel");
+  panel.innerHTML='<div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub" id="directionsSummary"></span></div>';
+  const steps=(route?.legs||[]).flatMap(leg=>leg.steps||[]);
+  if(!steps.length){
+    $("directionsSummary").textContent="راهنمای پیچ‌ها در دسترس نیست";
+    const msg=document.createElement("div");msg.className="sub";msg.textContent="سرویس مسیریابی مسیر را برگرداند، اما دستورهای مرحله‌ای در دسترس نیستند.";
+    panel.appendChild(msg);return;
+  }
+  const total=steps.length;
+  $("directionsSummary").textContent=total+" مرحله";
+  const list=document.createElement("div");
+  steps.forEach((step,index)=>{
+    const item=document.createElement("div");item.className="direction-item";
+    const icon=document.createElement("div");icon.className="direction-icon";icon.textContent=maneuverSymbol(step);
+    const main=document.createElement("div");main.className="direction-main";
+    const text=document.createElement("span");text.textContent=maneuverText(step);main.appendChild(text);
+    if(step.name){
+      const road=document.createElement("span");road.className="direction-road";road.textContent="مسیر: "+step.name;main.appendChild(road);
+    } else if(index===0){
+      const road=document.createElement("span");road.className="direction-road";road.textContent="نام خیابان در داده نقشه ثبت نشده";main.appendChild(road);
+    }
+    const meta=document.createElement("div");meta.className="direction-meta";
+    const km=(Number(step.distance)||0)/1000;
+    meta.textContent=km>=1?km.toFixed(1)+" km":Math.round(Number(step.distance)||0)+" m";
+    item.append(icon,main,meta);list.appendChild(item);
+  });
+  panel.appendChild(list);
+  const note=document.createElement("div");note.className="sub";note.style.marginTop="10px";
+  note.textContent="این فهرست راهنمای مسیر برنامه‌ریزی‌شده است؛ ناوبری زنده با موقعیت GPS، هشدار تغییر مسیر و ترافیک لحظه‌ای در فاز اپلیکیشن اضافه می‌شود.";
+  panel.appendChild(note);
+}
+function bearingDegrees(a,b){
+  const rad=x=>x*Math.PI/180, deg=x=>x*180/Math.PI;
+  const p1=rad(a[0]),p2=rad(b[0]),dl=rad(b[1]-a[1]);
+  const y=Math.sin(dl)*Math.cos(p2);
+  const x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+  return (deg(Math.atan2(y,x))+360)%360;
+}
+function compassDirection(deg){
+  if(!Number.isFinite(deg))return "نامشخص";
+  return ["شمال","شمال‌شرق","شرق","جنوب‌شرق","جنوب","جنوب‌غرب","غرب","شمال‌غرب"][Math.round(deg/45)%8];
+}
+function weatherDescription(code){
+  const c=Number(code);
+  if(c===0)return "آسمان صاف";
+  if([1,2,3].includes(c))return "صاف تا ابری";
+  if([45,48].includes(c))return "مه";
+  if([51,53,55,56,57].includes(c))return "نم‌نم باران";
+  if([61,63,65,66,67,80,81,82].includes(c))return "باران";
+  if([71,73,75,77,85,86].includes(c))return "برف";
+  if([95,96,99].includes(c))return "احتمال رعدوبرق";
+  return "وضعیت جوی متغیر";
+}
+function localDateTimeValue(date){
+  const pad=n=>String(n).padStart(2,"0");
+  return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())+"T"+pad(date.getHours())+":"+pad(date.getMinutes());
+}
+function jalaliParts(date){
+  const parts=new Intl.DateTimeFormat("en-US-u-ca-persian-nu-latn",{year:"numeric",month:"2-digit",day:"2-digit"}).formatToParts(date);
+  const get=t=>Number(parts.find(p=>p.type===t)?.value);
+  return {year:get("year"),month:get("month"),day:get("day")};
+}
+function jalaliDateText(date){
+  const p=jalaliParts(date),pad=n=>String(n).padStart(2,"0");
+  return p.year+"/"+pad(p.month)+"/"+pad(p.day);
+}
+function parseJalaliDate(text){
+  const normalized=String(text||"").replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).trim();
+  const m=normalized.match(/^(\d{4})[\/.-](\d{1,2})[\/.-](\d{1,2})$/);
+  if(!m)return null;
+  const jy=Number(m[1]),jm=Number(m[2]),jd=Number(m[3]);
+  if(jm<1||jm>12||jd<1||jd>31)return null;
+  const target=jy+"-"+jm+"-"+jd;
+  const start=new Date(Date.UTC(jy+621,2,1));
+  for(let offset=-75;offset<310;offset++){
+    const d=new Date(start.getTime()+offset*86400000),p=jalaliParts(d);
+    if(p.year===jy&&p.month===jm&&p.day===jd)return {year:jy,month:jm,day:jd,date:d};
+  }
+  return null;
+}
+function syncDepartureInput(){
+  const parsed=parseJalaliDate($("departureJalali").value);
+  const time=$("departureClock").value;
+  if(!parsed||!time){$("departure").value="";return false;}
+  const [h,m]=time.split(":").map(Number);
+  const d=new Date(parsed.date.getTime());
+  d.setHours(h,m,0,0);
+  $("departure").value=localDateTimeValue(d);
+  return true;
+}
+let calendarView={year:1405,month:7};
+function formatJalaliDate(p){return String(p.year).padStart(4,"0")+"/"+String(p.month).padStart(2,"0")+"/"+String(p.day).padStart(2,"0");}
+function currentJalaliParts(){return jalaliParts(new Date());}
+function renderJalaliCalendar(year,month){
+ const title=$("calendarTitle"),grid=$("calendarGrid"),names=["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
+ title.textContent=names[month-1]+" "+year;grid.innerHTML="";
+ ["ش","ی","د","س","چ","پ","ج"].forEach(x=>{const e=document.createElement("span");e.textContent=x;grid.appendChild(e);});
+ const base=new Date(Date.UTC(year+621,2,1));let first=null,days=0;
+ for(let k=-75;k<310;k++){const d=new Date(base.getTime()+k*86400000),p=jalaliParts(d);if(p.year===year&&p.month===month){if(p.day===1)first=d;days=Math.max(days,p.day);}}
+ const start=first?((first.getUTCDay()+1)%7):0;for(let k=0;k<start;k++)grid.appendChild(document.createElement("span"));
+ const sel=parseJalaliDate($("departureJalali").value),today=currentJalaliParts();
+ for(let day=1;day<=days;day++){const b=document.createElement("button");b.type="button";b.textContent=day;if(sel&&sel.year===year&&sel.month===month&&sel.day===day)b.classList.add("selected");if(today.year===year&&today.month===month&&today.day===day)b.classList.add("today");b.addEventListener("click",()=>{$("departureJalali").value=formatJalaliDate({year,month,day});syncDepartureInput();$("calendarDialog").close();});grid.appendChild(b);}
+}
+function shiftCalendarMonth(delta){let y=calendarView.year,m=calendarView.month+delta;if(m<1){m=12;y--;}else if(m>12){m=1;y++;}calendarView={year:y,month:m};renderJalaliCalendar(y,m);}
+function openJalaliCalendar(){const p=parseJalaliDate($("departureJalali").value)||currentJalaliParts();calendarView={year:p.year,month:p.month};renderJalaliCalendar(p.year,p.month);$("calendarDialog").showModal();}
+function initDepartureInput(){
+  // Leave date and time blank until the user explicitly chooses them.
+  $("departureJalali").value="";
+  $("departureClock").value="";
+  $("departure").value="";
+  $("departureJalali").addEventListener("change",syncDepartureInput);
+  $("departureClock").addEventListener("change",syncDepartureInput);
+  $("openDatePicker").addEventListener("click",openJalaliCalendar);$("departureJalali").addEventListener("click",openJalaliCalendar);
+  $("prevMonth").addEventListener("click",()=>shiftCalendarMonth(-1));$("nextMonth").addEventListener("click",()=>shiftCalendarMonth(1));$("calendarToday").addEventListener("click",()=>{const p=currentJalaliParts();$("departureJalali").value=formatJalaliDate(p);syncDepartureInput();$("calendarDialog").close();});$("calendarCancel").addEventListener("click",()=>$("calendarDialog").close());
+  
+}
+async function fetchWeatherAt(lat,lon,when){
+  const date=when.toISOString().slice(0,10);
+  const params=new URLSearchParams({
+    latitude:String(lat),longitude:String(lon),
+    hourly:"temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
+    wind_speed_unit:"kmh",temperature_unit:"celsius",timezone:"auto",forecast_days:"16"
+  });
+  let response;
+  for(let attempt=0;attempt<3;attempt++){
+    response=await fetch("https://api.open-meteo.com/v1/forecast?"+params.toString(),{headers:{Accept:"application/json"}});
+    if(response.ok)break;
+    if(response.status!==429&&response.status<500)throw new Error("سرویس هواشناسی پاسخ نداد (HTTP "+response.status+").");
+    if(attempt===2)throw new Error("سرویس هواشناسی موقتاً محدودیت درخواست اعمال کرده (HTTP "+response.status+"). چند دقیقه بعد دوباره تلاش کنید.");
+    await new Promise(resolve=>setTimeout(resolve,1500*(attempt+1)));
+  }
+  const data=await response.json();
+  if(data.error)throw new Error(data.reason||"سرویس هواشناسی خطا برگرداند.");
+  const times=data?.hourly?.time||[];
+  if(!times.length)throw new Error("برای این نقطه داده ساعتی هواشناسی وجود ندارد.");
+  const target=when.getTime();
+  let best=-1,delta=Infinity;
+  for(let i=0;i<times.length;i++){
+    const t=Date.parse(times[i]);
+    if(!Number.isFinite(t))continue;
+    const d=Math.abs(t-target);
+    if(d<delta){delta=d;best=i;}
+  }
+  if(best<0||delta>90*60*1000)throw new Error("پیش‌بینی هواشناسی برای زمان عبور از این نقطه در دسترس نیست؛ تاریخ نزدیک‌تری انتخاب کنید.");
+  const val=(key)=>data.hourly[key]?.[best];
+  const result={
+    time:times[best],temperature:Number(val("temperature_2m")),
+    precipProb:Number(val("precipitation_probability")),precipitation:Number(val("precipitation")),
+    code:Number(val("weather_code")),windSpeed:Number(val("wind_speed_10m")),
+    windDirection:Number(val("wind_direction_10m")),gust:Number(val("wind_gusts_10m")),
+    timezone:data.timezone||""
+  };
+  if(!Number.isFinite(result.windSpeed)||!Number.isFinite(result.windDirection))throw new Error("داده باد برای این زمان کامل نیست.");
+  return result;
+}
+function estimateHvacLoadKw(temperature,mode){
+  if(mode==="off"||!Number.isFinite(temperature))return 0;
+  // Approximate average cabin HVAC load; actual demand varies by vehicle and heat-pump type.
+  if(temperature<18)return Math.max(0.5,Math.min(3.0,0.5+(18-temperature)*0.12));
+  if(temperature>24)return Math.max(0.4,Math.min(2.0,0.4+(temperature-24)*0.13));
+  return 0;
+}
+function analyzeWind(sample,heading,speedKmh,baseConsumption,hvacMode="auto"){
+  // wind_direction_10m is the direction the wind comes FROM.
+  const delta=((sample.windDirection-heading+540)%360)-180;
+  const headwind=sample.windSpeed*Math.cos(delta*Math.PI/180);
+  const vehicleSpeed=Math.max(40,Math.min(110,speedKmh||80));
+  // Approximation: 30% of baseline energy is treated as aerodynamic load.
+  // This is a planning estimate, not a vehicle-specific physical simulation.
+  const aeroRatio=((vehicleSpeed+headwind)/vehicleSpeed)**2;
+  const factor=Math.max(0.80,Math.min(1.50,1+0.30*(aeroRatio-1)));
+  const vehicleConsumptionSpeed=Math.max(40,Math.min(110,speedKmh||80));
+  const hvacLoadKw=estimateHvacLoadKw(sample.temperature,hvacMode);
+  const hvacConsumption=hvacLoadKw*100/vehicleConsumptionSpeed;
+  return {headwind, factor, hvacLoadKw, hvacConsumption, adjustedConsumption:baseConsumption*factor+hvacConsumption};
+}
+function renderWeather(samples,baseConsumption,adjustedConsumption){
+  const panel=$("weatherPanel");
+  panel.classList.remove("weather-expanded");
+  panel.innerHTML='<div class="directions-head"><h2>هواشناسی و تحلیل باد در مسیر</h2><span class="sub">پیش‌بینی ساعتی</span></div><div class="weather-content weather-fade" id="weatherContent"></div>';
+  const content=$("weatherContent");
+  const factors=samples.map(s=>s.wind.factor);
+  const avgFactor=factors.reduce((a,b)=>a+b,0)/Math.max(1,factors.length);
+  const avgHvac=samples.reduce((sum,s)=>sum+(s.wind.hvacConsumption||0),0)/Math.max(1,samples.length);
+  const pct=(adjustedConsumption/baseConsumption-1)*100;
+  const windPct=(avgFactor-1)*100;
+  const summary=document.createElement("div");
+  summary.className="weather-summary"+(samples.some(s=>s.weather.precipProb>=60)||samples.some(s=>s.weather.gust>=45)?" warn":"");
+  const effect=pct>1?("افزایش تخمینی مصرف "+pct.toFixed(1)+"٪"):pct< -1?("کاهش تخمینی مصرف "+Math.abs(pct).toFixed(1)+"٪"):"تغییر متوسط مصرف ناشی از باد ناچیز برآورد می‌شود";
+  summary.textContent=effect+" · مصرف پایه "+baseConsumption.toFixed(1)+"، اثر متوسط باد "+(windPct>=0?"+":"")+windPct.toFixed(1)+"٪، سهم تخمینی بخاری/کولر "+avgHvac.toFixed(1)+" و مصرف نهایی "+adjustedConsumption.toFixed(1)+" kWh/100km.";
+  content.appendChild(summary);
+  const grid=document.createElement("div");grid.className="weather-grid";
+  samples.forEach((s,i)=>{
+    const card=document.createElement("div");card.className="weather-card";
+    const heading=document.createElement("strong");heading.textContent="حدود کیلومتر "+Math.round(s.routeKm)+" مسیر";
+    const time=document.createElement("div");time.className="weather-time";
+    time.textContent="زمان عبور: "+new Date(s.eta).toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"});
+    const conditions=document.createElement("div");conditions.className="weather-detail";
+    const temp=Number.isFinite(s.weather.temperature)?Math.round(s.weather.temperature)+"°C":"دما نامشخص";
+    const rain=Number.isFinite(s.weather.precipProb)?"احتمال بارش "+Math.round(s.weather.precipProb)+"٪":"احتمال بارش نامشخص";
+    conditions.textContent=temp+" · "+weatherDescription(s.weather.code)+" · "+rain;
+    const wind=document.createElement("div");wind.className="weather-wind";
+    const relative=s.wind.headwind>3?"باد روبه‌رو":s.wind.headwind< -3?"باد پشت":"باد جانبی/متغیر";
+    wind.textContent="باد "+Math.round(s.weather.windSpeed)+" km/h از "+compassDirection(s.weather.windDirection)+" · "+relative;
+    const gust=document.createElement("div");gust.className="weather-detail";
+    gust.textContent="تندباد: "+(Number.isFinite(s.weather.gust)?Math.round(s.weather.gust)+" km/h":"نامشخص")+" · اثر باد: "+((s.wind.factor-1)*100>=0?"+":"")+((s.wind.factor-1)*100).toFixed(1)+"٪ · بخاری/کولر: "+(s.wind.hvacLoadKw||0).toFixed(1)+" kW (حدود "+(s.wind.hvacConsumption||0).toFixed(1)+" kWh/100km)";
+    card.append(heading,time,conditions,wind,gust);grid.appendChild(card);
+  });
+  content.appendChild(grid);
+  const credit=document.createElement("div");credit.className="weather-credit";
+  credit.innerHTML='منبع پیش‌بینی: <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#64b5ff">Open-Meteo</a>. پیش‌بینی قطعی نیست. اثر باد و بار مصرفی بخاری/کولر با مدل ساده و تقریبی محاسبه می‌شود؛ مصرف واقعی به مدل خودرو، نوع پمپ حرارتی یا بخاری مقاومتی، تنظیم دمای کابین، سرعت و شرایط جاده وابسته است.';
+  content.appendChild(credit);
+  const more=document.createElement("button");more.type="button";more.className="weather-more";more.textContent="نمایش بیشتر";
+  more.addEventListener("click",()=>{const expanded=panel.classList.toggle("weather-expanded");content.classList.toggle("weather-expanded",expanded);content.classList.toggle("weather-fade",!expanded);more.textContent=expanded?"نمایش کمتر":"نمایش بیشتر";});
+  panel.appendChild(more);
+}
+function summarizeDepartureWeather(analysis){
+ const a=Array.isArray(analysis?.samples)?analysis.samples:[];
+ const n=Math.max(1,a.length);
+ const avg=k=>a.reduce((sum,x)=>{const v=Number(x?.weather?.[k]);return sum+(Number.isFinite(v)?v:0);},0)/n;
+ const rain=avg("precipProb"),gust=avg("gust");
+ const severe=a.filter(x=>[65,67,75,82,86,95,96,99].includes(Number(x?.weather?.code))).length;
+ const consumption=Number(analysis?.adjustedConsumption);
+ const safeConsumption=Number.isFinite(consumption)?consumption:0;
+ return {score:safeConsumption+rain*.025+Math.max(0,gust-35)*.08+severe*2.5,rain,gust,consumption:safeConsumption,severe};
+}
+function weatherClock(d){return d.toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit",hour12:false});}
+async function recommendWeatherDeparture(coords,km,duration,selectedValue,baseConsumption){
+ const panel=$("weatherPanel"),box=document.createElement("div");
+ box.className="weather-summary";box.textContent="در حال مقایسه ساعت‌های حرکت بر اساس پیش‌بینی هواشناسی مسیر…";panel.insertBefore(box,panel.firstChild);
+ const selected=new Date(selectedValue),now=Date.now(),candidates=[];
+ for(const offset of [0,2,4,1,3]){
+  const d=new Date(selected.getTime()+offset*3600000);d.setMinutes(0,0,0);
+  if(d.getTime()>=now+10*60000&&!candidates.some(x=>x.getTime()===d.getTime()))candidates.push(d);
+  if(candidates.length===5)break;
+ }
+ if(candidates.length<2){box.className="weather-summary warn";box.textContent="برای این تاریخ ساعت‌های کافی در آینده جهت مقایسه هواشناسی وجود ندارد؛ تاریخ یا ساعت آینده‌تری انتخاب کنید.";return;}
+ const results=[];
+ for(const departure of candidates){
+  try{
+   const analysis=await getRouteWeather(coords,km,duration,localDateTimeValue(departure),baseConsumption,{maxSamples:2,delayMs:800});
+   results.push({departure,analysis,...summarizeDepartureWeather(analysis)});
+  }catch(e){console.warn("REV weather departure candidate failed",weatherClock(departure),e);}
+ }
+ if(!results.length){box.className="weather-summary warn";box.textContent="پیشنهاد ساعت حرکت آماده نشد؛ سرویس پیش‌بینی برای ساعت‌های جایگزین پاسخ کامل نداد. چند دقیقه بعد دوباره محاسبه کنید؛ ساعت انتخابی شما تغییر نکرده است.";return;}
+ results.sort((a,b)=>a.score-b.score);
+ const best=results[0],current=results.find(x=>Math.abs(x.departure-selected)<30*60000);
+ box.className="weather-summary"+(best.rain>=60||best.gust>=50||best.severe?" warn":"");
+ box.replaceChildren();
+ const title=document.createElement("strong");title.textContent="ساعت پیشنهادی حرکت بر اساس هواشناسی: "+weatherClock(best.departure);box.appendChild(title);
+ const detail=document.createElement("div");detail.style.marginTop="6px";
+ detail.textContent="از میان "+results.length+" زمان بررسی‌شده، این گزینه امتیاز جوی بهتری دارد؛ مصرف برآوردی "+best.consumption.toFixed(1)+" kWh/100 km، احتمال متوسط بارش "+Math.round(best.rain)+"٪ و تندباد میانگین "+Math.round(best.gust)+" km/h.";
+ box.appendChild(detail);
+ const note=document.createElement("div");note.style.marginTop="6px";
+ note.textContent=current&&current.score-best.score>.2?"شرایط هوا در این برآورد نسبت به ساعت انتخابی بهتر است. برای اعمال پیشنهاد، این ساعت را در فیلد ساعت حرکت وارد و مسیر را دوباره محاسبه کنید.":"این زمان بهترین گزینه در میان ساعت‌های بررسی‌شده است. ساعت انتخابی شما خودکار تغییر نمی‌کند و ترافیک در این پیشنهاد لحاظ نشده است.";
+ box.appendChild(note);
+ const disclaimer=document.createElement("small");disclaimer.style.display="block";disclaimer.style.marginTop="6px";
+ disclaimer.textContent="مقایسه بر اساس باد، دما و مصرف تهویه، بارش و شاخص‌های جوی است؛ ترافیک و وضعیت واقعی جاده لحاظ نشده‌اند.";
+ box.appendChild(disclaimer);
+}
+
+async function getRouteWeather(routeCoords,routeKm,routeDurationSeconds,departureValue,baseConsumption,options={}){
+  if(!departureValue)throw new Error("تاریخ شمسی و ساعت حرکت را درست وارد کنید؛ نمونه تاریخ: ۱۴۰۵/۰۷/۲۲.");
+  const departure=new Date(departureValue);
+  if(!Number.isFinite(departure.getTime()))throw new Error("تاریخ و ساعت حرکت معتبر نیست.");
+  if(departure.getTime()<Date.now()-5*60*1000)throw new Error("زمان حرکت نمی‌تواند در گذشته باشد.");
+  const arrival=new Date(departure.getTime()+routeDurationSeconds*1000);
+  const maxForecastDays=15;
+  if((departure.getTime()-Date.now())>maxForecastDays*24*60*60*1000 || (arrival.getTime()-Date.now())>16*24*60*60*1000){
+    throw new Error("تاریخ سفر خارج از افق پیش‌بینی قابل اتکای این سرویس است. نزدیک‌تر به زمان سفر دوباره بررسی کنید.");
+  }
+  const samples=routeSamplePoints(routeCoords,Math.max(20,routeKm/7),options.maxSamples||8);
+  if(samples.length<2)throw new Error("نقاط کافی برای تحلیل هواشناسی مسیر وجود ندارد.");
+  const segmentKm=routeKm/(samples.length-1);
+  const speedKmh=routeKm/Math.max(0.1,routeDurationSeconds/3600);
+  const results=[];
+  // Limit concurrent calls to avoid Open-Meteo HTTP 429 responses.
+  for(let i=0;i<samples.length;i++){
+    if(i>0) await new Promise(resolve=>setTimeout(resolve,Number.isFinite(options.delayMs)?options.delayMs:900));
+    const point=samples[i],fraction=i/(samples.length-1);
+    const eta=new Date(departure.getTime()+routeDurationSeconds*fraction*1000);
+    const weather=await fetchWeatherAt(point[0],point[1],eta);
+    const prev=samples[Math.max(0,i-1)],next=samples[Math.min(samples.length-1,i+1)];
+    const heading=bearingDegrees(prev,next);
+    const wind=analyzeWind(weather,heading,speedKmh,baseConsumption,$("hvacMode")?.value||"auto");
+    results.push({lat:point[0],lon:point[1],routeKm:routeKm*fraction,eta,weather,wind});
+  }
+  // Weighted by distance between samples; endpoints count as half-segments.
+  const weights=results.map((_,i)=>(i===0||i===results.length-1)?0.5:1);
+  const weightTotal=weights.reduce((a,b)=>a+b,0);
+  const avgFactor=results.reduce((sum,x,i)=>sum+x.wind.factor*weights[i],0)/weightTotal;
+  const adjustedConsumption=results.reduce((sum,x,i)=>sum+x.wind.adjustedConsumption*weights[i],0)/weightTotal;
+  return {samples:results,adjustedConsumption,avgFactor,departure,arrival};
+}
+
+
+let revTimeline = {coords:null,routeKm:0,durationSeconds:0,departure:null,weatherSamples:[],battery:60,soc:90,consumption:18,stops:[],stationList:[],carMarker:null,batteryMarker:null,vehicleType:"bev",electricKm:0,regenerationKwh:0,reserve:15};
+let timelinePlayback=null;
+function timelineMaxReachKm(){
+  if(revTimeline.vehicleType!=="bev")return revTimeline.routeKm;
+  const battery=Number(revTimeline.battery)||0,consumption=Number(revTimeline.consumption)||0,reserve=Number(revTimeline.reserve)||0;
+  if(battery<=0||consumption<=0)return 0;
+  const stops=[...(revTimeline.stops||[])].filter(s=>Number.isFinite(Number(s.routeKm))&&Number(s.routeKm)>0).sort((a,b)=>a.routeKm-b.routeKm);
+  let atKm=0,soc=Number(revTimeline.soc)||0;
+  for(const stop of stops){const stopKm=Math.min(revTimeline.routeKm,Number(stop.routeKm));if(stopKm<=atKm)continue;const need=(stopKm-atKm)*consumption/battery;if(need>soc-reserve)return Math.max(atKm,Math.min(stopKm,atKm+Math.max(0,soc-reserve)*battery/consumption));soc-=need;soc= Math.max(soc,Number(stop.targetSoc)||soc);atKm=stopKm;}
+  const need=(revTimeline.routeKm-atKm)*consumption/battery;
+  if(need>soc-reserve)return Math.max(atKm,Math.min(revTimeline.routeKm,atKm+Math.max(0,soc-reserve)*battery/consumption));
+  return revTimeline.routeKm;
+}
+function stopTimelinePlayback(message){if(timelinePlayback){clearInterval(timelinePlayback);timelinePlayback=null;}const btn=$("timelinePlayBtn");if(btn)btn.textContent=message||"↻ توقف خودرو";}
+function toggleTimelinePlayback(){const slider=$("timelineSlider"),btn=$("timelinePlayBtn");if(!slider||slider.disabled||!btn)return;if(timelinePlayback){clearInterval(timelinePlayback);timelinePlayback=null;btn.textContent="▶ ادامه حرکت";return;}const maxKm=timelineMaxReachKm(),maxFraction=revTimeline.routeKm>0?Math.min(100,100*maxKm/revTimeline.routeKm):0;if(Number(slider.value)>=maxFraction-0.001){if(maxFraction<99.999){btn.textContent="⛔ باتری کافی نیست";return;}slider.value=0;}btn.textContent="Ⅱ توقف";timelinePlayback=setInterval(()=>{const current=Number(slider.value),next=Math.min(maxFraction,current+0.5);slider.value=String(next);updateTimeline();if(next>=maxFraction-0.001){stopTimelinePlayback(maxFraction<99.999?"⛔ توقف؛ شارژ قابل‌استفاده تمام شد":"↻ پایان مسیر");}},120);}
+function timelinePointAt(coords,targetKm){
+  if(!coords||coords.length<2)return null;
+  let traveled=0;
+  for(let i=1;i<coords.length;i++){
+    const a=[coords[i-1][1],coords[i-1][0]],b=[coords[i][1],coords[i][0]];
+    const seg=haversine(a,b);
+    if(traveled+seg>=targetKm){
+      const t=seg?(targetKm-traveled)/seg:0;
+      return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t];
+    }
+    traveled+=seg;
+  }
+  const last=coords[coords.length-1];return [last[1],last[0]];
+}
+function timelineBatteryAt(km){
+  const st=[...revTimeline.stops].sort((a,b)=>a.routeKm-b.routeKm);
+  let atKm=0,soc=revTimeline.soc;
+  for(const stop of st){
+    if(km<stop.routeKm){
+      soc-=(km-atKm)*revTimeline.consumption/revTimeline.battery;
+      return Math.max(0,Math.min(100,soc));
+    }
+    soc-=(stop.routeKm-atKm)*revTimeline.consumption/revTimeline.battery;
+    soc=Number(stop.targetSoc)||soc;
+    atKm=stop.routeKm;
+  }
+  soc-=(km-atKm)*revTimeline.consumption/revTimeline.battery;
+  return Math.max(0,Math.min(100,soc));
+}
+function makeEvMapIcon(soc,weatherIcons=[]){
+  const value=Math.round(soc),low=value<=15;
+  const badges=(weatherIcons||[]).map(w=>`<span class="rev-weather-badge" title="${w.title}" aria-label="${w.title}">${w.icon}</span>`).join('');
+  const html="<div class='rev-ev-marker'><div class='rev-ev-charge"+(low?" low":"")+"'>"+badges+"شارژ تخمینی "+value+"٪</div><svg class='rev-ev-vehicle' viewBox='0 0 100 62' xmlns='http://www.w3.org/2000/svg' aria-hidden='true'><defs><linearGradient id='evBody' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#f5fbff'/><stop offset='1' stop-color='#75d6c2'/></linearGradient></defs><path d='M9 39 15 24Q17 18 25 17L36 7Q39 4 46 4H64Q70 4 74 11L83 25 91 30Q95 33 95 39V48H7V42Q7 40 9 39Z' fill='url(#evBody)' stroke='#10222c' stroke-width='3' stroke-linejoin='round'/><path d='M25 21 38 9H61Q66 9 69 15L75 25H21Z' fill='#15394a' stroke='#10222c' stroke-width='2'/><path d='M46 10V24' stroke='#91e6ff' stroke-width='2'/><path d='M12 35H22' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><path d='M82 34h8' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><circle cx='25' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='25' cy='47' r='3' fill='#7e9aa7'/><circle cx='75' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='75' cy='47' r='3' fill='#7e9aa7'/><path d='M49 31h9l-5 7h6l-11 10 3-8h-6z' fill='#d7ff3f' stroke='#18313b' stroke-width='1'/></svg></div>";
+  return L.divIcon({className:"rev-map-car",html,iconSize:[150,76],iconAnchor:[75,70]});
+}
+function weatherRiskIcons(sample){
+ if(!sample||!sample.weather)return [];
+ const w=sample.weather,out=[],code=Number(w.code),rain=Number(w.precipProb),precip=Number(w.precipitation),speed=Number(w.windSpeed),gust=Number(w.gust);
+ // Always show the forecast condition beside the car, not only severe weather.
+ if([71,73,75,77,85,86].includes(code))out.push({icon:'❄️',title:'پیش‌بینی برف'});
+ else if([95,96,99].includes(code))out.push({icon:'⛈️',title:'پیش‌بینی رعدوبرق'});
+ else if([51,53,55,56,57,61,63,65,66,67,80,81,82].includes(code)||((Number.isFinite(rain)&&rain>=50)||(Number.isFinite(precip)&&precip>=1)))out.push({icon:'🌧️',title:'پیش‌بینی بارش'});
+ else if([45,48].includes(code))out.push({icon:'🌫️',title:'پیش‌بینی مه'});
+ else if([1,2,3].includes(code))out.push({icon:'☁️',title:'پیش‌بینی هوای نیمه‌ابری یا ابری'});
+ else if(code===0)out.push({icon:'☀️',title:'پیش‌بینی آسمان صاف'});
+ else out.push({icon:'🌤️',title:'وضعیت هواشناسی'});
+ if((Number.isFinite(speed)&&speed>=35)||(Number.isFinite(gust)&&gust>=55))out.push({icon:'💨',title:'باد شدید یا تندباد پیش‌بینی‌شده'});
+ return out;
+}
+function updateTimeline(){
+  if(!revTimeline.coords||!revTimeline.departure)return;
+  const slider=$("timelineSlider"),fraction=Number(slider.value)/100;
+  const maxReachKm=timelineMaxReachKm(),maxFraction=revTimeline.routeKm>0?Math.min(100,100*maxReachKm/revTimeline.routeKm):0;
+  if(revTimeline.vehicleType==="bev"&&fraction>maxFraction/100+0.00001){slider.value=String(maxFraction);return updateTimeline();}
+  const km=Math.min(revTimeline.routeKm*fraction,maxReachKm),point=timelinePointAt(revTimeline.coords,km);
+  const eta=new Date(revTimeline.departure.getTime()+revTimeline.durationSeconds*fraction*1000);
+  const hybrid=["phev","hev","mhev"].includes(revTimeline.vehicleType),electricKm=Number(revTimeline.electricKm)||0,regenerationKwh=Math.max(0,Number(revTimeline.regenerationKwh)||0),recoveredSoFar=regenerationKwh*fraction;
+  const switchedToFuel=hybrid&&(revTimeline.vehicleType!=="phev"||(electricKm<revTimeline.routeKm&&km>=electricKm));
+  const soc=hybrid?(switchedToFuel?0:Math.max(0,100*(electricKm-km)/Math.max(.1,electricKm))):timelineBatteryAt(km);
+  $("timelineProgress").style.width=(fraction*100)+"%";
+  $("timelineCar").style.left="auto";$("timelineCar").style.right="calc("+(fraction*100)+"% - 22px)";
+  $("timelineProgressText").textContent=Math.round(revTimeline.routeKm?km/revTimeline.routeKm*100:0)+"٪ از مسیر";
+  $("timelineKm").textContent=Math.round(km)+" از "+Math.round(revTimeline.routeKm)+" km"+(revTimeline.vehicleType==="bev"&&maxReachKm<revTimeline.routeKm-0.5?" · توقف به‌دلیل اتمام شارژ":"");
+  $("timelineTime").textContent=eta.toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"});
+  $("timelineSoc").textContent=hybrid?(revTimeline.vehicleType==="phev"?(switchedToFuel?"بنزین · برق تمام شد":"برق تا "+Math.round(electricKm-km)+" km"):"بازیابی +"+recoveredSoFar.toFixed(2)+" kWh"):(Math.round(soc)+"٪");
+  $("timelineSoc").style.color=hybrid&&switchedToFuel?"#ffb45c":soc<=15?"#ff8d8d":"var(--accent)";
+  const samples=revTimeline.weatherSamples||[];
+  let wx=null;
+  if(samples.length)wx=samples.reduce((best,x)=>Math.abs(x.routeKm-km)<Math.abs(best.routeKm-km)?x:best,samples[0]);
+  const risks=weatherRiskIcons(wx);
+  if(point&&revTimeline.carMarker){revTimeline.carMarker.setLatLng(point);if(hybrid&&switchedToFuel){revTimeline.carMarker.setIcon(L.divIcon({className:"rev-map-car",html:"<div style=\"background:#24180d;color:#ffb45c;border:2px solid #ff9f43;border-radius:9px;padding:5px 8px;font:800 12px Tahoma;white-space:nowrap;box-shadow:0 3px 10px #000b\">⛽ حرکت با بنزین</div>",iconSize:[130,38],iconAnchor:[65,19]}));revTimeline.carMarker.setPopupContent("حرکت با بنزین · برق اولیه مصرف شده");}else{revTimeline.carMarker.setIcon(makeEvMapIcon(soc,risks));revTimeline.carMarker.setPopupContent(hybrid?"حرکت برقی PHEV · برق باقی‌مانده: "+Math.round(electricKm-km)+" کیلومتر":"موقعیت خودرو روی مسیر · شارژ تخمینی باتری: "+Math.round(soc)+"٪"+(risks.length?" · "+risks.map(x=>x.title).join("، "):""));}}
+  $("timelineWeather").textContent=wx?(Math.round(wx.weather.temperature)+"° · باد "+Math.round(wx.weather.windSpeed)+" km/h"):"در دسترس نیست";
+  const upcoming=revTimeline.stationList.filter(x=>x.routeKm>=km).sort((a,b)=>a.routeKm-b.routeKm)[0];
+  const nextStop=revTimeline.stops.filter(x=>x.routeKm>=km).sort((a,b)=>a.routeKm-b.routeKm)[0];
+  let detail="<b>زمان تخمینی:</b> "+eta.toLocaleString("fa-IR",{dateStyle:"full",timeStyle:"short"})+(hybrid?(" · <b>وضعیت انرژی:</b> "+(switchedToFuel?"بنزین (برق اولیه تمام شده)":revTimeline.vehicleType==="phev"?"حرکت برقی تا حدود کیلومتر "+Math.round(electricKm):"هیبرید خودشارژ؛ مصرف اصلی بنزین")):(" · <b>شارژ تخمینی:</b> "+Math.round(soc)+"٪."));
+  if(revTimeline.vehicleType==="bev"&&maxReachKm<revTimeline.routeKm-0.5)detail+="<br><b style=\"color:#ff8d8d\">خودرو در کیلومتر "+Math.round(maxReachKm)+" متوقف می‌شود:</b> شارژ قابل‌استفاده برای ادامه مسیر کافی نیست. برای ادامه سفر باید در ایستگاه قابل‌دسترسی شارژ کنید."; 
+  if(revTimeline.vehicleType==="hev"||revTimeline.vehicleType==="mhev")detail+="<br><b>برق بازیابی‌شده تخمینی تا این نقطه:</b> "+recoveredSoFar.toFixed(2)+" kWh از حدود "+regenerationKwh.toFixed(2)+" kWh در کل مسیر. این برآورد تقریبی است و به ترافیک، ترمزگیری، شیب و مدل خودرو بستگی دارد.";
+  if(wx){
+    const rel=wx.wind.headwind>3?"باد روبه‌رو":wx.wind.headwind< -3?"باد پشت":"باد جانبی/متغیر";
+    detail+="<br><b>هوا:</b> "+escapeHTML(weatherDescription(wx.weather.code))+", دما "+Math.round(wx.weather.temperature)+"°C، احتمال بارش "+(Number.isFinite(wx.weather.precipProb)?Math.round(wx.weather.precipProb)+"٪":"نامشخص")+".";
+    detail+="<br><b>باد:</b> "+Math.round(wx.weather.windSpeed)+" km/h از "+escapeHTML(compassDirection(wx.weather.windDirection))+"؛ "+rel+"؛ تندباد "+(Number.isFinite(wx.weather.gust)?Math.round(wx.weather.gust)+" km/h":"نامشخص")+".";
+    detail+="<br><span class='muted'>نقطه پیش‌بینی نزدیک: کیلومتر "+Math.round(wx.routeKm)+" · ساعت "+new Date(wx.eta).toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit"})+"</span>";
+  }else detail+="<br><span class='muted'>برای این سفر داده هواشناسی ساعتی دریافت نشد؛ از نمایش مقادیر ساختگی خودداری شده است.</span>";
+  if(hybrid){if(revTimeline.vehicleType==="phev")detail+="<br><b>تعویض منبع انرژی:</b> حدود کیلومتر "+Math.round(electricKm)+"، سپس بنزین تا مقصد.";}else if(nextStop)detail+="<br><b>توقف شارژ پیشنهادی بعدی:</b> "+escapeHTML(nextStop.name)+"، حدود کیلومتر "+Math.round(nextStop.routeKm)+" (شارژ هدف "+Math.round(nextStop.targetSoc)+"٪).";
+  else if(!hybrid&&upcoming)detail+="<br><b>ایستگاه ثبت‌شده بعدی:</b> "+escapeHTML(upcoming.name)+"، حدود کیلومتر "+Math.round(upcoming.routeKm)+"."
+  else if(!hybrid)detail+="<br><span class='muted'>ایستگاه ثبت‌شده دیگری در ادامه مسیر فهرست نشده است.</span>";
+  $("timelineDetails").innerHTML=detail;
+}
+function configureTimeline(data){
+  revTimeline={...revTimeline,...data};
+  $("timelineOrigin").textContent=$("origin").value.trim()||"مبدأ";
+  $("timelineDestination").textContent=$("destination").value.trim()||"مقصد";
+  $("timelineSlider").disabled=false;$("timelineSlider").value=0;
+  if(revTimeline.carMarker)routeLayer.removeLayer(revTimeline.carMarker);
+  if(revTimeline.batteryMarker)routeLayer.removeLayer(revTimeline.batteryMarker);
+  const start=timelinePointAt(revTimeline.coords,0);
+  revTimeline.carMarker=L.marker(start,{icon:makeEvMapIcon(timelineBatteryAt(0)),zIndexOffset:2000,keyboard:false,interactive:true}).addTo(routeLayer).bindPopup("موقعیت خودرو روی مسیر");
+  revTimeline.batteryMarker=null;
+  updateTimeline();const play=$("timelinePlayBtn");if(play){play.disabled=false;play.textContent="▶ شروع حرکت";}
+}
+
+function fmtDuration(seconds){
+  const mins=Math.round(seconds/60), h=Math.floor(mins/60),m=mins%60;
+  return h?`${h} ساعت و ${m} دقیقه`:`${m} دقیقه`;
+}
+async function loadStationRatings(stations){
+  const api='https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/ratings';
+  await Promise.all(stations.map(async s=>{
+    s._revRatingId=String(s.id||((s.source||"station")+":"+(s.name||"")+":"+(s.lat??"")+","+(s.lon??""))).slice(0,240);
+    try{
+      const r=await fetch(api+'?type=station&id='+encodeURIComponent(s._revRatingId),{cache:'no-store'});
+      const j=await r.json();
+      if(r.ok&&j.success){s._ratingCount=Number(j.count)||0;s._ratingAverage=j.average==null?null:Number(j.average);}
+      else{s._ratingCount=0;s._ratingAverage=null;}
+    }catch(e){s._ratingCount=0;s._ratingAverage=null;}
+    const n=s._ratingCount,avg=s._ratingAverage==null?3.5:s._ratingAverage;
+    s._ratingScore=(avg*n+3.5*3)/(n+3);
+  }));
+}
+let revStationReportVoterId=null;
+function stationReportVoterId(){
+  if(revStationReportVoterId)return revStationReportVoterId;
+  const key="rev_station_report_voter_v1";
+  try{let id=localStorage.getItem(key);if(!id){id=(crypto.randomUUID?crypto.randomUUID():"rev-report-"+Date.now()+"-"+Math.random().toString(16).slice(2));localStorage.setItem(key,id);}revStationReportVoterId=id;return id;}
+  catch(e){revStationReportVoterId="rev-report-"+Date.now()+"-"+Math.random().toString(16).slice(2)+"-"+Math.random().toString(16).slice(2);return revStationReportVoterId;}
+}
+async function getPublishedStationReports(){
+  try{const r=await fetch("https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/station-reports/published",{cache:"no-store"});if(!r.ok)return [];const j=await r.json();return j.success&&Array.isArray(j.items)?j.items:[]}catch(e){return []}
+}
+async function renderStations(stations,routeCoords,routeKm,params){
+  const el=$('results');el.innerHTML='';
+  const publishedReports=await getPublishedStationReports();
+  const publishedFor=s=>publishedReports.filter(r=>String(r.station_id||"")===String(s.id||"")||String(r.station_name||"").trim().toLowerCase()===String(s.name||"").trim().toLowerCase());
+  const metrics=routeMetrics(routeCoords);
+  const listStations=stations.map(s=>({...s,...stationAlongRouteKm(s,metrics)})).sort((a,b)=>a.routeKm-b.routeKm);
+  const plan=buildChargingPlan(listStations,routeCoords,routeKm,params);
+  el.appendChild(renderChargingPlan(plan));
+  const heading=document.createElement('h2');heading.style.marginTop='18px';heading.textContent=`شارژرهای نزدیک مسیر (${listStations.length})`;el.appendChild(heading);
+  if(!listStations.length){
+    const empty=document.createElement('div');empty.className='sub';
+    empty.textContent='در بانک REV یا داده‌های عمومی OpenStreetMap ایستگاهی در شعاع انتخاب‌شده پیدا نشد. فاصله را روی ۲۰ یا ۴۰ کیلومتر بگذارید. پوشش داده‌های عمومی ممکن است ناقص باشد؛ این نتیجه به معنی نبود شارژر واقعی نیست.';
+    el.appendChild(empty);return;
+  }
+  const plannedIds=new Set(plan.stops.map(s=>String(s.id)));
+  listStations.slice(0,50).forEach(s=>{
+    const planned=plannedIds.has(String(s.id));
+    const stationPublishedReports=publishedFor(s);
+    const marker=L.circleMarker([s.lat,s.lon],{radius:planned?10:7,color:stationPublishedReports.length?'#d93025':'#0b1016',weight:stationPublishedReports.length?3:2,fillColor:stationPublishedReports.length?'#ff7043':(planned?'#64b5ff':'#d7ff3f'),fillOpacity:.98}).addTo(stationLayer);
+    marker.bindPopup(`<div style="min-width:190px">${stationPublishedReports.length?'<div style="background:#fff0eb;color:#a12616;padding:7px;border-radius:7px;margin-bottom:8px;font-weight:800">⚠ هشدار تأییدشده توسط REV</div>'+stationPublishedReports.map(r=>'<div style="border-right:3px solid #d93025;padding:4px 7px;margin-bottom:6px"><b>'+escapeHTML(({not_found:'جایگاه در محل وجود ندارد',not_working:'خراب یا غیرفعال',connector_wrong:'کانکتور اشتباه',power_wrong:'توان شارژ اشتباه',location_wrong:'موقعیت اشتباه',duplicate:'جایگاه تکراری',violation:'تخلف یا اطلاعات مشکوک',other:'گزارش مشکل'})[r.report_type]||r.report_type||'گزارش مشکل')+'</b>'+(r.details?'<br>'+escapeHTML(r.details):'')+'</div>').join(''):''}${(s.image_url||s.image)?'<img src="'+escapeHTML(s.image_url||s.image)+'" alt="" style="display:block;width:220px;max-height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px">':''}<b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>امتیاز رضایت: ${s._ratingAverage==null?'بدون امتیاز':Number(s._ratingAverage).toLocaleString('fa-IR',{maximumFractionDigits:1})+'/۵ · '+Number(s._ratingCount||0).toLocaleString('fa-IR')+' رأی'}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+' kW':'نامشخص'}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br>منبع: ${escapeHTML(s.source||"نامشخص")}<br>${escapeHTML(formatStationUpdatedAt(s.updatedAt))}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a><br><button type="button" class="rev-map-report-button" style="margin-top:9px;padding:7px 10px;border:0;border-radius:7px;background:#39ff88;color:#080b0d;font-weight:800;cursor:pointer">گزارش خرابی یا تخلف این جایگاه</button></div>`);
+    const item=document.createElement('div');item.className='station';
+    const ratingLabel=s._ratingCount?('★ '+s._ratingAverage.toFixed(1)+'/۵ · '+s._ratingCount+' رأی'):'بدون امتیاز';
+    item.innerHTML=`<strong>${planned?'★ توقف پیشنهادی: ':''}${escapeHTML(s.name)} <span class="pill" style="display:inline-block">${escapeHTML(ratingLabel)}</span></strong><small>${escapeHTML(s.address||'نشانی کامل ثبت نشده')}</small><div><span class="pill">${s.routeDistance.toFixed(1)} کیلومتر فاصله از جاده</span><span class="pill">کیلومتر ${Math.round(s.routeKm??0)} مسیر</span><span class="pill">${s.power?s.power+' kW':'توان نامشخص'}</span><span class="pill">${escapeHTML(s.status)}</span></div><div class="sub">${escapeHTML(s.connectors.join('، ')||'نوع کانکتور نامشخص')}${s.operator?' · '+escapeHTML(s.operator):''}</div><div class="sub">${escapeHTML(s.source||"منبع نامشخص")} · ${escapeHTML(formatStationUpdatedAt(s.updatedAt))}</div><div style="margin-top:6px"><a href="${s.url}" target="_blank" rel="noopener" style="color:#64b5ff">مشاهده جزئیات</a> · <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lon}#map=16/${s.lat}/${s.lon}" target="_blank" rel="noopener" style="color:#64b5ff">نمایش روی نقشه</a></div>`;
+    el.appendChild(item);
+    const ratingBox=document.createElement("div");
+    ratingBox.addEventListener("click",event=>event.stopPropagation());
+    item.appendChild(ratingBox);
+    const reportBox=document.createElement("details");
+    reportBox.className="station-report-box";
+    reportBox.style.cssText="margin-top:10px;padding:9px 11px;border:1px solid #394650;border-radius:10px;background:#0c131b;color:#e9f0f4";
+    reportBox.innerHTML=`<summary style="cursor:pointer;font-size:13px;font-weight:700">ثبت گزارش خرابی، تخلف یا خطای اطلاعات</summary>
+      <form class="station-report-form" style="display:grid;gap:8px;margin-top:10px">
+        <label style="font-size:12px">نوع مشکل
+          <select name="report_type" required style="display:block;width:100%;margin-top:4px;padding:8px;border-radius:8px;background:#101a22;color:#f5f7f8;border:1px solid #52616b">
+            <option value="not_found">جایگاه در محل وجود ندارد</option><option value="not_working">جایگاه خراب یا غیرفعال است</option><option value="connector_wrong">نوع کانکتور اشتباه است</option><option value="power_wrong">توان شارژ اشتباه است</option><option value="location_wrong">موقعیت یا نشانی اشتباه است</option><option value="duplicate">جایگاه تکراری است</option><option value="violation">تخلف، اطلاعات جعلی یا رفتار مشکوک</option><option value="other">سایر موارد</option>
+          </select>
+        </label>
+        <label style="font-size:12px">توضیح تکمیلی (اختیاری)
+          <textarea name="details" maxlength="600" rows="2" placeholder="مثلاً جایگاه جابه‌جا شده یا شارژر خاموش است" style="display:block;width:100%;margin-top:4px;padding:8px;border-radius:8px;background:#101a22;color:#f5f7f8;border:1px solid #52616b;resize:vertical"></textarea>
+        </label>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="submit" style="padding:7px 12px;border:0;border-radius:8px;background:#39ff88;color:#080b0d;font-weight:800;cursor:pointer">ارسال گزارش</button><span class="station-report-message" role="status" style="font-size:12px;color:#b7c4cb"></span></div>
+      </form>`;
+    item.appendChild(reportBox);
+    // Let users open the existing report form directly from a charging-station map popup.
+    marker.on("popupopen",event=>{
+      const popupEl=event.popup.getElement();
+      const button=popupEl?.querySelector(".rev-map-report-button");
+      if(!button||button.dataset.bound==="1")return;
+      button.dataset.bound="1";
+      button.addEventListener("click",ev=>{
+        ev.preventDefault();ev.stopPropagation();
+        let inlineForm=popupEl.querySelector(".rev-map-report-inline");
+        if(inlineForm){inlineForm.hidden=!inlineForm.hidden;return;}
+        inlineForm=document.createElement("form");
+        inlineForm.className="rev-map-report-inline";
+        inlineForm.style.cssText="display:grid;gap:8px;margin-top:10px;padding-top:10px;border-top:1px solid #52616b;min-width:220px";
+        const typeLabel=document.createElement("label");
+        typeLabel.textContent="نوع گزارش";
+        typeLabel.style.cssText="display:grid;gap:4px;font-size:12px";
+        const typeSelect=document.createElement("select");
+        typeSelect.name="report_type";typeSelect.required=true;
+        typeSelect.style.cssText="width:100%;padding:7px;border-radius:7px;background:#101a22;color:#f5f7f8;border:1px solid #52616b";
+        [["not_found","جایگاه در محل وجود ندارد"],["not_working","جایگاه خراب یا غیرفعال است"],["connector_wrong","نوع کانکتور اشتباه است"],["power_wrong","توان شارژ اشتباه است"],["location_wrong","موقعیت یا نشانی اشتباه است"],["duplicate","جایگاه تکراری است"],["violation","تخلف، اطلاعات جعلی یا رفتار مشکوک"],["other","سایر موارد"]].forEach(([value,label])=>{const o=document.createElement("option");o.value=value;o.textContent=label;typeSelect.appendChild(o);});
+        typeLabel.appendChild(typeSelect);
+        const details=document.createElement("textarea");details.name="details";details.maxLength=600;details.rows=2;details.placeholder="توضیحات تکمیلی (اختیاری)";
+        details.style.cssText="width:100%;padding:7px;border-radius:7px;background:#101a22;color:#f5f7f8;border:1px solid #52616b;resize:vertical";
+        const submit=document.createElement("button");submit.type="submit";submit.textContent="ارسال گزارش";
+        submit.style.cssText="padding:7px 10px;border:0;border-radius:7px;background:#39ff88;color:#080b0d;font-weight:800;cursor:pointer";
+        const message=document.createElement("div");message.setAttribute("role","status");message.style.cssText="font-size:12px;color:#b7c4cb";
+        inlineForm.append(typeLabel,details,submit,message);button.insertAdjacentElement("afterend",inlineForm);
+        inlineForm.addEventListener("click",e=>e.stopPropagation());
+        inlineForm.addEventListener("submit",async e=>{
+          e.preventDefault();e.stopPropagation();if(submit.disabled)return;
+          const reportId=String(s._revRatingId||s.id||((s.source||"station")+":"+(s.name||"")+":"+(s.lat??"")+","+(s.lon??""))).slice(0,240);
+          submit.disabled=true;message.textContent="در حال ارسال گزارش…";
+          try{
+            const response=await fetch("https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/station-reports",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({station_id:reportId,station_name:String(s.name||"ایستگاه شارژ").slice(0,180),report_type:typeSelect.value,details:details.value,voter:stationReportVoterId()})});
+            const result=await response.json().catch(()=>({}));
+            if(response.ok&&result.success){message.textContent="گزارش با موفقیت ثبت شد.";message.style.color="#39ff88";submit.textContent="ثبت شد";}
+            else if(response.status===409){message.textContent="برای این ایستگاه قبلاً گزارشی ثبت کرده‌اید.";submit.disabled=true;}
+            else throw new Error(result.error||"ارسال گزارش ناموفق بود");
+          }catch(err){message.textContent=err.message||"خطا در ارسال گزارش؛ دوباره تلاش کنید.";submit.disabled=false;}
+        });
+      });
+    });
+    const reportForm=reportBox.querySelector("form"),reportMessage=reportBox.querySelector(".station-report-message"),reportSubmit=reportForm.querySelector('button[type="submit"]');
+    const reportId=String(s._revRatingId||s.id||((s.source||"station")+":"+(s.name||"")+":"+(s.lat??"")+","+(s.lon??""))).slice(0,240);
+    const reportKey="rev_station_report_sent_v1:"+reportId;
+    try{if(localStorage.getItem(reportKey)==="1"){reportSubmit.disabled=true;reportMessage.textContent="از این مرورگر قبلاً برای این جایگاه گزارش ارسال شده است.";}}catch(e){}
+    reportForm.addEventListener("submit",async event=>{
+      event.preventDefault();event.stopPropagation();if(reportSubmit.disabled)return;
+      reportSubmit.disabled=true;reportMessage.textContent="در حال ارسال گزارش…";
+      try{
+        const response=await fetch("https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/station-reports",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({station_id:reportId,station_name:String(s.name||"ایستگاه شارژ").slice(0,180),report_type:reportForm.elements.report_type.value,details:reportForm.elements.details.value,voter:stationReportVoterId()})});
+        const result=await response.json().catch(()=>({}));
+        if(response.status===409){reportMessage.textContent="قبلاً برای این جایگاه گزارشی ثبت شده است.";return;}
+        if(!response.ok||!result.success)throw new Error(result.error||("HTTP "+response.status));
+        try{localStorage.setItem(reportKey,"1");}catch(e){}
+        reportMessage.textContent="گزارش ثبت شد؛ از اطلاع‌رسانی شما سپاسگزاریم.";reportForm.querySelector("select").disabled=true;reportForm.querySelector("textarea").disabled=true;
+      }catch(error){reportMessage.textContent=error.message||"ارسال گزارش ناموفق بود.";reportSubmit.disabled=false;}
+    });
+    item.addEventListener('click',()=>{map.setView([s.lat,s.lon],14);marker.openPopup();});
+  });
+}
+function updateVehicleFields(){
+  const type=$("vehicleType").value;
+  const electric=type==="bev", plugIn=type==="phev", fuel=type!=="bev";
+  $("electricFields").hidden=!electric;
+  $("fuelFields").hidden=!fuel;
+  $("tankFields").style.display=fuel?"grid":"none";
+  $("phevRangeField").style.display=plugIn?"block":"none";
+  $("phevBatteryFields").style.display=plugIn?"grid":"none";
+  $("vehicleHelp").textContent=electric
+    ?"برای خودروی تمام‌برقی، مصرف باتری، برد و توقف‌های شارژ محاسبه می‌شود."
+    :plugIn
+      ?"هیبرید شارژی: برآورد برد برقی و مصرف بنزین پس از اتمام برد برقی؛ شارژ عمومی اختیاری است."
+      :type==="hev"
+        ?"هیبرید معمولی: مصرف بنزین و برد باک محاسبه می‌شود؛ توقف شارژ در برنامه سفر الزامی نیست."
+        :"هیبرید ملایم: مصرف بنزین و برد باک محاسبه می‌شود؛ باتری کوچک کمکی نیازمند شارژ عمومی نیست.";
+  $("range").parentElement.querySelector("span").textContent=electric?"برد تخمینی برقی (km)":plugIn?"برد برقی + بنزینی (km)":"برد با باک (km)";
+}
+$("vehicleType").addEventListener("change",updateVehicleFields);
+updateVehicleFields();
+async function planTrip(){
+  window.revStationSourceWarning = "";
+  window.revStationCacheNote = "";
+  $("planBtn").disabled=true;$("planBtn").textContent="در حال محاسبه…";
+  if(!syncDepartureInput()){setStatus("تاریخ شمسی یا ساعت حرکت معتبر نیست. تاریخ را مانند ۱۴۰۵/۰۷/۲۲ وارد کنید.");$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";return;}
+  routeLayer.clearLayers();stationLayer.clearLayers();$("results").innerHTML="<h2 style='margin-top:18px'>شارژرهای نزدیک مسیر</h2>";$("directionsPanel").innerHTML='<div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub">در حال محاسبه…</span></div>';
+  try{
+    const origin=$("origin").value.trim(), destination=$("destination").value.trim();
+    if(!origin||!destination) throw new Error("مبدأ و مقصد را وارد کنید.");
+    setStatus("در حال پیدا کردن مبدأ و مقصد…");
+    const [start,end]=await Promise.all([geocode(origin),geocode(destination)]);
+    // Reject identical/near-identical endpoints before routing or battery calculations.
+    // This prevents a zero-distance trip from being misreported as an empty-battery issue.
+    if(haversine(start,end)<0.5){
+      lastRoute=null;
+      routeLayer.clearLayers();stationLayer.clearLayers();
+      $("distance").textContent="—";$("duration").textContent="—";$("range").textContent="—";
+      $("results").innerHTML="<h2 style=\"margin-top:18px\">شارژرهای نزدیک مسیر</h2>";
+      $("directionsPanel").innerHTML="<div class=\"directions-head\"><h2>راهنمای مسیر</h2></div><div class=\"weather-summary warn\">مبدأ و مقصد یکسان هستند؛ دو نقطه متفاوت انتخاب کنید.</div>";
+      $("timelineSlider").disabled=true;$("timelineSlider").value="0";
+      $("timelineKm").textContent="—";$("timelineTime").textContent="—";$("timelineSoc").textContent="—";
+      stopTimelinePlayback("مبدأ و مقصد یکسان هستند");
+      setStatus("⚠️ مبدأ و مقصد یکسان هستند. برای محاسبه سفر، دو نقطه متفاوت انتخاب کنید.");
+      return;
+    }
+    setStatus("در حال محاسبه مسیر جاده‌ای…");
+    const route=await getRoute(start,end);lastRoute=route;renderDirections(route);
+    const coords=route.geometry.coordinates;
+    const latlngs=coords.map(c=>[c[1],c[0]]);
+    L.marker(start).addTo(routeLayer).bindPopup("مبدأ");
+    L.marker(end).addTo(routeLayer).bindPopup("مقصد");
+    L.polyline(latlngs,{color:"#d7ff3f",weight:5,opacity:.9}).addTo(routeLayer);
+    map.fitBounds(L.latLngBounds(latlngs),{padding:[25,25]});
+    const km=route.distance/1000, hours=route.duration;
+    $("distance").textContent=km.toFixed(0);
+    $("duration").textContent=fmtDuration(hours);
+    const vehicleType=$("vehicleType").value;
+    if(vehicleType==="hev"||vehicleType==="mhev"||vehicleType==="phev"){
+      const fuelRate=num("fuelConsumption",5.5),fuelPrice=num("fuelPrice",3000),tank=num("fuelTank",45);
+      if(fuelRate<=0||tank<=0||fuelPrice<0)throw new Error("مصرف بنزین، ظرفیت باک و قیمت سوخت را بررسی کنید.");
+      const nominalElectricRange=vehicleType==="phev"?num("electricRange",60):0;
+      const initialElectricSoc=vehicleType==="phev"?num("phevSoc",90):0;
+      const electricKm=vehicleType==="phev"?Math.min(km,nominalElectricRange*initialElectricSoc/100):0;
+      // Conservative route-average estimates, not vehicle-specific measurements: HEV 0.7 and MHEV 0.25 kWh per 100 km.
+      const regenerationRate=vehicleType==="hev"?0.7:vehicleType==="mhev"?0.25:0;
+      const regenerationKwh=km*regenerationRate/100;
+      const fuelKm=Math.max(0,km-electricKm);
+      const liters=fuelKm*fuelRate/100,cost=liters*fuelPrice;
+      const fuelRange=tank/fuelRate*100;
+      const totalRange=vehicleType==="phev"?nominalElectricRange+fuelRange:fuelRange;
+      $("range").textContent=Math.round(totalRange);
+      $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در حال دریافت پیش‌بینی…</span></div><div class="weather-summary">محاسبه مسیر و شبیه‌ساز مستقل از سرویس هواشناسی اجرا می‌شوند.</div>';
+      // Initialize route playback immediately; weather and fuel stations load in the background.
+      const departureValue=$("departure").value;
+      let departure=new Date(departureValue);
+      if(!Number.isFinite(departure.getTime())||departure.getTime()<Date.now()-5*60*1000)departure=new Date();
+      configureTimeline({coords,routeKm:km,durationSeconds:hours,departure,weatherSamples:[],battery:1,soc:100,consumption:0,stops:[],stationList:[],vehicleType,electricKm,regenerationKwh});
+      $("timelineSoc").parentElement.querySelector("span").textContent="وضعیت انرژی";
+      $("timelineDetails").innerHTML="برای حرکت خودکار دکمه شروع حرکت را بزنید یا نوار مسیر را جابه‌جا کنید."+(vehicleType==="hev"||vehicleType==="mhev"?"<br><b>بازیابی برق برآوردی کل مسیر:</b> "+regenerationKwh.toFixed(2)+" kWh؛ مقدار واقعی به خودرو و شرایط رانندگی وابسته است.":" در PHEV پس از پایان برد برقی، نشانگر به حالت بنزین تغییر می‌کند.");
+      const hybridRadius=num("radius",10);
+      renderFuelStations(coords,hybridRadius).then(count=>{if(count===0)console.warn("REV: no mapped fuel stations returned for this route");}).catch(e=>console.warn("REV fuel layer:",e));
+      renderBusinessDirectory(coords,hybridRadius).catch(e=>console.warn("REV business layer:",e));
+      // Fetch weather asynchronously so a slow forecast API cannot block the route results.
+      getRouteWeather(coords,km,hours,departureValue,18,{maxSamples:4,delayMs:200}).then(hybridWeather=>{
+        const cards=hybridWeather.samples.map(x=>'<div class="weather-card"><strong>حدود کیلومتر '+Math.round(x.routeKm)+' مسیر</strong><div class="weather-time">زمان عبور: '+new Date(x.eta).toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"})+'</div><div class="weather-detail">'+Math.round(x.weather.temperature)+'°C · '+escapeHTML(weatherDescription(x.weather.code))+' · احتمال بارش '+(Number.isFinite(x.weather.precipProb)?Math.round(x.weather.precipProb)+"٪":"نامشخص")+'</div><div class="weather-wind">باد '+Math.round(x.weather.windSpeed)+' km/h از '+escapeHTML(compassDirection(x.weather.windDirection))+'</div><div class="weather-detail">تندباد: '+(Number.isFinite(x.weather.gust)?Math.round(x.weather.gust)+" km/h":"نامشخص")+'</div></div>').join("");
+        $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">پیش‌بینی ساعتی</span></div><div class="weather-grid">'+cards+'</div><div class="weather-credit">منبع: <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#64b5ff">Open-Meteo</a>. پیش‌بینی تقریبی است؛ اثر آب‌وهوا بر هزینه بنزین لحاظ نشده است.</div>';
+        revTimeline.weatherSamples=hybridWeather.samples;
+        updateTimeline();
+      }).catch(wxError=>{$("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">داده در دسترس نیست</span></div><div class="weather-summary warn">'+escapeHTML(wxError?.message||"پیش‌بینی آب‌وهوا دریافت نشد")+'</div>';});
+      setStatus("مسیر محاسبه شد: "+km.toFixed(0)+" کیلومتر · زمان رانندگی تخمینی: "+fmtDuration(hours)+".\\nمصرف بنزین برآوردی: "+liters.toFixed(1)+" لیتر · هزینه تقریبی: "+Math.round(cost).toLocaleString("fa-IR")+" تومان.\\n"+(vehicleType==="phev"?"سوییچ تخمینی به بنزین در کیلومتر "+Math.round(electricKm)+".\\n":(vehicleType==="hev"||vehicleType==="mhev"?"بازیابی برق تخمینی: "+regenerationKwh.toFixed(2)+" kWh (برآورد تقریبی).\\n":""))+"شبیه‌ساز حرکت آماده است؛ هواشناسی و جایگاه‌ها در پس‌زمینه بارگذاری می‌شوند.");
+      return;
+    }
+    if($("timelineSlider"))$("timelineSlider").disabled=false;
+    if($("timelineDetails"))$("timelineDetails").textContent="پس از محاسبه مسیر، زمان‌بندی پیشنهادی شارژ نمایش داده می‌شود.";
+    const battery=num("battery",60),soc=num("soc",90),baseConsumption=num("consumption",18),reserve=num("reserve",15);
+    let weatherAnalysis=null,consumption=baseConsumption,weatherWarning="";
+    $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در حال دریافت پیش‌بینی ساعتی…</span></div>';
+    setStatus("در حال دریافت پیش‌بینی آب‌وهوا برای زمان عبور از نقاط مسیر و تحلیل جهت باد…");
+    try{
+      weatherAnalysis=await getRouteWeather(coords,km,hours,$("departure").value,baseConsumption);
+      consumption=weatherAnalysis.adjustedConsumption;
+      renderWeather(weatherAnalysis.samples,baseConsumption,consumption);
+      await recommendWeatherDeparture(coords,km,hours,$("departure").value,baseConsumption);
+    }catch(weatherError){
+      weatherWarning=weatherError?.message||"اطلاعات هواشناسی در دسترس نیست.";
+      $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">داده در دسترس نیست</span></div>';
+      const msg=document.createElement("div");msg.className="weather-summary warn";msg.textContent=weatherWarning+" مصرف و توقف‌های شارژ در این محاسبه بر اساس مصرف مبنا انجام می‌شود؛ مقدار باد یا هوا حدس زده نمی‌شود."; $("weatherPanel").appendChild(msg);
+      const credit=document.createElement("div");credit.className="weather-credit";credit.innerHTML='منبع پیش‌بینی مورد استفاده: <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#64b5ff">Open-Meteo</a>.';$("weatherPanel").appendChild(credit);
+    }
+    const range=battery*(soc-reserve)/100/consumption*100;
+    $("range").textContent=range.toFixed(0);
+    setStatus(`مسیر محاسبه شد: ${km.toFixed(0)} کیلومتر.\nبرد تخمینی تا رسیدن به ذخیره ${reserve}%: حدود ${range.toFixed(0)} کیلومتر.\nدر حال دریافت شارژرهای ثبت‌شده نزدیک مسیر…`);
+    if(km>range) setStatus(`هشدار: مسافت سفر از برد تخمینی خودرو (${range.toFixed(0)} کیلومتر) بیشتر است؛ احتمالاً به شارژ بین‌راهی نیاز دارید.\nدر حال دریافت شارژرهای ثبت‌شده نزدیک مسیر…`);
+    const radius=num("radius",10);
+    const stations=await getIranStations(coords,radius);
+    const targetSoc=Math.min(100,Math.max(reserve+5,num('targetSoc',80)));
+    if(soc<=reserve) throw new Error('درصد شارژ اولیه باید از درصد ذخیره ایمنی بیشتر باشد.');
+    if(targetSoc<=reserve) throw new Error('شارژ هدف باید از درصد ذخیره ایمنی بیشتر باشد.');
+    const params={battery,soc,consumption,reserve,targetSoc,radius};
+    await loadStationRatings(stations);
+    renderStations(stations,coords,km,params);
+    await renderBusinessDirectory(coords,radius);
+    const plan=buildChargingPlan(stations,coords,km,params);
+    const stationTimeline=stations.map(s=>({...s,...stationAlongRouteKm(s,routeMetrics(coords))}));
+    configureTimeline({coords,routeKm:km,durationSeconds:hours,departure:weatherAnalysis?.departure||new Date($("departure").value),weatherSamples:weatherAnalysis?.samples||[],battery,soc,consumption,reserve,stops:plan.stops||[],stationList:stationTimeline,vehicleType:"bev",electricKm:0});
+    $("timelineSoc").parentElement.querySelector("span").textContent="شارژ تخمینی باتری";
+    const sourceNote = window.revStationSourceWarning
+      ? `\nهشدار منبع آنلاین: ${window.revStationSourceWarning}\nفهرست ایستگاه‌ها ممکن است ناقص باشد؛ صفر ایستگاه به معنی نبود شارژر واقعی نیست.`
+      : (window.revStationCacheNote ? `\n${window.revStationCacheNote}` : "");
+    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\nزمان حرکت: ${new Date($("departure").value).toLocaleString("fa-IR")} · زمان رسیدن تقریبی: ${new Date(new Date($("departure").value).getTime()+hours*1000).toLocaleString("fa-IR")}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد؛ فهرست بر اساس فاصله از مبدأ مرتب شده است.\nمصرف مبنا: ${baseConsumption.toFixed(1)} · ${weatherAnalysis ? `مصرف تعدیل‌شده با باد و بخاری/کولر: ${consumption.toFixed(1)} kWh/100 km.` : `تحلیل باد اعمال نشد: ${weatherWarning}`}\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
+  }catch(e){setStatus("مشکل: "+e.message);console.error(e);}
+  finally{$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";}
+}
+function applySharedTripParams(){
+  const q=new URLSearchParams(window.location.search);
+  const fields={origin:"origin",destination:"destination",vehicleType:"vehicleType",battery:"battery",soc:"soc",consumption:"consumption",reserve:"reserve",targetSoc:"targetSoc",fuelConsumption:"fuelConsumption",fuelPrice:"fuelPrice",fuelTank:"fuelTank",electricRange:"electricRange",phevBattery:"phevBattery",phevSoc:"phevSoc",radius:"radius",hvac:"hvacMode",date:"departureJalali",time:"departureClock"};
+  let applied=0;
+  for(const [key,id] of Object.entries(fields)){
+    const value=q.get(key),el=$(id);
+    if(value===null||!el)continue;
+    if(["origin","destination"].includes(key))el.value=value.slice(0,180);
+    else if(key==="date"&&/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(value))el.value=value;
+    else if(key==="time"&&/^([01]\d|2[0-3]):[0-5]\d$/.test(value))el.value=value;
+    else if(key==="hvac"&&["auto","off"].includes(value))el.value=value;
+    else if(key==="vehicleType"&&["bev","phev","hev","mhev"].includes(value)){el.value=value;updateVehicleFields();}
+    else if(["battery","soc","consumption","reserve","targetSoc","fuelConsumption","fuelPrice","fuelTank","electricRange","phevBattery","phevSoc","radius"].includes(key)&&Number.isFinite(Number(value)))el.value=value;
+    applied++;
+  }
+  syncDepartureInput();
+  if(applied)$("status").textContent="تنظیمات سفر از لینک اشتراکی بارگذاری شد. برای محاسبه مسیر، دکمه سبز را بزنید.";
+}
+function buildTripShareUrl(){
+  const q=new URLSearchParams({origin:$("origin").value.trim(),destination:$("destination").value.trim(),vehicleType:$("vehicleType").value,battery:$("battery").value,soc:$("soc").value,consumption:$("consumption").value,reserve:$("reserve").value,targetSoc:$("targetSoc").value,fuelConsumption:$("fuelConsumption").value,fuelPrice:$("fuelPrice").value,fuelTank:$("fuelTank").value,electricRange:$("electricRange").value,phevBattery:$("phevBattery").value,phevSoc:$("phevSoc").value,radius:$("radius").value,hvac:$("hvacMode").value,date:$("departureJalali").value.trim(),time:$("departureClock").value});
+  return window.location.origin+window.location.pathname+"?"+q.toString();
+}
+async function shareTrip(){
+  if(!$("origin").value.trim()||!$("destination").value.trim()){setStatus("برای ساخت لینک اشتراک‌گذاری، مبدأ و مقصد را وارد کنید.");return;}
+  if(!syncDepartureInput()){setStatus("تاریخ شمسی یا ساعت حرکت معتبر نیست؛ ابتدا آن را اصلاح کنید.");return;}
+  const url=buildTripShareUrl();
+  try{
+    if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(url);setStatus("لینک سفر کپی شد. آن را برای دوستانتان بفرستید؛ مسیر و تنظیمات خودرو در لینک حفظ می‌شود.");}
+    else{window.prompt("این لینک را کپی و ارسال کنید:",url);setStatus("لینک اشتراک‌گذاری آماده شد. در پنجره بازشده آن را کپی کنید.");}
+  }catch(e){window.prompt("این لینک را کپی و ارسال کنید:",url);setStatus("لینک اشتراک‌گذاری آماده شد.");}
+}
+initDepartureInput();
+applySharedTripParams();
+$("timelineSlider").addEventListener("input",()=>{const maxKm=timelineMaxReachKm(),maxPct=revTimeline.routeKm>0?100*maxKm/revTimeline.routeKm:0;if(revTimeline.vehicleType==="bev"&&Number($("timelineSlider").value)>maxPct)$("timelineSlider").value=String(maxPct);updateTimeline();});
+$("timelinePlayBtn").addEventListener("click",toggleTimelinePlayback);
+$("planBtn").addEventListener("click",planTrip);
+$("shareTripBtn").addEventListener("click",shareTrip);
+</script>
+</body>
+</html>
