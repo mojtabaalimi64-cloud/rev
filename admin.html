@@ -219,7 +219,14 @@ function login(){
 function list(){
   const t=TYPES[tab], items=c[tab];
   return `<p style="margin-bottom:12px"><button class="btn main" data-a="new">افزودن ${t.one} جدید</button></p>`+
-   (items.length?items.map((it,i)=>`<div class="row"><div style="flex:1;min-width:220px"><b>${esc(it.title)}</b><small>${esc(PARTS[it.part]||'')} ${esc(it.date||it.priceDate||it.price||'')}${(tab==='partsStores'&&it.satisfactionScore!==undefined&&it.satisfactionScore!==''&&it.satisfactionScore!==null)?` · رضایت: ${esc(it.satisfactionScore)}/۵ (${esc(it.satisfactionCount??0)} رأی)`:''}</small>${(tab==='serviceCenters'||tab==='partsStores')?`<label style="display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:5px 10px;border:1px solid ${it.status==='verified'?'#9cdbb5':'#dce6e7'};border-radius:9px;background:${it.status==='verified'?'#edfff3':'#f8fafb'};cursor:pointer"><input type="checkbox" data-a="verify-toggle" data-k="${tab}" data-i="${i}" ${it.status==='verified'?'checked':''} style="width:18px;height:18px;accent-color:#00806f"><span>${it.status==='verified'?'تأییدشده':'تأیید بررسی'}</span></label><small>برای تأیید یا لغو تأیید، همین گزینه را تیک بزنید؛ تغییر بلافاصله ذخیره می‌شود.</small>`:''}</div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`).join(''):'<div class="box" style="color:var(--muted)">هنوز موردی ثبت نشده است.</div>');
+   (items.length?items.map((it,i)=>{
+     const votes=(ratingsCache||[]).filter(v=>v._type==='store'&&String(v.id||'')===String(it.id||''));
+     const avg=votes.length?votes.reduce((sum,v)=>sum+Number(v.rating||0),0)/votes.length:null;
+     const storedScore=it.satisfactionScore!==undefined&&it.satisfactionScore!==''&&it.satisfactionScore!==null?Number(it.satisfactionScore):null;
+     const score=avg!==null?avg:storedScore, count=avg!==null?votes.length:Number(it.satisfactionCount||0);
+     const ratingBadge=score!==null&&Number.isFinite(score)?`<span style="display:inline-flex;align-items:center;gap:5px;margin:6px 6px 0 0;padding:4px 8px;border-radius:8px;background:#fff7df;color:#765300;font-size:12px;font-weight:700">★ ${score.toLocaleString('fa-IR',{maximumFractionDigits:1})}/۵ · ${count.toLocaleString('fa-IR')} رأی</span>`:`<span style="display:inline-flex;align-items:center;margin:6px 6px 0 0;padding:4px 8px;border-radius:8px;background:#f0f2f3;color:#606b70;font-size:12px">هنوز امتیازی ثبت نشده</span>`;
+     return `<div class="row"><div style="flex:1;min-width:220px"><b>${esc(it.title)}</b><small>${esc(PARTS[it.part]||'')} ${esc(it.date||it.priceDate||it.price||'')}</small>${(tab==='serviceCenters'||tab==='partsStores')?ratingBadge+`<label style="display:inline-flex;align-items:center;gap:8px;margin:8px 6px 0 0;padding:5px 10px;border:1px solid ${it.status==='verified'?'#9cdbb5':'#dce6e7'};border-radius:9px;background:${it.status==='verified'?'#edfff3':'#f8fafb'};cursor:pointer"><input type="checkbox" data-a="verify-toggle" data-k="${tab}" data-i="${i}" ${it.status==='verified'?'checked':''} style="width:18px;height:18px;accent-color:#00806f"><span>${it.status==='verified'?'تأییدشده':'تأیید بررسی'}</span></label><small>برای تأیید یا لغو تأیید، همین گزینه را تیک بزنید؛ تغییر بلافاصله ذخیره می‌شود.</small>`:''}</div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`;
+   }).join(''):'<div class="box" style="color:var(--muted)">هنوز موردی ثبت نشده است.</div>');
 }
 function imgField(id,v,attr){
   return `<div class="imgf"><input type="text" id="${id}" ${attr} value="${esc(v)}" dir="ltr" placeholder="تصویری انتخاب نشده" readonly>
@@ -294,7 +301,7 @@ async function loadRatings(){
     ];
     note='سابقه '+ratingsCache.length+' رأی فروشگاه/تعمیرگاه و ایستگاه شارژ دریافت شد.';
   }catch(e){ratingsCache=[];note='دریافت سابقه امتیازها ناموفق بود: '+(e.message||'خطای اتصال')+'؛ رمز مدیر و انتشار Worker امتیازدهی را بررسی کنید.'}
-  finally{ratingsBusy=false;if(tab==='ratings')draw()}
+  finally{ratingsBusy=false;if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores')draw()}
 }
 function ratingsPanel(){
   if(ratingsCache===null){loadRatings();return '<div class="box">در حال دریافت سابقه امتیازها...</div>'}
@@ -449,7 +456,7 @@ root.addEventListener('click',async e=>{
   const a=b.dataset.a, i=+b.dataset.i;
   if(a==='login'){tok=$('t').value.trim();gitTok=$('gt').value.trim();if(!tok){msg('رمز مدیریتی را وارد کنید.');return}sessionStorage.setItem('rev_admin_token',tok);if(gitTok)sessionStorage.setItem('rev_github_token',gitTok);else sessionStorage.removeItem('rev_github_token');c=null;draw()}
   else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
-  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations();if(tab==='ratings')loadRatings();if(tab==='set')loadAuthSettings()}
+  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations();if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores')loadRatings();if(tab==='set')loadAuthSettings()}
   else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:(tab==='serviceCenters'||tab==='partsStores')?{status:'pending'}:tab==='ads'?{position:'left',enabled:'yes',order:'10'}:tab==='techSections'?{part:'battery',enabled:'yes',order:'10'}:{part:'battery'}};draw()}
   else if(a==='verify-toggle'){
     const k=b.dataset.k, idx=Number(b.dataset.i);
