@@ -85,14 +85,20 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 .leaflet-popup-content a{color:#d7ff3f}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.wrap{padding:12px}#map{height:430px}.head{align-items:flex-start;flex-direction:column}.head-actions{width:100%;justify-content:space-between}.stats{grid-template-columns:repeat(3,1fr)}}
  
+/* EV position marker with live estimated battery */
+.rev-map-car{background:transparent!important;border:0!important}
+.rev-ev-marker{position:relative;width:104px;height:58px;pointer-events:none}
+.rev-ev-vehicle{position:absolute;left:0;bottom:0;width:66px;height:42px;filter:drop-shadow(0 3px 5px #0009)}
+.rev-ev-charge{position:absolute;left:28px;top:0;min-width:54px;padding:4px 7px;border-radius:9px;background:#101820;color:#d7ff3f;border:1px solid #d7ff3f;font-size:12px;font-weight:800;text-align:center;white-space:nowrap;box-shadow:0 3px 9px #0008}
+.rev-ev-charge.low{color:#ff8d8d;border-color:#ff8d8d}
 /* Route playback timeline */
-.timeline-panel{margin-top:18px;padding:18px;border:1px solid #304452;border-radius:18px;background:linear-gradient(135deg,#14212b,#0c151d);box-shadow:0 14px 38px #0002}
+.timeline-panel{display:block!important;visibility:visible!important;opacity:1!important;position:relative;z-index:5;width:100%;box-sizing:border-box;margin:14px 0 18px;padding:18px;border:1px solid #304452;border-radius:18px;background:linear-gradient(135deg,#14212b,#0c151d);box-shadow:0 14px 38px #0002}
 .timeline-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
 .timeline-head h2{margin:0;font-size:18px}
 .timeline-track-wrap{position:relative;margin:26px 8px 12px;height:42px;display:flex;align-items:center;isolation:isolate}
 .timeline-track{height:8px;width:100%;border-radius:99px;background:#344653;position:relative;overflow:hidden}
 .timeline-progress{position:absolute;right:0;top:0;height:100%;width:0;background:linear-gradient(270deg,#64b5ff,#d7ff3f);border-radius:99px}
-.timeline-car{position:absolute;top:50%;left:0;transform:translate(-50%,-55%);width:44px;height:36px;display:grid;place-items:center;font-size:28px;filter:drop-shadow(0 4px 6px #0009);pointer-events:none;transition:left .05s linear;z-index:2}
+.timeline-car{position:absolute;top:50%;left:0;transform:translate(-50%,-55%);width:48px;height:38px;display:grid;place-items:center;filter:drop-shadow(0 4px 6px #0009);pointer-events:none;transition:left .05s linear;z-index:2}
 .timeline-range{position:absolute;inset:-8px 0;width:100%;height:58px;opacity:.01;cursor:ew-resize;margin:0!important;z-index:3;direction:rtl;appearance:none;-webkit-appearance:none}
 .timeline-endpoints{display:flex;justify-content:space-between;color:var(--muted);font-size:12px;gap:10px}
 .timeline-readout{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:14px}
@@ -102,7 +108,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 .timeline-details{margin-top:12px;padding:13px;border-radius:12px;border:1px solid #2b414f;background:#0d1821;font-size:13px}
 .timeline-details .muted{color:var(--muted)}
 .timeline-legend{font-size:11px;color:var(--muted);margin-top:8px}
-@media(max-width:650px){.timeline-readout{grid-template-columns:repeat(2,minmax(0,1fr))}.timeline-panel{padding:13px}.timeline-car{font-size:24px}}
+@media(max-width:650px){.timeline-readout{grid-template-columns:repeat(2,minmax(0,1fr))}.timeline-panel{padding:13px}.timeline-car svg{width:38px;height:25px}}
 
 </style>
 </head>
@@ -146,18 +152,11 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
     <main class="panel">
       <div class="map-heading"><h2>نقشه مسیر و ایستگاه‌های شارژ</h2><span class="map-tag">نقشه زنده · مسیر جاده‌ای</span></div>
       <div id="map" role="img" aria-label="نقشه مسیر سفر و ایستگاه‌های شارژ"></div>
-      <section class="weather-panel" id="weatherPanel" aria-live="polite"><div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در انتظار محاسبه مسیر</span></div><div class="sub">پس از تعیین زمان حرکت، باد، دما و بارش در طول مسیر بررسی می‌شود.</div></section>
-      <section class="directions" id="directionsPanel" aria-live="polite">
-        <div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub" id="directionsSummary">پس از محاسبه مسیر نمایش داده می‌شود</span></div>
-        <div class="sub">برای مشاهده مسیر و راهنمای پیچ‌ها، مبدأ و مقصد را وارد کنید.</div>
-      </section>
-    </main>
-  </div>
   <section class="timeline-panel" id="timelinePanel" aria-live="polite">
     <div class="timeline-head"><h2>حرکت روی مسیر · شبیه‌ساز سفر</h2><span class="sub" id="timelineProgressText">ابتدا مسیر را محاسبه کنید</span></div>
     <div class="timeline-track-wrap" id="timelineTrackWrap">
       <div class="timeline-track"><div class="timeline-progress" id="timelineProgress"></div></div>
-      <div class="timeline-car" id="timelineCar" aria-hidden="true">🚙</div>
+      <div class="timeline-car" id="timelineCar" aria-hidden="true"><svg viewBox="0 0 64 34" width="42" height="27" role="img" aria-label="خودروی برقی"><path d="M10 22 14 12Q15 9 19 9h22q4 0 6 4l5 9v5H10z" fill="#d7ff3f" stroke="#14212b" stroke-width="2"/><path d="m19 11-3 8h29l-4-8z" fill="#8bd7ff"/><circle cx="19" cy="27" r="5" fill="#101820" stroke="#d7ff3f" stroke-width="2"/><circle cx="45" cy="27" r="5" fill="#101820" stroke="#d7ff3f" stroke-width="2"/><path d="M26 13h8v4h-8z" fill="#fff"/><path d="M53 17h5v4h-5z" fill="#d7ff3f"/></svg></div>
       <input class="timeline-range" id="timelineSlider" type="range" min="0" max="100" value="0" step="0.25" aria-label="جابجایی خودرو در طول مسیر" disabled>
     </div>
     <div class="timeline-endpoints"><span id="timelineOrigin">مبدأ</span><span id="timelineDestination">مقصد</span></div>
@@ -170,6 +169,13 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
     <div class="timeline-details" id="timelineDetails">پس از محاسبه مسیر، با کشیدن نشانگر خودرو روی نوار، وضعیت تخمینی همان نقطه و ساعت را بررسی کنید.</div>
     <div class="timeline-legend">زمان و شارژ برآوردی‌اند و به سرعت واقعی، ترافیک، شیوه رانندگی و مدت توقف شارژ وابسته‌اند. حرکت نشانگر، اطلاعات مسیر را تغییر نمی‌دهد.</div>
   </section>
+      <section class="weather-panel" id="weatherPanel" aria-live="polite"><div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در انتظار محاسبه مسیر</span></div><div class="sub">پس از تعیین زمان حرکت، باد، دما و بارش در طول مسیر بررسی می‌شود.</div></section>
+      <section class="directions" id="directionsPanel" aria-live="polite">
+        <div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub" id="directionsSummary">پس از محاسبه مسیر نمایش داده می‌شود</span></div>
+        <div class="sub">برای مشاهده مسیر و راهنمای پیچ‌ها، مبدأ و مقصد را وارد کنید.</div>
+      </section>
+    </main>
+  </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
@@ -713,6 +719,11 @@ function timelineBatteryAt(km){
   soc-=(km-atKm)*revTimeline.consumption/revTimeline.battery*100;
   return Math.max(0,Math.min(100,soc));
 }
+function makeEvMapIcon(soc){
+  const low=soc<=15;
+  const html="<div class='rev-ev-marker'><div class='rev-ev-charge"+(low?" low":"")+"'>باتری "+Math.round(soc)+"٪</div><svg class='rev-ev-vehicle' viewBox='0 0 100 62' xmlns='http://www.w3.org/2000/svg' aria-hidden='true'><defs><linearGradient id='evBody' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#f5fbff'/><stop offset='1' stop-color='#75d6c2'/></linearGradient></defs><path d='M9 39 15 24Q17 18 25 17L36 7Q39 4 46 4H64Q70 4 74 11L83 25 91 30Q95 33 95 39V48H7V42Q7 40 9 39Z' fill='url(#evBody)' stroke='#10222c' stroke-width='3' stroke-linejoin='round'/><path d='M25 21 38 9H61Q66 9 69 15L75 25H21Z' fill='#15394a' stroke='#10222c' stroke-width='2'/><path d='M46 10V24' stroke='#91e6ff' stroke-width='2'/><path d='M12 35H22' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><path d='M82 34h8' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><circle cx='25' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='25' cy='47' r='3' fill='#7e9aa7'/><circle cx='75' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='75' cy='47' r='3' fill='#7e9aa7'/><path d='M49 31h9l-5 7h6l-11 10 3-8h-6z' fill='#d7ff3f' stroke='#18313b' stroke-width='1'/></svg></div>";
+  return L.divIcon({className:"rev-map-car",html,iconSize:[104,58],iconAnchor:[34,50]});
+}
 function updateTimeline(){
   if(!revTimeline.coords||!revTimeline.departure)return;
   const slider=$("timelineSlider"),fraction=Number(slider.value)/100;
@@ -726,7 +737,7 @@ function updateTimeline(){
   $("timelineTime").textContent=eta.toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"});
   $("timelineSoc").textContent=Math.round(soc)+"٪";
   $("timelineSoc").style.color=soc<=15?"#ff8d8d":"var(--accent)";
-  if(point&&revTimeline.carMarker)revTimeline.carMarker.setLatLng(point);
+  if(point&&revTimeline.carMarker){revTimeline.carMarker.setLatLng(point);revTimeline.carMarker.setIcon(makeEvMapIcon(soc));revTimeline.carMarker.setPopupContent("موقعیت خودرو روی مسیر · شارژ تخمینی باتری: "+Math.round(soc)+"٪");}
   const samples=revTimeline.weatherSamples||[];
   let wx=null;
   if(samples.length)wx=samples.reduce((best,x)=>Math.abs(x.routeKm-km)<Math.abs(best.routeKm-km)?x:best,samples[0]);
@@ -752,8 +763,7 @@ function configureTimeline(data){
   $("timelineSlider").disabled=false;$("timelineSlider").value=0;
   if(revTimeline.carMarker)routeLayer.removeLayer(revTimeline.carMarker);
   const start=timelinePointAt(revTimeline.coords,0);
-  const carIcon=L.divIcon({className:"rev-map-car",html:"<span style='display:block;font-size:25px;line-height:30px;text-shadow:0 1px 5px #000'>🚙</span>",iconSize:[32,32],iconAnchor:[16,16]});
-  revTimeline.carMarker=L.marker(start,{icon:carIcon,zIndexOffset:1000}).addTo(routeLayer).bindPopup("موقعیت خودرو روی مسیر");
+  revTimeline.carMarker=L.marker(start,{icon:makeEvMapIcon(timelineBatteryAt(0)),zIndexOffset:1000}).addTo(routeLayer).bindPopup("موقعیت خودرو روی مسیر");
   updateTimeline();
 }
 
