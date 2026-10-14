@@ -155,11 +155,11 @@ function initDriverMap(){
 function loadMapLibraryFallback(){
   if(window.L){initDriverMap();return}
   const fallback=document.createElement('script');fallback.src='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js';
-  fallback.onload=initDriverMap;fallback.onerror=()=>{const b=$('plannedRouteBanner');b.hidden=false;b.textContent='نقشه بارگذاری نشد. اتصال به سرویس نقشه یا CDN را بررسی کنید.'};
+  fallback.onload=()=>{initDriverMap();restoreTripAfterMapReady()};fallback.onerror=()=>{const b=$('plannedRouteBanner');b.hidden=false;b.textContent='نقشه بارگذاری نشد. اتصال به سرویس نقشه یا CDN را بررسی کنید.'};
   document.head.appendChild(fallback);
 }
 loadDisplayIdentity();loadProfile();
-if(window.L)initDriverMap();else loadMapLibraryFallback();
+if(window.L){initDriverMap();restoreTripAfterMapReady()}else loadMapLibraryFallback();
 function restoreTripAfterMapReady(){loadPlannedTrip();setTimeout(()=>{if(map)map.invalidateSize()},350)}
 const oldLoadPlannedTrip=loadPlannedTrip;
 loadPlannedTrip=function(){if(!map){const q=new URLSearchParams(location.search);if(q.has('origin')&&q.has('destination')){$('plannedTripCard').hidden=false;$('plannedRouteBanner').hidden=false;$('plannedRouteBanner').textContent='در حال آماده‌سازی نقشه و بارگذاری برنامه سفر…'};return}oldLoadPlannedTrip()};
