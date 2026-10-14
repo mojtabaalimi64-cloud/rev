@@ -116,7 +116,7 @@ const TYPES={
  ,partsStores:{label:'فروشگاه‌های قطعات خودرو برقی',one:'فروشگاه قطعات',fields:[['title','نام فروشگاه','text'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا لینک سفارش','text'],['brands','برندها و مدل‌های سازگار (با ویرگول جدا کنید)','text'],['products','دسته‌های قطعات (باتری، شارژر، اینورتر، موتور، کابل و...)','area'],['authorization','مرجع/مدرک نمایندگی یا مجوز','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری فروشگاه (روزها و بازه زمانی)','area'],['deliveryHours','ساعات ارسال/تحویل (اختیاری)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (اختیاری)','text'],['satisfactionCount','تعداد امتیازهای ثبت‌شده کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
 };
 const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',ratings:'امتیازها و سابقه','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
-let stationsCache=null, stationEdit=null, stationBusy=false, ratingsCache=null, ratingsBusy=false, ratingSearchValue='', ratingSelected=null, ratingOverride=null, ratingSaveBusy=false;
+let stationsCache=null, stationEdit=null, stationBusy=false, ratingsCache=null, ratingsBusy=false, ratingSearchValue='', ratingSelected=null, ratingOverride=null, ratingSaveBusy=false, listSearchValue='', listSortValue='default';
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
 const CONTACT=[['email','ایمیل'],['phone','تلفن'],['telegram','تلگرام (نام کاربری یا لینک)'],['instagram','اینستاگرام (نام کاربری یا لینک)'],['youtube','یوتیوب (لینک کامل)'],['x','ایکس (نام کاربری یا لینک)'],['address','آدرس'],['note','متن کوتاه پایین صفحه‌ی تماس']];
@@ -218,16 +218,30 @@ function login(){
   if($('gt')) $('gt').value=gitTok;
 }
 function list(){
-  const t=TYPES[tab], items=c[tab];
-  return `<p style="margin-bottom:12px"><button class="btn main" data-a="new">افزودن ${t.one} جدید</button></p>`+
-   (items.length?items.map((it,i)=>{
+  const t=TYPES[tab], items=Array.isArray(c[tab])?c[tab]:[];
+  const searchable=it=>[it.title,it.name,it.id,it.publicCode,it.phone,it.address,it.date,it.price,it.status,it.part,it.brands,it.products,it.services,it.description,it.url,it.slug].map(v=>String(v??'')).join(' ').toLocaleLowerCase();
+  let indexed=items.map((it,i)=>({it,i}));
+  const q=listSearchValue.trim().toLocaleLowerCase();
+  if(q)indexed=indexed.filter(x=>searchable(x.it).includes(q));
+  const sort=listSortValue||'default';
+  const value=x=>String(x.it.title||x.it.name||'').toLocaleLowerCase();
+  if(sort==='name-asc')indexed.sort((a,b)=>value(a).localeCompare(value(b),'fa'));
+  else if(sort==='name-desc')indexed.sort((a,b)=>value(b).localeCompare(value(a),'fa'));
+  else if(sort==='newest')indexed.sort((a,b)=>String(b.it.updatedAt||b.it.createdAt||b.it.date||'').localeCompare(String(a.it.updatedAt||a.it.createdAt||a.it.date||'')));
+  else if(sort==='price-asc')indexed.sort((a,b)=>(Number(a.it.price)||0)-(Number(b.it.price)||0));
+  else if(sort==='price-desc')indexed.sort((a,b)=>(Number(b.it.price)||0)-(Number(a.it.price)||0));
+  else if(sort==='rating-desc')indexed.sort((a,b)=>(Number(b.it.satisfactionScore)||0)-(Number(a.it.satisfactionScore)||0));
+  else if(sort==='status')indexed.sort((a,b)=>String(a.it.status||'').localeCompare(String(b.it.status||''),'fa'));
+  const rows=indexed.map(({it,i})=>{
      const votes=(ratingsCache||[]).filter(v=>v._type==='store'&&String(v.id||'')===String(it.id||''));
      const avg=votes.length?votes.reduce((sum,v)=>sum+Number(v.rating||0),0)/votes.length:null;
      const storedScore=it.satisfactionScore!==undefined&&it.satisfactionScore!==''&&it.satisfactionScore!==null?Number(it.satisfactionScore):null;
      const score=avg!==null?avg:storedScore, count=avg!==null?votes.length:Number(it.satisfactionCount||0);
      const ratingBadge=score!==null&&Number.isFinite(score)?`<span style="display:inline-flex;align-items:center;gap:5px;margin:6px 6px 0 0;padding:4px 8px;border-radius:8px;background:#fff7df;color:#765300;font-size:12px;font-weight:700">★ ${score.toLocaleString('fa-IR',{maximumFractionDigits:1})}/۵ · ${count.toLocaleString('fa-IR')} رأی</span>`:`<span style="display:inline-flex;align-items:center;margin:6px 6px 0 0;padding:4px 8px;border-radius:8px;background:#f0f2f3;color:#606b70;font-size:12px">هنوز امتیازی ثبت نشده</span>`;
-     return `<div class="row"><div style="flex:1;min-width:220px"><b>${esc(it.title)}</b><small>${esc(PARTS[it.part]||'')} ${esc(it.date||it.priceDate||it.price||'')}</small>${(tab==='serviceCenters'||tab==='partsStores')?ratingBadge+`<label style="display:inline-flex;align-items:center;gap:8px;margin:8px 6px 0 0;padding:5px 10px;border:1px solid ${it.status==='verified'?'#9cdbb5':'#dce6e7'};border-radius:9px;background:${it.status==='verified'?'#edfff3':'#f8fafb'};cursor:pointer"><input type="checkbox" data-a="verify-toggle" data-k="${tab}" data-i="${i}" ${it.status==='verified'?'checked':''} style="width:18px;height:18px;accent-color:#00806f"><span>${it.status==='verified'?'تأییدشده':'تأیید بررسی'}</span></label><small>برای تأیید یا لغو تأیید، همین گزینه را تیک بزنید؛ تغییر بلافاصله ذخیره می‌شود.</small>`:''}</div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`;
-   }).join(''):'<div class="box" style="color:var(--muted)">هنوز موردی ثبت نشده است.</div>');
+     return `<div class="row admin-list-row" data-search="${esc(searchable({ ...it, _kind:tab }))}"><div style="flex:1;min-width:220px"><b>${esc(it.title||it.name||'بدون نام')}</b><small>${esc(PARTS[it.part]||'')} ${esc(it.date||it.priceDate||it.price||'')}</small>${(tab==='serviceCenters'||tab==='partsStores')?ratingBadge+`<label style="display:inline-flex;align-items:center;gap:8px;margin:8px 6px 0 0;padding:5px 10px;border:1px solid ${it.status==='verified'?'#9cdbb5':'#dce6e7'};border-radius:9px;background:${it.status==='verified'?'#edfff3':'#f8fafb'};cursor:pointer"><input type="checkbox" data-a="verify-toggle" data-k="${tab}" data-i="${i}" ${it.status==='verified'?'checked':''} style="width:18px;height:18px;accent-color:#00806f"><span>${it.status==='verified'?'تأییدشده':'تأیید بررسی'}</span></label><small>برای تأیید یا لغو تأیید، همین گزینه را تیک بزنید؛ تغییر بلافاصله ذخیره می‌شود.</small>`:''}</div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`;
+   }).join('');
+  const sortOptions=`<option value="default" ${sort==='default'?'selected':''}>ترتیب فعلی</option><option value="name-asc" ${sort==='name-asc'?'selected':''}>نام: الف تا ی</option><option value="name-desc" ${sort==='name-desc'?'selected':''}>نام: ی تا الف</option><option value="newest" ${sort==='newest'?'selected':''}>جدیدترین</option><option value="price-asc" ${sort==='price-asc'?'selected':''}>قیمت: کم به زیاد</option><option value="price-desc" ${sort==='price-desc'?'selected':''}>قیمت: زیاد به کم</option><option value="rating-desc" ${sort==='rating-desc'?'selected':''}>بیشترین رضایت</option><option value="status" ${sort==='status'?'selected':''}>وضعیت</option>`;
+  return `<div class="box"><p style="margin-bottom:12px"><button class="btn main" data-a="new">افزودن ${t.one} جدید</button></p><div class="grid2"><div><label for="list-search">جست‌وجو در ${t.label}</label><input id="list-search" data-list-search value="${esc(listSearchValue)}" placeholder="نام، شناسه، تلفن، نشانی یا توضیحات"></div><div><label for="list-sort">مرتب‌سازی</label><select id="list-sort" data-list-sort>${sortOptions}</select></div></div><p class="hint" style="margin-top:8px">نمایش <b id="list-count">${indexed.length}</b> مورد از ${items.length} مورد. جست‌وجو به‌صورت زنده انجام می‌شود.</p></div>${rows||'<div class="box" style="color:var(--muted)">موردی مطابق جست‌وجو پیدا نشد.</div>'}`;
 }
 function imgField(id,v,attr){
   return `<div class="imgf"><input type="text" id="${id}" ${attr} value="${esc(v)}" dir="ltr" placeholder="تصویری انتخاب نشده" readonly>
@@ -489,7 +503,8 @@ function collect(){
 }
 root.addEventListener('input',e=>{
   const t=e.target,d=t.dataset;
-  if(d.ratingSearch){ratingSearchValue=t.value;return}
+  if(d.listSearch){listSearchValue=t.value;const q=listSearchValue.trim().toLocaleLowerCase();let n=0;root.querySelectorAll('.admin-list-row').forEach(row=>{const show=!q||String(row.dataset.search||'').toLocaleLowerCase().includes(q);row.hidden=!show;if(show)n++});const counter=$('list-count');if(counter)counter.textContent=n;return}
+  if(d.ratingSearch){ratingSearchValue=t.value;const pos=t.selectionStart;draw();const input=$('rating-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
   if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true}
   else if(d.c){c.contact[d.c]=t.value.trim();dirty=true}
   else if(d.s){c.shopInfo[d.s]=t.value;dirty=true}
@@ -501,6 +516,7 @@ root.addEventListener('input',e=>{
 root.addEventListener('change',e=>{
   if(e.target.id==='sh'){c.shop=e.target.checked;dirty=true}
   if(e.target.id==='tc')wrap('{'+e.target.value+'|','}','متن رنگی');
+  if(e.target.dataset.listSort){listSortValue=e.target.value;draw()}
 });
 root.addEventListener('change',async e=>{
   if(e.target.id==='station-csv'&&e.target.files?.[0]){const file=e.target.files[0];try{const text=await file.text();const rows=parseCSV(text);if(!rows.length){msg('هیچ ردیف معتبری در فایل پیدا نشد.');return}if(!confirm(`${rows.length} ردیف برای ورود آماده است. موارد هم‌مختصات/هم‌شناسه به‌روزرسانی می‌شوند. ادامه می‌دهید؟`))return;msg('در حال ورود گروهی...');const r=await fetch(WORKER+'/api/admin/stations/bulk',{method:'POST',headers:H(),body:JSON.stringify({stations:rows})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationsCache=null;note=`ورود گروهی موفق بود؛ ${j.count} ردیف پردازش شد.`;await loadStations()}catch(err){msg('ورود CSV ناموفق بود: '+(err.message||'خطای فایل'))}finally{e.target.value=''}}
