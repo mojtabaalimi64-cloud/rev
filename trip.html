@@ -1263,6 +1263,8 @@ function updateVehicleFields(){
 }
 $("vehicleType").addEventListener("change",updateVehicleFields);
 updateVehicleFields();
+// Apply settings intentionally passed from the driver profile.
+(function applyDriverSettings(){const q=new URLSearchParams(location.search);if(!q.has("vehicleType")&&!q.has("battery")&&!q.has("consumption"))return;const allowed=["bev","phev","hev","mhev"],type=q.get("vehicleType");if(allowed.includes(type))$("vehicleType").value=type;const setNumber=(id,key,min,max)=>{const raw=q.get(key);if(raw===null)return;const n=Number(raw);if(Number.isFinite(n)&&n>=min&&n<=max)$(id).value=String(n)};setNumber("battery","battery",10,250);setNumber("soc","soc",5,100);setNumber("consumption","consumption",5,50);if(["auto","off"].includes(q.get("hvac")))$("hvacMode").value=q.get("hvac");updateVehicleFields();const note=document.createElement("div");note.className="weather-summary";note.textContent="تنظیمات خودرو از پروفایل راننده وارد شد"+(q.get("vehicleName")?" · "+q.get("vehicleName"):"")+". مبدأ و مقصد را وارد و مسیر را محاسبه کنید.";const status=$("status");if(status)status.parentNode.insertBefore(note,status);history.replaceState(null,"",location.pathname+location.hash)})();
 async function planTrip(){
   window.revStationSourceWarning = "";
   window.revStationCacheNote = "";
