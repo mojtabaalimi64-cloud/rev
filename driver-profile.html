@@ -167,4 +167,5 @@ const oldLoadPlannedTrip=loadPlannedTrip;
 loadPlannedTrip=function(){if(!map){const q=new URLSearchParams(location.search);if(q.has('origin')&&q.has('destination')){$('plannedTripCard').hidden=false;$('plannedRouteBanner').hidden=false;$('plannedRouteBanner').textContent='در حال آماده‌سازی نقشه و بارگذاری برنامه سفر…'};return}oldLoadPlannedTrip()};
 window.addEventListener('load',()=>setTimeout(()=>{if(map){restoreTripAfterMapReady();map.invalidateSize()}},400));
 </script>
+<script src="./rev-site-settings.js?v=1" defer></script>
 </body></html>
