@@ -302,7 +302,10 @@ async function save(){
     }
     else if(r.status===401||r.status===403){tok='';sessionStorage.removeItem('rev_admin_token');c=null;note='رمز مدیریتی پذیرفته نشد؛ دوباره وارد شوید.';draw()}
     else msg('ذخیره انجام نشد (کد '+r.status+'): '+(j.error||'خطای نامشخص'));
-  }catch(e){msg('ذخیره انجام نشد؛ اتصال Worker را بررسی کنید.');}
+  }catch(e){
+    console.error('REV content save failed:',e);
+    msg('ذخیره انجام نشد: '+(e&&e.message?e.message:'خطای شبکه یا CORS')+'. نشانی Worker: '+WORKER);
+  }
 }
 /* ---- تصویر: انتخاب، کوچک‌سازی و آپلود ---- */
 const choose=()=>new Promise(r=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>r(i.files[0]);i.click()});
