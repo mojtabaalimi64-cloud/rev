@@ -186,6 +186,11 @@ export default {
     await env.DB.prepare("INSERT INTO rev_payment_orders(id,user_id,plan_code,amount_toman,status,created_at,updated_at,reference,admin_note,verified_by) VALUES(?,?,?,?, 'pending',?,?,NULL,NULL,NULL)").bind(id,u.id,code,plans[code].amount,now,now).run();
     return response(request,env,{success:true,order:{id,planCode:code,amountToman:plans[code].amount,status:"pending"},message:"درخواست خرید ثبت شد؛ درگاه پرداخت آنلاین هنوز متصل نیست. دسترسی تا تأیید پرداخت توسط مدیریت فعال نمی‌شود."},201);
    }
+   if(path==="/api/admin/billing/orders" && method==="GET") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    const rows=await env.DB.prepare("SELECT o.id,o.plan_code,o.amount_toman,o.status,o.created_at,o.updated_at,o.reference,o.admin_note,u.display_name,u.email_normalized FROM rev_payment_orders o JOIN rev_users u ON u.id=o.user_id ORDER BY CASE o.status WHEN 'pending' THEN 0 ELSE 1 END,o.created_at DESC LIMIT 300").all();
+    return response(request,env,{success:true,orders:rows.results||[]});
+   }
    if(path.startsWith("/api/admin/billing/orders/") && path.endsWith("/review") && method==="POST") {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
     const id=path.split("/")[5], b=await request.json().catch(()=>null), status=String(b?.status||"");
