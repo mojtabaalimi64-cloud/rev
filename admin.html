@@ -301,7 +301,7 @@ async function loadRatings(){
     ];
     note='سابقه '+ratingsCache.length+' رأی فروشگاه/تعمیرگاه و ایستگاه شارژ دریافت شد.';
   }catch(e){ratingsCache=[];note='دریافت سابقه امتیازها ناموفق بود: '+(e.message||'خطای اتصال')+'؛ رمز مدیر و انتشار Worker امتیازدهی را بررسی کنید.'}
-  finally{ratingsBusy=false;if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores')draw()}
+  finally{ratingsBusy=false;if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores'||tab==='stations')draw()}
 }
 function ratingsPanel(){
   if(ratingsCache===null){loadRatings();return '<div class="box">در حال دریافت سابقه امتیازها...</div>'}
@@ -400,7 +400,12 @@ function stationPanel(){
   const rows=stationsCache.map((s,i)=>{
     const d=stationDate(s), old=stationIsStale(s), source=s.source||'نامشخص';
     const statusLabel=({operational:'فعال',offline:'غیرفعال',planned:'در دست احداث',unknown:'نامشخص'})[s.status||'unknown']||s.status;
-    return `<div class="row"><div><b>${esc(s.name||'بدون نام')}</b><small>${esc(s.address||'بدون آدرس')} · ${Number(s.latitude).toFixed(5)}, ${Number(s.longitude).toFixed(5)} · ${esc(s.power_kw??'؟')} kW · وضعیت: ${esc(statusLabel)}${s.satisfactionScore!==null&&s.satisfactionScore!==undefined&&s.satisfactionScore!==''?` · رضایت: ${esc(s.satisfactionScore)}/۵ (${esc(s.satisfactionCount??0)} رأی)`: ' · رضایت: ثبت نشده'}</small><small>منبع: ${esc(source)} · آخرین به‌روزرسانی: ${esc(d.label)}${old?' · ⚠ اطلاعات قدیمی/بدون تاریخ':''}</small>${s.source_url?`<small><a href="${esc(s.source_url)}" target="_blank" rel="noopener noreferrer">مشاهده منبع</a></small>`:''}</div><div><button class="btn" data-a="station-edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="station-delete" data-i="${i}">حذف</button></div></div>`;
+    const votes=(ratingsCache||[]).filter(v=>v._type==='station'&&String(v.id||'')===String(s.id||''));
+    const avg=votes.length?votes.reduce((sum,v)=>sum+Number(v.rating||0),0)/votes.length:null;
+    const stored=s.satisfactionScore!==null&&s.satisfactionScore!==undefined&&s.satisfactionScore!==''?Number(s.satisfactionScore):null;
+    const score=avg!==null?avg:stored, count=avg!==null?votes.length:Number(s.satisfactionCount||0);
+    const rating=score!==null&&Number.isFinite(score)?`<span style="display:inline-flex;align-items:center;gap:5px;margin:6px 0;padding:4px 8px;border-radius:8px;background:#fff7df;color:#765300;font-size:12px;font-weight:700">★ رضایت کاربران: ${score.toLocaleString('fa-IR',{maximumFractionDigits:1})}/۵ · ${count.toLocaleString('fa-IR')} رأی</span>`:`<span style="display:inline-flex;margin:6px 0;padding:4px 8px;border-radius:8px;background:#f0f2f3;color:#606b70;font-size:12px">هنوز امتیازی ثبت نشده</span>`;
+    return `<div class="row"><div style="flex:1;min-width:220px"><b>${esc(s.name||'بدون نام')}</b><small>${esc(s.address||'بدون آدرس')} · ${Number(s.latitude).toFixed(5)}, ${Number(s.longitude).toFixed(5)} · ${esc(s.power_kw??'؟')} kW · وضعیت: ${esc(statusLabel)}</small>${rating}<small>منبع: ${esc(source)} · آخرین به‌روزرسانی: ${esc(d.label)}${old?' · ⚠ اطلاعات قدیمی/بدون تاریخ':''}</small>${s.source_url?`<small><a href="${esc(s.source_url)}" target="_blank" rel="noopener noreferrer">مشاهده منبع</a></small>`:''}</div><div><button class="btn" data-a="station-edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="station-delete" data-i="${i}">حذف</button></div></div>`;
   }).join('');
   return `<div class="box"><h3>مدیریت جایگاه‌های شارژ</h3><p class="hint">اطلاعات این بخش مستقیماً در جدول stations ذخیره می‌شود و از مسیر عمومی برنامه‌ریز سفر خوانده می‌شود. جایگاه‌های بدون تاریخ به‌روزرسانی یا قدیمی، نیازمند بازبینی‌اند.</p><p style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button class="btn main" data-a="station-new">ثبت جایگاه جدید</button><button class="btn" data-a="station-import">ورود گروهی CSV</button><button class="btn" data-a="station-template">دانلود قالب CSV</button><button class="btn" data-a="station-refresh">به‌روزرسانی فهرست</button></p><div class="hint">تعداد کل: <b>${stationsCache.length}</b> · وضعیت نامشخص: <b>${unknown}</b> · قدیمی/بدون تاریخ: <b>${stale}</b></div><input id="station-csv" type="file" accept=".csv,text/csv" hidden><p class="hint" style="margin-top:8px">ستون‌های CSV: name, address, latitude, longitude, connectors, power_kw, status, openingHours, source_url, source_id. فایل UTF-8 باشد؛ مختصات اعشاری وارد کنید.</p></div>${rows||'<div class="box">هنوز جایگاهی در دیتابیس ثبت نشده است.</div>'}`;
 }
@@ -456,7 +461,7 @@ root.addEventListener('click',async e=>{
   const a=b.dataset.a, i=+b.dataset.i;
   if(a==='login'){tok=$('t').value.trim();gitTok=$('gt').value.trim();if(!tok){msg('رمز مدیریتی را وارد کنید.');return}sessionStorage.setItem('rev_admin_token',tok);if(gitTok)sessionStorage.setItem('rev_github_token',gitTok);else sessionStorage.removeItem('rev_github_token');c=null;draw()}
   else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
-  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations();if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores')loadRatings();if(tab==='set')loadAuthSettings()}
+  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations();if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores'||tab==='stations')loadRatings();if(tab==='set')loadAuthSettings()}
   else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:(tab==='serviceCenters'||tab==='partsStores')?{status:'pending'}:tab==='ads'?{position:'left',enabled:'yes',order:'10'}:tab==='techSections'?{part:'battery',enabled:'yes',order:'10'}:{part:'battery'}};draw()}
   else if(a==='verify-toggle'){
     const k=b.dataset.k, idx=Number(b.dataset.i);
