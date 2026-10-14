@@ -205,14 +205,22 @@ function directoryIntro(){
  return `<div class="box"><h3>${isService?'فهرست تعمیرگاه‌های مجاز':'فهرست فروشگاه‌های قطعات خودرو برقی'}</h3><p class="hint">هر دسته فهرست مستقل دارد. وضعیت «تأییدشده» را فقط پس از بررسی مجوز انتخاب کنید. برای نمایش روی نقشه، مختصات جغرافیایی لازم است. این بخش فعلاً مدیریت فهرست است و به‌تنهایی ثبت‌نام عمومی و احراز هویت ایجاد نمی‌کند.</p><p class="hint">مدارک هویتی یا اطلاعات حساس را در توضیحات عمومی وارد نکنید.</p></div>`;
 }
 async function loadRatings(){
-  if(ratingsBusy)return;ratingsBusy=true;note='در حال دریافت سابقه امتیازها...';draw();
+  if(ratingsBusy)return;ratingsBusy=true;note='در حال دریافت سابقه فروشگاه‌ها، تعمیرگاه‌ها و ایستگاه‌های شارژ...';draw();
   try{
-    const r=await fetch('https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/admin/ratings?type=store&limit=1000',{headers:H(),cache:'no-store'});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
-    ratingsCache=Array.isArray(j.items)?j.items:[];
-    note=ratingsCache.length+' رأی فروشگاه/تعمیرگاه دریافت شد.';
-  }catch(e){ratingsCache=[];note='دریافت سابقه امتیازها ناموفق بود: '+(e.message||'خطای اتصال')+'؛ رمز مدیر را در تنظیمات Worker امتیازدهی بررسی کنید.'}
+    const base='https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/admin/ratings';
+    const [storesRes,stationsRes]=await Promise.all([
+      fetch(base+'?type=store&limit=1000',{headers:H(),cache:'no-store'}),
+      fetch(base+'?type=station&limit=1000',{headers:H(),cache:'no-store'})
+    ]);
+    const [stores,stations]=await Promise.all([storesRes.json().catch(()=>({})),stationsRes.json().catch(()=>({}))]);
+    if(!storesRes.ok||!stores.success)throw new Error(stores.error||('فروشگاه‌ها: HTTP '+storesRes.status));
+    if(!stationsRes.ok||!stations.success)throw new Error(stations.error||('ایستگاه‌ها: HTTP '+stationsRes.status));
+    ratingsCache=[
+      ...(Array.isArray(stores.items)?stores.items.map(x=>({...x,_type:'store'})):[]),
+      ...(Array.isArray(stations.items)?stations.items.map(x=>({...x,_type:'station'})):[]
+    ];
+    note='سابقه '+ratingsCache.length+' رأی فروشگاه/تعمیرگاه و ایستگاه شارژ دریافت شد.';
+  }catch(e){ratingsCache=[];note='دریافت سابقه امتیازها ناموفق بود: '+(e.message||'خطای اتصال')+'؛ رمز مدیر و انتشار Worker امتیازدهی را بررسی کنید.'}
   finally{ratingsBusy=false;if(tab==='ratings')draw()}
 }
 function ratingsPanel(){
@@ -220,16 +228,19 @@ function ratingsPanel(){
   const businesses=[...(c.partsStores||[]).map(x=>({...x,_kind:'فروشگاه قطعات'})),...(c.serviceCenters||[]).map(x=>({...x,_kind:'تعمیرگاه مجاز'}))];
   const idFor=x=>String(x.id||((x.title||x.name||'فروشگاه')+'|'+(x.address||''))).slice(0,240);
   const byId=new Map(businesses.map(x=>[idFor(x),x]));
-  const groups=new Map();
-  for(const vote of ratingsCache){const id=String(vote.id||'');if(!groups.has(id))groups.set(id,[]);groups.get(id).push(vote)}
-  const cards=[...groups.entries()].map(([id,votes])=>{
-    const b=byId.get(id),avg=votes.reduce((s,v)=>s+Number(v.rating||0),0)/votes.length;
-    const title=b?.title||b?.name||id;
-    const history=votes.map(v=>'<div class="row"><div><b>'+esc('★'.repeat(Number(v.rating)||0))+'</b><small>'+esc(new Date(v.created_at).toLocaleString('fa-IR'))+'</small></div><small>'+esc(Number(v.rating)||0)+' از ۵</small></div>').join('');
-    return '<div class="box"><h3>'+esc(title)+'</h3><p class="hint">'+esc(b?b._kind:'مورد حذف‌شده یا با شناسه تغییرکرده')+' · میانگین '+avg.toLocaleString('fa-IR',{maximumFractionDigits:2})+' از ۵ · '+votes.length.toLocaleString('fa-IR')+' رأی</p><p class="hint" style="margin:8px 0">شناسه مورد: <code dir="ltr">'+esc(id)+'</code></p><details><summary>مشاهده سابقه رأی‌ها ('+votes.length.toLocaleString('fa-IR')+')</summary>'+history+'</details></div>';
-  }).join('');
-  const total=ratingsCache.length, avg=total?ratingsCache.reduce((s,v)=>s+Number(v.rating||0),0)/total:0;
-  return '<div class="box"><h3>امتیازها و سابقه فروشگاه‌ها و تعمیرگاه‌ها</h3><p class="hint">این بخش رأی‌های ثبت‌شده در دیتابیس را نشان می‌دهد؛ رأی‌دهندگان به‌صورت ناشناس ذخیره می‌شوند و اطلاعات شخصی نمایش داده نمی‌شود. سابقه تا ۱۰۰۰ رأی آخر بارگذاری می‌شود.</p><p style="margin-top:10px">تعداد رأی‌ها: <b>'+total.toLocaleString('fa-IR')+'</b> · میانگین کل: <b>'+avg.toLocaleString('fa-IR',{maximumFractionDigits:2})+'/۵</b></p><button class="btn" data-a="ratings-refresh" style="margin-top:10px">تازه‌سازی سابقه</button></div>'+(cards||'<div class="box">هنوز رأیی برای فروشگاه یا تعمیرگاه ثبت نشده است.</div>');
+  const renderGroup=(type,title)=>{
+    const votesAll=ratingsCache.filter(v=>v._type===type),groups=new Map();
+    for(const vote of votesAll){const id=String(vote.id||'');if(!groups.has(id))groups.set(id,[]);groups.get(id).push(vote)}
+    const cards=[...groups.entries()].map(([id,votes])=>{
+      const b=type==='store'?byId.get(id):null,avg=votes.reduce((sum,v)=>sum+Number(v.rating||0),0)/votes.length;
+      const name=b?.title||b?.name||(type==='station'?'شناسه ایستگاه: '+id:id);
+      const history=votes.map(v=>'<div class="row"><div><b>'+esc('★'.repeat(Number(v.rating)||0))+'</b><small>'+esc(new Date(v.created_at).toLocaleString('fa-IR'))+'</small></div><small>'+esc(Number(v.rating)||0)+' از ۵</small></div>').join('');
+      return '<div class="box"><h3>'+esc(name)+'</h3><p class="hint">'+esc(b?b._kind:(type==='station'?'ایستگاه شارژ':'مورد حذف‌شده یا شناسه تغییرکرده'))+' · میانگین '+avg.toLocaleString('fa-IR',{maximumFractionDigits:2})+' از ۵ · '+votes.length.toLocaleString('fa-IR')+' رأی</p><p class="hint" style="margin:8px 0">شناسه رأی: <code dir="ltr">'+esc(id)+'</code></p><details><summary>مشاهده سابقه رأی‌ها ('+votes.length.toLocaleString('fa-IR')+')</summary>'+history+'</details></div>';
+    }).join('');
+    const total=votesAll.length,avg=total?votesAll.reduce((sum,v)=>sum+Number(v.rating||0),0)/total:0;
+    return '<div class="box"><h3>'+title+'</h3><p class="hint">تعداد رأی‌ها: <b>'+total.toLocaleString('fa-IR')+'</b> · میانگین کل: <b>'+avg.toLocaleString('fa-IR',{maximumFractionDigits:2})+'/۵</b></p></div>'+(cards||'<div class="box">هنوز رأیی در این دسته ثبت نشده است.</div>');
+  };
+  return '<div class="box"><h3>امتیازها و سابقه</h3><p class="hint">سوابق ناشناس ذخیره می‌شوند؛ برای هر دسته حداکثر ۱۰۰۰ رأی آخر نمایش داده می‌شود. رأی ایستگاه‌ها جدا از فروشگاه‌ها و تعمیرگاه‌هاست.</p><button class="btn" data-a="ratings-refresh" style="margin-top:10px">تازه‌سازی سابقه</button></div>'+renderGroup('store','فروشگاه‌ها و تعمیرگاه‌ها')+renderGroup('station','ایستگاه‌های شارژ');
 }
 function draw(){
   if(!tok) return login();
