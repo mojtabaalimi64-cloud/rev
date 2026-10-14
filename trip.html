@@ -1112,22 +1112,25 @@ async function planTrip(){
       const fuelRange=tank/fuelRate*100;
       const totalRange=vehicleType==="phev"?nominalElectricRange+fuelRange:fuelRange;
       $("range").textContent=Math.round(totalRange);
-      $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در حال دریافت پیش‌بینی…</span></div><div class="weather-summary">در حال بررسی دما، باد و بارش در طول مسیر؛ اثر آب‌وهوا بر هزینه بنزین در این نسخه لحاظ نمی‌شود.</div>';
-      $("results").innerHTML='<h2 style="margin-top:10px">برنامه انرژی خودرو</h2><div class="station"><strong>'+ (vehicleType==="phev"?"هیبرید شارژی (PHEV)":vehicleType==="hev"?"هیبرید معمولی (HEV)":"هیبرید ملایم (MHEV)")+'</strong><div class="sub">مسافت سفر: '+km.toFixed(0)+' کیلومتر</div><div class="sub">مسافت برقی برآوردی: '+electricKm.toFixed(0)+' کیلومتر</div><div class="sub">مسافت با بنزین: '+fuelKm.toFixed(0)+' کیلومتر</div><div class="sub">بنزین موردنیاز: '+liters.toFixed(1)+' لیتر · هزینه تقریبی: '+Math.round(cost).toLocaleString("fa-IR")+' تومان</div><div class="sub">برد تقریبی با باک پر'+(vehicleType==="phev"?" به‌علاوه برد برقی":"")+': '+Math.round(totalRange)+' کیلومتر</div></div><div class="sub">برای HEV و MHEV توقف شارژ عمومی در برنامه الزامی نیست. برای PHEV، شارژ بین‌راهی می‌تواند مصرف بنزین واقعی را کاهش دهد؛ این برآورد فرض می‌کند پس از شارژ اولیه، در طول مسیر شارژ مجدد انجام نمی‌شود.</div>';
-      if($("timelineSlider"))$("timelineSlider").disabled=false;
-      const departure=new Date($("departure").value);let hybridWeather=null;
-      try{
-        hybridWeather=await getRouteWeather(coords,km,hours,$("departure").value,18,{maxSamples:6,delayMs:350});
-        const cards=hybridWeather.samples.map(x=>'<div class="weather-card"><strong>حدود کیلومتر '+Math.round(x.routeKm)+' مسیر</strong><div class="weather-time">زمان عبور: '+new Date(x.eta).toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"})+'</div><div class="weather-detail">'+Math.round(x.weather.temperature)+'°C · '+escapeHTML(weatherDescription(x.weather.code))+' · احتمال بارش '+(Number.isFinite(x.weather.precipProb)?Math.round(x.weather.precipProb)+"٪":"نامشخص")+'</div><div class="weather-wind">باد '+Math.round(x.weather.windSpeed)+' km/h از '+escapeHTML(compassDirection(x.weather.windDirection))+'</div><div class="weather-detail">تندباد: '+(Number.isFinite(x.weather.gust)?Math.round(x.weather.gust)+" km/h":"نامشخص")+'</div></div>').join("");
-        $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">پیش‌بینی ساعتی</span></div><div class="weather-grid">'+cards+'</div><div class="weather-credit">منبع: <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#64b5ff">Open-Meteo</a>. پیش‌بینی تقریبی است و تأثیر آن بر مصرف بنزین در هزینه لحاظ نشده است.</div>';
-      }catch(wxError){$("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">داده در دسترس نیست</span></div><div class="weather-summary warn">'+escapeHTML(wxError?.message||"پیش‌بینی آب‌وهوا دریافت نشد")+'</div>';}
-      configureTimeline({coords,routeKm:km,durationSeconds:hours,departure:hybridWeather?.departure||departure,weatherSamples:hybridWeather?.samples||[],battery:1,soc:100,consumption:0,stops:[],stationList:[],vehicleType,electricKm});
+      $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در حال دریافت پیش‌بینی…</span></div><div class="weather-summary">محاسبه مسیر و شبیه‌ساز مستقل از سرویس هواشناسی اجرا می‌شوند.</div>';
+      // Initialize route playback immediately; weather and fuel stations load in the background.
+      const departureValue=$("departure").value;
+      let departure=new Date(departureValue);
+      if(!Number.isFinite(departure.getTime())||departure.getTime()<Date.now()-5*60*1000)departure=new Date();
+      configureTimeline({coords,routeKm:km,durationSeconds:hours,departure,weatherSamples:[],battery:1,soc:100,consumption:0,stops:[],stationList:[],vehicleType,electricKm});
       $("timelineSoc").parentElement.querySelector("span").textContent="وضعیت انرژی";
-      $("timelineDetails").textContent="برای حرکت خودکار دکمه شروع حرکت را بزنید یا نوار مسیر را جابه‌جا کنید؛ در PHEV پس از اتمام برد برقی، نشانگر به حالت بنزین تغییر می‌کند.";
+      $("timelineDetails").textContent="برای حرکت خودکار دکمه شروع حرکت را بزنید یا نوار مسیر را جابه‌جا کنید؛ در PHEV پس از پایان برد برقی، نشانگر به حالت بنزین تغییر می‌کند.";
       const hybridRadius=num("radius",10);
       renderFuelStations(coords,hybridRadius).then(count=>{if(count===0)console.warn("REV: no mapped fuel stations returned for this route");}).catch(e=>console.warn("REV fuel layer:",e));
       renderBusinessDirectory(coords,hybridRadius).catch(e=>console.warn("REV business layer:",e));
-      setStatus("مسیر محاسبه شد: "+km.toFixed(0)+" کیلومتر · زمان رانندگی تخمینی: "+fmtDuration(hours)+".\nمصرف بنزین برآوردی: "+liters.toFixed(1)+" لیتر · هزینه تقریبی: "+Math.round(cost).toLocaleString("fa-IR")+" تومان.\n"+(vehicleType==="phev"?"سوییچ تخمینی به بنزین در کیلومتر "+Math.round(electricKm)+".\n":"")+"از دکمه شروع حرکت یا نوار مسیر استفاده کنید. هواشناسی در صورت دسترسی نمایش داده می‌شود.");
+      // Fetch weather asynchronously so a slow forecast API cannot block the route results.
+      getRouteWeather(coords,km,hours,departureValue,18,{maxSamples:4,delayMs:200}).then(hybridWeather=>{
+        const cards=hybridWeather.samples.map(x=>'<div class="weather-card"><strong>حدود کیلومتر '+Math.round(x.routeKm)+' مسیر</strong><div class="weather-time">زمان عبور: '+new Date(x.eta).toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"})+'</div><div class="weather-detail">'+Math.round(x.weather.temperature)+'°C · '+escapeHTML(weatherDescription(x.weather.code))+' · احتمال بارش '+(Number.isFinite(x.weather.precipProb)?Math.round(x.weather.precipProb)+"٪":"نامشخص")+'</div><div class="weather-wind">باد '+Math.round(x.weather.windSpeed)+' km/h از '+escapeHTML(compassDirection(x.weather.windDirection))+'</div><div class="weather-detail">تندباد: '+(Number.isFinite(x.weather.gust)?Math.round(x.weather.gust)+" km/h":"نامشخص")+'</div></div>').join("");
+        $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">پیش‌بینی ساعتی</span></div><div class="weather-grid">'+cards+'</div><div class="weather-credit">منبع: <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#64b5ff">Open-Meteo</a>. پیش‌بینی تقریبی است؛ اثر آب‌وهوا بر هزینه بنزین لحاظ نشده است.</div>';
+        revTimeline.weatherSamples=hybridWeather.samples;
+        updateTimeline();
+      }).catch(wxError=>{$("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">داده در دسترس نیست</span></div><div class="weather-summary warn">'+escapeHTML(wxError?.message||"پیش‌بینی آب‌وهوا دریافت نشد")+'</div>';});
+      setStatus("مسیر محاسبه شد: "+km.toFixed(0)+" کیلومتر · زمان رانندگی تخمینی: "+fmtDuration(hours)+".\\nمصرف بنزین برآوردی: "+liters.toFixed(1)+" لیتر · هزینه تقریبی: "+Math.round(cost).toLocaleString("fa-IR")+" تومان.\\n"+(vehicleType==="phev"?"سوییچ تخمینی به بنزین در کیلومتر "+Math.round(electricKm)+".\\n":"")+"شبیه‌ساز حرکت آماده است؛ هواشناسی و جایگاه‌ها در پس‌زمینه بارگذاری می‌شوند.");
       return;
     }
     if($("timelineSlider"))$("timelineSlider").disabled=false;
