@@ -133,7 +133,7 @@ export default {
       const now=new Date().toISOString(), token=randomToken(32), exp=new Date(Date.now()+30*60000).toISOString();
       await env.DB.prepare("UPDATE rev_verification_challenges SET consumed_at=? WHERE user_id=? AND purpose='recover' AND consumed_at IS NULL").bind(now,u.id).run();
       await env.DB.prepare("INSERT INTO rev_verification_challenges(id,user_id,channel,destination_normalized,purpose,token_hash,attempts,max_attempts,created_at,expires_at,consumed_at,request_window_key) VALUES(?,?, 'email',?,'recover',?,0,5,?,?,NULL,?)").bind(crypto.randomUUID(),u.id,email,await sha256(token),now,exp,email).run();
-      const link=env.SITE_URL.replace(/\\/$/,"")+"/reset-password.html?token="+encodeURIComponent(token);
+      const siteBase=env.SITE_URL.endsWith("/")?env.SITE_URL.slice(0,-1):env.SITE_URL; const link=siteBase+"/reset-password.html?token="+encodeURIComponent(token);
       const mail=await fetch("https://api.resend.com/emails",{method:"POST",headers:{"Authorization":"Bearer "+env.RESEND_API_KEY,"Content-Type":"application/json"},body:JSON.stringify({from:env.EMAIL_FROM,to:[email],subject:"بازیابی رمز عبور REV",text:"برای تعیین رمز عبور جدید REV، این پیوند را تا ۳۰ دقیقه در مرورگر باز کنید:\\n\\n"+link+"\\n\\nاگر شما این درخواست را نداده‌اید، این پیام را نادیده بگیرید."})});
       if(!mail.ok) return response(request,env,{success:false,error:"ارسال ایمیل بازیابی انجام نشد؛ تنظیمات ایمیل را بررسی کنید."},503);
     }
