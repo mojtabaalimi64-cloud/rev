@@ -913,7 +913,7 @@ async function getRouteWeather(routeCoords,routeKm,routeDurationSeconds,departur
 }
 
 
-let revTimeline = {coords:null,routeKm:0,durationSeconds:0,departure:null,weatherSamples:[],battery:60,soc:90,consumption:18,stops:[],stationList:[],carMarker:null,batteryMarker:null,vehicleType:"bev",electricKm:0};
+let revTimeline = {coords:null,routeKm:0,durationSeconds:0,departure:null,weatherSamples:[],battery:60,soc:90,consumption:18,stops:[],stationList:[],carMarker:null,batteryMarker:null,vehicleType:"bev",electricKm:0,regenerationKwh:0};
 let timelinePlayback=null;
 function toggleTimelinePlayback(){const slider=$("timelineSlider"),btn=$("timelinePlayBtn");if(!slider||slider.disabled||!btn)return;if(timelinePlayback){clearInterval(timelinePlayback);timelinePlayback=null;btn.textContent="▶ ادامه حرکت";return;}if(Number(slider.value)>=100)slider.value=0;btn.textContent="Ⅱ توقف";timelinePlayback=setInterval(()=>{const next=Math.min(100,Number(slider.value)+0.5);slider.value=String(next);updateTimeline();if(next>=100){clearInterval(timelinePlayback);timelinePlayback=null;btn.textContent="↻ شروع دوباره";}},120);}
 function timelinePointAt(coords,targetKm){
@@ -970,7 +970,7 @@ function updateTimeline(){
   const slider=$("timelineSlider"),fraction=Number(slider.value)/100;
   const km=revTimeline.routeKm*fraction,point=timelinePointAt(revTimeline.coords,km);
   const eta=new Date(revTimeline.departure.getTime()+revTimeline.durationSeconds*fraction*1000);
-  const hybrid=["phev","hev","mhev"].includes(revTimeline.vehicleType),electricKm=Number(revTimeline.electricKm)||0;
+  const hybrid=["phev","hev","mhev"].includes(revTimeline.vehicleType),electricKm=Number(revTimeline.electricKm)||0,regenerationKwh=Math.max(0,Number(revTimeline.regenerationKwh)||0),recoveredSoFar=regenerationKwh*fraction;
   const switchedToFuel=hybrid&&(revTimeline.vehicleType!=="phev"||(electricKm<revTimeline.routeKm&&km>=electricKm));
   const soc=hybrid?(switchedToFuel?0:Math.max(0,100*(electricKm-km)/Math.max(.1,electricKm))):timelineBatteryAt(km);
   $("timelineProgress").style.width=(fraction*100)+"%";
@@ -978,7 +978,7 @@ function updateTimeline(){
   $("timelineProgressText").textContent=Math.round(fraction*100)+"٪ از مسیر";
   $("timelineKm").textContent=Math.round(km)+" از "+Math.round(revTimeline.routeKm)+" km";
   $("timelineTime").textContent=eta.toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"});
-  $("timelineSoc").textContent=hybrid?(revTimeline.vehicleType==="phev"?(switchedToFuel?"بنزین · برق تمام شد":"برق تا "+Math.round(electricKm-km)+" km"):"بنزین · هیبرید خودشارژ"):(Math.round(soc)+"٪");
+  $("timelineSoc").textContent=hybrid?(revTimeline.vehicleType==="phev"?(switchedToFuel?"بنزین · برق تمام شد":"برق تا "+Math.round(electricKm-km)+" km"):"بازیابی +"+recoveredSoFar.toFixed(2)+" kWh"):(Math.round(soc)+"٪");
   $("timelineSoc").style.color=hybrid&&switchedToFuel?"#ffb45c":soc<=15?"#ff8d8d":"var(--accent)";
   const samples=revTimeline.weatherSamples||[];
   let wx=null;
@@ -989,6 +989,7 @@ function updateTimeline(){
   const upcoming=revTimeline.stationList.filter(x=>x.routeKm>=km).sort((a,b)=>a.routeKm-b.routeKm)[0];
   const nextStop=revTimeline.stops.filter(x=>x.routeKm>=km).sort((a,b)=>a.routeKm-b.routeKm)[0];
   let detail="<b>زمان تخمینی:</b> "+eta.toLocaleString("fa-IR",{dateStyle:"full",timeStyle:"short"})+(hybrid?(" · <b>وضعیت انرژی:</b> "+(switchedToFuel?"بنزین (برق اولیه تمام شده)":revTimeline.vehicleType==="phev"?"حرکت برقی تا حدود کیلومتر "+Math.round(electricKm):"هیبرید خودشارژ؛ مصرف اصلی بنزین")):(" · <b>شارژ تخمینی:</b> "+Math.round(soc)+"٪."));
+  if(revTimeline.vehicleType==="hev"||revTimeline.vehicleType==="mhev")detail+="<br><b>برق بازیابی‌شده تخمینی تا این نقطه:</b> "+recoveredSoFar.toFixed(2)+" kWh از حدود "+regenerationKwh.toFixed(2)+" kWh در کل مسیر. این برآورد تقریبی است و به ترافیک، ترمزگیری، شیب و مدل خودرو بستگی دارد.";
   if(wx){
     const rel=wx.wind.headwind>3?"باد روبه‌رو":wx.wind.headwind< -3?"باد پشت":"باد جانبی/متغیر";
     detail+="<br><b>هوا:</b> "+escapeHTML(weatherDescription(wx.weather.code))+", دما "+Math.round(wx.weather.temperature)+"°C، احتمال بارش "+(Number.isFinite(wx.weather.precipProb)?Math.round(wx.weather.precipProb)+"٪":"نامشخص")+".";
@@ -1107,6 +1108,9 @@ async function planTrip(){
       const nominalElectricRange=vehicleType==="phev"?num("electricRange",60):0;
       const initialElectricSoc=vehicleType==="phev"?num("phevSoc",90):0;
       const electricKm=vehicleType==="phev"?Math.min(km,nominalElectricRange*initialElectricSoc/100):0;
+      // Conservative route-average estimates, not vehicle-specific measurements: HEV 0.7 and MHEV 0.25 kWh per 100 km.
+      const regenerationRate=vehicleType==="hev"?0.7:vehicleType==="mhev"?0.25:0;
+      const regenerationKwh=km*regenerationRate/100;
       const fuelKm=Math.max(0,km-electricKm);
       const liters=fuelKm*fuelRate/100,cost=liters*fuelPrice;
       const fuelRange=tank/fuelRate*100;
@@ -1117,9 +1121,9 @@ async function planTrip(){
       const departureValue=$("departure").value;
       let departure=new Date(departureValue);
       if(!Number.isFinite(departure.getTime())||departure.getTime()<Date.now()-5*60*1000)departure=new Date();
-      configureTimeline({coords,routeKm:km,durationSeconds:hours,departure,weatherSamples:[],battery:1,soc:100,consumption:0,stops:[],stationList:[],vehicleType,electricKm});
+      configureTimeline({coords,routeKm:km,durationSeconds:hours,departure,weatherSamples:[],battery:1,soc:100,consumption:0,stops:[],stationList:[],vehicleType,electricKm,regenerationKwh});
       $("timelineSoc").parentElement.querySelector("span").textContent="وضعیت انرژی";
-      $("timelineDetails").textContent="برای حرکت خودکار دکمه شروع حرکت را بزنید یا نوار مسیر را جابه‌جا کنید؛ در PHEV پس از پایان برد برقی، نشانگر به حالت بنزین تغییر می‌کند.";
+      $("timelineDetails").innerHTML="برای حرکت خودکار دکمه شروع حرکت را بزنید یا نوار مسیر را جابه‌جا کنید."+(vehicleType==="hev"||vehicleType==="mhev"?"<br><b>بازیابی برق برآوردی کل مسیر:</b> "+regenerationKwh.toFixed(2)+" kWh؛ مقدار واقعی به خودرو و شرایط رانندگی وابسته است.":" در PHEV پس از پایان برد برقی، نشانگر به حالت بنزین تغییر می‌کند.");
       const hybridRadius=num("radius",10);
       renderFuelStations(coords,hybridRadius).then(count=>{if(count===0)console.warn("REV: no mapped fuel stations returned for this route");}).catch(e=>console.warn("REV fuel layer:",e));
       renderBusinessDirectory(coords,hybridRadius).catch(e=>console.warn("REV business layer:",e));
@@ -1130,7 +1134,7 @@ async function planTrip(){
         revTimeline.weatherSamples=hybridWeather.samples;
         updateTimeline();
       }).catch(wxError=>{$("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">داده در دسترس نیست</span></div><div class="weather-summary warn">'+escapeHTML(wxError?.message||"پیش‌بینی آب‌وهوا دریافت نشد")+'</div>';});
-      setStatus("مسیر محاسبه شد: "+km.toFixed(0)+" کیلومتر · زمان رانندگی تخمینی: "+fmtDuration(hours)+".\\nمصرف بنزین برآوردی: "+liters.toFixed(1)+" لیتر · هزینه تقریبی: "+Math.round(cost).toLocaleString("fa-IR")+" تومان.\\n"+(vehicleType==="phev"?"سوییچ تخمینی به بنزین در کیلومتر "+Math.round(electricKm)+".\\n":"")+"شبیه‌ساز حرکت آماده است؛ هواشناسی و جایگاه‌ها در پس‌زمینه بارگذاری می‌شوند.");
+      setStatus("مسیر محاسبه شد: "+km.toFixed(0)+" کیلومتر · زمان رانندگی تخمینی: "+fmtDuration(hours)+".\\nمصرف بنزین برآوردی: "+liters.toFixed(1)+" لیتر · هزینه تقریبی: "+Math.round(cost).toLocaleString("fa-IR")+" تومان.\\n"+(vehicleType==="phev"?"سوییچ تخمینی به بنزین در کیلومتر "+Math.round(electricKm)+".\\n":(vehicleType==="hev"||vehicleType==="mhev"?"بازیابی برق تخمینی: "+regenerationKwh.toFixed(2)+" kWh (برآورد تقریبی).\\n":""))+"شبیه‌ساز حرکت آماده است؛ هواشناسی و جایگاه‌ها در پس‌زمینه بارگذاری می‌شوند.");
       return;
     }
     if($("timelineSlider"))$("timelineSlider").disabled=false;
