@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>برنامه‌ریز سفر خودروی برقی | REV</title>
+<title>پیش‌نمایش بازطراحی ظاهری برنامه‌ریز سفر | REV</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
 :root{--bg:#0b1016;--panel:#121a23;--line:#263442;--text:#eef4f8;--muted:#9eafbd;--accent:#d7ff3f;--blue:#64b5ff;--danger:#ff8d8d}
@@ -119,6 +119,63 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 
  .compact-disclosure{margin-top:12px;border:1px solid #2d4351;border-radius:12px;background:#0d151e;overflow:hidden}.compact-disclosure>summary{cursor:pointer;list-style:none;padding:11px 13px;color:var(--accent);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:10px}.compact-disclosure>summary::-webkit-details-marker{display:none}.compact-disclosure>summary:after{content:"＋";font-size:16px}.compact-disclosure[open]>summary:after{content:"−"}.disclosure-content{max-height:260px;overflow:auto;padding:0 12px 12px}.disclosure-content .results{margin-top:4px}.disclosure-content .directions{margin-top:0;padding:8px;background:transparent;border:0}.disclosure-content .direction-item{padding:8px 0}.disclosure-content .plan-box{margin:8px 0;padding:9px}.disclosure-content .station{padding:8px 6px}
 .datePickerWrap{display:flex;gap:6px;align-items:stretch}.datePickerWrap input{flex:1;min-width:0}.pickerButton{min-width:44px;padding:8px 12px;border:1px solid #344454;border-radius:10px;background:#182530;color:var(--text);font-size:20px;cursor:pointer}.calendarDialog{width:min(340px,calc(100vw - 32px));border:1px solid #344454;border-radius:16px;padding:16px;background:#121a23;color:var(--text);box-shadow:0 16px 50px #0008}.calendarDialog::backdrop{background:#0009}.calendarHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.calendarHeader button,.calendarActions button,.timeDialogActions button{border:1px solid #344454;border-radius:8px;padding:6px 10px;background:#1b2a36;color:var(--text);cursor:pointer}.calendarGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}.calendarGrid span{font-size:12px;color:var(--muted);padding:5px 0}.calendarGrid button{border:1px solid transparent;border-radius:8px;padding:7px 0;background:transparent;color:var(--text);cursor:pointer}.calendarGrid button.selected{background:var(--accent);color:#10150a}.calendarGrid button.today{border-color:var(--accent)}.calendarActions,.timeDialogActions{display:flex;justify-content:space-between;gap:8px;margin-top:12px}.timeDialog input{font-size:24px;text-align:center;width:100%}
+
+/* REV visual-only redesign preview: original HTML, IDs, scripts and integrations retained */
+:root{--bg:#06111b;--panel:#0c1b29;--line:#20394c;--text:#edf7ff;--muted:#9bb4c7;--accent:#14dfc1;--blue:#5dbbff;--danger:#ff8d8d}
+html{background:#06111b}
+body{background:radial-gradient(ellipse at 12% 0%,#103149 0,transparent 35%),linear-gradient(135deg,#06111b,#091725 58%,#07121c);color:var(--text);font-family:Tahoma,Arial,sans-serif}
+.wrap{max-width:1800px;padding:18px 22px}
+.head{position:relative;padding:12px 18px;margin-bottom:14px;border:1px solid #1d3b50;border-radius:15px;background:linear-gradient(110deg,#0c1d2c,#0a1724);box-shadow:0 12px 34px #0003}
+.logo{font-size:34px;color:#14dfc1;text-shadow:0 0 22px #14dfc126;letter-spacing:1px}
+.sub{color:#9bb4c7}
+.layout{grid-template-columns:minmax(330px,390px) minmax(0,1fr);gap:14px;align-items:start}
+.panel{padding:17px;background:linear-gradient(150deg,#0e2030,#0a1723);border:1px solid #20394c;border-radius:15px;box-shadow:0 12px 30px #0002}
+aside.panel:before{background:linear-gradient(90deg,transparent,#14dfc1,#5dbbff,transparent)}
+h1{font-size:23px;color:#f2f8fc}
+h2{font-size:17px}
+label{font-size:12px;color:#b3c8d8}
+input,select{background:#081521;color:#edf7ff;border-color:#29475d;border-radius:10px;min-height:43px}
+input:focus,select:focus{border-color:#14dfc1;box-shadow:0 0 0 3px #14dfc11a;background:#0b1c2a}
+button{border-radius:10px}
+.primary{background:linear-gradient(110deg,#14dfc1,#12cbbd);color:#03221f;box-shadow:0 7px 22px #14dfc11c;min-height:48px}
+.secondary,.back-link{background:#132a3b;color:#eaf6ff;border:1px solid #2a4a60}
+.back-link:hover{background:#18384a;border-color:#14dfc1}
+#map{height:min(76vh,850px);min-height:540px;border:1px solid #24475d;border-radius:13px;box-shadow:0 12px 32px #0003}
+.map-heading h2{color:#edf7ff}
+.map-tag{color:#14dfc1;border-color:#24594f;background:#0d2829}
+.map-layers,.directions,.compact-disclosure,.timeline-details{background:#091824;border-color:#20394c}
+.stat,.timeline-metric,.weather-card{background:linear-gradient(145deg,#0d2030,#081521);border-color:#20394c}
+.stat b,.timeline-metric strong{color:#14dfc1}
+.stats{gap:9px}
+.stat{padding:12px}
+.station:hover{background:#122a3a}
+.plan-box{background:linear-gradient(145deg,#102b2a,#0c201f);border-color:#23635b}
+.plan-box h2,.plan-ok{color:#14dfc1}
+.plan-stop{border-color:#23453f}
+.pill{background:#102534;border-color:#2a4a5e}
+.weather-panel{background:linear-gradient(145deg,#0c2231,#091824);border-color:#24475d}
+.weather-card .weather-wind{color:#14dfc1}
+.weather-summary{background:#102b27;border-color:#24574c}
+.weather-summary.warn{background:#281f14;border-color:#66502b}
+.map-layer-toggle input{accent-color:#14dfc1}
+.direction-icon{color:#14dfc1;border-color:#245467;background:#102636}
+.timeline-panel{background:linear-gradient(135deg,#0d2231,#081521);border-color:#24475d}
+.timeline-track{background:#294052}
+.timeline-progress{background:linear-gradient(270deg,#5dbbff,#14dfc1)}
+.timeline-metric{padding:11px}
+.compact-disclosure>summary{color:#14dfc1}
+.pickerButton,.calendarDialog{background:#0e2030;border-color:#29475d;color:#edf7ff}
+.calendarHeader button,.calendarActions button,.timeDialogActions button{background:#142b3c;border-color:#29475d;color:#edf7ff}
+.calendarGrid button.selected{background:#14dfc1;color:#03221f}
+.calendarGrid button.today{border-color:#14dfc1}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#0c1b29;color:#edf7ff}
+.leaflet-popup-content a{color:#14dfc1}
+.rev-ev-charge{color:#14dfc1;border-color:#14dfc1;background:#0b1c2a}
+.rev-ev-charge.low{color:#ff8d8d;border-color:#ff8d8d}
+@media(min-width:1100px){.layout{grid-template-columns:minmax(340px,390px) minmax(0,1fr)}}
+@media(max-width:850px){.wrap{padding:10px}.head{padding:14px}.layout{grid-template-columns:minmax(0,1fr)}#map{height:55vh;min-height:390px}.logo{font-size:30px}.panel{padding:14px}}
+@media(max-width:520px){.wrap{padding:8px}.head{border-radius:12px}.head-actions{gap:8px}.back-link{white-space:normal;font-size:12px;padding:8px 10px}#map{height:48vh;min-height:330px}.stats{grid-template-columns:repeat(3,minmax(0,1fr))}.stat{padding:8px}.stat b{font-size:17px}.stat span{font-size:11px}.timeline-readout{grid-template-columns:repeat(2,minmax(0,1fr))}}
+
 </style>
 </head>
 <body>
