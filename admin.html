@@ -138,24 +138,40 @@ table td span[style*="direction:ltr"]{font-size:10px!important;font-weight:700!i
 }
 
 
-/* Fix native dropdown option contrast across browsers */
-select, select:focus {
-  color:#142027 !important;
-  background-color:#ffffff !important;
-  -webkit-text-fill-color:#142027 !important;
-  opacity:1 !important;
-  color-scheme:light;
+/* REV dropdown visibility fix v2: force readable native select controls and popup options */
+html body #root select,
+html body #root select:focus,
+html body #root select:hover {
+  color: #142027 !important;
+  background: #ffffff !important;
+  -webkit-text-fill-color: #142027 !important;
+  opacity: 1 !important;
+  color-scheme: light !important;
+  forced-color-adjust: none !important;
+  appearance: auto !important;
+  -webkit-appearance: menulist !important;
+  text-shadow: none !important;
 }
-select option, select optgroup {
-  color:#142027 !important;
-  background-color:#ffffff !important;
-  -webkit-text-fill-color:#142027 !important;
+html body #root select option,
+html body #root select optgroup,
+html body #root select option:checked,
+html body #root select option:hover {
+  color: #142027 !important;
+  background: #ffffff !important;
+  -webkit-text-fill-color: #142027 !important;
+  opacity: 1 !important;
+  forced-color-adjust: none !important;
+  text-shadow: none !important;
 }
-select option:checked {
-  color:#ffffff !important;
-  background-color:#087b63 !important;
+html body #root select option:checked {
+  color: #ffffff !important;
+  background: #087b63 !important;
+  -webkit-text-fill-color: #ffffff !important;
 }
-
+html body #root select[data-t] {
+  border: 1px solid #aebfc2 !important;
+  font-weight: 600 !important;
+}
 </style>
 </head>
 <body>
