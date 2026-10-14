@@ -294,7 +294,7 @@ function login(){
 }
 function list(){
   const t=TYPES[tab], items=Array.isArray(c[tab])?c[tab]:[];
-  const normalizeSearch=v=>String(v??'').toLocaleLowerCase().replace(/[ي]/g,'ی').replace(/[ك]/g,'ک').replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[\\s\\-_.،,]/g,'');
+  const normalizeSearch=v=>String(v??'').toLocaleLowerCase().replace(/[ي]/g,'ی').replace(/[ك]/g,'ک').replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[\s\-_.،,]/g,'');
   const searchable=it=>{
     const generatedCode=it.publicCode||(
       tab==='serviceCenters'?makeRevCode('RP',it.id):
