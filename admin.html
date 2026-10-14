@@ -137,6 +137,25 @@ table td span[style*="direction:ltr"]{font-size:10px!important;font-weight:700!i
  thead th,tbody td{padding:6px!important}
 }
 
+
+/* Fix native dropdown option contrast across browsers */
+select, select:focus {
+  color:#142027 !important;
+  background-color:#ffffff !important;
+  -webkit-text-fill-color:#142027 !important;
+  opacity:1 !important;
+  color-scheme:light;
+}
+select option, select optgroup {
+  color:#142027 !important;
+  background-color:#ffffff !important;
+  -webkit-text-fill-color:#142027 !important;
+}
+select option:checked {
+  color:#ffffff !important;
+  background-color:#087b63 !important;
+}
+
 </style>
 </head>
 <body>
