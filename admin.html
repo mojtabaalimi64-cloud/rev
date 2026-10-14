@@ -91,6 +91,8 @@ input:focus,select:focus,textarea:focus{border-color:#00806f;box-shadow:0 0 0 4p
 @media(max-width:680px){header{min-height:66px;padding:12px 14px}header>span{font-size:18px}.bar2{top:66px;border-radius:13px;padding:8px}.tab{padding:8px 10px}.wrap{width:calc(100% - 16px);margin-top:14px}.pub{width:100%}}
 
 
+/* REV Admin search normalization patch */
+/* Search handles generated business codes, pasted UUIDs, Persian/Arabic letters and digits. */
 /* REV Admin compact readability patch */
 body{font-size:13px;line-height:1.65}
 header{min-height:62px;padding:10px clamp(14px,2.5vw,28px)}
@@ -292,9 +294,18 @@ function login(){
 }
 function list(){
   const t=TYPES[tab], items=Array.isArray(c[tab])?c[tab]:[];
-  const searchable=it=>[it.title,it.name,it.id,it.publicCode,it.registrationId,it.userId,it.phone,it.address,it.date,it.price,it.status,it.part,it.brands,it.products,it.services,it.description,it.url,it.slug].map(v=>String(v??'')).join(' ').toLocaleLowerCase();
+  const normalizeSearch=v=>String(v??'').toLocaleLowerCase().replace(/[ي]/g,'ی').replace(/[ك]/g,'ک').replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[\\s\\-_.،,]/g,'');
+  const searchable=it=>{
+    const generatedCode=it.publicCode||(
+      tab==='serviceCenters'?makeRevCode('RP',it.id):
+      tab==='partsStores'?makeRevCode('ST',it.id):
+      ''
+    );
+    return [it.title,it.name,it.id,it.publicCode,generatedCode,it.registrationId,it.userId,it.phone,it.address,it.date,it.price,it.status,it.part,it.brands,it.products,it.services,it.description,it.url,it.slug]
+      .map(normalizeSearch).join(' ');
+  };
   let indexed=items.map((it,i)=>({it,i}));
-  const q=listSearchValue.trim().toLocaleLowerCase();
+  const q=normalizeSearch(listSearchValue.trim());
   if(q)indexed=indexed.filter(x=>searchable(x.it).includes(q));
   const sort=listSortValue||'default';
   const value=x=>String(x.it.title||x.it.name||'').toLocaleLowerCase();
@@ -549,7 +560,7 @@ function stationPanel(){
   const unknown=stationsCache.filter(s=>!s.status||s.status==='unknown').length;
   const stale=stationsCache.filter(stationIsStale).length;
   const q=stationSearchValue.trim().toLocaleLowerCase();
-  const filteredStations=stationsCache.map((s,i)=>({s,i,code:s.publicCode||makeRevCode('CH',s.id||s.source_id||String(s.latitude)+','+String(s.longitude))})).filter(({s,code})=>!q||[code,s.id,s.source_id,s.name,s.address,s.phone,s.status,s.operator,s.city].some(v=>String(v||'').toLocaleLowerCase().includes(q)));
+  const filteredStations=stationsCache.map((s,i)=>({s,i,code:s.publicCode||makeRevCode('CH',s.id||s.source_id||String(s.latitude)+','+String(s.longitude))})).filter(({s,code})=>!normalizeSearch(q)||[code,s.id,s.source_id,s.name,s.address,s.phone,s.status,s.operator,s.city].some(v=>normalizeSearch(v).includes(normalizeSearch(q))));
   const stationRows=filteredStations.map(({s,i,code})=>({s,i,code}));
   const stationValue=x=>String(x.s.name||'').toLocaleLowerCase();
   if(stationSortValue==='name')stationRows.sort((a,b)=>stationValue(a).localeCompare(stationValue(b),'fa'));
@@ -599,9 +610,9 @@ function collect(){
 }
 root.addEventListener('input',e=>{
   const t=e.target,d=t.dataset;
-  if('usersSearch' in d){usersSearchValue=t.value;usersPage=1;clearTimeout(usersDebounce);usersDebounce=setTimeout(()=>loadUsers(),300);return}
+  if('usersSearch' in d){usersSearchValue=t.value;usersPage=1;clearTimeout(usersDebounce);usersDebounce=setTimeout(()=>{usersBusy=false;loadUsers()},300);return}
   if('stationSearch' in d){stationSearchValue=t.value;const pos=t.selectionStart;draw();const input=$('station-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
-  if('listSearch' in d){listSearchValue=t.value;const q=listSearchValue.trim().toLocaleLowerCase();let n=0;root.querySelectorAll('.admin-list-row').forEach(row=>{const show=!q||String(row.dataset.search||'').toLocaleLowerCase().includes(q);row.hidden=!show;if(show)n++});const counter=$('list-count');if(counter)counter.textContent=n;return}
+  if('listSearch' in d){listSearchValue=t.value;const q=normalizeSearch(listSearchValue.trim());let n=0;root.querySelectorAll('.admin-list-row').forEach(row=>{const show=!q||normalizeSearch(row.dataset.search||'').includes(q);row.hidden=!show;if(show)n++});const counter=$('list-count');if(counter)counter.textContent=n;return}
   if('ratingSearch' in d){ratingSearchValue=t.value;ratingSelected=null;ratingOverride=null;const pos=t.selectionStart;draw();const input=$('rating-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
   if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true}
   else if(d.c){c.contact[d.c]=t.value.trim();dirty=true}
