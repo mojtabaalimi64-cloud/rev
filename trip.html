@@ -85,6 +85,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 .leaflet-popup-content a{color:#d7ff3f}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.wrap{padding:12px}#map{height:430px}.head{align-items:flex-start;flex-direction:column}.head-actions{width:100%;justify-content:space-between}.stats{grid-template-columns:repeat(3,1fr)}}
  
+.rev-weather-badge{display:inline-flex;align-items:center;justify-content:center;margin-left:3px;font:16px/1 Tahoma,Arial,sans-serif;vertical-align:middle;filter:drop-shadow(0 1px 1px #0008)}
 /* EV position marker with live estimated battery */
 .rev-map-car{background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none!important}
 .rev-ev-marker{position:relative;width:150px;height:76px;pointer-events:none;overflow:visible}
@@ -773,10 +774,19 @@ function timelineBatteryAt(km){
   soc-=(km-atKm)*revTimeline.consumption/revTimeline.battery;
   return Math.max(0,Math.min(100,soc));
 }
-function makeEvMapIcon(soc){
+function makeEvMapIcon(soc,weatherIcons=[]){
   const value=Math.round(soc),low=value<=15;
-  const html="<div class='rev-ev-marker'><div class='rev-ev-charge"+(low?" low":"")+"'>شارژ تخمینی "+value+"٪</div><svg class='rev-ev-vehicle' viewBox='0 0 100 62' xmlns='http://www.w3.org/2000/svg' aria-hidden='true'><defs><linearGradient id='evBody' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#f5fbff'/><stop offset='1' stop-color='#75d6c2'/></linearGradient></defs><path d='M9 39 15 24Q17 18 25 17L36 7Q39 4 46 4H64Q70 4 74 11L83 25 91 30Q95 33 95 39V48H7V42Q7 40 9 39Z' fill='url(#evBody)' stroke='#10222c' stroke-width='3' stroke-linejoin='round'/><path d='M25 21 38 9H61Q66 9 69 15L75 25H21Z' fill='#15394a' stroke='#10222c' stroke-width='2'/><path d='M46 10V24' stroke='#91e6ff' stroke-width='2'/><path d='M12 35H22' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><path d='M82 34h8' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><circle cx='25' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='25' cy='47' r='3' fill='#7e9aa7'/><circle cx='75' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='75' cy='47' r='3' fill='#7e9aa7'/><path d='M49 31h9l-5 7h6l-11 10 3-8h-6z' fill='#d7ff3f' stroke='#18313b' stroke-width='1'/></svg></div>";
+  const badges=(weatherIcons||[]).map(w=>`<span class="rev-weather-badge" title="${w.title}" aria-label="${w.title}">${w.icon}</span>`).join('');
+  const html="<div class='rev-ev-marker'><div class='rev-ev-charge"+(low?" low":"")+"'>"+badges+"شارژ تخمینی "+value+"٪</div><svg class='rev-ev-vehicle' viewBox='0 0 100 62' xmlns='http://www.w3.org/2000/svg' aria-hidden='true'><defs><linearGradient id='evBody' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#f5fbff'/><stop offset='1' stop-color='#75d6c2'/></linearGradient></defs><path d='M9 39 15 24Q17 18 25 17L36 7Q39 4 46 4H64Q70 4 74 11L83 25 91 30Q95 33 95 39V48H7V42Q7 40 9 39Z' fill='url(#evBody)' stroke='#10222c' stroke-width='3' stroke-linejoin='round'/><path d='M25 21 38 9H61Q66 9 69 15L75 25H21Z' fill='#15394a' stroke='#10222c' stroke-width='2'/><path d='M46 10V24' stroke='#91e6ff' stroke-width='2'/><path d='M12 35H22' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><path d='M82 34h8' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><circle cx='25' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='25' cy='47' r='3' fill='#7e9aa7'/><circle cx='75' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='75' cy='47' r='3' fill='#7e9aa7'/><path d='M49 31h9l-5 7h6l-11 10 3-8h-6z' fill='#d7ff3f' stroke='#18313b' stroke-width='1'/></svg></div>";
   return L.divIcon({className:"rev-map-car",html,iconSize:[150,76],iconAnchor:[75,70]});
+}
+function weatherRiskIcons(sample){
+ if(!sample||!sample.weather)return [];
+ const w=sample.weather,out=[],code=Number(w.code),rain=Number(w.precipProb),precip=Number(w.precipitation),speed=Number(w.windSpeed),gust=Number(w.gust);
+ if([71,73,75,77,85,86].includes(code))out.push({icon:'❄️',title:'برف پیش‌بینی‌شده'});
+ else if([51,53,55,56,57,61,63,65,66,67,80,81,82,95,96,99].includes(code)||((Number.isFinite(rain)&&rain>=50)||(Number.isFinite(precip)&&precip>=1)))out.push({icon:'🌧️',title:'باران یا بارش پیش‌بینی‌شده'});
+ if((Number.isFinite(speed)&&speed>=35)||(Number.isFinite(gust)&&gust>=55))out.push({icon:'💨',title:'باد شدید یا تندباد پیش‌بینی‌شده'});
+ return out;
 }
 function updateTimeline(){
   if(!revTimeline.coords||!revTimeline.departure)return;
@@ -791,7 +801,7 @@ function updateTimeline(){
   $("timelineTime").textContent=eta.toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"});
   $("timelineSoc").textContent=Math.round(soc)+"٪";
   $("timelineSoc").style.color=soc<=15?"#ff8d8d":"var(--accent)";
-  if(point&&revTimeline.carMarker){revTimeline.carMarker.setLatLng(point);revTimeline.carMarker.setIcon(makeEvMapIcon(soc));revTimeline.carMarker.setPopupContent("موقعیت خودرو روی مسیر · شارژ تخمینی باتری: "+Math.round(soc)+"٪");}
+  const risks=weatherRiskIcons(wx);if(point&&revTimeline.carMarker){revTimeline.carMarker.setLatLng(point);revTimeline.carMarker.setIcon(makeEvMapIcon(soc,risks));revTimeline.carMarker.setPopupContent("موقعیت خودرو روی مسیر · شارژ تخمینی باتری: "+Math.round(soc)+"٪"+(risks.length?" · "+risks.map(x=>x.title).join("، "):""));}
   const samples=revTimeline.weatherSamples||[];
   let wx=null;
   if(samples.length)wx=samples.reduce((best,x)=>Math.abs(x.routeKm-km)<Math.abs(best.routeKm-km)?x:best,samples[0]);
