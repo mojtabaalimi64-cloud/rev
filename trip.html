@@ -471,11 +471,18 @@ function buildChargingPlan(stations,routeCoords,routeKm,params){
     // Prefer the furthest reachable station from which the destination or at least
     // another listed station is reachable after charging to targetSoc.
     let chosen=null;
-    for(let i=reachable.length-1;i>=0;i--){
-      const st=reachable[i];
+    const viable=reachable.filter(st=>{
       const destinationReachable=routeKm-st.routeKm<=nextRange;
       const nextStationReachable=remaining.some(n=>n.routeKm>st.routeKm+2&&n.routeKm-st.routeKm<=nextRange+0.1);
-      if(destinationReachable||nextStationReachable){chosen=st;break;}
+      return destinationReachable||nextStationReachable;
+    });
+    if(viable.length){
+      // Ratings only influence the choice among stations that preserve route feasibility.
+      chosen=viable.sort((a,b)=>{
+        const sa=(Number(a._ratingScore)||3.5)+0.2*(a.routeKm/Math.max(routeKm,1));
+        const sb=(Number(b._ratingScore)||3.5)+0.2*(b.routeKm/Math.max(routeKm,1));
+        return sb-sa;
+      })[0];
     }
     if(!chosen) chosen=reachable[reachable.length-1];
     const legKm=chosen.routeKm-currentKm;
@@ -938,6 +945,20 @@ function fmtDuration(seconds){
   const mins=Math.round(seconds/60), h=Math.floor(mins/60),m=mins%60;
   return h?`${h} ساعت و ${m} دقیقه`:`${m} دقیقه`;
 }
+async function loadStationRatings(stations){
+  const api='https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/ratings';
+  await Promise.all(stations.map(async s=>{
+    s._revRatingId=String(s.id||((s.source||"station")+":"+(s.name||"")+":"+(s.lat??"")+","+(s.lon??""))).slice(0,240);
+    try{
+      const r=await fetch(api+'?type=station&id='+encodeURIComponent(s._revRatingId),{cache:'no-store'});
+      const j=await r.json();
+      if(r.ok&&j.success){s._ratingCount=Number(j.count)||0;s._ratingAverage=j.average==null?null:Number(j.average);}
+      else{s._ratingCount=0;s._ratingAverage=null;}
+    }catch(e){s._ratingCount=0;s._ratingAverage=null;}
+    const n=s._ratingCount,avg=s._ratingAverage==null?3.5:s._ratingAverage;
+    s._ratingScore=(avg*n+3.5*3)/(n+3);
+  }));
+}
 function renderStations(stations,routeCoords,routeKm,params){
   const el=$('results');el.innerHTML='';
   const metrics=routeMetrics(routeCoords);
@@ -956,7 +977,8 @@ function renderStations(stations,routeCoords,routeKm,params){
     const marker=L.circleMarker([s.lat,s.lon],{radius:planned?10:7,color:'#0b1016',weight:2,fillColor:planned?'#64b5ff':'#d7ff3f',fillOpacity:.98}).addTo(stationLayer);
     marker.bindPopup(`<b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+' kW':'نامشخص'}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br>منبع: ${escapeHTML(s.source||"نامشخص")}<br>${escapeHTML(formatStationUpdatedAt(s.updatedAt))}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a>`);
     const item=document.createElement('div');item.className='station';
-    item.innerHTML=`<strong>${planned?'★ توقف پیشنهادی: ':''}${escapeHTML(s.name)}</strong><small>${escapeHTML(s.address||'نشانی کامل ثبت نشده')}</small><div><span class="pill">${s.routeDistance.toFixed(1)} کیلومتر فاصله از جاده</span><span class="pill">کیلومتر ${Math.round(s.routeKm??0)} مسیر</span><span class="pill">${s.power?s.power+' kW':'توان نامشخص'}</span><span class="pill">${escapeHTML(s.status)}</span></div><div class="sub">${escapeHTML(s.connectors.join('، ')||'نوع کانکتور نامشخص')}${s.operator?' · '+escapeHTML(s.operator):''}</div><div class="sub">${escapeHTML(s.source||"منبع نامشخص")} · ${escapeHTML(formatStationUpdatedAt(s.updatedAt))}</div><div style="margin-top:6px"><a href="${s.url}" target="_blank" rel="noopener" style="color:#64b5ff">مشاهده جزئیات</a> · <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lon}#map=16/${s.lat}/${s.lon}" target="_blank" rel="noopener" style="color:#64b5ff">نمایش روی نقشه</a></div>`;
+    const ratingLabel=s._ratingCount?('★ '+s._ratingAverage.toFixed(1)+'/۵ · '+s._ratingCount+' رأی'):'بدون امتیاز';
+    item.innerHTML=`<strong>${planned?'★ توقف پیشنهادی: ':''}${escapeHTML(s.name)} <span class="pill" style="display:inline-block">${escapeHTML(ratingLabel)}</span></strong><small>${escapeHTML(s.address||'نشانی کامل ثبت نشده')}</small><div><span class="pill">${s.routeDistance.toFixed(1)} کیلومتر فاصله از جاده</span><span class="pill">کیلومتر ${Math.round(s.routeKm??0)} مسیر</span><span class="pill">${s.power?s.power+' kW':'توان نامشخص'}</span><span class="pill">${escapeHTML(s.status)}</span></div><div class="sub">${escapeHTML(s.connectors.join('، ')||'نوع کانکتور نامشخص')}${s.operator?' · '+escapeHTML(s.operator):''}</div><div class="sub">${escapeHTML(s.source||"منبع نامشخص")} · ${escapeHTML(formatStationUpdatedAt(s.updatedAt))}</div><div style="margin-top:6px"><a href="${s.url}" target="_blank" rel="noopener" style="color:#64b5ff">مشاهده جزئیات</a> · <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lon}#map=16/${s.lat}/${s.lon}" target="_blank" rel="noopener" style="color:#64b5ff">نمایش روی نقشه</a></div>`;
     el.appendChild(item);
     const ratingBox=document.createElement("div");
     ratingBox.addEventListener("click",event=>event.stopPropagation());
@@ -1012,6 +1034,7 @@ async function planTrip(){
     if(soc<=reserve) throw new Error('درصد شارژ اولیه باید از درصد ذخیره ایمنی بیشتر باشد.');
     if(targetSoc<=reserve) throw new Error('شارژ هدف باید از درصد ذخیره ایمنی بیشتر باشد.');
     const params={battery,soc,consumption,reserve,targetSoc,radius};
+    await loadStationRatings(stations);
     renderStations(stations,coords,km,params);
     await renderBusinessDirectory(coords,radius);
     const plan=buildChargingPlan(stations,coords,km,params);
