@@ -171,7 +171,9 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
     <div class="timeline-legend">زمان و شارژ برآوردی‌اند و به سرعت واقعی، ترافیک، شیوه رانندگی و مدت توقف شارژ وابسته‌اند. حرکت نشانگر، اطلاعات مسیر را تغییر نمی‌دهد.</div>
   </section>
       <section class="weather-panel" id="weatherPanel" aria-live="polite"><div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در انتظار محاسبه مسیر</span></div><div class="sub">پس از تعیین زمان حرکت، باد، دما و بارش در طول مسیر بررسی می‌شود.</div></section>
-      <details class="compact-disclosure" id="directionsDetails"><summary>نمایش بیشتر · راهنمای مسیر</summary><section class="directions disclosure-content" id="directionsPanel" aria-live="polite"><div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub" id="directionsSummary">پس از محاسبه مسیر نمایش داده می‌شود</span></div><div class="sub">برای مشاهده مسیر و راهنمای پیچ‌ها، مبدأ و مقصد را وارد کنید.</div></section></details>
+  
+      <details class="compact-disclosure" id="businessDetails"><summary>نمایش بیشتر · تعمیرگاه‌های مجاز و فروشگاه‌های قطعات</summary><div class="disclosure-content"><div class="sub" style="margin:8px 0">نارنجی: تعمیرگاه مجاز · بنفش: فروشگاه قطعات</div><div id="businessDirectory"></div></div></details>
+    <details class="compact-disclosure" id="directionsDetails"><summary>نمایش بیشتر · راهنمای مسیر</summary><section class="directions disclosure-content" id="directionsPanel" aria-live="polite"><div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub" id="directionsSummary">پس از محاسبه مسیر نمایش داده می‌شود</span></div><div class="sub">برای مشاهده مسیر و راهنمای پیچ‌ها، مبدأ و مقصد را وارد کنید.</div></section></details>
     </main>
   </div>
 </div>
@@ -191,6 +193,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 }).addTo(map);
 const routeLayer = L.layerGroup().addTo(map);
 const stationLayer = L.layerGroup().addTo(map);
+const businessLayer = L.layerGroup().addTo(map);
 let lastRoute = null;
 const $ = id => document.getElementById(id);
 function setStatus(message){ $("status").textContent = message; }
@@ -395,6 +398,18 @@ async function getIranStations(routeCoords,radiusKm){
     return revStations;
   }
 }
+
+async function renderBusinessDirectory(routeCoords,radiusKm){
+ businessLayer.clearLayers();const box=$('businessDirectory');if(!box)return;box.innerHTML='<div class="sub">در حال بررسی فهرست تعمیرگاه‌ها و فروشگاه‌های قطعات…</div>';
+ try{const response=await fetch('./content.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('فهرست عمومی در دسترس نیست');const data=await response.json();
+ const entries=[...(Array.isArray(data.serviceCenters)?data.serviceCenters.map(x=>({...x,_category:'تعمیرگاه مجاز',_key:'serviceCenters'})):[]),...(Array.isArray(data.partsStores)?data.partsStores.map(x=>({...x,_category:'فروشگاه قطعات',_key:'partsStores'})):[])];const metrics=routeMetrics(routeCoords);
+ const near=entries.map(x=>({...x,lat:Number(x.latitude??x.lat),lon:Number(x.longitude??x.lon)})).filter(x=>x.status==='verified'&&Number.isFinite(x.lat)&&Number.isFinite(x.lon)&&x.lat>=-90&&x.lat<=90&&x.lon>=-180&&x.lon<=180).map(x=>({...x,...stationAlongRouteKm({lat:x.lat,lon:x.lon},metrics)})).filter(x=>x.offRouteKm<=radiusKm).sort((a,b)=>a.routeKm-b.routeKm);
+ near.forEach(x=>{const color=x._key==='serviceCenters'?'#ff9f43':'#c084fc';const marker=L.circleMarker([x.lat,x.lon],{radius:8,color:'#101820',weight:2,fillColor:color,fillOpacity:1}).addTo(businessLayer);const link=x.website?'<br><a target="_blank" rel="noopener" href="'+escapeHTML(x.website)+'">وب‌سایت / سفارش</a>':'';marker.bindPopup('<b>'+escapeHTML(x.title||x.name)+'</b><br>'+escapeHTML(x._category)+'<br>'+escapeHTML(x.address||'نشانی ثبت نشده')+'<br>'+escapeHTML(x.phone||'شماره تماس ثبت نشده')+link)});
+ if(!near.length){box.innerHTML='<div class="sub">فعلاً کسب‌وکار تأییدشده‌ای در فهرست عمومی REV و در شعاع انتخاب‌شده از مسیر ثبت نشده است. فقط موارد تأییدشده نمایش داده می‌شوند.</div>';return}
+ box.innerHTML=near.map(x=>'<div class="station"><strong>'+escapeHTML(x._category)+' · '+escapeHTML(x.title||x.name)+'</strong><small>'+escapeHTML(x.address||'نشانی ثبت نشده')+'</small><div class="sub">'+escapeHTML(x.phone||'شماره تماس ثبت نشده')+' · فاصله از مسیر '+x.offRouteKm.toFixed(1)+' کیلومتر</div>'+(x.website?'<a target="_blank" rel="noopener" href="'+escapeHTML(x.website)+'">وب‌سایت / سفارش</a>':'')+'</div>').join('');
+ }catch(e){box.innerHTML='<div class="sub">فهرست تعمیرگاه‌ها و فروشگاه‌ها بارگذاری نشد. '+escapeHTML(e.message||'')+'</div>'}
+}
+
 function routeMetrics(routeCoords){
   const points=routeCoords.map(c=>[Number(c[1]),Number(c[0])]);
   const cumulative=[0];
@@ -882,6 +897,7 @@ async function planTrip(){
     if(targetSoc<=reserve) throw new Error('شارژ هدف باید از درصد ذخیره ایمنی بیشتر باشد.');
     const params={battery,soc,consumption,reserve,targetSoc,radius};
     renderStations(stations,coords,km,params);
+    await renderBusinessDirectory(coords,radius);
     const plan=buildChargingPlan(stations,coords,km,params);
     const stationTimeline=stations.map(s=>({...s,...stationAlongRouteKm(s,routeMetrics(coords))}));
     configureTimeline({coords,routeKm:km,durationSeconds:hours,departure:weatherAnalysis?.departure||new Date($("departure").value),weatherSamples:weatherAnalysis?.samples||[],battery,soc,consumption,stops:plan.stops||[],stationList:stationTimeline});
