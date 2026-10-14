@@ -830,7 +830,8 @@ root.addEventListener('click',async e=>{
     if(edit.i<0)c[tab].unshift(it);else c[tab][edit.i]=it;
     edit=null;dirty=true;draw();
   }
-  else if(a==='ratings-filter'){ratingHistoryFilter=['all','store','station'].includes(b.dataset.k)?b.dataset.k:'all';draw()}\n  else if(a==='ratings-refresh'){ratingsCache=null;loadRatings()}
+  else if(a==='ratings-filter'){ratingHistoryFilter=['all','store','station'].includes(b.dataset.k)?b.dataset.k:'all';draw()}
+  else if(a==='ratings-refresh'){ratingsCache=null;loadRatings()}
   else if(a==='rating-search'){ratingSearchValue=$('rating-search')?.value||ratingSearchValue;ratingSelected=null;ratingOverride=null;draw()}
   else if(a==='rating-clear'){ratingSearchValue='';ratingSelected=null;ratingOverride=null;draw()}
   else if(a==='rating-select'){const target=ratingSearchResults()[i];if(target)await selectRatingTarget(target)}
