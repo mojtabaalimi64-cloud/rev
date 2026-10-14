@@ -200,7 +200,7 @@ const TYPES={
  ,serviceCenters:{label:'تعمیرگاه‌های مجاز خودرو برقی',one:'تعمیرگاه',fields:[['title','نام تعمیرگاه','text'],['image','تصویر تعمیرگاه','img'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا صفحه رزرو','text'],['brands','برندهای تحت پوشش (با ویرگول جدا کنید)','text'],['services','خدمات (مثلاً عیب‌یابی، باتری، موتور، اینورتر، نرم‌افزار)','area'],['authorization','مرجع/مدرک مجوز و شماره آن','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری (مثلاً شنبه تا چهارشنبه ۹ تا ۱۸؛ پنجشنبه ۹ تا ۱۳)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (در صورت وجود داده)','text'],['satisfactionCount','تعداد رأی‌های رضایت کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
  ,partsStores:{label:'فروشگاه‌های قطعات خودرو برقی',one:'فروشگاه قطعات',fields:[['title','نام فروشگاه','text'],['image','تصویر فروشگاه','img'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا لینک سفارش','text'],['brands','برندها و مدل‌های سازگار (با ویرگول جدا کنید)','text'],['products','دسته‌های قطعات (باتری، شارژر، اینورتر، موتور، کابل و...)','area'],['authorization','مرجع/مدرک نمایندگی یا مجوز','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری فروشگاه (روزها و بازه زمانی)','area'],['deliveryHours','ساعات ارسال/تحویل (اختیاری)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (اختیاری)','text'],['satisfactionCount','تعداد امتیازهای ثبت‌شده کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
 };
-const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',users:'مدیریت کاربران',ratings:'امتیازها و سابقه','station-reports':'گزارش خطای جایگاه‌ها','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
+const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',users:'مدیریت کاربران',ratings:'امتیازها و سابقه','station-reports':'گزارش خطای جایگاه‌ها','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',plans:'پلن‌های درآمدی',set:'تنظیمات'};
 let stationsCache=null, stationEdit=null, stationBusy=false, stationSearchValue='', stationSortValue='name', usersCache=[], usersSearchValue='', usersSortValue='created_at', usersOrder='desc', usersPage=1, usersBusy=false, usersDebounce=null, ratingsCache=null, ratingsBusy=false, stationReportsCache=null, stationReportsBusy=false, stationReportsError='', ratingSearchValue='', ratingSelected=null, ratingOverride=null, ratingSaveBusy=false, listSearchValue='', listSortValue='default', ratingSortValue='name', ratingHistoryFilter='all', ratingOverridesCache=null, ratingOverridesBusy=false;
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
@@ -275,6 +275,8 @@ async function load(){
       note='اطلاعات از نسخه فعلی سایت بارگذاری شد. برای انتقال آن به دیتابیس، پس از بررسی روی «انتشار تغییرات» بزنید.';
     }
     c.theme={...THEME0,adminSize:13,tableSize:11,tableDensity:'compact',tableLines:'full',tableStripe:'yes',tableWidth:'scroll',...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.carsInfo=c.carsInfo||{};c.about=c.about||'';
+    c.businessPlans={...defaultBusinessPlans(),...(c.businessPlans||{})};
+    Object.keys(defaultBusinessPlans()).forEach(k=>c.businessPlans[k]={...defaultBusinessPlans()[k],...(c.businessPlans[k]||{})});
     ['news','articles','episodes','products','cars','serviceCenters','partsStores','ads','techSections'].forEach(k=>c[k]=c[k]||[]);
     const assignedCodes=ensureBusinessIdentifiers(c);
     if(assignedCodes){dirty=true;note+=' برای '+assignedCodes+' موردِ شناسه‌گذاری/کد اختصاصی ایجاد شد؛ برای دائمی‌شدن آن‌ها روی «انتشار تغییرات» بزنید.';}
@@ -609,12 +611,43 @@ async function loadRatingOverrides(){
   }catch(e){ratingOverridesCache=[];console.warn('Could not load manual rating overrides',e)}
   finally{ratingOverridesBusy=false;if(['stations','serviceCenters','partsStores','rating-admin','ratings'].includes(tab))draw()}
 }
+
+function defaultBusinessPlans(){
+  return {
+    free:{name:'پایه — رایگان',price:0,active:true,annualEnabled:false,summary:'ثبت نام، شهر، آدرس، تلفن و نمایش عادی در فهرست.'},
+    professional:{name:'حرفه‌ای',price:300000,active:true,annualEnabled:true,summary:'گالری تصاویر، ساعت کاری، خدمات، لینک‌ها و آمار بازدید و کلیک تماس.'},
+    featured:{name:'ویژه',price:1200000,active:false,annualEnabled:true,summary:'جایگاه برجسته در شهر/دسته‌بندی، پین تبلیغاتی نقشه و گزارش عملکرد.'},
+    sponsor:{name:'سازمانی و اسپانسری',price:5000000,active:false,annualEnabled:false,summary:'بنر، محتوای حمایت‌شده و همکاری چندکاناله با توافق اختصاصی.'}
+  };
+}
+function plansPanel(){
+  const plans=c.businessPlans||(c.businessPlans=defaultBusinessPlans());
+  const ids=['free','professional','featured','sponsor'];
+  const rows=ids.map(id=>{
+    const p=plans[id], isFree=id==='free';
+    return `<div class="row" style="display:block;padding:16px;margin-bottom:12px">
+      <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div><strong style="font-size:15px">${esc(p.name)}</strong><small>${esc(p.summary)}</small></div>
+        <label style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer">
+          <input type="checkbox" data-plan-active="${id}" ${p.active?'checked':''} style="width:20px;height:20px;accent-color:#00806f">
+          <span>${p.active?'فعال':'غیرفعال'}</span>
+        </label>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:12px">
+        <div><label>قیمت ماهانه (تومان)</label><input type="number" min="0" step="50000" data-plan-price="${id}" value="${Number(p.price)||0}" ${isFree?'disabled':''}></div>
+        <div><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" data-plan-annual="${id}" ${p.annualEnabled?'checked':''} style="width:18px;height:18px;accent-color:#00806f"> ارائه تخفیف سالانه (۱۰ ماه به قیمت ۱۲ ماه)</label><p class="hint">در صورت فعال بودن، مبلغ سالانه برابر ۱۰ برابر قیمت ماهانه محاسبه می‌شود.</p></div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<section class="box"><h2>پلن‌های درآمدی REV</h2><p class="hint">هر پلن را می‌توانی مستقل فعال یا غیرفعال کنی. پلن غیرفعال باید از پیشنهادهای خرید جدید پنهان شود؛ اطلاعات مشتریان فعلی نباید با غیرفعال‌کردن پلن حذف شود. تغییرات را با دکمه «انتشار تغییرات» ذخیره کن.</p>${rows}<p class="hint">قیمت‌ها فعلاً پیشنهادی‌اند و با تغییر آن‌ها فقط تنظیمات پلن ذخیره می‌شود؛ اتصال پرداخت و نمایش عمومی پلن‌ها در مرحلهٔ جداگانه پیاده‌سازی می‌شود.</p></section>`;
+}
+
 function draw(){
   if(['stations','serviceCenters','partsStores','rating-admin','ratings'].includes(tab)&&ratingOverridesCache===null&&!ratingOverridesBusy)loadRatingOverrides();
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
-  const body=tab==='users'?usersPanel():tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='station-reports'?stationReportsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
+  const body=tab==='plans'?plansPanel():tab==='users'?usersPanel():tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='station-reports'?stationReportsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
   applyAdminAppearance();
   fixDropdownContrast();
@@ -778,6 +811,7 @@ root.addEventListener('input',e=>{
   if('stationSearch' in d){stationSearchValue=t.value;const pos=t.selectionStart;draw();const input=$('station-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
   if('listSearch' in d){listSearchValue=t.value;const q=normalizeSearch(listSearchValue.trim());let n=0;root.querySelectorAll('.admin-list-row').forEach(row=>{const show=!q||normalizeSearch(row.dataset.search||'').includes(q);row.hidden=!show;if(show)n++});const counter=$('list-count');if(counter)counter.textContent=n;return}
   if('ratingSearch' in d){ratingSearchValue=t.value;ratingSelected=null;ratingOverride=null;const pos=t.selectionStart;draw();const input=$('rating-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
+  if(d.planPrice){c.businessPlans[d.planPrice].price=Math.max(0,Number(t.value)||0);dirty=true}
   if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true;if(['adminSize','tableSize','tableDensity','tableLines','tableStripe','tableWidth'].includes(d.t))applyAdminAppearance()}
   else if(d.c){c.contact[d.c]=t.value.trim();dirty=true}
   else if(d.s){c.shopInfo[d.s]=t.value;dirty=true}
@@ -787,6 +821,9 @@ root.addEventListener('input',e=>{
   else if(t.id==='pn'){c.podcast=t.value;dirty=true}
 });
 root.addEventListener('change',e=>{
+  const p=e.target.dataset;
+  if(p.planActive){c.businessPlans[p.planActive].active=e.target.checked;dirty=true;draw();return}
+  if(p.planAnnual){c.businessPlans[p.planAnnual].annualEnabled=e.target.checked;dirty=true;draw();return}
   if(e.target.id==='sh'){c.shop=e.target.checked;dirty=true}
   if(e.target.id==='tc')wrap('{'+e.target.value+'|','}','متن رنگی');
   if(e.target.dataset.listSort){listSortValue=e.target.value;draw()}
