@@ -200,7 +200,7 @@ const TYPES={
  ,serviceCenters:{label:'تعمیرگاه‌های مجاز خودرو برقی',one:'تعمیرگاه',fields:[['title','نام تعمیرگاه','text'],['image','تصویر تعمیرگاه','img'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا صفحه رزرو','text'],['brands','برندهای تحت پوشش (با ویرگول جدا کنید)','text'],['services','خدمات (مثلاً عیب‌یابی، باتری، موتور، اینورتر، نرم‌افزار)','area'],['authorization','مرجع/مدرک مجوز و شماره آن','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری (مثلاً شنبه تا چهارشنبه ۹ تا ۱۸؛ پنجشنبه ۹ تا ۱۳)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (در صورت وجود داده)','text'],['satisfactionCount','تعداد رأی‌های رضایت کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
  ,partsStores:{label:'فروشگاه‌های قطعات خودرو برقی',one:'فروشگاه قطعات',fields:[['title','نام فروشگاه','text'],['image','تصویر فروشگاه','img'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا لینک سفارش','text'],['brands','برندها و مدل‌های سازگار (با ویرگول جدا کنید)','text'],['products','دسته‌های قطعات (باتری، شارژر، اینورتر، موتور، کابل و...)','area'],['authorization','مرجع/مدرک نمایندگی یا مجوز','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری فروشگاه (روزها و بازه زمانی)','area'],['deliveryHours','ساعات ارسال/تحویل (اختیاری)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (اختیاری)','text'],['satisfactionCount','تعداد امتیازهای ثبت‌شده کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
 };
-const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',users:'مدیریت کاربران',ratings:'امتیازها و سابقه','station-reports':'گزارش خطای جایگاه‌ها','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',plans:'پلن‌های درآمدی',set:'تنظیمات'};
+const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),site:'تنظیمات عمومی سایت',stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',users:'مدیریت کاربران',ratings:'امتیازها و سابقه','station-reports':'گزارش خطای جایگاه‌ها','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',plans:'پلن‌های درآمدی',set:'تنظیمات'};
 let stationsCache=null, stationEdit=null, stationBusy=false, stationSearchValue='', stationSortValue='name', usersCache=[], usersSearchValue='', usersSortValue='created_at', usersOrder='desc', usersPage=1, usersBusy=false, usersDebounce=null, ratingsCache=null, ratingsBusy=false, stationReportsCache=null, stationReportsBusy=false, stationReportsError='', ratingSearchValue='', ratingSelected=null, ratingOverride=null, ratingSaveBusy=false, listSearchValue='', listSortValue='default', ratingSortValue='name', ratingHistoryFilter='all', ratingOverridesCache=null, ratingOverridesBusy=false;
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
@@ -274,7 +274,8 @@ async function load(){
       c=await old.json();
       note='اطلاعات از نسخه فعلی سایت بارگذاری شد. برای انتقال آن به دیتابیس، پس از بررسی روی «انتشار تغییرات» بزنید.';
     }
-    c.theme={...THEME0,adminSize:13,tableSize:11,tableDensity:'compact',tableLines:'full',tableStripe:'yes',tableWidth:'scroll',...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.carsInfo=c.carsInfo||{};c.about=c.about||'';
+    c.theme={...THEME0,adminSize:13,tableSize:11,tableDensity:'compact',tableLines:'full',tableStripe:'yes',tableWidth:'scroll',...(c.theme||{})};
+    c.siteSettings={siteName:'REV',tagline:'خودروهای برقی، تکنولوژی و آینده حمل‌ونقل',footerText:'REV؛ رسانه فارسی‌زبان خودروهای برقی و فناوری',accent:c.theme.accent||'#39FF88',dark:c.theme.dark||'#080B0D',paper:c.theme.paper||'#F5F7F8',text:'#142027',fontSize:c.theme.size||17,menuSize:15,font:c.theme.font||'modern',menu:{},textOverrides:{},...(c.siteSettings||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.carsInfo=c.carsInfo||{};c.about=c.about||'';
     c.businessPlans={...defaultBusinessPlans(),...(c.businessPlans||{})};
     Object.keys(defaultBusinessPlans()).forEach(k=>c.businessPlans[k]={...defaultBusinessPlans()[k],...(c.businessPlans[k]||{})});
     ['news','articles','episodes','products','cars','serviceCenters','partsStores','ads','techSections'].forEach(k=>c[k]=c[k]||[]);
@@ -401,6 +402,36 @@ function form(){
     else el=`<input type="text" id="${id}" data-f="${k}" value="${esc(v)}">`;
     return `<label for="${id}">${l}</label>${el}`;
   }).join('')+`<p style="margin-top:16px"><button class="btn main" data-a="ok">ثبت</button> <button class="btn" data-a="cancel">انصراف</button></p></div>`;
+}
+function sitePanel(){
+  c.siteSettings=c.siteSettings||{};
+  const s=c.siteSettings;
+  const menuDefaults={
+    'index.html':{label:'صفحه اصلی',enabled:true},
+    'article-ev.html':{label:'آموزش',enabled:true},
+    'news.html':{label:'اخبار',enabled:true},
+    'trip.html':{label:'برنامه‌ریزی سفر',enabled:true},
+    'businesses.html':{label:'فروشگاه‌ها و تعمیرگاه‌ها',enabled:true},
+    'plans.html':{label:'پلن همکاری',enabled:true},
+    'travel-plans.html':{label:'پلن مسیریابی',enabled:true},
+    'account.html':{label:'حساب کاربری',enabled:true}
+  };
+  s.menu={...menuDefaults,...(s.menu||{})};
+  const menus=Object.entries(s.menu).map(([path,m])=>'<div class="grid2" style="align-items:end;border-bottom:1px solid #dce3e6;padding:8px 0"><div><label>'+path+'</label><input data-menu-label="'+path+'" value="'+esc(m.label||'')+'" placeholder="عنوان منو"></div><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-menu-enabled="'+path+'" '+(m.enabled!==false?'checked':'')+'> نمایش این گزینه</label></div>').join('');
+  return `<div class="box"><h3>هویت و متن‌های عمومی سایت</h3>
+  <label>نام سایت</label><input data-site="siteName" value="${esc(s.siteName||'REV')}">
+  <label>شعار زیر نام سایت</label><input data-site="tagline" value="${esc(s.tagline||'خودروهای برقی، تکنولوژی و آینده حمل‌ونقل')}">
+  <label>متن عمومی پایین صفحه</label><input data-site="footerText" value="${esc(s.footerText||'REV؛ رسانه فارسی‌زبان خودروهای برقی و فناوری')}">
+  <label>رنگ اصلی سایت</label><input type="color" data-site="accent" value="${s.accent||c.theme.accent||'#39FF88'}">
+  <label>رنگ زمینه حالت شب</label><input type="color" data-site="dark" value="${s.dark||c.theme.dark||'#080B0D'}">
+  <label>رنگ زمینه حالت روز</label><input type="color" data-site="paper" value="${s.paper||c.theme.paper||'#F5F7F8'}">
+  <label>رنگ متن در حالت روز</label><input type="color" data-site="text" value="${s.text||'#142027'}">
+  <label>اندازه متن عمومی سایت (۱۴ تا ۲۴)</label><input type="number" min="14" max="24" data-site="fontSize" value="${s.fontSize||c.theme.size||17}">
+  <label>اندازه نوشته‌های منو (۱۲ تا ۲۲)</label><input type="number" min="12" max="22" data-site="menuSize" value="${s.menuSize||15}">
+  <label>فونت سایت</label><select data-site="font"><option value="modern" ${(s.font||c.theme.font)==='modern'?'selected':''}>وزیرمتن / فونت فارسی</option><option value="classic" ${(s.font||c.theme.font)==='classic'?'selected':''}>Tahoma</option><option value="system" ${(s.font||c.theme.font)==='system'?'selected':''}>فونت سیستم</option></select>
+  <p class="hint">تغییرات این قسمت بعد از «انتشار تغییرات» به صفحات عمومی منتقل می‌شود. حالت روز/شب انتخابی هر کاربر جداگانه روی همان مرورگر نگه‌داری می‌شود.</p></div>
+  <div class="box"><h3>مدیریت منوهای اصلی</h3><p class="hint">عنوان گزینه‌ها و نمایش یا مخفی‌بودن آن‌ها را تنظیم کنید. این تنظیمات روی پیوندهای شناخته‌شده در صفحات سایت اعمال می‌شوند.</p>${menus}</div>
+  <div class="box"><h3>ویرایش متن‌های ثابت دلخواه</h3><p class="hint">برای تغییر عبارت‌های ثابت، یک JSON با قالب «متن فعلی»: «متن جدید» وارد کنید. فقط تطبیق دقیق متن‌های متنی انجام می‌شود؛ محتوای مقاله‌ها، اخبار، خودروها و محصولات را از تب اختصاصی خودشان ویرایش کنید.</p><textarea data-site="textOverrides" rows="8" style="width:100%;direction:ltr;font-family:monospace" placeholder='{"متن فعلی":"متن جدید"}'>${esc(JSON.stringify(s.textOverrides||{},null,2))}</textarea></div>`;
 }
 function look(){
   const t=c.theme;
@@ -647,7 +678,7 @@ function draw(){
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
-  const body=tab==='plans'?plansPanel():tab==='users'?usersPanel():tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='station-reports'?stationReportsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
+  const body=tab==='site'?sitePanel():tab==='plans'?plansPanel():tab==='users'?usersPanel():tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='station-reports'?stationReportsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
   applyAdminAppearance();
   fixDropdownContrast();
@@ -812,6 +843,9 @@ root.addEventListener('input',e=>{
   if('listSearch' in d){listSearchValue=t.value;const q=normalizeSearch(listSearchValue.trim());let n=0;root.querySelectorAll('.admin-list-row').forEach(row=>{const show=!q||normalizeSearch(row.dataset.search||'').includes(q);row.hidden=!show;if(show)n++});const counter=$('list-count');if(counter)counter.textContent=n;return}
   if('ratingSearch' in d){ratingSearchValue=t.value;ratingSelected=null;ratingOverride=null;const pos=t.selectionStart;draw();const input=$('rating-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
   if(d.planPrice){c.businessPlans[d.planPrice].price=Math.max(0,Number(t.value)||0);dirty=true}
+  if(d.site){c.siteSettings=c.siteSettings||{};if(d.site==='textOverrides'){try{c.siteSettings.textOverrides=JSON.parse(t.value||'{}');t.setCustomValidity('');}catch(_){t.setCustomValidity('JSON معتبر نیست');} }else if(['fontSize','menuSize'].includes(d.site)){c.siteSettings[d.site]=Math.max(d.site==='fontSize'?14:12,Math.min(d.site==='fontSize'?24:22,Number(t.value)||17));}else{c.siteSettings[d.site]=t.value;}dirty=true}
+  if(d.menuLabel){c.siteSettings.menu=c.siteSettings.menu||{};c.siteSettings.menu[d.menuLabel]={...(c.siteSettings.menu[d.menuLabel]||{}),label:t.value};dirty=true}
+
   if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true;if(['adminSize','tableSize','tableDensity','tableLines','tableStripe','tableWidth'].includes(d.t))applyAdminAppearance()}
   else if(d.c){c.contact[d.c]=t.value.trim();dirty=true}
   else if(d.s){c.shopInfo[d.s]=t.value;dirty=true}
@@ -823,6 +857,8 @@ root.addEventListener('input',e=>{
 root.addEventListener('change',e=>{
   const p=e.target.dataset;
   if(p.planActive){c.businessPlans[p.planActive].active=e.target.checked;dirty=true;draw();return}
+  if(p.menuEnabled){c.siteSettings=c.siteSettings||{};c.siteSettings.menu=c.siteSettings.menu||{};c.siteSettings.menu[p.menuEnabled]={...(c.siteSettings.menu[p.menuEnabled]||{}),enabled:e.target.checked};dirty=true;return}
+
   if(p.planAnnual){c.businessPlans[p.planAnnual].annualEnabled=e.target.checked;dirty=true;draw();return}
   if(e.target.id==='sh'){c.shop=e.target.checked;dirty=true}
   if(e.target.id==='tc')wrap('{'+e.target.value+'|','}','متن رنگی');
