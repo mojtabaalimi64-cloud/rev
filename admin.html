@@ -36,6 +36,31 @@ ol{padding-inline-start:20px;color:var(--muted);font-size:14px;margin-top:10px}
 .imgf img{max-height:90px;border-radius:8px;border:1px solid var(--line)}
 .hint{color:var(--muted);font-size:13px}
 :focus-visible{outline:3px solid var(--green);outline-offset:2px}
+:root{--shadow:0 10px 30px rgba(8,11,13,.07);--radius:18px}
+body{background:linear-gradient(180deg,#edf2f3 0,#f7f9fa 260px);font-size:15px}
+header{position:sticky;top:0;z-index:20;padding:13px clamp(16px,3vw,34px);box-shadow:0 4px 18px rgba(0,0,0,.12);min-height:66px}
+header>span{display:flex;align-items:center;gap:10px}header>span:first-letter{letter-spacing:1px}
+.wrap{width:min(100% - 28px,1180px);margin:24px auto 64px}
+.bar2{top:66px;background:rgba(247,249,250,.94);backdrop-filter:blur(12px);padding:12px;border:1px solid rgba(221,227,230,.85);border-radius:16px;box-shadow:var(--shadow)}
+.tab{padding:8px 15px;transition:transform .15s,background .15s,border-color .15s}
+.tab:hover,.btn:hover{transform:translateY(-1px);border-color:#8b9ba3}
+.tab.on{box-shadow:0 5px 14px rgba(8,11,13,.16)}
+.pub{padding:9px 20px;box-shadow:0 5px 15px rgba(57,255,136,.16);transition:transform .15s}
+.pub:hover{transform:translateY(-1px)}
+.box{border-color:#e2e8eb;border-radius:var(--radius);padding:clamp(16px,2.2vw,26px);margin-bottom:16px;box-shadow:var(--shadow)}
+.box h2,.box h3{letter-spacing:-.2px}
+.row{border-radius:14px;padding:13px 16px;transition:border-color .15s,box-shadow .15s}
+.row:hover{border-color:#b5c3c9;box-shadow:0 5px 15px rgba(8,11,13,.04)}
+.btn{padding:6px 13px;transition:all .15s}
+.btn.main{background:linear-gradient(135deg,#10181d,#26353d)}
+label{margin:14px 0 5px;color:#27343a}
+input[type=text],input[type=password],input[type=number],select,textarea{padding:10px 13px;min-height:42px;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal-d);box-shadow:0 0 0 3px rgba(0,128,111,.10)}
+textarea{min-height:110px;resize:vertical}
+#msg{position:sticky;top:120px;z-index:4;background:#f7f9fa;padding:5px 0}
+.hint{line-height:1.9}
+@media(max-width:680px){header{font-size:17px}.wrap{width:min(100% - 18px,1180px);margin-top:12px}.bar2{top:60px;gap:6px}.tab{font-size:13px;padding:7px 10px}.pub{width:100%;margin-inline-start:0}.box{padding:15px}.row{align-items:flex-start;flex-wrap:wrap}}
+
 </style>
 </head>
 <body>
