@@ -89,7 +89,7 @@ export default {
     const rawDetails=String(b?.details||"");
     const details=rawDetails.trim().slice(0,600);
     const voter=String(b?.voter||"");
-    const allowedTypes=["not_found","not_working","connector_wrong","power_wrong","location_wrong","duplicate","other"];
+    const allowedTypes=["not_found","not_working","connector_wrong","power_wrong","location_wrong","duplicate","violation","other"];
     if(!stationId||!stationName||!allowedTypes.includes(type)||voter.length<8||voter.length>300||rawDetails.length>2000){
       return reply(request,env,{success:false,error:"اطلاعات گزارش معتبر نیست."},400);
     }
