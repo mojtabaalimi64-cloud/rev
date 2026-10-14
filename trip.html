@@ -116,6 +116,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 @media(max-width:650px){.timeline-readout{grid-template-columns:repeat(2,minmax(0,1fr))}.timeline-panel{padding:13px}.timeline-car svg{width:38px;height:25px}}
 
  .compact-disclosure{margin-top:12px;border:1px solid #2d4351;border-radius:12px;background:#0d151e;overflow:hidden}.compact-disclosure>summary{cursor:pointer;list-style:none;padding:11px 13px;color:var(--accent);font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:space-between;gap:10px}.compact-disclosure>summary::-webkit-details-marker{display:none}.compact-disclosure>summary:after{content:"＋";font-size:16px}.compact-disclosure[open]>summary:after{content:"−"}.disclosure-content{max-height:260px;overflow:auto;padding:0 12px 12px}.disclosure-content .results{margin-top:4px}.disclosure-content .directions{margin-top:0;padding:8px;background:transparent;border:0}.disclosure-content .direction-item{padding:8px 0}.disclosure-content .plan-box{margin:8px 0;padding:9px}.disclosure-content .station{padding:8px 6px}
+.datePickerWrap,.timePickerWrap{display:flex;gap:6px;align-items:stretch}.datePickerWrap input,.timePickerWrap input{flex:1;min-width:0}.pickerButton{min-width:44px;padding:8px 12px;border:1px solid #344454;border-radius:10px;background:#182530;color:var(--text);font-size:20px;cursor:pointer}.calendarDialog,.timeDialog{width:min(340px,calc(100vw - 32px));border:1px solid #344454;border-radius:16px;padding:16px;background:#121a23;color:var(--text);box-shadow:0 16px 50px #0008}.calendarDialog::backdrop,.timeDialog::backdrop{background:#0009}.calendarHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.calendarHeader button,.calendarActions button,.timeDialogActions button{border:1px solid #344454;border-radius:8px;padding:6px 10px;background:#1b2a36;color:var(--text);cursor:pointer}.calendarGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}.calendarGrid span{font-size:12px;color:var(--muted);padding:5px 0}.calendarGrid button{border:1px solid transparent;border-radius:8px;padding:7px 0;background:transparent;color:var(--text);cursor:pointer}.calendarGrid button.selected{background:var(--accent);color:#10150a}.calendarGrid button.today{border-color:var(--accent)}.calendarActions,.timeDialogActions{display:flex;justify-content:space-between;gap:8px;margin-top:12px}.timeDialog input{font-size:24px;text-align:center;width:100%}
 </style>
 </head>
 <body>
@@ -132,7 +133,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
       <h1>برنامه‌ریزی سفر</h1>
       <div class="sub">مبدأ، مقصد و مشخصات باتری را وارد کنید تا مسیر، شارژرهای ثبت‌شده و توقف‌های پیشنهادی محاسبه شوند.</div>
       <label for="origin">مبدأ</label><input id="origin" placeholder="مثلاً تهران، میدان آزادی" value="">
-      <label for="destination">مقصد</label><input id="destination" placeholder="مثلاً اصفهان، میدان نقش جهان" value=""><div class="grid2"><div><label for="departureJalali">تاریخ حرکت (شمسی)</label><input id="departureJalali" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۷/۲۲" autocomplete="off" required><input id="departure" type="hidden"></div><div><label for="departureClock">ساعت حرکت</label><input id="departureClock" type="time" required><label for="weatherModel">منبع هواشناسی</label><select id="weatherModel"><option value="auto" selected>پیش‌بینی خودکار</option></select></div></div><div class="sub" style="margin-top:6px">آب‌وهوا بر اساس زمان عبور تخمینی از نقاط مسیر دریافت می‌شود؛ باد به‌صورت خودکار تحلیل می‌شود.</div>
+      <label for="destination">مقصد</label><input id="destination" placeholder="مثلاً اصفهان، میدان نقش جهان" value=""><div class="grid2"><div><label for="departureJalali">تاریخ حرکت (شمسی)</label><div class="datePickerWrap"><input id="departureJalali" type="text" placeholder="انتخاب تاریخ شمسی" autocomplete="off" required readonly aria-haspopup="dialog"><button type="button" id="openDatePicker" class="pickerButton" aria-label="باز کردن تقویم">▦</button></div><input id="departure" type="hidden"></div><div><label for="departureClock">ساعت حرکت</label><div class="timePickerWrap"><input id="departureClock" type="time" required aria-label="ساعت حرکت"><button type="button" id="openTimePicker" class="pickerButton" aria-label="باز کردن انتخاب ساعت">◷</button></div><label for="weatherModel">منبع هواشناسی</label><select id="weatherModel"><option value="auto" selected>پیش‌بینی خودکار</option></select></div></div><dialog id="calendarDialog" class="calendarDialog" aria-label="تقویم شمسی"><div class="calendarHeader"><button type="button" id="prevMonth" aria-label="ماه قبل">‹</button><strong id="calendarTitle">انتخاب تاریخ</strong><button type="button" id="nextMonth" aria-label="ماه بعد">›</button></div><div class="calendarGrid" id="calendarGrid"></div><div class="calendarActions"><button type="button" id="calendarToday">امروز</button><button type="button" id="calendarCancel">انصراف</button></div></dialog><dialog id="timeDialog" class="timeDialog" aria-label="انتخاب ساعت حرکت"><label for="timePickerValue">ساعت و دقیقه حرکت</label><input id="timePickerValue" type="time" value="08:00"><div class="timeDialogActions"><button type="button" id="timeCancel">انصراف</button><button type="button" id="timeConfirm">تأیید</button></div></dialog><div class="sub" style="margin-top:6px">آب‌وهوا بر اساس زمان عبور تخمینی از نقاط مسیر دریافت می‌شود؛ باد به‌صورت خودکار تحلیل می‌شود.</div>
       <div class="grid2">
         <div><label for="battery">ظرفیت باتری (kWh)</label><input id="battery" type="number" min="10" max="250" value="60"></div>
         <div><label for="soc">شارژ اولیه (%)</label><input id="soc" type="number" min="5" max="100" value="90"></div>
@@ -626,6 +627,22 @@ function syncDepartureInput(){
   $("departure").value=localDateTimeValue(d);
   return true;
 }
+let calendarView={year:1405,month:7};
+function formatJalaliDate(p){return String(p.year).padStart(4,"0")+"/"+String(p.month).padStart(2,"0")+"/"+String(p.day).padStart(2,"0");}
+function currentJalaliParts(){return jalaliParts(new Date());}
+function renderJalaliCalendar(year,month){
+ const title=$("calendarTitle"),grid=$("calendarGrid"),names=["فروردین","اردیبهشت","خرداد","تیر","مرداد","شهریور","مهر","آبان","آذر","دی","بهمن","اسفند"];
+ title.textContent=names[month-1]+" "+year;grid.innerHTML="";
+ ["ش","ی","د","س","چ","پ","ج"].forEach(x=>{const e=document.createElement("span");e.textContent=x;grid.appendChild(e);});
+ const base=new Date(Date.UTC(year+621,2,1));let first=null,days=0;
+ for(let k=-75;k<310;k++){const d=new Date(base.getTime()+k*86400000),p=jalaliParts(d);if(p.year===year&&p.month===month){if(p.day===1)first=d;days=Math.max(days,p.day);}}
+ const start=first?((first.getUTCDay()+1)%7):0;for(let k=0;k<start;k++)grid.appendChild(document.createElement("span"));
+ const sel=parseJalaliDate($("departureJalali").value),today=currentJalaliParts();
+ for(let day=1;day<=days;day++){const b=document.createElement("button");b.type="button";b.textContent=day;if(sel&&sel.year===year&&sel.month===month&&sel.day===day)b.classList.add("selected");if(today.year===year&&today.month===month&&today.day===day)b.classList.add("today");b.addEventListener("click",()=>{$("departureJalali").value=formatJalaliDate({year,month,day});syncDepartureInput();$("calendarDialog").close();});grid.appendChild(b);}
+}
+function shiftCalendarMonth(delta){let y=calendarView.year,m=calendarView.month+delta;if(m<1){m=12;y--;}else if(m>12){m=1;y++;}calendarView={year:y,month:m};renderJalaliCalendar(y,m);}
+function openJalaliCalendar(){const p=parseJalaliDate($("departureJalali").value)||currentJalaliParts();calendarView={year:p.year,month:p.month};renderJalaliCalendar(p.year,p.month);$("calendarDialog").showModal();}
+function openDepartureTime(){$("timePickerValue").value=$("departureClock").value||"08:00";$("timeDialog").showModal();}
 function initDepartureInput(){
   // Leave date and time blank until the user explicitly chooses them.
   $("departureJalali").value="";
@@ -633,6 +650,9 @@ function initDepartureInput(){
   $("departure").value="";
   $("departureJalali").addEventListener("change",syncDepartureInput);
   $("departureClock").addEventListener("change",syncDepartureInput);
+  $("openDatePicker").addEventListener("click",openJalaliCalendar);$("departureJalali").addEventListener("click",openJalaliCalendar);
+  $("prevMonth").addEventListener("click",()=>shiftCalendarMonth(-1));$("nextMonth").addEventListener("click",()=>shiftCalendarMonth(1));$("calendarToday").addEventListener("click",()=>{const p=currentJalaliParts();$("departureJalali").value=formatJalaliDate(p);syncDepartureInput();$("calendarDialog").close();});$("calendarCancel").addEventListener("click",()=>$("calendarDialog").close());
+  $("openTimePicker").addEventListener("click",openDepartureTime);$("departureClock").addEventListener("click",()=>{if(!$("departureClock").value)openDepartureTime();});$("timeCancel").addEventListener("click",()=>$("timeDialog").close());$("timeConfirm").addEventListener("click",()=>{const v=$("timePickerValue").value;if(v){$("departureClock").value=v;syncDepartureInput();$("timeDialog").close();}});
 }
 async function fetchWeatherAt(lat,lon,when){
   const date=when.toISOString().slice(0,10);
