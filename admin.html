@@ -54,8 +54,10 @@ const TYPES={
  episodes:{label:'پادکست',one:'قسمت',fields:[['title','عنوان قسمت','text'],['date','تاریخ','text'],['image','تصویر قسمت','img'],['url','لینک شنیدن','text'],['desc','توضیح','area']]}
  ,products:{label:'فروشگاه',one:'محصول',fields:[['title','نام محصول','text'],['price','قیمت (فقط عدد، مثلاً 1500000)','text'],['image','تصویر محصول','img'],['desc','توضیحات کوتاه','area'],['url','لینک سفارش همین محصول (اختیاری)','text'],['stock','موجودی','stock']]}
  ,cars:{label:'خودروها',one:'خودرو',fields:[['title','نام خودرو (برند و مدل)','text'],['type','نوع بدنه','sel:sedan|سدان,suv|شاسی‌بلند,hatch|هاچ‌بک,crossover|کراس‌اور,other|سایر'],['market','وضعیت در بازار ایران','sel:iran|موجود در بازار ایران,import|وارداتی یا غیررسمی,none|فعلاً در بازار ایران نیست'],['price','قیمت به تومان (عدد کامل، مثلاً 2500000000)','text'],['priceDate','تاریخ قیمت (مثلاً ۱۴۰۵/۰۷/۲۰)','text'],['range','برد (کیلومتر، فقط عدد)','text'],['rangeStd','استاندارد اندازه‌گیری برد (WLTP، EPA، CLTC و...)','text'],['battery','ظرفیت باتری (کیلووات‌ساعت، فقط عدد)','text'],['power','توان (اسب‌بخار، فقط عدد)','text'],['accel','شتاب ۰ تا ۱۰۰ (ثانیه، فقط عدد)','text'],['dc','حداکثر شارژ DC (کیلووات، فقط عدد)','text'],['seats','تعداد صندلی (فقط عدد)','text'],['drive','سیستم محرک','sel:RWD|عقب‌رو,FWD|جلو‌رو,AWD|چهارچرخ‌محرک'],['connector','نوع کانکتور شارژ (مثلاً CCS2)','text'],['image','تصویر خودرو','img'],['pros','نقاط قوت (هر مورد در یک خط)','area'],['cons','نقاط ضعف (هر مورد در یک خط)','area'],['url','لینک بررسی کامل یا خرید (اختیاری)','text']]}
+ ,serviceCenters:{label:'تعمیرگاه‌های مجاز خودرو برقی',one:'تعمیرگاه',fields:[['title','نام تعمیرگاه','text'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا صفحه رزرو','text'],['brands','برندهای تحت پوشش (با ویرگول جدا کنید)','text'],['services','خدمات (مثلاً عیب‌یابی، باتری، موتور، اینورتر، نرم‌افزار)','area'],['authorization','مرجع/مدرک مجوز و شماره آن','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['description','توضیحات و ساعات کاری','area']]}
+ ,partsStores:{label:'فروشگاه‌های قطعات خودرو برقی',one:'فروشگاه قطعات',fields:[['title','نام فروشگاه','text'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا لینک سفارش','text'],['brands','برندها و مدل‌های سازگار (با ویرگول جدا کنید)','text'],['products','دسته‌های قطعات (باتری، شارژر، اینورتر، موتور، کابل و...)','area'],['authorization','مرجع/مدرک نمایندگی یا مجوز','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['description','توضیحات، ساعات کاری و ارسال','area']]}
 };
-const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
+const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
 let stationsCache=null, stationEdit=null, stationBusy=false;
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
@@ -86,7 +88,7 @@ async function load(){
       note='اطلاعات از نسخه فعلی سایت بارگذاری شد. برای انتقال آن به دیتابیس، پس از بررسی روی «انتشار تغییرات» بزنید.';
     }
     c.theme={...THEME0,...(c.theme||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.carsInfo=c.carsInfo||{};c.about=c.about||'';
-    ['news','articles','episodes','products','cars'].forEach(k=>c[k]=c[k]||[]);
+    ['news','articles','episodes','products','cars','serviceCenters','partsStores'].forEach(k=>c[k]=c[k]||[]);
     draw();
   }catch(e){msg('بارگذاری انجام نشد. اتصال Worker و نشانی content.json را بررسی کنید.');}
 }
@@ -181,11 +183,15 @@ const carsBox=()=>`<div class="box"><h3>راهنمای بخش مقایسه و پ
  <label for="ci_note">توضیح اضافه زیر این بخش (اختیاری)</label><textarea id="ci_note" data-ci="note" rows="2">${esc(c.carsInfo.note)}</textarea></div>
  <h3 style="margin:16px 0 8px">خودروها</h3>`;
 const aboutTab=()=>`<div class="box"><label for="ab">متن صفحه‌ی «درباره ما»</label><textarea id="ab" rows="14">${esc(c.about)}</textarea><p class="hint">پاراگراف‌ها را با یک خط خالی جدا کنید. «## عنوان» عنوان فرعی می‌سازد و **متن** پررنگ می‌شود.</p></div>`;
+function directoryIntro(){
+ const isService=tab==='serviceCenters';
+ return `<div class="box"><h3>${isService?'فهرست تعمیرگاه‌های مجاز':'فهرست فروشگاه‌های قطعات خودرو برقی'}</h3><p class="hint">هر دسته فهرست مستقل دارد. وضعیت «تأییدشده» را فقط پس از بررسی مجوز انتخاب کنید. برای نمایش روی نقشه، مختصات جغرافیایی لازم است. این بخش فعلاً مدیریت فهرست است و به‌تنهایی ثبت‌نام عمومی و احراز هویت ایجاد نمی‌کند.</p><p class="hint">مدارک هویتی یا اطلاعات حساس را در توضیحات عمومی وارد نکنید.</p></div>`;
+}
 function draw(){
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
-  const body=tab==='stations'?stationPanel():edit?form():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
+  const body=tab==='stations'?stationPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
 }
 
@@ -316,7 +322,7 @@ root.addEventListener('click',async e=>{
   if(a==='login'){tok=$('t').value.trim();gitTok=$('gt').value.trim();if(!tok){msg('رمز مدیریتی را وارد کنید.');return}sessionStorage.setItem('rev_admin_token',tok);if(gitTok)sessionStorage.setItem('rev_github_token',gitTok);else sessionStorage.removeItem('rev_github_token');c=null;draw()}
   else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
   else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations();if(tab==='set')loadAuthSettings()}
-  else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:{part:'battery'}};draw()}
+  else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:(tab==='serviceCenters'||tab==='partsStores')?{status:'pending'}:{part:'battery'}};draw()}
   else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
   else if(a==='del'){if(confirm('این مورد حذف شود؟')){c[tab].splice(i,1);dirty=true;draw()}}
   else if(a==='cancel'){edit=null;draw()}
@@ -338,6 +344,11 @@ root.addEventListener('click',async e=>{
   else if(a==='ok'){
     const it=collect();
     if(!it.title){msg('عنوان لازم است.');return}
+    if(tab==='serviceCenters'||tab==='partsStores'){
+      const lat=Number(it.latitude),lon=Number(it.longitude);
+      if(it.latitude!==''||it.longitude!=='')if(!Number.isFinite(lat)||lat < -90||lat > 90||!Number.isFinite(lon)||lon < -180||lon > 180){msg('مختصات باید معتبر باشد؛ برای نمایش روی نقشه هر دو مختصات را وارد کنید.');return}
+      it.category=tab==='serviceCenters'?'authorized_ev_service':'ev_parts_store';it.latitude=it.latitude===''?'':lat;it.longitude=it.longitude===''?'':lon;it.id=it.id||tab+'-'+Date.now().toString(36);
+    }
     if(tab==='articles'&&!it.slug)it.slug='a'+Date.now().toString(36);
     if(edit.i<0)c[tab].unshift(it);else c[tab][edit.i]=it;
     edit=null;dirty=true;draw();
