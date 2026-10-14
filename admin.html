@@ -285,6 +285,7 @@ async function load(){
   }catch(e){msg('بارگذاری انجام نشد. اتصال Worker و نشانی content.json را بررسی کنید.');}
 }
 async function save(){
+  const overridesInput=root.querySelector('[data-site="textOverrides"]');if(overridesInput){try{c.siteSettings=c.siteSettings||{};c.siteSettings.textOverrides=JSON.parse(overridesInput.value||'{}');overridesInput.setCustomValidity('')}catch(_){overridesInput.setCustomValidity('JSON معتبر نیست');overridesInput.reportValidity();msg('متن‌های ثابت ذخیره نشدند؛ قالب JSON را اصلاح کنید.');return}}
   msg('در حال ذخیره در دیتابیس Cloudflare...');
   try{
     const r=await api('PUT',c);
