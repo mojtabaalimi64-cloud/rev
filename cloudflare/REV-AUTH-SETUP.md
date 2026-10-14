@@ -92,3 +92,20 @@ New public pages:
 - Public API responses omit owner email and moderation notes. The admin API requires `Authorization: Bearer <ADMIN_TOKEN>`.
 - Product submission is a catalog workflow only; online checkout/payment is not implemented in this phase.
 - Because GitHub Pages and `workers.dev` are cross-site, browsers may block session cookies. A same-site custom domain/API hostname is still recommended before public rollout; do not work around this by putting tokens in public code.
+
+
+## Password recovery and paid navigation access (new)
+Files added:
+- `reset-password.html`: password-reset form.
+- `travel-plans.html`: user-facing navigation subscription plans and purchase-request UI.
+- `admin-billing.html`: admin queue to approve/reject payment requests.
+- `cloudflare/rev-navigation-billing-schema.sql`: additive subscription and payment-request tables.
+
+### Required rollout
+1. In D1 `rev-db` → Console, run the full contents of `cloudflare/rev-navigation-billing-schema.sql`. This requires the existing `rev_users`, `rev_sessions`, `rev_password_credentials`, and `rev_verification_challenges` tables.
+2. Deploy the latest `cloudflare/rev-auth-worker.js` to Worker `rev-auth-api`, keeping the existing `DB` binding and secrets. Do not change or replace `rev-api`.
+3. For password recovery, ensure `RESEND_API_KEY`, `EMAIL_FROM`, and `SITE_URL` are configured and the sender domain is verified. Recovery tokens expire after 30 minutes and are single-use.
+4. Open `admin-billing.html`, enter the existing `ADMIN_TOKEN` in the page (not in GitHub), load orders, and approve only after independently verifying payment.
+5. The route/navigation page `driver-profile.html` checks `GET /api/navigation/access` and stays blocked unless the signed-in user has an active navigation subscription. The public planning page `trip.html` remains available to everyone.
+6. The current checkout only creates a pending purchase request; it does **not** charge money or confirm payment. Real online payments require choosing a payment provider, adding its credentials as Worker secrets, and implementing server-side signed callback verification before enabling automatic activation. Never activate subscriptions from a client-side success query parameter.
+7. The GitHub Pages origin and `workers.dev` are cross-site. Cookie restrictions may block login/session checks in some browsers; a custom domain with the API on a same-site subdomain is recommended before public launch.
