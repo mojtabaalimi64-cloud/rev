@@ -52,3 +52,20 @@ The previously created `rev_password_credentials` table and existing `rev_users`
 پس از ذخیره این مقادیر، کد Worker را Deploy کنید. در پنل ادمین REV، زبانه «مدیریت دستی رضایت» را باز کنید، پروفایل را جست‌وجو و انتخاب کنید و دکمه «ارسال شناسه با پیامک» را بزنید. شماره تماس باید شماره همراه ایران با قالب `09xxxxxxxxx` باشد و شماره فرستنده نیز باید در پنل ملی پیامک مجاز باشد.
 
 این دکمه پیامک را به‌صورت دستی و با تأیید ادمین می‌فرستد؛ ثبت‌نام خودکار صاحب کسب‌وکار هنوز یک فرایند جداست و تا زمانی که فرم ثبت‌نام فروشندگان به این سرویس متصل نشده، پیامک خودکار هنگام ثبت‌نام ارسال نمی‌شود.
+
+
+## REV Driver Trip Tracking (GPS and private efficiency profile)
+
+The additive migration is `cloudflare/rev-driver-trips-schema.sql`. Apply it to the same D1 database `rev-db` **after** `cloudflare/rev-community-schema.sql` has created `rev_users`. It creates only `rev_driver_trips` and its index.
+
+The updated `cloudflare/rev-auth-worker.js` adds these authenticated, user-scoped endpoints:
+- `GET /api/driver/profile` — private aggregate statistics and recent trip history.
+- `GET /api/driver/trips` — the signed-in user's trips only.
+- `POST /api/driver/trips` — validates and saves a trip; GPS coordinates are saved only when `saveRoute: true` is explicitly submitted.
+- `POST /api/driver/trips/:id/delete` — deletes only a trip owned by the signed-in user.
+
+Deploy the updated Worker source after applying the schema. The public page is `driver-profile.html`; the trip planner links to it. GPS recording requires HTTPS and explicit browser permission. Keep the page open during a trip: mobile browsers may suspend GPS when the screen locks or the tab is backgrounded. The page does not yet claim continuous background tracking.
+
+Important: the profile page requires the REV account system to be enabled and a valid session. Because GitHub Pages (`github.io`) and the Worker (`workers.dev`) are cross-site, browser third-party-cookie restrictions may prevent session cookies from working. The recommended production setup is a custom REV domain with the API on a same-site subdomain before enabling private profiles for users.
+
+OBD-II and vehicle-maker APIs are not universal. The profile page only checks whether Web Bluetooth is exposed by the browser; it does not falsely report a generic OBD connection. Real telemetry requires a tested adapter protocol and a vehicle-specific profile, or an official OEM API with credentials stored only as Worker secrets. Never place vehicle API secrets in GitHub Pages or client-side JavaScript.
