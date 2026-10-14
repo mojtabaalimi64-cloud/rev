@@ -78,6 +78,58 @@ export default {
       .bind(type,id,code,name,phone,avg,count,now,"admin").run();
     return reply(request,env,{success:true,override:{type,id,publicCode:code,displayName:name,ownerPhone:phone,average:avg,count,updatedAt:now}});
    }
+
+   // Public station-data report submission. Raw voter identifiers are never stored.
+   if(path==="/api/station-reports"&&method==="POST"){
+    if(await limited(request,env))return reply(request,env,{success:false,error:"درخواست‌های زیاد؛ کمی بعد دوباره تلاش کنید."},429);
+    const b=await request.json().catch(()=>null);
+    const stationId=String(b?.station_id||"").trim().slice(0,240);
+    const stationName=String(b?.station_name||"").trim().slice(0,180);
+    const type=String(b?.report_type||"");
+    const rawDetails=String(b?.details||"");
+    const details=rawDetails.trim().slice(0,600);
+    const voter=String(b?.voter||"");
+    const allowedTypes=["not_found","not_working","connector_wrong","power_wrong","location_wrong","duplicate","other"];
+    if(!stationId||!stationName||!allowedTypes.includes(type)||voter.length<8||voter.length>300||rawDetails.length>2000){
+      return reply(request,env,{success:false,error:"اطلاعات گزارش معتبر نیست."},400);
+    }
+    const reporterHash=await hash("station-report:"+voter);
+    try{
+      const result=await env.DB.prepare(`
+        INSERT INTO rev_station_reports
+          (station_id,station_name,report_type,details,reporter_hash,status,created_at)
+        VALUES(?,?,?,?,?,'new',?)
+      `).bind(stationId,stationName,type,details,reporterHash,new Date().toISOString()).run();
+      return reply(request,env,{success:true,message:"گزارش شما برای بررسی مدیر REV ثبت شد.",id:result.meta?.last_row_id||null},201);
+    }catch(e){
+      const exists=await env.DB.prepare("SELECT id FROM rev_station_reports WHERE station_id=? AND reporter_hash=?").bind(stationId,reporterHash).first();
+      if(exists)return reply(request,env,{success:false,error:"برای این جایگاه قبلاً گزارشی از این مرورگر ثبت شده است."},409);
+      throw e;
+    }
+   }
+   // Admin-only list of station reports.
+   if(path==="/api/admin/station-reports"&&method==="GET"){
+    if(!admin(request,env))return reply(request,env,{success:false,error:"Unauthorized"},401);
+    const status=url.searchParams.get("status")||"all";
+    const limit=Math.max(1,Math.min(1000,Number(url.searchParams.get("limit")||500)));
+    const validStatuses=["new","in_review","resolved","invalid"];
+    if(status!=="all"&&!validStatuses.includes(status))return reply(request,env,{success:false,error:"وضعیت نامعتبر است."},400);
+    const result=status==="all"
+      ? await env.DB.prepare(`SELECT id,station_id,station_name,report_type,details,status,created_at,reviewed_at,reviewed_by,admin_note FROM rev_station_reports ORDER BY CASE status WHEN 'new' THEN 0 WHEN 'in_review' THEN 1 ELSE 2 END,created_at DESC LIMIT ?`).bind(limit).all()
+      : await env.DB.prepare(`SELECT id,station_id,station_name,report_type,details,status,created_at,reviewed_at,reviewed_by,admin_note FROM rev_station_reports WHERE status=? ORDER BY created_at DESC LIMIT ?`).bind(status,limit).all();
+    return reply(request,env,{success:true,items:result.results||[]});
+   }
+   // Admin marks a report as being reviewed, resolved, or invalid.
+   const reportPrefix="/api/admin/station-reports/";
+   if(path.startsWith(reportPrefix)&&method==="PUT"){
+    if(!admin(request,env))return reply(request,env,{success:false,error:"Unauthorized"},401);
+    const b=await request.json().catch(()=>null),id=Number(path.slice(reportPrefix.length)),status=String(b?.status||""),note=String(b?.admin_note||"").trim().slice(0,600);
+    if(!Number.isSafeInteger(id)||id<1||!["new","in_review","resolved","invalid"].includes(status))return reply(request,env,{success:false,error:"شناسه یا وضعیت گزارش معتبر نیست."},400);
+    const now=new Date().toISOString();
+    const result=await env.DB.prepare("UPDATE rev_station_reports SET status=?,reviewed_at=?,reviewed_by='REV admin',admin_note=? WHERE id=?").bind(status,now,note,id).run();
+    if(!result.meta?.changes)return reply(request,env,{success:false,error:"گزارش پیدا نشد."},404);
+    return reply(request,env,{success:true,message:"وضعیت گزارش ذخیره شد.",status,reviewed_at:now});
+   }
    return reply(request,env,{success:false,error:"Not found"},404);
   }catch(e){return reply(request,env,{success:false,error:"Internal server error"},500);}
  }
