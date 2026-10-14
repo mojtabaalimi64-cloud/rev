@@ -234,6 +234,8 @@ button{border-radius:10px}
       <select id="radius"><option value="5">۵ کیلومتر</option><option value="10">۱۰ کیلومتر</option><option value="20">۲۰ کیلومتر</option><option value="30">۳۰ کیلومتر</option><option value="50" selected>۵۰ کیلومتر</option></select><div class="sub" style="margin-top:6px">این محدوده برای ایستگاه‌های شارژ، تعمیرگاه‌ها و فروشگاه‌های ثبت‌شده اعمال می‌شود. پوشش داده‌ها به اطلاعات در دسترس بستگی دارد.</div>
       <button class="primary" id="planBtn">محاسبه مسیر و یافتن شارژرها</button>
       <button class="secondary" id="shareTripBtn" type="button" style="width:100%;margin-top:8px">اشتراک‌گذاری این سفر</button>
+      <button class="primary" id="continueTripBtn" type="button" style="display:none;width:100%;margin-top:8px">تأیید برنامه و رفتن به شروع سفر</button>
+      <div class="sub" id="continueTripHint" style="display:none;margin-top:6px">پس از بررسی مبدأ، مقصد و برآوردها، با ادامه‌دادن به صفحه راننده می‌روید؛ GPS فقط با فشردن دکمه شروع سفر فعال می‌شود.</div>
       <div class="status" id="status" aria-live="polite">برای شروع، دکمه محاسبه مسیر را بزنید.</div>
       <div class="stats">
         <div class="stat"><b id="distance">—</b><span>مسافت (km)</span></div>
@@ -1267,7 +1269,10 @@ $("vehicleType").addEventListener("change",updateVehicleFields);
 updateVehicleFields();
 // Apply settings intentionally passed from the driver profile.
 (function applyDriverSettings(){const q=new URLSearchParams(location.search);if(!q.has("vehicleType")&&!q.has("battery")&&!q.has("consumption"))return;const allowed=["bev","phev","hev","mhev"],type=q.get("vehicleType");if(allowed.includes(type))$("vehicleType").value=type;const setNumber=(id,key,min,max)=>{const raw=q.get(key);if(raw===null)return;const n=Number(raw);if(Number.isFinite(n)&&n>=min&&n<=max)$(id).value=String(n)};setNumber("battery","battery",10,250);setNumber("soc","soc",5,100);setNumber("consumption","consumption",5,50);if(["auto","off"].includes(q.get("hvac")))$("hvacMode").value=q.get("hvac");updateVehicleFields();const note=document.createElement("div");note.className="weather-summary";note.textContent="تنظیمات خودرو از پروفایل راننده وارد شد"+(q.get("vehicleName")?" · "+q.get("vehicleName"):"")+". مبدأ و مقصد را وارد و مسیر را محاسبه کنید.";const status=$("status");if(status)status.parentNode.insertBefore(note,status);history.replaceState(null,"",location.pathname+location.hash)})();
+function showContinueTrip(){const b=$("continueTripBtn"),hint=$("continueTripHint");if(b)b.style.display="block";if(hint)hint.style.display="block";}
+function continueToDriverProfile(){const origin=$("origin").value.trim(),destination=$("destination").value.trim();if(!origin||!destination||!lastRoute){setStatus("ابتدا مسیر را با موفقیت محاسبه کنید.");return;}if(!confirm("برنامه مسیر به پروفایل راننده ارسال شود؟\nمبدأ: "+origin+"\nمقصد: "+destination+"\nGPS تا زمانی که در صفحه بعد «شروع سفر» را نزنید فعال نمی‌شود."))return;const type=$("vehicleType").value,isPhev=type==="phev";const q=new URLSearchParams({origin,destination,routeKm:String(lastRoute.distance/1000),routeDuration:$("duration").textContent,vehicleType:type,vehicleName:"REV",battery:isPhev?$("phevBattery").value:$("battery").value,soc:isPhev?$("phevSoc").value:$("soc").value,consumption:$("consumption").value,hvac:$("hvacMode").value});location.href="./driver-profile.html?"+q.toString();}
 async function planTrip(){
+  const next=$("continueTripBtn"),hint=$("continueTripHint");if(next)next.style.display="none";if(hint)hint.style.display="none";
   window.revStationSourceWarning = "";
   window.revStationCacheNote = "";
   $("planBtn").disabled=true;$("planBtn").textContent="در حال محاسبه…";
@@ -1336,6 +1341,7 @@ async function planTrip(){
         revTimeline.weatherSamples=hybridWeather.samples;
         updateTimeline();
       }).catch(wxError=>{$("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">داده در دسترس نیست</span></div><div class="weather-summary warn">'+escapeHTML(wxError?.message||"پیش‌بینی آب‌وهوا دریافت نشد")+'</div>';});
+      showContinueTrip();
       setStatus("مسیر محاسبه شد: "+km.toFixed(0)+" کیلومتر · زمان رانندگی تخمینی: "+fmtDuration(hours)+".\\nمصرف بنزین برآوردی: "+liters.toFixed(1)+" لیتر · هزینه تقریبی: "+Math.round(cost).toLocaleString("fa-IR")+" تومان.\\n"+(vehicleType==="phev"?"سوییچ تخمینی به بنزین در کیلومتر "+Math.round(electricKm)+".\\n":(vehicleType==="hev"||vehicleType==="mhev"?"بازیابی برق تخمینی: "+regenerationKwh.toFixed(2)+" kWh (برآورد تقریبی).\\n":""))+"شبیه‌ساز حرکت آماده است؛ هواشناسی و جایگاه‌ها در پس‌زمینه بارگذاری می‌شوند.");
       return;
     }
@@ -1376,6 +1382,7 @@ async function planTrip(){
     const sourceNote = window.revStationSourceWarning
       ? `\nهشدار منبع آنلاین: ${window.revStationSourceWarning}\nفهرست ایستگاه‌ها ممکن است ناقص باشد؛ صفر ایستگاه به معنی نبود شارژر واقعی نیست.`
       : (window.revStationCacheNote ? `\n${window.revStationCacheNote}` : "");
+    showContinueTrip();
     setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\nزمان حرکت: ${new Date($("departure").value).toLocaleString("fa-IR")} · زمان رسیدن تقریبی: ${new Date(new Date($("departure").value).getTime()+hours*1000).toLocaleString("fa-IR")}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد؛ فهرست بر اساس فاصله از مبدأ مرتب شده است.\nمصرف مبنا: ${baseConsumption.toFixed(1)} · ${weatherAnalysis ? `مصرف تعدیل‌شده با باد و بخاری/کولر: ${consumption.toFixed(1)} kWh/100 km.` : `تحلیل باد اعمال نشد: ${weatherWarning}`}\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
   }catch(e){setStatus("مشکل: "+e.message);console.error(e);}
   finally{$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";}
@@ -1417,6 +1424,7 @@ $("timelineSlider").addEventListener("input",()=>{const maxKm=timelineMaxReachKm
 $("timelinePlayBtn").addEventListener("click",toggleTimelinePlayback);
 $("planBtn").addEventListener("click",planTrip);
 $("shareTripBtn").addEventListener("click",shareTrip);
+$("continueTripBtn").addEventListener("click",continueToDriverProfile);
 </script>
 </body>
 </html>
