@@ -163,10 +163,11 @@ html body #root select option:hover {
   forced-color-adjust: none !important;
   text-shadow: none !important;
 }
+/* Keep selected options dark too: some native browser menus ignore option backgrounds. */
 html body #root select option:checked {
-  color: #ffffff !important;
-  background: #087b63 !important;
-  -webkit-text-fill-color: #ffffff !important;
+  color: #142027 !important;
+  background: #ffffff !important;
+  -webkit-text-fill-color: #142027 !important;
 }
 html body #root select[data-t] {
   border: 1px solid #aebfc2 !important;
@@ -544,11 +545,13 @@ function fixDropdownContrast(){
       opt.style.setProperty('-webkit-text-fill-color','#142027','important');
       opt.style.setProperty('text-shadow','none','important');
     });
+    /* Native dropdown popups may ignore the selected background color.
+       Never set selected option text to white, as it can become white-on-white. */
     const selected=sel.selectedOptions&&sel.selectedOptions[0];
     if(selected){
-      selected.style.setProperty('color','#ffffff','important');
-      selected.style.setProperty('background-color','#087b63','important');
-      selected.style.setProperty('-webkit-text-fill-color','#ffffff','important');
+      selected.style.setProperty('color','#142027','important');
+      selected.style.setProperty('background-color','#ffffff','important');
+      selected.style.setProperty('-webkit-text-fill-color','#142027','important');
     }
   });
 }
