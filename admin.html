@@ -219,7 +219,7 @@ function login(){
 function list(){
   const t=TYPES[tab], items=c[tab];
   return `<p style="margin-bottom:12px"><button class="btn main" data-a="new">افزودن ${t.one} جدید</button></p>`+
-   (items.length?items.map((it,i)=>`<div class="row"><div>${esc(it.title)}<small>${esc(PARTS[it.part]||'')} ${esc(it.date||it.priceDate||it.price||'')}${(tab==='partsStores'&&it.satisfactionScore!==undefined&&it.satisfactionScore!==''&&it.satisfactionScore!==null)?` · رضایت: ${esc(it.satisfactionScore)}/۵ (${esc(it.satisfactionCount??0)} رأی)`:''}</small></div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`).join(''):'<div class="box" style="color:var(--muted)">هنوز موردی ثبت نشده است.</div>');
+   (items.length?items.map((it,i)=>`<div class="row"><div style="flex:1;min-width:220px"><b>${esc(it.title)}</b><small>${esc(PARTS[it.part]||'')} ${esc(it.date||it.priceDate||it.price||'')}${(tab==='partsStores'&&it.satisfactionScore!==undefined&&it.satisfactionScore!==''&&it.satisfactionScore!==null)?` · رضایت: ${esc(it.satisfactionScore)}/۵ (${esc(it.satisfactionCount??0)} رأی)`:''}</small>${(tab==='serviceCenters'||tab==='partsStores')?`<label style="display:inline-flex;align-items:center;gap:8px;margin-top:8px;padding:5px 10px;border:1px solid ${it.status==='verified'?'#9cdbb5':'#dce6e7'};border-radius:9px;background:${it.status==='verified'?'#edfff3':'#f8fafb'};cursor:pointer"><input type="checkbox" data-a="verify-toggle" data-k="${tab}" data-i="${i}" ${it.status==='verified'?'checked':''} style="width:18px;height:18px;accent-color:#00806f"><span>${it.status==='verified'?'تأییدشده':'تأیید بررسی'}</span></label><small>برای تأیید یا لغو تأیید، همین گزینه را تیک بزنید؛ تغییر بلافاصله ذخیره می‌شود.</small>`:''}</div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`).join(''):'<div class="box" style="color:var(--muted)">هنوز موردی ثبت نشده است.</div>');
 }
 function imgField(id,v,attr){
   return `<div class="imgf"><input type="text" id="${id}" ${attr} value="${esc(v)}" dir="ltr" placeholder="تصویری انتخاب نشده" readonly>
@@ -451,6 +451,17 @@ root.addEventListener('click',async e=>{
   else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
   else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations();if(tab==='ratings')loadRatings();if(tab==='set')loadAuthSettings()}
   else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:(tab==='serviceCenters'||tab==='partsStores')?{status:'pending'}:tab==='ads'?{position:'left',enabled:'yes',order:'10'}:tab==='techSections'?{part:'battery',enabled:'yes',order:'10'}:{part:'battery'}};draw()}
+  else if(a==='verify-toggle'){
+    const k=b.dataset.k, idx=Number(b.dataset.i);
+    if(!['serviceCenters','partsStores'].includes(k)||!c[k]?.[idx])return;
+    const checked=b.checked;
+    c[k][idx].status=checked?'verified':'pending';
+    c[k][idx].reviewedAt=checked?new Date().toISOString():'';
+    c[k][idx].reviewedBy='REV admin';
+    dirty=true;
+    draw();
+    await save();
+  }
   else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
   else if(a==='del'){if(confirm('این مورد حذف شود؟')){c[tab].splice(i,1);dirty=true;draw()}}
   else if(a==='cancel'){edit=null;draw()}
