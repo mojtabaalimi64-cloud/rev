@@ -97,7 +97,22 @@ async function save(){
   try{
     const r=await api('PUT',c);
     const j=await r.json().catch(()=>({}));
-    if(r.ok&&j.success){dirty=false;draw();msg('در دیتابیس Cloudflare ذخیره شد. برای نمایش تغییرات روی سایت، اتصال صفحه اصلی هم باید به API انجام شده باشد.');}
+    if(r.ok&&j.success){
+      dirty=false;
+      if(gitTok){
+        try{
+          msg('داده‌ها ذخیره شد؛ در حال انتشار نسخه عمومی برای نمایش روی نقشه...');
+          const current=await fetch(API+FILE,{headers:GH(),cache:'no-store'});
+          const currentJson=await current.json().catch(()=>({}));
+          if(!current.ok||!currentJson.sha)throw new Error('خواندن نسخه فعلی content.json ناموفق بود');
+          const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(c,null,2)+'\n')));
+          const put=await fetch(API+FILE,{method:'PUT',headers:GH(),body:JSON.stringify({message:'Publish REV content and EV business directories',content:encoded,sha:currentJson.sha})});
+          const putJson=await put.json().catch(()=>({}));
+          if(!put.ok)throw new Error(putJson.message||('GitHub HTTP '+put.status));
+          draw();msg('ذخیره در Cloudflare و انتشار content.json در GitHub انجام شد. داده‌های تأییدشده در فهرست عمومی برای نقشه قابل خواندن هستند.');
+        }catch(pubErr){draw();msg('داده‌ها در Cloudflare ذخیره شد، اما انتشار عمومی content.json انجام نشد: '+(pubErr.message||'خطای GitHub')+'. توکن GitHub با دسترسی Contents را در ورود پنل وارد کنید و دوباره انتشار را انجام دهید.');}
+      }else{draw();msg('داده‌ها در Cloudflare ذخیره شد. برای انتشار فهرست عمومی و نمایش موارد روی نقشه، با توکن GitHub دارای دسترسی Contents وارد شوید و «انتشار تغییرات» را بزنید.');}
+    }
     else if(r.status===401||r.status===403){tok='';sessionStorage.removeItem('rev_admin_token');c=null;note='رمز مدیریتی پذیرفته نشد؛ دوباره وارد شوید.';draw()}
     else msg('ذخیره انجام نشد (کد '+r.status+'): '+(j.error||'خطای نامشخص'));
   }catch(e){msg('ذخیره انجام نشد؛ اتصال Worker را بررسی کنید.');}
