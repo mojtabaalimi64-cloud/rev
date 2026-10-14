@@ -717,14 +717,14 @@ function timelineBatteryAt(km){
   let atKm=0,soc=revTimeline.soc;
   for(const stop of st){
     if(km<stop.routeKm){
-      soc-=(km-atKm)*revTimeline.consumption/revTimeline.battery*100;
+      soc-=(km-atKm)*revTimeline.consumption/revTimeline.battery;
       return Math.max(0,Math.min(100,soc));
     }
-    soc-=(stop.routeKm-atKm)*revTimeline.consumption/revTimeline.battery*100;
+    soc-=(stop.routeKm-atKm)*revTimeline.consumption/revTimeline.battery;
     soc=Number(stop.targetSoc)||soc;
     atKm=stop.routeKm;
   }
-  soc-=(km-atKm)*revTimeline.consumption/revTimeline.battery*100;
+  soc-=(km-atKm)*revTimeline.consumption/revTimeline.battery;
   return Math.max(0,Math.min(100,soc));
 }
 function makeEvMapIcon(soc){
