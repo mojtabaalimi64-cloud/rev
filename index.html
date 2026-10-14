@@ -134,7 +134,7 @@ footer{background:var(--ink);color:#C3CBD0;padding:36px 0;font-size:15px}
   <div class="parts-bar" id="partsbar" hidden><div class="wrap" id="partchips"></div></div>
 </header>
 <main id="app" tabindex="-1"></main>
-<footer><div class="wrap foot"><div><strong style="color:#fff;letter-spacing:.06em">REV</strong> · خودروهای برقی، تکنولوژی و آینده حمل‌ونقل</div><div><a href="#/about">درباره ما</a> · <a href="#/contact">ارتباط با ما</a> · <a href="businesses.html">تعمیرگاه‌ها و فروشگاه‌های مجاز</a> · <a href="admin.html" style="opacity:.6">ورود مدیر</a> · © ۲۰۲۶ REV</div></div></footer>
+<footer><div class="wrap foot"><div><strong style="color:#fff;letter-spacing:.06em">REV</strong> · خودروهای برقی، تکنولوژی و آینده حمل‌ونقل</div><div><a href="#/about">درباره ما</a> · <a href="#/contact">ارتباط با ما</a> · <a href="businesses.html">فروشگاه‌ها، تعمیرگاه‌ها و جایگاه‌های شارژ</a> · <a href="account.html">پنل کاربری و کسب‌وکار</a> · <a href="admin.html" style="opacity:.6">ورود مدیر</a> · © ۲۰۲۶ REV</div></div></footer>
 
 <script>
 /* =====================================================================
@@ -191,7 +191,7 @@ const fnum=n=>n==null?'—':Number(n).toLocaleString('fa-IR');
 const TYPE_FA={sedan:'سدان',suv:'شاسی‌بلند',hatch:'هاچ‌بک',crossover:'کراس‌اور',wagon:'استیشن',fastback:'فست‌بک',coupe:'کوپه',convertible:'کروک',pickup:'پیکاپ',van:'ون',minivan:'مینی‌ون',other:'سایر'},POWERTRAIN_FA={BEV:'تمام‌برقی (BEV)',PHEV:'هیبرید شارژی (PHEV)',HEV:'هیبرید معمولی (HEV)',MHEV:'هیبرید ملایم (MHEV)',FCEV:'پیل سوختی هیدروژنی (FCEV)',ICE:'بنزینی/دیزلی'},FUEL_FA={gasoline:'بنزین',diesel:'گازوئیل',hydrogen:'هیدروژن',other:'سایر/نامشخص'},MKT_FA={iran:'موجود در بازار ایران',import:'وارداتی/غیررسمی',none:'خارج از بازار ایران'},DRV_FA={RWD:'عقب‌رو',FWD:'جلو‌رو',AWD:'چهارچرخ‌محرک', '4WD':'چهارچرخ‌محرک دو دیفرانسیل'};
 const $ = s => document.querySelector(s), app = $('#app');
 const partKeys = Object.keys(PARTS);
-const navList=()=>{const n=[['#/','خانه'],['#/articles','مقالات'],['#/podcast','پادکست'],['safety-checklist.html','چک‌لیست ایمنی سفر']];if(SHOP_ENABLED)n.push(['#/shop','فروشگاه']);n.push(['#/contact','ارتباط با ما']);return n};
+const navList=()=>{const n=[['#/','خانه'],['#/articles','مقالات'],['#/podcast','پادکست'],['safety-checklist.html','چک‌لیست ایمنی سفر'],['businesses.html','کسب‌وکارها'],['account.html','حساب کاربری']];if(SHOP_ENABLED)n.push(['#/shop','فروشگاه']);n.push(['#/contact','ارتباط با ما']);return n};
 
 const artCard = a => `<a class="card" href="#/a/${a.slug}">${a.image?`<img class="cover" src="${esc(a.image)}" alt="" loading="lazy">`:''}<span class="tag">${PARTS[a.part].name}</span><h3>${a.title}</h3><p>${a.excerpt}</p></a>`;
 const artGrid = list => list.length ? `<div class="grid">${list.map(artCard).join('')}</div>` : `<div class="empty">هنوز مقاله‌ای در این بخش منتشر نشده است.</div>`;
