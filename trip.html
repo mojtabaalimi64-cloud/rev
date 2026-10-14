@@ -146,6 +146,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
       <label for="radius">فاصله قابل‌قبول شارژر از مسیر</label>
       <select id="radius"><option value="5">۵ کیلومتر</option><option value="10" selected>۱۰ کیلومتر</option></select>
       <button class="primary" id="planBtn">محاسبه مسیر و یافتن شارژرها</button>
+      <button class="secondary" id="shareTripBtn" type="button" style="width:100%;margin-top:8px">اشتراک‌گذاری این سفر</button>
       <div class="status" id="status" aria-live="polite">برای شروع، دکمه محاسبه مسیر را بزنید.</div>
       <div class="stats">
         <div class="stat"><b id="distance">—</b><span>مسافت (km)</span></div>
@@ -930,13 +931,44 @@ async function planTrip(){
     const sourceNote = window.revStationSourceWarning
       ? `\nهشدار منبع آنلاین: ${window.revStationSourceWarning}\nفهرست ایستگاه‌ها ممکن است ناقص باشد؛ صفر ایستگاه به معنی نبود شارژر واقعی نیست.`
       : (window.revStationCacheNote ? `\n${window.revStationCacheNote}` : "");
-    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\nزمان حرکت: ${weatherAnalysis.departure.toLocaleString("fa-IR")} · زمان رسیدن تقریبی: ${weatherAnalysis.arrival.toLocaleString("fa-IR")}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد؛ فهرست بر اساس فاصله از مبدأ مرتب شده است.\nمصرف مبنا: ${baseConsumption.toFixed(1)} · ${weatherAnalysis ? `مصرف تعدیل‌شده با باد: ${consumption.toFixed(1)} kWh/100 km.` : `تحلیل باد اعمال نشد: ${weatherWarning}`}\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
+    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\nزمان حرکت: ${new Date($("departure").value).toLocaleString("fa-IR")} · زمان رسیدن تقریبی: ${new Date(new Date($("departure").value).getTime()+hours*1000).toLocaleString("fa-IR")}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد؛ فهرست بر اساس فاصله از مبدأ مرتب شده است.\nمصرف مبنا: ${baseConsumption.toFixed(1)} · ${weatherAnalysis ? `مصرف تعدیل‌شده با باد: ${consumption.toFixed(1)} kWh/100 km.` : `تحلیل باد اعمال نشد: ${weatherWarning}`}\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
   }catch(e){setStatus("مشکل: "+e.message);console.error(e);}
   finally{$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";}
 }
+function applySharedTripParams(){
+  const q=new URLSearchParams(window.location.search);
+  const fields={origin:"origin",destination:"destination",battery:"battery",soc:"soc",consumption:"consumption",reserve:"reserve",targetSoc:"targetSoc",radius:"radius",date:"departureJalali",time:"departureClock"};
+  let applied=0;
+  for(const [key,id] of Object.entries(fields)){
+    const value=q.get(key),el=$(id);
+    if(value===null||!el)continue;
+    if(["origin","destination"].includes(key))el.value=value.slice(0,180);
+    else if(key==="date"&&/^\\d{4}\\/\\d{1,2}\\/\\d{1,2}$/.test(value))el.value=value;
+    else if(key==="time"&&/^([01]\\d|2[0-3]):[0-5]\\d$/.test(value))el.value=value;
+    else if(["battery","soc","consumption","reserve","targetSoc","radius"].includes(key)&&Number.isFinite(Number(value)))el.value=value;
+    applied++;
+  }
+  syncDepartureInput();
+  if(applied)$("status").textContent="تنظیمات سفر از لینک اشتراکی بارگذاری شد. برای محاسبه مسیر، دکمه سبز را بزنید.";
+}
+function buildTripShareUrl(){
+  const q=new URLSearchParams({origin:$("origin").value.trim(),destination:$("destination").value.trim(),battery:$("battery").value,soc:$("soc").value,consumption:$("consumption").value,reserve:$("reserve").value,targetSoc:$("targetSoc").value,radius:$("radius").value,date:$("departureJalali").value.trim(),time:$("departureClock").value});
+  return window.location.origin+window.location.pathname+"?"+q.toString();
+}
+async function shareTrip(){
+  if(!$("origin").value.trim()||!$("destination").value.trim()){setStatus("برای ساخت لینک اشتراک‌گذاری، مبدأ و مقصد را وارد کنید.");return;}
+  if(!syncDepartureInput()){setStatus("تاریخ شمسی یا ساعت حرکت معتبر نیست؛ ابتدا آن را اصلاح کنید.");return;}
+  const url=buildTripShareUrl();
+  try{
+    if(navigator.clipboard&&window.isSecureContext){await navigator.clipboard.writeText(url);setStatus("لینک سفر کپی شد. آن را برای دوستانتان بفرستید؛ مسیر و تنظیمات خودرو در لینک حفظ می‌شود.");}
+    else{window.prompt("این لینک را کپی و ارسال کنید:",url);setStatus("لینک اشتراک‌گذاری آماده شد. در پنجره بازشده آن را کپی کنید.");}
+  }catch(e){window.prompt("این لینک را کپی و ارسال کنید:",url);setStatus("لینک اشتراک‌گذاری آماده شد.");}
+}
 initDepartureInput();
+applySharedTripParams();
 $("timelineSlider").addEventListener("input",updateTimeline);
 $("planBtn").addEventListener("click",planTrip);
+$("shareTripBtn").addEventListener("click",shareTrip);
 </script>
 </body>
 </html>
