@@ -225,6 +225,85 @@ export default {
     if(raw) await env.DB.prepare("UPDATE rev_sessions SET revoked_at=? WHERE session_token_hash=? AND revoked_at IS NULL").bind(new Date().toISOString(),await sha256(decodeURIComponent(raw))).run();
     return response(request,env,{success:true},200,{"Set-Cookie":clearCookie()});
    }
+   // Public business directory: only approved profiles and approved products are exposed.
+   if(path==="/api/businesses" && method==="GET") {
+    const type=url.searchParams.get("type")||"";
+    if(type&&!["store","repair","charging"].includes(type)) return response(request,env,{success:false,error:"نوع کسب‌وکار معتبر نیست."},400);
+    const rows=await env.DB.prepare("SELECT id,business_type,name,city,address,latitude,longitude,phone,website,description,services_json,brands_json,opening_hours,created_at,updated_at FROM rev_business_profiles WHERE status='approved' AND (?='' OR business_type=?) ORDER BY name LIMIT 500").bind(type,type).all();
+    const businesses=rows.results||[];
+    const prods=await env.DB.prepare("SELECT p.id,p.business_id,p.title,p.description,p.price_text,p.image_url,p.product_url,p.stock_status,p.updated_at FROM rev_business_products p JOIN rev_business_profiles b ON b.id=p.business_id WHERE p.status='approved' AND b.status='approved' ORDER BY p.updated_at DESC LIMIT 500").all();
+    return response(request,env,{success:true,businesses,products:prods.results||[]});
+   }
+   if(path==="/api/portal/me" && method==="GET") {
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:false,error:"برای ورود به پنل ابتدا وارد حساب کاربری شوید."},401);
+    const businesses=await env.DB.prepare("SELECT * FROM rev_business_profiles WHERE owner_user_id=? ORDER BY updated_at DESC LIMIT 100").bind(u.id).all();
+    const products=await env.DB.prepare("SELECT p.*,b.name AS business_name FROM rev_business_products p JOIN rev_business_profiles b ON b.id=p.business_id WHERE b.owner_user_id=? ORDER BY p.updated_at DESC LIMIT 200").bind(u.id).all();
+    return response(request,env,{success:true,user:u,businesses:businesses.results||[],products:products.results||[]});
+   }
+   if(path==="/api/portal/businesses" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:false,error:"برای ثبت کسب‌وکار وارد حساب شوید."},401);
+    const b=await request.json().catch(()=>null), type=String(b?.businessType||""), name=String(b?.name||"").trim(), city=String(b?.city||"").trim(), address=String(b?.address||"").trim();
+    if(!b||!["store","repair","charging"].includes(type)||!name||name.length>120||!city||city.length>80||!address||address.length>1000) return response(request,env,{success:false,error:"نوع کسب‌وکار، نام، شهر و نشانی معتبر الزامی است."},400);
+    const phone=String(b.phone||"").trim().slice(0,40), website=String(b.website||"").trim().slice(0,300), description=String(b.description||"").trim().slice(0,3000), opening=String(b.openingHours||"").trim().slice(0,200), license=String(b.licenseDetails||"").trim().slice(0,500);
+    for(const v of [website]) if(v && !/^https?:\/\//i.test(v)) return response(request,env,{success:false,error:"آدرس وب‌سایت باید با https:// یا http:// شروع شود."},400);
+    const lat=b.latitude==null||b.latitude===""?null:Number(b.latitude), lon=b.longitude==null||b.longitude===""?null:Number(b.longitude);
+    if((lat!==null&&(!Number.isFinite(lat)||lat < -90||lat>90))||(lon!==null&&(!Number.isFinite(lon)||lon < -180||lon>180))||((lat===null)!==(lon===null))) return response(request,env,{success:false,error:"مختصات جغرافیایی نامعتبر است؛ هر دو مقدار را وارد کنید."},400);
+    const asList=v=>Array.isArray(v)?v.slice(0,50).map(x=>String(x).trim().slice(0,100)).filter(Boolean):[];
+    const services=JSON.stringify(asList(b.services)), brands=JSON.stringify(asList(b.brands)), now=new Date().toISOString();
+    let id=String(b.id||"").trim();
+    if(id){
+     const old=await env.DB.prepare("SELECT id,status FROM rev_business_profiles WHERE id=? AND owner_user_id=? LIMIT 1").bind(id,u.id).first();
+     if(!old) return response(request,env,{success:false,error:"این پروفایل متعلق به حساب شما نیست."},404);
+     await env.DB.prepare("UPDATE rev_business_profiles SET business_type=?,name=?,city=?,address=?,latitude=?,longitude=?,phone=?,website=?,description=?,services_json=?,brands_json=?,opening_hours=?,license_details=?,status='pending',moderation_note=NULL,updated_at=? WHERE id=? AND owner_user_id=?").bind(type,name,city,address,lat,lon,phone,website,description,services,brands,opening,license,now,id,u.id).run();
+     await env.DB.prepare("UPDATE rev_business_products SET status='pending',updated_at=? WHERE business_id=? AND status='approved'").bind(now,id).run();
+    } else {
+     id=crypto.randomUUID();
+     await env.DB.prepare("INSERT INTO rev_business_profiles(id,owner_user_id,business_type,name,city,address,latitude,longitude,phone,website,description,services_json,brands_json,opening_hours,license_details,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,'pending',?,?)").bind(id,u.id,type,name,city,address,lat,lon,phone,website,description,services,brands,opening,license,now,now).run();
+    }
+    return response(request,env,{success:true,id,status:"pending",message:"درخواست ثبت شد و پس از بررسی مدیریت REV نمایش داده می‌شود."},201);
+   }
+   if(path==="/api/portal/products" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:false,error:"برای ثبت محصول وارد حساب شوید."},401);
+    const b=await request.json().catch(()=>null), businessId=String(b?.businessId||""), title=String(b?.title||"").trim();
+    if(!businessId||!title||title.length>160) return response(request,env,{success:false,error:"فروشگاه و نام محصول الزامی است."},400);
+    const shop=await env.DB.prepare("SELECT id,status,business_type FROM rev_business_profiles WHERE id=? AND owner_user_id=? LIMIT 1").bind(businessId,u.id).first();
+    if(!shop||shop.business_type!=="store") return response(request,env,{success:false,error:"فروشگاه انتخاب‌شده متعلق به شما نیست."},403);
+    if(shop.status!=="approved") return response(request,env,{success:false,error:"ابتدا فروشگاه باید توسط مدیریت REV تأیید شود."},409);
+    const price=String(b.priceText||"").trim().slice(0,100), image=String(b.imageUrl||"").trim().slice(0,500), productUrl=String(b.productUrl||"").trim().slice(0,500), desc=String(b.description||"").trim().slice(0,2000), stock=["in_stock","out_of_stock","preorder","unknown"].includes(b.stockStatus)?b.stockStatus:"unknown";
+    if((image&&!/^https?:\/\//i.test(image))||(productUrl&&!/^https?:\/\//i.test(productUrl))) return response(request,env,{success:false,error:"لینک تصویر و محصول باید با http:// یا https:// شروع شود."},400);
+    const id=crypto.randomUUID(),now=new Date().toISOString();
+    await env.DB.prepare("INSERT INTO rev_business_products(id,business_id,title,description,price_text,image_url,product_url,stock_status,status,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,'pending',?,?)").bind(id,businessId,title,desc,price,image,productUrl,stock,now,now).run();
+    return response(request,env,{success:true,id,status:"pending",message:"محصول برای بررسی مدیر REV ارسال شد."},201);
+   }
+   if(path==="/api/admin/businesses" && method==="GET") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    const businesses=await env.DB.prepare("SELECT b.*,u.display_name AS owner_name,u.email_normalized AS owner_email FROM rev_business_profiles b JOIN rev_users u ON u.id=b.owner_user_id ORDER BY CASE b.status WHEN 'pending' THEN 0 WHEN 'needs_review' THEN 1 ELSE 2 END,b.updated_at DESC LIMIT 500").all();
+    const products=await env.DB.prepare("SELECT p.*,b.name AS business_name,u.email_normalized AS owner_email FROM rev_business_products p JOIN rev_business_profiles b ON b.id=p.business_id JOIN rev_users u ON u.id=b.owner_user_id ORDER BY CASE p.status WHEN 'pending' THEN 0 ELSE 1 END,p.updated_at DESC LIMIT 500").all();
+    return response(request,env,{success:true,businesses:businesses.results||[],products:products.results||[]});
+   }
+   if(path.startsWith("/api/admin/businesses/") && path.endsWith("/review") && method==="POST") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    const id=path.split("/")[4], b=await request.json().catch(()=>null), status=String(b?.status||""), note=String(b?.note||"").trim().slice(0,500);
+    if(!id||!["approved","rejected","needs_review","suspended"].includes(status)) return response(request,env,{success:false,error:"وضعیت بررسی نامعتبر است."},400);
+    const now=new Date().toISOString();
+    const result=await env.DB.prepare("UPDATE rev_business_profiles SET status=?,moderation_note=?,updated_at=? WHERE id=?").bind(status,note||null,now,id).run();
+    if(!Number(result.meta?.changes)) return response(request,env,{success:false,error:"کسب‌وکار پیدا نشد."},404);
+    return response(request,env,{success:true,status});
+   }
+   if(path.startsWith("/api/admin/products/") && path.endsWith("/review") && method==="POST") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    const id=path.split("/")[4], b=await request.json().catch(()=>null), status=String(b?.status||""), note=String(b?.note||"").trim().slice(0,500);
+    if(!id||!["approved","rejected","suspended"].includes(status)) return response(request,env,{success:false,error:"وضعیت بررسی محصول نامعتبر است."},400);
+    const now=new Date().toISOString();
+    const result=await env.DB.prepare("UPDATE rev_business_products SET status=?,moderation_note=?,updated_at=? WHERE id=?").bind(status,note||null,now,id).run();
+    if(!Number(result.meta?.changes)) return response(request,env,{success:false,error:"محصول پیدا نشد."},404);
+    return response(request,env,{success:true,status});
+   }
    if(path==="/api/admin/send-owner-code" && method==="POST") {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
     const b=await request.json().catch(()=>null);
