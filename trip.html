@@ -56,6 +56,17 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 .map-heading h2{margin:0;font-size:18px}
 .map-tag{font-size:11px;color:#d7ff3f;border:1px solid #48583c;background:#19231a;padding:4px 9px;border-radius:99px}
 .directions{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:15px;background:#0d151e}
+.weather-panel{margin-top:16px;padding:16px;border:1px solid #2d4654;border-radius:15px;background:linear-gradient(145deg,#10202b,#0d151e)}
+.weather-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.weather-card{padding:12px;border:1px solid #2b414f;border-radius:12px;background:#0d1821;min-width:0}
+.weather-card strong{display:block;font-size:13px;margin-bottom:5px}
+.weather-card .weather-time{font-size:11px;color:var(--muted)}
+.weather-card .weather-wind{font-size:13px;color:#d7ff3f;margin-top:6px}
+.weather-card .weather-detail{font-size:12px;color:#b8c8d3}
+.weather-summary{padding:12px;border-radius:11px;background:#17251c;border:1px solid #3d5439;margin:10px 0;font-size:13px}
+.weather-summary.warn{background:#281f14;border-color:#66502b;color:#ffd18a}
+.weather-credit{font-size:11px;color:var(--muted);margin-top:12px}
+@media(max-width:520px){.weather-grid{grid-template-columns:1fr}}
 .directions-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
 .directions-head h2{margin:0}
 .direction-item{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:start;padding:12px 0;border-top:1px solid #263542}
@@ -115,6 +126,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
     <main class="panel">
       <div class="map-heading"><h2>نقشه مسیر و ایستگاه‌های شارژ</h2><span class="map-tag">نقشه زنده · مسیر جاده‌ای</span></div>
       <div id="map" role="img" aria-label="نقشه مسیر سفر و ایستگاه‌های شارژ"></div>
+      <section class="weather-panel" id="weatherPanel" aria-live="polite"><div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در انتظار محاسبه مسیر</span></div><div class="sub">پس از تعیین زمان حرکت، باد، دما و بارش در طول مسیر بررسی می‌شود.</div></section>
       <section class="directions" id="directionsPanel" aria-live="polite">
         <div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub" id="directionsSummary">پس از محاسبه مسیر نمایش داده می‌شود</span></div>
         <div class="sub">برای مشاهده مسیر و راهنمای پیچ‌ها، مبدأ و مقصد را وارد کنید.</div>
@@ -491,6 +503,148 @@ function renderDirections(route){
   note.textContent="این فهرست راهنمای مسیر برنامه‌ریزی‌شده است؛ ناوبری زنده با موقعیت GPS، هشدار تغییر مسیر و ترافیک لحظه‌ای در فاز اپلیکیشن اضافه می‌شود.";
   panel.appendChild(note);
 }
+function bearingDegrees(a,b){
+  const rad=x=>x*Math.PI/180, deg=x=>x*180/Math.PI;
+  const p1=rad(a[0]),p2=rad(b[0]),dl=rad(b[1]-a[1]);
+  const y=Math.sin(dl)*Math.cos(p2);
+  const x=Math.cos(p1)*Math.sin(p2)-Math.sin(p1)*Math.cos(p2)*Math.cos(dl);
+  return (deg(Math.atan2(y,x))+360)%360;
+}
+function compassDirection(deg){
+  if(!Number.isFinite(deg))return "نامشخص";
+  return ["شمال","شمال‌شرق","شرق","جنوب‌شرق","جنوب","جنوب‌غرب","غرب","شمال‌غرب"][Math.round(deg/45)%8];
+}
+function weatherDescription(code){
+  const c=Number(code);
+  if(c===0)return "آسمان صاف";
+  if([1,2,3].includes(c))return "صاف تا ابری";
+  if([45,48].includes(c))return "مه";
+  if([51,53,55,56,57].includes(c))return "نم‌نم باران";
+  if([61,63,65,66,67,80,81,82].includes(c))return "باران";
+  if([71,73,75,77,85,86].includes(c))return "برف";
+  if([95,96,99].includes(c))return "احتمال رعدوبرق";
+  return "وضعیت جوی متغیر";
+}
+function localDateTimeValue(date){
+  const pad=n=>String(n).padStart(2,"0");
+  return date.getFullYear()+"-"+pad(date.getMonth()+1)+"-"+pad(date.getDate())+"T"+pad(date.getHours())+":"+pad(date.getMinutes());
+}
+function initDepartureInput(){
+  const input=$("departure");
+  if(!input.value){
+    const d=new Date(Date.now()+60*60*1000);
+    d.setMinutes(Math.ceil(d.getMinutes()/15)*15,0,0);
+    input.value=localDateTimeValue(d);
+  }
+  input.min=localDateTimeValue(new Date(Date.now()-5*60*1000));
+}
+async function fetchWeatherAt(lat,lon,when){
+  const date=when.toISOString().slice(0,10);
+  const params=new URLSearchParams({
+    latitude:String(lat),longitude:String(lon),
+    hourly:"temperature_2m,precipitation_probability,precipitation,weather_code,wind_speed_10m,wind_direction_10m,wind_gusts_10m",
+    wind_speed_unit:"kmh",temperature_unit:"celsius",timezone:"auto",forecast_days:"16"
+  });
+  const response=await fetch("https://api.open-meteo.com/v1/forecast?"+params.toString(),{headers:{Accept:"application/json"}});
+  if(!response.ok)throw new Error("سرویس هواشناسی پاسخ نداد (HTTP "+response.status+").");
+  const data=await response.json();
+  if(data.error)throw new Error(data.reason||"سرویس هواشناسی خطا برگرداند.");
+  const times=data?.hourly?.time||[];
+  if(!times.length)throw new Error("برای این نقطه داده ساعتی هواشناسی وجود ندارد.");
+  const target=when.getTime();
+  let best=-1,delta=Infinity;
+  for(let i=0;i<times.length;i++){
+    const t=Date.parse(times[i]);
+    if(!Number.isFinite(t))continue;
+    const d=Math.abs(t-target);
+    if(d<delta){delta=d;best=i;}
+  }
+  if(best<0||delta>90*60*1000)throw new Error("پیش‌بینی هواشناسی برای زمان عبور از این نقطه در دسترس نیست؛ تاریخ نزدیک‌تری انتخاب کنید.");
+  const val=(key)=>data.hourly[key]?.[best];
+  const result={
+    time:times[best],temperature:Number(val("temperature_2m")),
+    precipProb:Number(val("precipitation_probability")),precipitation:Number(val("precipitation")),
+    code:Number(val("weather_code")),windSpeed:Number(val("wind_speed_10m")),
+    windDirection:Number(val("wind_direction_10m")),gust:Number(val("wind_gusts_10m")),
+    timezone:data.timezone||""
+  };
+  if(!Number.isFinite(result.windSpeed)||!Number.isFinite(result.windDirection))throw new Error("داده باد برای این زمان کامل نیست.");
+  return result;
+}
+function analyzeWind(sample,heading,speedKmh,baseConsumption){
+  // wind_direction_10m is the direction the wind comes FROM.
+  const delta=((sample.windDirection-heading+540)%360)-180;
+  const headwind=sample.windSpeed*Math.cos(delta*Math.PI/180);
+  const vehicleSpeed=Math.max(40,Math.min(110,speedKmh||80));
+  // Approximation: 30% of baseline energy is treated as aerodynamic load.
+  // This is a planning estimate, not a vehicle-specific physical simulation.
+  const aeroRatio=((vehicleSpeed+headwind)/vehicleSpeed)**2;
+  const factor=Math.max(0.80,Math.min(1.50,1+0.30*(aeroRatio-1)));
+  return {headwind, factor, adjustedConsumption:baseConsumption*factor};
+}
+function renderWeather(samples,baseConsumption,adjustedConsumption){
+  const panel=$("weatherPanel");
+  panel.innerHTML='<div class="directions-head"><h2>هواشناسی و تحلیل باد در مسیر</h2><span class="sub">پیش‌بینی ساعتی</span></div>';
+  const factors=samples.map(s=>s.wind.factor);
+  const avgFactor=factors.reduce((a,b)=>a+b,0)/Math.max(1,factors.length);
+  const pct=(avgFactor-1)*100;
+  const summary=document.createElement("div");
+  summary.className="weather-summary"+(samples.some(s=>s.weather.precipProb>=60)||samples.some(s=>s.weather.gust>=45)?" warn":"");
+  const effect=pct>1?("افزایش تخمینی مصرف "+pct.toFixed(1)+"٪"):pct< -1?("کاهش تخمینی مصرف "+Math.abs(pct).toFixed(1)+"٪"):"تغییر متوسط مصرف ناشی از باد ناچیز برآورد می‌شود";
+  summary.textContent=effect+" · مصرف مبنا "+baseConsumption.toFixed(1)+" و مصرف تعدیل‌شده "+adjustedConsumption.toFixed(1)+" کیلووات‌ساعت در ۱۰۰ کیلومتر.";
+  panel.appendChild(summary);
+  const grid=document.createElement("div");grid.className="weather-grid";
+  samples.forEach((s,i)=>{
+    const card=document.createElement("div");card.className="weather-card";
+    const heading=document.createElement("strong");heading.textContent="حدود کیلومتر "+Math.round(s.routeKm)+" مسیر";
+    const time=document.createElement("div");time.className="weather-time";
+    time.textContent="زمان عبور: "+new Date(s.eta).toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"});
+    const conditions=document.createElement("div");conditions.className="weather-detail";
+    const temp=Number.isFinite(s.weather.temperature)?Math.round(s.weather.temperature)+"°C":"دما نامشخص";
+    const rain=Number.isFinite(s.weather.precipProb)?"احتمال بارش "+Math.round(s.weather.precipProb)+"٪":"احتمال بارش نامشخص";
+    conditions.textContent=temp+" · "+weatherDescription(s.weather.code)+" · "+rain;
+    const wind=document.createElement("div");wind.className="weather-wind";
+    const relative=s.wind.headwind>3?"باد روبه‌رو":s.wind.headwind< -3?"باد پشت":"باد جانبی/متغیر";
+    wind.textContent="باد "+Math.round(s.weather.windSpeed)+" km/h از "+compassDirection(s.weather.windDirection)+" · "+relative;
+    const gust=document.createElement("div");gust.className="weather-detail";
+    gust.textContent="تندباد: "+(Number.isFinite(s.weather.gust)?Math.round(s.weather.gust)+" km/h":"نامشخص")+" · اثر تخمینی باد: "+((s.wind.factor-1)*100>=0?"+":"")+((s.wind.factor-1)*100).toFixed(1)+"٪";
+    card.append(heading,time,conditions,wind,gust);grid.appendChild(card);
+  });
+  panel.appendChild(grid);
+  const credit=document.createElement("div");credit.className="weather-credit";
+  credit.innerHTML='منبع پیش‌بینی: <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#64b5ff">Open-Meteo</a>. پیش‌بینی قطعی نیست. اثر باد با مدل ساده و تقریبی محاسبه شده و به شکل خودرو، سرعت واقعی، بادگیر بودن مسیر و سامانه گرمایش/سرمایش وابسته است؛ دما و بارش فعلاً نمایش داده می‌شوند اما ضریب مصرف جداگانه‌ای برای آن‌ها اعمال نشده است.';
+  panel.appendChild(credit);
+}
+async function getRouteWeather(routeCoords,routeKm,routeDurationSeconds,departureValue,baseConsumption){
+  if(!departureValue)throw new Error("تاریخ و ساعت حرکت را انتخاب کنید.");
+  const departure=new Date(departureValue);
+  if(!Number.isFinite(departure.getTime()))throw new Error("تاریخ و ساعت حرکت معتبر نیست.");
+  if(departure.getTime()<Date.now()-5*60*1000)throw new Error("زمان حرکت نمی‌تواند در گذشته باشد.");
+  const arrival=new Date(departure.getTime()+routeDurationSeconds*1000);
+  const maxForecastDays=15;
+  if((departure.getTime()-Date.now())>maxForecastDays*24*60*60*1000 || (arrival.getTime()-Date.now())>16*24*60*60*1000){
+    throw new Error("تاریخ سفر خارج از افق پیش‌بینی قابل اتکای این سرویس است. نزدیک‌تر به زمان سفر دوباره بررسی کنید.");
+  }
+  const samples=routeSamplePoints(routeCoords,Math.max(20,routeKm/7),8);
+  if(samples.length<2)throw new Error("نقاط کافی برای تحلیل هواشناسی مسیر وجود ندارد.");
+  const segmentKm=routeKm/(samples.length-1);
+  const speedKmh=routeKm/Math.max(0.1,routeDurationSeconds/3600);
+  const jobs=samples.map(async(point,i)=>{
+    const fraction=i/(samples.length-1);
+    const eta=new Date(departure.getTime()+routeDurationSeconds*fraction*1000);
+    const weather=await fetchWeatherAt(point[0],point[1],eta);
+    const prev=samples[Math.max(0,i-1)],next=samples[Math.min(samples.length-1,i+1)];
+    const heading=bearingDegrees(prev,next);
+    const wind=analyzeWind(weather,heading,speedKmh,baseConsumption);
+    return {lat:point[0],lon:point[1],routeKm:routeKm*fraction,eta,weather,wind};
+  });
+  const results=await Promise.all(jobs);
+  // Weighted by distance between samples; endpoints count as half-segments.
+  const weights=results.map((_,i)=>(i===0||i===results.length-1)?0.5:1);
+  const avgFactor=results.reduce((sum,x,i)=>sum+x.wind.factor*weights[i],0)/weights.reduce((a,b)=>a+b,0);
+  return {samples:results,adjustedConsumption:baseConsumption*avgFactor,avgFactor,departure,arrival};
+}
+
 function fmtDuration(seconds){
   const mins=Math.round(seconds/60), h=Math.floor(mins/60),m=mins%60;
   return h?`${h} ساعت و ${m} دقیقه`:`${m} دقیقه`;
@@ -498,7 +652,7 @@ function fmtDuration(seconds){
 function renderStations(stations,routeCoords,routeKm,params){
   const el=$('results');el.innerHTML='';
   const metrics=routeMetrics(routeCoords);
-  const listStations=stations.map(s=>({...s,...stationAlongRouteKm(s,metrics)}));
+  const listStations=stations.map(s=>({...s,...stationAlongRouteKm(s,metrics)})).sort((a,b)=>a.routeKm-b.routeKm);
   const plan=buildChargingPlan(listStations,routeCoords,routeKm,params);
   el.appendChild(renderChargingPlan(plan));
   const heading=document.createElement('h2');heading.style.marginTop='18px';heading.textContent=`شارژرهای نزدیک مسیر (${listStations.length})`;el.appendChild(heading);
@@ -539,7 +693,12 @@ async function planTrip(){
     const km=route.distance/1000, hours=route.duration;
     $("distance").textContent=km.toFixed(0);
     $("duration").textContent=fmtDuration(hours);
-    const battery=num("battery",60),soc=num("soc",90),consumption=num("consumption",18),reserve=num("reserve",15);
+    const battery=num("battery",60),soc=num("soc",90),baseConsumption=num("consumption",18),reserve=num("reserve",15);
+    $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در حال دریافت پیش‌بینی ساعتی…</span></div>';
+    setStatus("در حال دریافت پیش‌بینی آب‌وهوا برای زمان عبور از نقاط مسیر و تحلیل جهت باد…");
+    const weatherAnalysis=await getRouteWeather(coords,km,hours,$("departure").value,baseConsumption);
+    const consumption=weatherAnalysis.adjustedConsumption;
+    renderWeather(weatherAnalysis.samples,baseConsumption,consumption);
     const range=battery*(soc-reserve)/100/consumption*100;
     $("range").textContent=range.toFixed(0);
     setStatus(`مسیر محاسبه شد: ${km.toFixed(0)} کیلومتر.\nبرد تخمینی تا رسیدن به ذخیره ${reserve}%: حدود ${range.toFixed(0)} کیلومتر.\nدر حال دریافت شارژرهای ثبت‌شده نزدیک مسیر…`);
@@ -555,10 +714,11 @@ async function planTrip(){
     const sourceNote = window.revStationSourceWarning
       ? `\nهشدار منبع آنلاین: ${window.revStationSourceWarning}\nفهرست ایستگاه‌ها ممکن است ناقص باشد؛ صفر ایستگاه به معنی نبود شارژر واقعی نیست.`
       : (window.revStationCacheNote ? `\n${window.revStationCacheNote}` : "");
-    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد.\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
+    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\nزمان حرکت: ${weatherAnalysis.departure.toLocaleString("fa-IR")} · زمان رسیدن تقریبی: ${weatherAnalysis.arrival.toLocaleString("fa-IR")}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد؛ فهرست بر اساس فاصله از مبدأ مرتب شده است.\nمصرف مبنا: ${baseConsumption.toFixed(1)} · مصرف تعدیل‌شده با باد: ${consumption.toFixed(1)} kWh/100 km.\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
   }catch(e){setStatus("مشکل: "+e.message);console.error(e);}
   finally{$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";}
 }
+initDepartureInput();
 $("planBtn").addEventListener("click",planTrip);
 </script>
 </body>
