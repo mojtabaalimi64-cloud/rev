@@ -694,11 +694,19 @@ async function planTrip(){
     $("distance").textContent=km.toFixed(0);
     $("duration").textContent=fmtDuration(hours);
     const battery=num("battery",60),soc=num("soc",90),baseConsumption=num("consumption",18),reserve=num("reserve",15);
+    let weatherAnalysis=null,consumption=baseConsumption,weatherWarning="";
     $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در حال دریافت پیش‌بینی ساعتی…</span></div>';
     setStatus("در حال دریافت پیش‌بینی آب‌وهوا برای زمان عبور از نقاط مسیر و تحلیل جهت باد…");
-    const weatherAnalysis=await getRouteWeather(coords,km,hours,$("departure").value,baseConsumption);
-    const consumption=weatherAnalysis.adjustedConsumption;
-    renderWeather(weatherAnalysis.samples,baseConsumption,consumption);
+    try{
+      weatherAnalysis=await getRouteWeather(coords,km,hours,$("departure").value,baseConsumption);
+      consumption=weatherAnalysis.adjustedConsumption;
+      renderWeather(weatherAnalysis.samples,baseConsumption,consumption);
+    }catch(weatherError){
+      weatherWarning=weatherError?.message||"اطلاعات هواشناسی در دسترس نیست.";
+      $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">داده در دسترس نیست</span></div>';
+      const msg=document.createElement("div");msg.className="weather-summary warn";msg.textContent=weatherWarning+" مصرف و توقف‌های شارژ در این محاسبه بر اساس مصرف مبنا انجام می‌شود؛ مقدار باد یا هوا حدس زده نمی‌شود."; $("weatherPanel").appendChild(msg);
+      const credit=document.createElement("div");credit.className="weather-credit";credit.innerHTML='منبع پیش‌بینی مورد استفاده: <a href="https://open-meteo.com/" target="_blank" rel="noopener" style="color:#64b5ff">Open-Meteo</a>.';$("weatherPanel").appendChild(credit);
+    }
     const range=battery*(soc-reserve)/100/consumption*100;
     $("range").textContent=range.toFixed(0);
     setStatus(`مسیر محاسبه شد: ${km.toFixed(0)} کیلومتر.\nبرد تخمینی تا رسیدن به ذخیره ${reserve}%: حدود ${range.toFixed(0)} کیلومتر.\nدر حال دریافت شارژرهای ثبت‌شده نزدیک مسیر…`);
@@ -714,7 +722,7 @@ async function planTrip(){
     const sourceNote = window.revStationSourceWarning
       ? `\nهشدار منبع آنلاین: ${window.revStationSourceWarning}\nفهرست ایستگاه‌ها ممکن است ناقص باشد؛ صفر ایستگاه به معنی نبود شارژر واقعی نیست.`
       : (window.revStationCacheNote ? `\n${window.revStationCacheNote}` : "");
-    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\nزمان حرکت: ${weatherAnalysis.departure.toLocaleString("fa-IR")} · زمان رسیدن تقریبی: ${weatherAnalysis.arrival.toLocaleString("fa-IR")}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد؛ فهرست بر اساس فاصله از مبدأ مرتب شده است.\nمصرف مبنا: ${baseConsumption.toFixed(1)} · مصرف تعدیل‌شده با باد: ${consumption.toFixed(1)} kWh/100 km.\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
+    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\nزمان حرکت: ${weatherAnalysis.departure.toLocaleString("fa-IR")} · زمان رسیدن تقریبی: ${weatherAnalysis.arrival.toLocaleString("fa-IR")}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد؛ فهرست بر اساس فاصله از مبدأ مرتب شده است.\nمصرف مبنا: ${baseConsumption.toFixed(1)} · ${weatherAnalysis ? `مصرف تعدیل‌شده با باد: ${consumption.toFixed(1)} kWh/100 km.` : `تحلیل باد اعمال نشد: ${weatherWarning}`}\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
   }catch(e){setStatus("مشکل: "+e.message);console.error(e);}
   finally{$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";}
 }
