@@ -1052,6 +1052,26 @@ async function planTrip(){
     const km=route.distance/1000, hours=route.duration;
     $("distance").textContent=km.toFixed(0);
     $("duration").textContent=fmtDuration(hours);
+    const vehicleType=$("vehicleType").value;
+    if(vehicleType==="hev"||vehicleType==="mhev"||vehicleType==="phev"){
+      const fuelRate=num("fuelConsumption",5.5),fuelPrice=num("fuelPrice",3000),tank=num("fuelTank",45);
+      if(fuelRate<=0||tank<=0||fuelPrice<0)throw new Error("مصرف بنزین، ظرفیت باک و قیمت سوخت را بررسی کنید.");
+      const nominalElectricRange=vehicleType==="phev"?num("electricRange",60):0;
+      const initialElectricSoc=vehicleType==="phev"?num("phevSoc",90):0;
+      const electricKm=vehicleType==="phev"?Math.min(km,nominalElectricRange*initialElectricSoc/100):0;
+      const fuelKm=Math.max(0,km-electricKm);
+      const liters=fuelKm*fuelRate/100,cost=liters*fuelPrice;
+      const fuelRange=tank/fuelRate*100;
+      const totalRange=vehicleType==="phev"?nominalElectricRange+fuelRange:fuelRange;
+      $("range").textContent=Math.round(totalRange);
+      $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">حالت هیبرید</span></div><div class="weather-summary">برآورد مصرف سوخت در این نسخه بر اساس مصرف واردشده است؛ اثر آب‌وهوا بر مصرف بنزین هنوز در محاسبه هزینه اعمال نمی‌شود.</div>';
+      $("results").innerHTML='<h2 style="margin-top:10px">برنامه انرژی خودرو</h2><div class="station"><strong>'+ (vehicleType==="phev"?"هیبرید شارژی (PHEV)":vehicleType==="hev"?"هیبرید معمولی (HEV)":"هیبرید ملایم (MHEV)")+'</strong><div class="sub">مسافت سفر: '+km.toFixed(0)+' کیلومتر</div><div class="sub">مسافت برقی برآوردی: '+electricKm.toFixed(0)+' کیلومتر</div><div class="sub">مسافت با بنزین: '+fuelKm.toFixed(0)+' کیلومتر</div><div class="sub">بنزین موردنیاز: '+liters.toFixed(1)+' لیتر · هزینه تقریبی: '+Math.round(cost).toLocaleString("fa-IR")+' تومان</div><div class="sub">برد تقریبی با باک پر'+(vehicleType==="phev"?" به‌علاوه برد برقی":"")+': '+Math.round(totalRange)+' کیلومتر</div></div><div class="sub">برای HEV و MHEV توقف شارژ عمومی در برنامه الزامی نیست. برای PHEV، شارژ بین‌راهی می‌تواند مصرف بنزین واقعی را کاهش دهد؛ این برآورد فرض می‌کند پس از شارژ اولیه، در طول مسیر شارژ مجدد انجام نمی‌شود.</div>';
+      await renderBusinessDirectory(coords,num("radius",10));
+      $("timelineSlider").disabled=true;
+      $("timelineDetails").textContent="شبیه‌ساز شارژ باتری در حالت هیبریدی غیرفعال است؛ محاسبه زمان سفر و راهنمای مسیر در دسترس است.";
+      setStatus("مسیر محاسبه شد: "+km.toFixed(0)+" کیلومتر · زمان رانندگی تخمینی: "+fmtDuration(hours)+".\nمصرف بنزین برآوردی: "+liters.toFixed(1)+" لیتر · هزینه تقریبی: "+Math.round(cost).toLocaleString("fa-IR")+" تومان.\nاین برآورد به مصرف واقعی خودرو، ترافیک، سبک رانندگی و قیمت سوخت واردشده وابسته است.");
+      return;
+    }
     const battery=num("battery",60),soc=num("soc",90),baseConsumption=num("consumption",18),reserve=num("reserve",15);
     let weatherAnalysis=null,consumption=baseConsumption,weatherWarning="";
     $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در حال دریافت پیش‌بینی ساعتی…</span></div>';
