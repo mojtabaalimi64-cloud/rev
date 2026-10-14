@@ -532,6 +532,26 @@ function applyAdminAppearance(){
   if(!style){style=document.createElement('style');style.id='rev-admin-appearance';document.head.appendChild(style)}
   style.textContent='body{font-size:'+adminSize+'px!important} .box h3{font-size:'+(adminSize+2)+'px!important} table{font-size:'+tableSize+'px!important;table-layout:'+(width==='fit'?'fixed':'auto')+'!important;width:100%;border-collapse:collapse!important;border:'+(lines==='full'?'1px solid #cbd6da':'0')+'!important} table th,table td{padding:'+pad+'px!important;overflow-wrap:anywhere} table thead th{font-size:'+tableSize+'px!important;border-bottom:2px solid #9eafb4!important;border-left:'+(lines==='full'?'1px solid #d2dcdf':'0')+'!important} table tbody td{border-bottom:'+(lines==='none'?'0':'1px solid #d5dfe2')+'!important;border-left:'+(lines==='full'?'1px solid #e1e7e9':'0')+'!important} table tbody tr:nth-child(even){background:'+(stripe==='yes'?'#f5f8f8':'transparent')+'!important} table tbody tr:hover{background:#eaf6ef!important} '+(width==='fit'?'table{min-width:0!important}table th,table td{white-space:normal!important;word-break:break-word!important}':'');
 }
+function fixDropdownContrast(){
+  root.querySelectorAll('select').forEach(sel=>{
+    sel.style.setProperty('color','#142027','important');
+    sel.style.setProperty('background-color','#ffffff','important');
+    sel.style.setProperty('-webkit-text-fill-color','#142027','important');
+    sel.style.setProperty('color-scheme','light','important');
+    sel.querySelectorAll('option,optgroup').forEach(opt=>{
+      opt.style.setProperty('color','#142027','important');
+      opt.style.setProperty('background-color','#ffffff','important');
+      opt.style.setProperty('-webkit-text-fill-color','#142027','important');
+      opt.style.setProperty('text-shadow','none','important');
+    });
+    const selected=sel.selectedOptions&&sel.selectedOptions[0];
+    if(selected){
+      selected.style.setProperty('color','#ffffff','important');
+      selected.style.setProperty('background-color','#087b63','important');
+      selected.style.setProperty('-webkit-text-fill-color','#ffffff','important');
+    }
+  });
+}
 function draw(){
   if(!tok) return login();
   if(!c){load();return}
@@ -539,6 +559,7 @@ function draw(){
   const body=tab==='users'?usersPanel():tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
   applyAdminAppearance();
+  fixDropdownContrast();
 }
 
 async function loadAuthSettings(){
@@ -575,10 +596,23 @@ async function loadUsers(){
 }
 async function loadStations(){
   if(stationBusy)return; stationBusy=true; note='در حال دریافت جایگاه‌ها از دیتابیس...'; draw();
-  try{const r=await fetch(WORKER+'/api/admin/stations',{headers:H(),cache:'no-store'});const j=await r.json().catch(()=>({}));
-    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
-    stationsCache=Array.isArray(j.data)?j.data:[];note=`${stationsCache.length} جایگاه از دیتابیس دریافت شد.`;
-  }catch(e){note='دریافت جایگاه‌ها ناموفق بود: '+(e.message||'خطای اتصال');stationsCache=[]}
+  let lastError=null;
+  try{
+    for(const path of ['/api/admin/stations','/api/stations']){
+      try{
+        const r=await fetch(WORKER+path,{headers:H(),cache:'no-store'});
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok||!j.success)throw new Error((j.error||('HTTP '+r.status))+' ['+path+']');
+        const rows=Array.isArray(j.data)?j.data:(Array.isArray(j.stations)?j.stations:null);
+        if(!rows)throw new Error('پاسخ API فهرست جایگاه‌ها ندارد ['+path+']');
+        stationsCache=rows;
+        note=`${stationsCache.length} جایگاه از دیتابیس دریافت شد.`;
+        lastError=null;
+        break;
+      }catch(err){lastError=err}
+    }
+    if(lastError)throw lastError;
+  }catch(e){note='دریافت جایگاه‌ها ناموفق بود: '+(e.message||'خطای اتصال')+'؛ مسیر API جایگاه‌ها در Worker باید بررسی شود.';stationsCache=[]}
   finally{stationBusy=false;if(tab==='stations'||tab==='rating-admin')draw()}
 }
 function stationDate(s){
