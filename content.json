@@ -46,7 +46,142 @@
   "gaId": "G-39P06E48LT",
   "carsInfo": {},
   "cars": [],
-  "stations": [],
-  "serviceCenters": [],
-  "partsStores": []
+  "stations": [
+    {
+      "id": "seed-ocm-478206",
+      "name": "ایستگاه شارژ برج میلاد",
+      "address": "تهران، ورودی برج میلاد، منطقه ۲",
+      "latitude": 35.7466323,
+      "longitude": 51.374447,
+      "operator": "مپنا",
+      "status": "reported-operational",
+      "power_kw": 120,
+      "connectors": [
+        "GB/T DC"
+      ],
+      "source": "Open Charge Map",
+      "source_url": "https://openchargemap.org/poi/details/478206",
+      "updated_at": "2026-10-14",
+      "notes": "اطلاعات عمومی؛ پیش از مراجعه وضعیت لحظه‌ای بررسی شود."
+    },
+    {
+      "id": "seed-ocm-502577",
+      "name": "ایستگاه شارژ مرکز خرید پالادیوم",
+      "address": "تهران، مقدس اردبیلی، منطقه ۱",
+      "latitude": 35.7976015,
+      "longitude": 51.4133063,
+      "operator": "مپنا",
+      "status": "reported-operational",
+      "power_kw": 30,
+      "connectors": [
+        "GB/T DC",
+        "CCS Type 2"
+      ],
+      "source": "Open Charge Map",
+      "source_url": "https://openchargemap.org/poi/details/502577",
+      "updated_at": "2026-10-14",
+      "notes": "اطلاعات عمومی؛ پیش از مراجعه وضعیت لحظه‌ای بررسی شود."
+    },
+    {
+      "id": "seed-ocm-475500",
+      "name": "ایستگاه شارژ بوستان نهج‌البلاغه",
+      "address": "تهران، خیابان گل‌افشان شمالی، منطقه ۲",
+      "latitude": 35.7568534,
+      "longitude": 51.3437706,
+      "operator": "مپنا",
+      "status": "reported-operational",
+      "power_kw": 120,
+      "connectors": [
+        "GB/T DC",
+        "GB/T AC",
+        "Type 2"
+      ],
+      "source": "Open Charge Map",
+      "source_url": "https://openchargemap.org/poi/details/475500",
+      "updated_at": "2026-10-14",
+      "notes": "اطلاعات عمومی؛ پیش از مراجعه وضعیت لحظه‌ای بررسی شود."
+    },
+    {
+      "id": "seed-ocm-494377",
+      "name": "ایستگاه شارژ تاج محل",
+      "address": "تهران، خیابان شیخ بهایی، منطقه ۳",
+      "latitude": 35.7523982,
+      "longitude": 51.3965008,
+      "operator": "مپنا",
+      "status": "reported-operational",
+      "power_kw": 30,
+      "connectors": [
+        "GB/T DC",
+        "CCS Type 2"
+      ],
+      "source": "Open Charge Map",
+      "source_url": "https://openchargemap.org/poi/details/494377",
+      "updated_at": "2026-10-14",
+      "notes": "دسترسی ممکن است محدود به مشتریان/مراجعه‌کنندگان باشد؛ قبل از حرکت بررسی شود."
+    }
+  ],
+  "serviceCenters": [
+    {
+      "id": "seed-dcline-tehran",
+      "title": "مرکز تخصصی برق و الکترونیک خودرو دی‌سی‌لاین",
+      "address": "تهران، اتوبان ارتش غرب، پیش از میدان ارتش، مسیر کندرو اقدسیه",
+      "latitude": 35.802,
+      "longitude": 51.484,
+      "phone": "",
+      "website": "https://www.google.com/maps/search/?api=1&query=دی+سی+لاین+تهران",
+      "status": "verified",
+      "source_url": "https://dartehran.com/electric-car-repair-shop-in-tehran/",
+      "notes": "در فهرست عمومی به‌عنوان مرکز برق و الکترونیک خودرو معرفی شده؛ مختصات تقریبی و خدمات EV باید تلفنی تأیید شود."
+    },
+    {
+      "id": "seed-iran-auto-reaper",
+      "title": "ایران اتو ریپر (تعمیرگاه تخصصی برق خودرو)",
+      "address": "تهران، جاده دماوند، بعد از سه‌راه تهرانپارس، بن‌بست کاوه",
+      "latitude": 35.728,
+      "longitude": 51.545,
+      "phone": "09120996450",
+      "website": "https://iranreno.com/",
+      "status": "verified",
+      "source_url": "https://tamirat.info/car-electrical-repair-in-tehran/",
+      "notes": "تعمیرات برق خودروهای وارداتی؛ خدمات اختصاصی خودروی برقی و هیبریدی پیش از مراجعه استعلام شود. مختصات تقریبی."
+    },
+    {
+      "id": "seed-iran-hybrid",
+      "title": "ایران هیبرید",
+      "address": "تهران؛ نشانی دقیق در منبع عمومی بازیابی‌شده درج نشده",
+      "latitude": 35.721,
+      "longitude": 51.42,
+      "phone": "09364111215",
+      "website": "https://www.google.com/maps/search/?api=1&query=ایران+هیبرید+تهران",
+      "status": "verified",
+      "source_url": "https://dartehran.com/electric-car-repair-shop-in-tehran/",
+      "notes": "در فهرست عمومی تعمیرگاه‌های تخصصی هیبرید معرفی شده؛ نشانی و خدمات پیش از مراجعه تأیید شود. مختصات تقریبی برای تست نقشه."
+    }
+  ],
+  "partsStores": [
+    {
+      "id": "seed-evparts-zanjan",
+      "title": "ایوی پارتس (EVParts)",
+      "address": "زنجان، بلوار پروفسور ثبوتی، پارک علم و فناوری علوم پایه، واحد ۳۱۵",
+      "latitude": 36.6814,
+      "longitude": 48.4858,
+      "phone": "02433154413",
+      "website": "https://evparts.ir/",
+      "status": "verified",
+      "source_url": "https://evparts.ir/",
+      "notes": "تأمین قطعات و مشاوره خودروهای برقی؛ مختصات نقشه تقریبی و نیازمند تطبیق میدانی."
+    },
+    {
+      "id": "seed-chinpart-yazd",
+      "title": "چین‌پارت یزد",
+      "address": "یزد، حوالی میدان معلم",
+      "latitude": 31.8974,
+      "longitude": 54.3675,
+      "phone": "03535234142",
+      "website": "https://www.google.com/maps/search/?api=1&query=chinpart+yazd",
+      "status": "verified",
+      "source_url": "https://www.google.com/maps/search/?api=1&query=chinpart+yazd",
+      "notes": "فروشگاه قطعات خودرو؛ فروش قطعات اختصاصی EV تأیید نشده است. مختصات تقریبی."
+    }
+  ]
 }
