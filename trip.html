@@ -86,15 +86,11 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.wrap{padding:12px}#map{height:430px}.head{align-items:flex-start;flex-direction:column}.head-actions{width:100%;justify-content:space-between}.stats{grid-template-columns:repeat(3,1fr)}}
  
 /* EV position marker with live estimated battery */
-.rev-map-car{background:transparent!important;border:0!important}
-.rev-ev-marker{position:relative;width:70px;height:48px;pointer-events:none}
-.rev-ev-vehicle{position:absolute;left:0;bottom:0;width:68px;height:43px;filter:drop-shadow(0 3px 5px #0009)}
-.rev-battery-tooltip{background:#101820!important;color:#d7ff3f!important;border:1px solid #d7ff3f!important;border-radius:9px!important;padding:5px 9px!important;font-size:13px!important;font-weight:800!important;white-space:nowrap!important;box-shadow:0 3px 10px #0009!important}
-.rev-battery-tooltip:before{border-top-color:#d7ff3f!important}
-.rev-battery-tooltip.low{color:#ff8d8d!important;border-color:#ff8d8d!important}
-.rev-battery-icon{background:transparent!important;border:0!important}
-.rev-battery-badge{display:inline-block;white-space:nowrap;background:#101820;color:#d7ff3f;border:2px solid #d7ff3f;border-radius:9px;padding:4px 8px;font:800 13px/1.3 Tahoma,Arial,sans-serif;box-shadow:0 3px 10px #000b;transform:translateY(-2px)}
-.rev-battery-badge.low{color:#ff8d8d;border-color:#ff8d8d}
+.rev-map-car{background:transparent!important;border:0!important;box-shadow:none!important;pointer-events:none!important}
+.rev-ev-marker{position:relative;width:150px;height:76px;pointer-events:none;overflow:visible}
+.rev-ev-charge{position:absolute;left:50%;top:0;transform:translateX(-50%);display:block;min-width:82px;max-width:145px;box-sizing:border-box;padding:5px 9px;border-radius:9px;background:#101820;color:#d7ff3f;border:2px solid #d7ff3f;font:800 13px/1.25 Tahoma,Arial,sans-serif;text-align:center;white-space:nowrap;box-shadow:0 3px 10px #000b}
+.rev-ev-charge.low{color:#ff8d8d;border-color:#ff8d8d}
+.rev-ev-vehicle{position:absolute;left:41px;bottom:0;width:68px;height:43px;filter:drop-shadow(0 3px 5px #0009)}
 /* Route playback timeline */
 .timeline-panel{display:block!important;visibility:visible!important;opacity:1!important;position:relative;z-index:5;width:100%;box-sizing:border-box;margin:14px 0 18px;padding:18px;border:1px solid #304452;border-radius:18px;background:linear-gradient(135deg,#14212b,#0c151d);box-shadow:0 14px 38px #0002}
 .timeline-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
@@ -731,14 +727,10 @@ function timelineBatteryAt(km){
   soc-=(km-atKm)*revTimeline.consumption/revTimeline.battery*100;
   return Math.max(0,Math.min(100,soc));
 }
-function makeEvMapIcon(){
-  const html="<div class='rev-ev-marker'><svg class='rev-ev-vehicle' viewBox='0 0 100 62' xmlns='http://www.w3.org/2000/svg' aria-hidden='true'><defs><linearGradient id='evBody' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#f5fbff'/><stop offset='1' stop-color='#75d6c2'/></linearGradient></defs><path d='M9 39 15 24Q17 18 25 17L36 7Q39 4 46 4H64Q70 4 74 11L83 25 91 30Q95 33 95 39V48H7V42Q7 40 9 39Z' fill='url(#evBody)' stroke='#10222c' stroke-width='3' stroke-linejoin='round'/><path d='M25 21 38 9H61Q66 9 69 15L75 25H21Z' fill='#15394a' stroke='#10222c' stroke-width='2'/><path d='M46 10V24' stroke='#91e6ff' stroke-width='2'/><path d='M12 35H22' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><path d='M82 34h8' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><circle cx='25' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='25' cy='47' r='3' fill='#7e9aa7'/><circle cx='75' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='75' cy='47' r='3' fill='#7e9aa7'/><path d='M49 31h9l-5 7h6l-11 10 3-8h-6z' fill='#d7ff3f' stroke='#18313b' stroke-width='1'/></svg></div>";
-  return L.divIcon({className:"rev-map-car",html,iconSize:[70,48],iconAnchor:[34,43]});
-}
-function makeBatteryIcon(soc){
+function makeEvMapIcon(soc){
   const value=Math.round(soc),low=value<=15;
-  const html="<div class='rev-battery-badge"+(low?" low":"")+"'>باتری "+value+"٪</div>";
-  return L.divIcon({className:"rev-battery-icon",html,iconSize:[150,34],iconAnchor:[75,34]});
+  const html="<div class='rev-ev-marker'><div class='rev-ev-charge"+(low?" low":"")+"'>شارژ تخمینی "+value+"٪</div><svg class='rev-ev-vehicle' viewBox='0 0 100 62' xmlns='http://www.w3.org/2000/svg' aria-hidden='true'><defs><linearGradient id='evBody' x1='0' y1='0' x2='0' y2='1'><stop offset='0' stop-color='#f5fbff'/><stop offset='1' stop-color='#75d6c2'/></linearGradient></defs><path d='M9 39 15 24Q17 18 25 17L36 7Q39 4 46 4H64Q70 4 74 11L83 25 91 30Q95 33 95 39V48H7V42Q7 40 9 39Z' fill='url(#evBody)' stroke='#10222c' stroke-width='3' stroke-linejoin='round'/><path d='M25 21 38 9H61Q66 9 69 15L75 25H21Z' fill='#15394a' stroke='#10222c' stroke-width='2'/><path d='M46 10V24' stroke='#91e6ff' stroke-width='2'/><path d='M12 35H22' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><path d='M82 34h8' stroke='#d7ff3f' stroke-width='4' stroke-linecap='round'/><circle cx='25' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='25' cy='47' r='3' fill='#7e9aa7'/><circle cx='75' cy='47' r='9' fill='#111a22' stroke='#eaf7fa' stroke-width='3'/><circle cx='75' cy='47' r='3' fill='#7e9aa7'/><path d='M49 31h9l-5 7h6l-11 10 3-8h-6z' fill='#d7ff3f' stroke='#18313b' stroke-width='1'/></svg></div>";
+  return L.divIcon({className:"rev-map-car",html,iconSize:[150,76],iconAnchor:[75,70]});
 }
 function updateTimeline(){
   if(!revTimeline.coords||!revTimeline.departure)return;
@@ -753,7 +745,7 @@ function updateTimeline(){
   $("timelineTime").textContent=eta.toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"});
   $("timelineSoc").textContent=Math.round(soc)+"٪";
   $("timelineSoc").style.color=soc<=15?"#ff8d8d":"var(--accent)";
-  if(point&&revTimeline.carMarker){revTimeline.carMarker.setLatLng(point);revTimeline.carMarker.setPopupContent("موقعیت خودرو روی مسیر · شارژ تخمینی باتری: "+Math.round(soc)+"٪");if(revTimeline.batteryMarker){revTimeline.batteryMarker.setLatLng(point);revTimeline.batteryMarker.setIcon(makeBatteryIcon(soc));}}
+  if(point&&revTimeline.carMarker){revTimeline.carMarker.setLatLng(point);revTimeline.carMarker.setIcon(makeEvMapIcon(soc));revTimeline.carMarker.setPopupContent("موقعیت خودرو روی مسیر · شارژ تخمینی باتری: "+Math.round(soc)+"٪");}
   const samples=revTimeline.weatherSamples||[];
   let wx=null;
   if(samples.length)wx=samples.reduce((best,x)=>Math.abs(x.routeKm-km)<Math.abs(best.routeKm-km)?x:best,samples[0]);
@@ -780,8 +772,8 @@ function configureTimeline(data){
   if(revTimeline.carMarker)routeLayer.removeLayer(revTimeline.carMarker);
   if(revTimeline.batteryMarker)routeLayer.removeLayer(revTimeline.batteryMarker);
   const start=timelinePointAt(revTimeline.coords,0);
-  revTimeline.carMarker=L.marker(start,{icon:makeEvMapIcon(),zIndexOffset:1000,keyboard:false}).addTo(routeLayer).bindPopup("موقعیت خودرو روی مسیر");
-  revTimeline.batteryMarker=L.marker(start,{icon:makeBatteryIcon(timelineBatteryAt(0)),zIndexOffset:1200,interactive:false,keyboard:false}).addTo(routeLayer);
+  revTimeline.carMarker=L.marker(start,{icon:makeEvMapIcon(timelineBatteryAt(0)),zIndexOffset:2000,keyboard:false,interactive:true}).addTo(routeLayer).bindPopup("موقعیت خودرو روی مسیر");
+  revTimeline.batteryMarker=null;
   updateTimeline();
 }
 
