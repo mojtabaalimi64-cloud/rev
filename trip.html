@@ -131,8 +131,8 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
     <aside class="panel">
       <h1>برنامه‌ریزی سفر</h1>
       <div class="sub">مبدأ، مقصد و مشخصات باتری را وارد کنید تا مسیر، شارژرهای ثبت‌شده و توقف‌های پیشنهادی محاسبه شوند.</div>
-      <label for="origin">مبدأ</label><input id="origin" placeholder="مثلاً تهران، میدان آزادی" value="تهران">
-      <label for="destination">مقصد</label><input id="destination" placeholder="مثلاً اصفهان، میدان نقش جهان" value="اصفهان"><div class="grid2"><div><label for="departureJalali">تاریخ حرکت (شمسی)</label><input id="departureJalali" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۷/۲۲" autocomplete="off" required><input id="departure" type="hidden"></div><div><label for="departureClock">ساعت حرکت</label><input id="departureClock" type="time" required><label for="weatherModel">منبع هواشناسی</label><select id="weatherModel"><option value="auto" selected>پیش‌بینی خودکار</option></select></div></div><div class="sub" style="margin-top:6px">آب‌وهوا بر اساس زمان عبور تخمینی از نقاط مسیر دریافت می‌شود؛ باد به‌صورت خودکار تحلیل می‌شود.</div>
+      <label for="origin">مبدأ</label><input id="origin" placeholder="مثلاً تهران، میدان آزادی" value="">
+      <label for="destination">مقصد</label><input id="destination" placeholder="مثلاً اصفهان، میدان نقش جهان" value=""><div class="grid2"><div><label for="departureJalali">تاریخ حرکت (شمسی)</label><input id="departureJalali" type="text" inputmode="numeric" placeholder="۱۴۰۵/۰۷/۲۲" autocomplete="off" required><input id="departure" type="hidden"></div><div><label for="departureClock">ساعت حرکت</label><input id="departureClock" type="time" required><label for="weatherModel">منبع هواشناسی</label><select id="weatherModel"><option value="auto" selected>پیش‌بینی خودکار</option></select></div></div><div class="sub" style="margin-top:6px">آب‌وهوا بر اساس زمان عبور تخمینی از نقاط مسیر دریافت می‌شود؛ باد به‌صورت خودکار تحلیل می‌شود.</div>
       <div class="grid2">
         <div><label for="battery">ظرفیت باتری (kWh)</label><input id="battery" type="number" min="10" max="250" value="60"></div>
         <div><label for="soc">شارژ اولیه (%)</label><input id="soc" type="number" min="5" max="100" value="90"></div>
@@ -625,11 +625,10 @@ function syncDepartureInput(){
   return true;
 }
 function initDepartureInput(){
-  const d=new Date(Date.now()+60*60*1000);
-  d.setMinutes(Math.ceil(d.getMinutes()/15)*15,0,0);
-  $("departureJalali").value=jalaliDateText(d);
-  $("departureClock").value=String(d.getHours()).padStart(2,"0")+":"+String(d.getMinutes()).padStart(2,"0");
-  syncDepartureInput();
+  // Leave date and time blank until the user explicitly chooses them.
+  $("departureJalali").value="";
+  $("departureClock").value="";
+  $("departure").value="";
   $("departureJalali").addEventListener("change",syncDepartureInput);
   $("departureClock").addEventListener("change",syncDepartureInput);
 }
