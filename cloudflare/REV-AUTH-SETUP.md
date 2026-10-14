@@ -69,3 +69,26 @@ Deploy the updated Worker source after applying the schema. The public page is `
 Important: the profile page requires the REV account system to be enabled and a valid session. Because GitHub Pages (`github.io`) and the Worker (`workers.dev`) are cross-site, browser third-party-cookie restrictions may prevent session cookies from working. The recommended production setup is a custom REV domain with the API on a same-site subdomain before enabling private profiles for users.
 
 OBD-II and vehicle-maker APIs are not universal. The profile page only checks whether Web Bluetooth is exposed by the browser; it does not falsely report a generic OBD connection. Real telemetry requires a tested adapter protocol and a vehicle-specific profile, or an official OEM API with credentials stored only as Worker secrets. Never place vehicle API secrets in GitHub Pages or client-side JavaScript.
+
+
+## REV user and business portals (new)
+
+New public pages:
+- `account.html`: account login/register, personal profile, business registration, store product submissions.
+- `businesses.html`: reads approved business profiles and approved products from the Worker, with legacy `content.json` fallback.
+- `admin-businesses.html`: manager-only moderation UI. It requires the existing `ADMIN_TOKEN` entered by the admin and checks it server-side; it does not persist the token in local storage.
+- `cloudflare/rev-business-portal-schema.sql`: additive D1 migration for `rev_business_profiles` and `rev_business_products`.
+
+### Apply and deploy
+1. In D1 `rev-db`, apply `cloudflare/rev-business-portal-schema.sql` only after `rev_users` and auth tables exist (apply the community/auth schemas first if they have not already been applied).
+2. Deploy the updated `cloudflare/rev-auth-worker.js` to the existing Worker `rev-auth-api` with the `DB` binding pointing to `rev-db`. Keep `ADMIN_TOKEN` only in Worker Secrets; never commit it.
+3. Test `/api/health`, then log in and test `/api/portal/me`. The public `/api/businesses` endpoint must return approved profiles only.
+4. Open `admin-businesses.html` from the admin panel to approve/reject business profiles and products. A store must be approved before its owner can submit products; submitted products remain private until approved.
+5. Keep public registration disabled until the email provider is configured and end-to-end registration/login/email verification has been tested.
+
+### Roles and data access
+- All signed-in accounts start as ordinary members. Business ownership is tracked separately in `rev_business_profiles.owner_user_id`; users cannot edit another user's records.
+- Businesses and products are hidden from the public directory until an admin approves them.
+- Public API responses omit owner email and moderation notes. The admin API requires `Authorization: Bearer <ADMIN_TOKEN>`.
+- Product submission is a catalog workflow only; online checkout/payment is not implemented in this phase.
+- Because GitHub Pages and `workers.dev` are cross-site, browsers may block session cookies. A same-site custom domain/API hostname is still recommended before public rollout; do not work around this by putting tokens in public code.
