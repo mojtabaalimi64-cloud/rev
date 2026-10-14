@@ -318,6 +318,14 @@ async function upImage(){
     prev[p]=d;msg('تصویر در GitHub آپلود شد؛ بعد از «انتشار تغییرات» نشانی آن در دیتابیس ذخیره می‌شود.');return p;
   }catch(e){msg('این فایل به‌عنوان تصویر خوانده نشد.');return null}
 }
+/* Normalize Persian/Arabic letters and digits for all admin searches. */
+function normalizeSearch(v){
+  return String(v??'').toLocaleLowerCase()
+    .replace(/[ي]/g,'ی').replace(/[ك]/g,'ک')
+    .replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+    .replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+    .replace(/[\s\-_.،,]/g,'');
+}
 /* ---- صفحه‌ها ---- */
 function login(){
   root.innerHTML=`<div class="box"><h2>ورود به پنل مدیریت REV</h2><p style="color:var(--muted)">رمز مدیریتی Cloudflare را وارد کنید. این رمز فقط تا پایان نشست همین مرورگر نگه داشته می‌شود.</p>
@@ -330,7 +338,6 @@ function login(){
 }
 function list(){
   const t=TYPES[tab], items=Array.isArray(c[tab])?c[tab]:[];
-  const normalizeSearch=v=>String(v??'').toLocaleLowerCase().replace(/[ي]/g,'ی').replace(/[ك]/g,'ک').replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d))).replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d))).replace(/[\s\-_.،,]/g,'');
   const searchable=it=>{
     const generatedCode=it.publicCode||(
       tab==='serviceCenters'?makeRevCode('RP',it.id):
