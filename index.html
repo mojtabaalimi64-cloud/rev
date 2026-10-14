@@ -240,7 +240,7 @@ function recommend(f){
   const budget=f.budget?f.budget*1e6:null;
   const checks={
     budget:x=>budget==null||NUM(x.c.price)==null||NUM(x.c.price)<=budget,
-    range:x=>!f.range||((NUM(x.c.powertrain)===null&&false)||((x.c.powertrain==='PHEV'||x.c.powertrain==='BEV')?(NUM(x.c.electricRange??x.c.range)!=null&&NUM(x.c.electricRange??x.c.range)>=f.range):(NUM(x.c.range)!=null&&NUM(x.c.range)>=f.range))),
+    range:x=>!f.range||((x.c.powertrain==='PHEV'||x.c.powertrain==='BEV')?(NUM(x.c.electricRange??x.c.range)!=null&&NUM(x.c.electricRange??x.c.range)>=f.range):(NUM(x.c.range)!=null&&NUM(x.c.range)>=f.range)),
     powertrain:x=>!f.powertrain||f.powertrain==='any'||(x.c.powertrain||'BEV')===f.powertrain,
     type:x=>f.type==='any'||x.c.type===f.type,
     market:x=>f.market==='any'||x.c.market==='iran'
@@ -249,13 +249,14 @@ function recommend(f){
   Object.entries(checks).forEach(([k,fn])=>cnt[k]=list.filter(fn).length);
   list=list.filter(x=>Object.values(checks).every(fn=>fn(x)));
   const w=W[f.prio]||W.balanced,stats={};
-  Object.keys(w).forEach(k=>{const v=list.map(x=>NUM(x.c[k])).filter(n=>n!=null);stats[k]=v.length?{min:Math.min(...v),max:Math.max(...v)}:null});
-  list.forEach(x=>{let s=0,t=0;Object.keys(w).forEach(k=>{const v=NUM(x.c[k]),st=stats[k];if(v==null||!st)return;let n=st.max===st.min?.5:(v-st.min)/(st.max-st.min);if(k==='price'||k==='accel')n=1-n;s+=w[k]*n;t+=w[k]});x.s=t?s/t:0});
+  const metric=(car,k)=>k==='range'?NUM((car.powertrain==='PHEV'||car.powertrain==='BEV')?(car.electricRange??car.range):car.range):NUM(car[k]);
+  Object.keys(w).forEach(k=>{const v=list.map(x=>metric(x.c,k)).filter(n=>n!=null);stats[k]=v.length?{min:Math.min(...v),max:Math.max(...v)}:null});
+  list.forEach(x=>{let s=0,t=0;Object.keys(w).forEach(k=>{const v=metric(x.c,k),st=stats[k];if(v==null||!st)return;let n=st.max===st.min?.5:(v-st.min)/(st.max-st.min);if(k==='price'||k==='accel')n=1-n;s+=w[k]*n;t+=w[k]});x.s=t?s/t:0});
   list.sort((a,b)=>b.s-a.s);
   return {top:list.slice(0,3),cnt,total:list.length,stats};
 }
 function reasons(x,f,stats,n){
-  const c=x.c,r=[],price=NUM(c.price),range=NUM(c.range),acc=NUM(c.accel),dc=NUM(c.dc);
+  const c=x.c,r=[],price=NUM(c.price),range=NUM((c.powertrain==='PHEV'||c.powertrain==='BEV')?(c.electricRange??c.range):c.range),acc=NUM(c.accel),dc=NUM(c.dc);
   const best=(k,v,lo)=>n>1&&v!=null&&stats[k]&&v===(lo?stats[k].min:stats[k].max);
   if(f.budget&&price!=null){const p=Math.round((1-price/(f.budget*1e6))*100);if(p>=3)r.push(fnum(p)+'٪ کمتر از سقف بودجه‌ی شما')}
   if(f.range&&range!=null){const d=range-f.range;r.push(d>0?`برد ${fnum(range)} کیلومتر؛ ${fnum(d)} کیلومتر بیشتر از نیاز شما`:`برد ${fnum(range)} کیلومتر؛ دقیقاً در حد نیاز شما`)}
