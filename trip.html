@@ -34,6 +34,44 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px
 
 .pill{display:inline-block;font-size:11px;border:1px solid #4a5b69;border-radius:99px;padding:2px 7px;margin:4px 3px 0 0;color:#d9e4eb}
 .warning{font-size:12px;color:#ffd18a;margin-top:10px}
+body{background:radial-gradient(ellipse at 85% -10%,#1b3442 0,transparent 38%),linear-gradient(160deg,#0a1016,#0d151d 55%,#0a1016)}
+.wrap{max-width:1440px;padding:24px}
+.head{padding:18px 20px;border:1px solid #263b49;border-radius:18px;background:linear-gradient(120deg,rgba(18,29,39,.96),rgba(13,22,31,.86));box-shadow:0 12px 34px #0002}
+.logo{font-size:32px;letter-spacing:3px;text-shadow:0 0 22px #d7ff3f22}
+.sub{line-height:1.8}
+.layout{grid-template-columns:minmax(310px,370px) minmax(0,1fr);align-items:start;gap:18px}
+.panel{background:linear-gradient(155deg,rgba(19,29,39,.98),rgba(14,22,30,.98));border-color:#2a3b49;border-radius:18px;box-shadow:0 14px 38px #0002}
+aside.panel{position:relative;overflow:hidden}
+aside.panel:before{content:"";position:absolute;top:0;right:0;left:0;height:3px;background:linear-gradient(90deg,transparent,var(--accent),#64b5ff,transparent)}
+h1{font-size:24px;letter-spacing:-.3px}
+label{color:#b7c6d2;font-weight:600}
+input,select{transition:border-color .2s,box-shadow .2s,background .2s}
+input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px #d7ff3f15;background:#101b25}
+button{transition:transform .18s,filter .18s,opacity .18s}
+button:hover{filter:brightness(1.06);transform:translateY(-1px)}
+button:disabled{opacity:.65;cursor:wait;transform:none}
+.primary{min-height:48px;box-shadow:0 7px 22px #d7ff3f14}
+#map{height:min(68vh,720px);min-height:480px;border-radius:15px;border-color:#314656;box-shadow:inset 0 0 0 1px #ffffff06}
+.map-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;margin-bottom:12px;flex-wrap:wrap}
+.map-heading h2{margin:0;font-size:18px}
+.map-tag{font-size:11px;color:#d7ff3f;border:1px solid #48583c;background:#19231a;padding:4px 9px;border-radius:99px}
+.directions{margin-top:16px;padding:16px;border:1px solid var(--line);border-radius:15px;background:#0d151e}
+.directions-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
+.directions-head h2{margin:0}
+.direction-item{display:grid;grid-template-columns:34px 1fr auto;gap:10px;align-items:start;padding:12px 0;border-top:1px solid #263542}
+.direction-icon{display:grid;place-items:center;width:32px;height:32px;border:1px solid #3c5060;background:#142330;border-radius:10px;color:var(--accent);font-size:17px}
+.direction-main{font-size:13px;font-weight:700}
+.direction-road{display:block;color:var(--muted);font-size:11px;font-weight:400;margin-top:2px}
+.direction-meta{font-size:11px;color:#a9bac7;white-space:nowrap}
+.stats{grid-template-columns:repeat(3,minmax(0,1fr))}
+.stat{border-color:#263847;background:linear-gradient(145deg,#101b25,#0b131b)}
+.stat b{font-size:22px}
+.station{cursor:pointer;transition:background .18s;padding:13px 9px;border-radius:10px}
+.station:hover{background:#172430}
+.pill{border-color:#354b5a;background:#111d27}
+.plan-box{background:linear-gradient(145deg,#151f19,#111a17);border-color:#4b5c39}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#121d27;color:#eef4f8}
+.leaflet-popup-content a{color:#d7ff3f}
 @media(max-width:850px){.layout{grid-template-columns:1fr}.wrap{padding:12px}#map{height:430px}.head{align-items:flex-start;flex-direction:column}.head-actions{width:100%;justify-content:space-between}.stats{grid-template-columns:repeat(3,1fr)}}
 </style>
 </head>
@@ -74,7 +112,14 @@ button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px
       <div class="warning">برنامه توقف بر اساس ظرفیت باتری، مصرف، شارژ اولیه و ذخیره ایمنی تخمین زده می‌شود. اطلاعات زنده‌بودن، اشغال بودن، توان و سازگاری کانکتور ایستگاه‌ها تضمین نمی‌شود؛ پیش از سفر بررسی کنید.</div>
       <div class="results" id="results"><h2 style="margin-top:18px">شارژرهای نزدیک مسیر</h2><div class="sub">پس از محاسبه مسیر، فهرست اینجا نمایش داده می‌شود.</div></div>
     </aside>
-    <main class="panel"><div id="map" role="img" aria-label="نقشه مسیر سفر و ایستگاه‌های شارژ"></div></main>
+    <main class="panel">
+      <div class="map-heading"><h2>نقشه مسیر و ایستگاه‌های شارژ</h2><span class="map-tag">نقشه زنده · مسیر جاده‌ای</span></div>
+      <div id="map" role="img" aria-label="نقشه مسیر سفر و ایستگاه‌های شارژ"></div>
+      <section class="directions" id="directionsPanel" aria-live="polite">
+        <div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub" id="directionsSummary">پس از محاسبه مسیر نمایش داده می‌شود</span></div>
+        <div class="sub">برای مشاهده مسیر و راهنمای پیچ‌ها، مبدأ و مقصد را وارد کنید.</div>
+      </section>
+    </main>
   </div>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -108,7 +153,7 @@ async function geocode(place){
 }
 async function getRoute(start,end){
   const coords=`${start[1]},${start[0]};${end[1]},${end[0]}`;
-  const url=`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`;
+  const url=`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`;
   const r=await fetch(url);
   if(!r.ok) throw new Error("سرویس مسیریابی پاسخ نداد.");
   const data=await r.json();
@@ -387,6 +432,65 @@ function renderChargingPlan(plan){
   box.appendChild(note);return box;
 }
 
+function maneuverText(step){
+  const m=step?.maneuver||{}, type=m.type||"", mod=m.modifier||"";
+  const names={
+    "depart":"حرکت از مبدأ","arrive":"رسیدن به مقصد","turn":"پیچیدن",
+    "new name":"ادامه در مسیر","continue":"ادامه مسیر","merge":"ادغام با مسیر",
+    "on ramp":"ورود به رمپ","off ramp":"خروج از رمپ","fork":"انتخاب شاخه مسیر",
+    "end of road":"انتهای مسیر","roundabout":"ورود به میدان","rotary":"عبور از میدان",
+    "roundabout turn":"خروج از میدان","notification":"ادامه مسیر","exit roundabout":"خروج از میدان"
+  };
+  const directions={"left":"به چپ","slight left":"اندکی به چپ","sharp left":"به چپ تند","right":"به راست","slight right":"اندکی به راست","sharp right":"به راست تند","straight":"مستقیم","uturn":"دوربرگردان"};
+  let text=names[type]||"ادامه مسیر";
+  if(directions[mod]) text += " " + directions[mod];
+  if(type==="roundabout"||type==="rotary"){
+    if(m.exit) text += "، خروجی شماره "+m.exit;
+  }
+  return text;
+}
+function maneuverSymbol(step){
+  const m=step?.maneuver||{}, type=m.type||"", mod=m.modifier||"";
+  if(type==="arrive") return "⚑";
+  if(type==="depart") return "●";
+  if(type.includes("roundabout")||type==="rotary") return "⟳";
+  if(mod.includes("left")) return "↰";
+  if(mod.includes("right")) return "↱";
+  if(mod==="uturn"||type==="turnaround") return "↶";
+  return "↑";
+}
+function renderDirections(route){
+  const panel=$("directionsPanel");
+  panel.innerHTML='<div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub" id="directionsSummary"></span></div>';
+  const steps=(route?.legs||[]).flatMap(leg=>leg.steps||[]);
+  if(!steps.length){
+    $("directionsSummary").textContent="راهنمای پیچ‌ها در دسترس نیست";
+    const msg=document.createElement("div");msg.className="sub";msg.textContent="سرویس مسیریابی مسیر را برگرداند، اما دستورهای مرحله‌ای در دسترس نیستند.";
+    panel.appendChild(msg);return;
+  }
+  const total=steps.length;
+  $("directionsSummary").textContent=total+" مرحله";
+  const list=document.createElement("div");
+  steps.forEach((step,index)=>{
+    const item=document.createElement("div");item.className="direction-item";
+    const icon=document.createElement("div");icon.className="direction-icon";icon.textContent=maneuverSymbol(step);
+    const main=document.createElement("div");main.className="direction-main";
+    const text=document.createElement("span");text.textContent=maneuverText(step);main.appendChild(text);
+    if(step.name){
+      const road=document.createElement("span");road.className="direction-road";road.textContent="مسیر: "+step.name;main.appendChild(road);
+    } else if(index===0){
+      const road=document.createElement("span");road.className="direction-road";road.textContent="نام خیابان در داده نقشه ثبت نشده";main.appendChild(road);
+    }
+    const meta=document.createElement("div");meta.className="direction-meta";
+    const km=(Number(step.distance)||0)/1000;
+    meta.textContent=km>=1?km.toFixed(1)+" km":Math.round(Number(step.distance)||0)+" m";
+    item.append(icon,main,meta);list.appendChild(item);
+  });
+  panel.appendChild(list);
+  const note=document.createElement("div");note.className="sub";note.style.marginTop="10px";
+  note.textContent="این فهرست راهنمای مسیر برنامه‌ریزی‌شده است؛ ناوبری زنده با موقعیت GPS، هشدار تغییر مسیر و ترافیک لحظه‌ای در فاز اپلیکیشن اضافه می‌شود.";
+  panel.appendChild(note);
+}
 function fmtDuration(seconds){
   const mins=Math.round(seconds/60), h=Math.floor(mins/60),m=mins%60;
   return h?`${h} ساعت و ${m} دقیقه`:`${m} دقیقه`;
@@ -418,14 +522,14 @@ async function planTrip(){
   window.revStationSourceWarning = "";
   window.revStationCacheNote = "";
   $("planBtn").disabled=true;$("planBtn").textContent="در حال محاسبه…";
-  routeLayer.clearLayers();stationLayer.clearLayers();$("results").innerHTML="<h2 style='margin-top:18px'>شارژرهای نزدیک مسیر</h2>";
+  routeLayer.clearLayers();stationLayer.clearLayers();$("results").innerHTML="<h2 style='margin-top:18px'>شارژرهای نزدیک مسیر</h2>";$("directionsPanel").innerHTML='<div class="directions-head"><h2>راهنمای مسیر</h2><span class="sub">در حال محاسبه…</span></div>';
   try{
     const origin=$("origin").value.trim(), destination=$("destination").value.trim();
     if(!origin||!destination) throw new Error("مبدأ و مقصد را وارد کنید.");
     setStatus("در حال پیدا کردن مبدأ و مقصد…");
     const [start,end]=await Promise.all([geocode(origin),geocode(destination)]);
     setStatus("در حال محاسبه مسیر جاده‌ای…");
-    const route=await getRoute(start,end);lastRoute=route;
+    const route=await getRoute(start,end);lastRoute=route;renderDirections(route);
     const coords=route.geometry.coordinates;
     const latlngs=coords.map(c=>[c[1],c[0]]);
     L.marker(start).addTo(routeLayer).bindPopup("مبدأ");
