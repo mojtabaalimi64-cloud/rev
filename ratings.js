@@ -16,7 +16,9 @@
     const summary=document.createElement("span");summary.style.cssText="font-size:12px;color:var(--muted);font-weight:400";summary.textContent="در حال دریافت…";label.appendChild(summary);el.appendChild(label);
     const controls=document.createElement("div");controls.style.cssText="display:flex;align-items:center;gap:5px;flex-wrap:wrap";el.appendChild(controls);
     const note=document.createElement("div");note.style.cssText="font-size:12px;color:var(--muted);margin-top:4px";el.appendChild(note);
+    const voteKey="rev_public_rating_voted_v1:"+type+":"+id;
     let voted=false,buttons=[];
+    try{voted=localStorage.getItem(voteKey)==="1";}catch(e){}
     function stars(selected,disabled){
       controls.replaceChildren();buttons=[];
       for(let n=1;n<=5;n++){
@@ -37,13 +39,13 @@
       try{
         const r=await fetch(API,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:type,id:id,rating:n,voter:voterId()})});
         const d=await r.json();
-        if(r.status===409){voted=true;note.textContent="قبلاً با این مرورگر رأی داده‌اید.";stars(n,true);return;}
+        if(r.status===409){voted=true;try{localStorage.setItem(voteKey,"1");}catch(e){}note.textContent="قبلاً برای این مورد رأی داده‌اید.";stars(n,true);return;}
         if(!r.ok||!d.success)throw Error(d.error||"ثبت رأی ناموفق بود");
-        voted=true;summary.textContent="★ "+Number(d.average).toLocaleString("fa-IR")+" از ۵ · "+Number(d.count).toLocaleString("fa-IR")+" رأی";
+        voted=true;try{localStorage.setItem(voteKey,"1");}catch(e){}summary.textContent="★ "+Number(d.average).toLocaleString("fa-IR")+" از ۵ · "+Number(d.count).toLocaleString("fa-IR")+" رأی";
         note.textContent="امتیاز شما ثبت شد. سپاس از مشارکت شما.";stars(n,true);
       }catch(e){buttons.forEach(b=>b.disabled=false);note.textContent=e.message||"ارتباط با سرویس امتیازدهی برقرار نشد.";}
     }
-    stars(0,false);refresh();
+    stars(0,voted);if(voted)note.textContent="از این مرورگر قبلاً برای این مورد رأی ثبت شده است.";refresh();
   }
   window.REVRating={mount};
 })();
