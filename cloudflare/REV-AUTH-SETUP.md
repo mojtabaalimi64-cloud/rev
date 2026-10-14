@@ -39,3 +39,16 @@ The previously created `rev_password_credentials` table and existing `rev_users`
 - The code uses PBKDF2-SHA256 (310,000 iterations), random salts, hashed verification/session tokens, HttpOnly/Secure/SameSite=Lax cookies, and basic per-IP rate limits.
 - Once the custom domain is ready, use a same-site API hostname (for example `api.example.com`) and update the front-end `AUTH_WORKER` constants in `admin.html` and `verify-email.html` to that hostname. This helps avoid third-party-cookie restrictions from `github.io` → `workers.dev`.
 - Before enabling public registration, test register → receive email → verify → login → `/api/auth/me` → logout in a real browser.
+
+
+## ارسال شناسه اختصاصی صاحب کسب‌وکار با پیامک
+کد Worker یک مسیر مدیریتی جدید دارد: `POST /api/admin/send-owner-code`. این مسیر فقط با `ADMIN_TOKEN` معتبر کار می‌کند و از API REST ملی پیامک استفاده می‌کند.
+
+در `rev-auth-api` → Settings → Variables and Secrets:
+- Secret: `MELIPAYAMAK_USERNAME` — نام کاربری ملی پیامک
+- Secret: `MELIPAYAMAK_PASSWORD` — رمز عبور وب‌سرویس
+- Variable یا Secret: `MELIPAYAMAK_FROM` — شماره فرستنده مجاز پنل ملی پیامک
+
+پس از ذخیره این مقادیر، کد Worker را Deploy کنید. در پنل ادمین REV، زبانه «مدیریت دستی رضایت» را باز کنید، پروفایل را جست‌وجو و انتخاب کنید و دکمه «ارسال شناسه با پیامک» را بزنید. شماره تماس باید شماره همراه ایران با قالب `09xxxxxxxxx` باشد و شماره فرستنده نیز باید در پنل ملی پیامک مجاز باشد.
+
+این دکمه پیامک را به‌صورت دستی و با تأیید ادمین می‌فرستد؛ ثبت‌نام خودکار صاحب کسب‌وکار هنوز یک فرایند جداست و تا زمانی که فرم ثبت‌نام فروشندگان به این سرویس متصل نشده، پیامک خودکار هنگام ثبت‌نام ارسال نمی‌شود.
