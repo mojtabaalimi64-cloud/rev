@@ -17,6 +17,7 @@ label{display:block;font-size:13px;color:var(--muted);margin:12px 0 5px}
 input,select{width:100%;background:#0c131b;color:var(--text);border:1px solid #344454;border-radius:9px;padding:11px;font:inherit;outline:none}
 input:focus,select:focus{border-color:var(--accent)}
 .grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#electricFields,#fuelFields{margin-top:8px;padding:12px;border:1px solid var(--line);border-radius:12px;background:#101923}#fuelFields[hidden]{display:none}#electricFields label,#fuelFields label{margin-top:8px}#vehicleType{border-color:var(--accent);font-weight:700}
 button{font:inherit;cursor:pointer;border:0;border-radius:10px;padding:11px 14px;font-weight:bold}
 .primary{background:var(--accent);color:#10150a;width:100%;margin-top:16px}.secondary{background:#263746;color:var(--text)}
 #map{height:610px;border-radius:14px;overflow:hidden;border:1px solid var(--line)}
@@ -134,18 +135,41 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
       <div class="sub">مبدأ، مقصد و مشخصات باتری را وارد کنید تا مسیر، شارژرهای ثبت‌شده و توقف‌های پیشنهادی محاسبه شوند.</div>
       <label for="origin">مبدأ</label><input id="origin" placeholder="مثلاً تهران، میدان آزادی" value="">
       <label for="destination">مقصد</label><input id="destination" placeholder="مثلاً اصفهان، میدان نقش جهان" value=""><div class="grid2"><div><label for="departureJalali">تاریخ حرکت (شمسی)</label><div class="datePickerWrap"><input id="departureJalali" type="text" placeholder="انتخاب تاریخ شمسی" autocomplete="off" required readonly aria-haspopup="dialog"><button type="button" id="openDatePicker" class="pickerButton" aria-label="باز کردن تقویم">▦</button></div><input id="departure" type="hidden"></div><div><label for="departureClock">ساعت حرکت</label><input id="departureClock" type="time" required aria-label="ساعت حرکت"><label for="weatherModel">منبع هواشناسی</label><select id="weatherModel"><option value="auto" selected>پیش‌بینی خودکار</option></select></div></div><dialog id="calendarDialog" class="calendarDialog" aria-label="تقویم شمسی"><div class="calendarHeader"><button type="button" id="prevMonth" aria-label="ماه قبل">‹</button><strong id="calendarTitle">انتخاب تاریخ</strong><button type="button" id="nextMonth" aria-label="ماه بعد">›</button></div><div class="calendarGrid" id="calendarGrid"></div><div class="calendarActions"><button type="button" id="calendarToday">امروز</button><button type="button" id="calendarCancel">انصراف</button></div></dialog><div class="sub" style="margin-top:6px">آب‌وهوا بر اساس زمان عبور تخمینی از نقاط مسیر دریافت می‌شود؛ باد به‌صورت خودکار تحلیل می‌شود.</div>
-      <div class="grid2">
-        <div><label for="battery">ظرفیت باتری (kWh)</label><input id="battery" type="number" min="10" max="250" value="60"></div>
-        <div><label for="soc">شارژ اولیه (%)</label><input id="soc" type="number" min="5" max="100" value="90"></div>
-      </div>
-      <div class="grid2">
-        <div><label for="consumption">مصرف پایه (kWh/100km)</label><input id="consumption" type="number" min="5" max="50" step="0.5" value="18"></div>
-        <div><label for="reserve">ذخیره ایمنی (%)</label><input id="reserve" type="number" min="5" max="40" value="15"></div>
-      </div>
-      <label for="hvacMode">محاسبه اثر بخاری و کولر</label><select id="hvacMode"><option value="auto" selected>خودکار بر اساس دمای مسیر</option><option value="off">بدون اثر بخاری و کولر</option></select>
-      <div class="sub" style="margin-top:5px">در حالت خودکار، مصرف تقریبی تهویه بر اساس دمای پیش‌بینی‌شده و سرعت مسیر به مصرف پایه اضافه می‌شود.</div>
-      <label for="targetSoc">شارژ هدف در توقف‌های بین‌راهی (%)</label>
-      <input id="targetSoc" type="number" min="30" max="100" value="80">
+      <label for="vehicleType">نوع خودرو</label>
+      <select id="vehicleType">
+        <option value="bev" selected>تمام‌برقی (BEV)</option>
+        <option value="phev">هیبرید شارژی (PHEV) — برق + بنزین</option>
+        <option value="hev">هیبرید معمولی (HEV) — بنزین + شارژ خودکار</option>
+        <option value="mhev">هیبرید ملایم (MHEV) — بنزین + کمک برقی</option>
+      </select>
+      <div class="sub" id="vehicleHelp" style="margin-top:5px">برای خودروی تمام‌برقی، برنامه‌ریز مصرف باتری و توقف‌های شارژ را محاسبه می‌کند.</div>
+      <section id="electricFields">
+        <div class="grid2">
+          <div><label for="battery">ظرفیت باتری (kWh)</label><input id="battery" type="number" min="10" max="250" value="60"></div>
+          <div><label for="soc">شارژ اولیه (%)</label><input id="soc" type="number" min="5" max="100" value="90"></div>
+        </div>
+        <div class="grid2">
+          <div><label for="consumption">مصرف برق (kWh/100km)</label><input id="consumption" type="number" min="5" max="50" step="0.5" value="18"></div>
+          <div><label for="reserve">ذخیره ایمنی باتری (%)</label><input id="reserve" type="number" min="5" max="40" value="15"></div>
+        </div>
+        <label for="hvacMode">محاسبه اثر بخاری و کولر</label><select id="hvacMode"><option value="auto" selected>خودکار بر اساس دمای مسیر</option><option value="off">بدون اثر بخاری و کولر</option></select>
+        <label for="targetSoc">شارژ هدف در توقف‌های بین‌راهی (%)</label><input id="targetSoc" type="number" min="30" max="100" value="80">
+      </section>
+      <section id="fuelFields" hidden>
+        <div class="grid2">
+          <div><label for="fuelConsumption">مصرف بنزین (لیتر/۱۰۰ کیلومتر)</label><input id="fuelConsumption" type="number" min="2" max="20" step="0.1" value="5.5"></div>
+          <div><label for="fuelPrice">قیمت هر لیتر بنزین (تومان)</label><input id="fuelPrice" type="number" min="0" step="100" value="3000"></div>
+        </div>
+        <div class="grid2" id="tankFields">
+          <div><label for="fuelTank">ظرفیت باک (لیتر)</label><input id="fuelTank" type="number" min="10" max="120" value="45"></div>
+          <div id="phevRangeField"><label for="electricRange">برد برقی مستقل PHEV (کیلومتر)</label><input id="electricRange" type="number" min="0" max="250" value="60"></div>
+        </div>
+        <div class="grid2" id="phevBatteryFields">
+          <div><label for="phevBattery">ظرفیت باتری PHEV (kWh)</label><input id="phevBattery" type="number" min="2" max="100" value="18"></div>
+          <div><label for="phevSoc">شارژ اولیه باتری PHEV (%)</label><input id="phevSoc" type="number" min="0" max="100" value="90"></div>
+        </div>
+        <div class="sub">برای هیبرید شارژی، بخش برقی و بنزینی جداگانه برآورد می‌شوند. در هیبرید معمولی و ملایم، شارژر عمومی برای ادامه سفر الزامی نیست.</div>
+      </section>
       <label for="radius">فاصله قابل‌قبول شارژر از مسیر</label>
       <select id="radius"><option value="5">۵ کیلومتر</option><option value="10" selected>۱۰ کیلومتر</option></select>
       <button class="primary" id="planBtn">محاسبه مسیر و یافتن شارژرها</button>
@@ -987,6 +1011,25 @@ function renderStations(stations,routeCoords,routeKm,params){
     item.addEventListener('click',()=>{map.setView([s.lat,s.lon],14);marker.openPopup();});
   });
 }
+function updateVehicleFields(){
+  const type=$("vehicleType").value;
+  const electric=type==="bev", plugIn=type==="phev", fuel=type!=="bev";
+  $("electricFields").hidden=!electric;
+  $("fuelFields").hidden=!fuel;
+  $("tankFields").style.display=fuel?"grid":"none";
+  $("phevRangeField").style.display=plugIn?"block":"none";
+  $("phevBatteryFields").style.display=plugIn?"grid":"none";
+  $("vehicleHelp").textContent=electric
+    ?"برای خودروی تمام‌برقی، مصرف باتری، برد و توقف‌های شارژ محاسبه می‌شود."
+    :plugIn
+      ?"هیبرید شارژی: برآورد برد برقی و مصرف بنزین پس از اتمام برد برقی؛ شارژ عمومی اختیاری است."
+      :type==="hev"
+        ?"هیبرید معمولی: مصرف بنزین و برد باک محاسبه می‌شود؛ توقف شارژ در برنامه سفر الزامی نیست."
+        :"هیبرید ملایم: مصرف بنزین و برد باک محاسبه می‌شود؛ باتری کوچک کمکی نیازمند شارژ عمومی نیست.";
+  $("range").parentElement.querySelector("span").textContent=electric?"برد تخمینی برقی (km)":plugIn?"برد برقی + بنزینی (km)":"برد با باک (km)";
+}
+$("vehicleType").addEventListener("change",updateVehicleFields);
+updateVehicleFields();
 async function planTrip(){
   window.revStationSourceWarning = "";
   window.revStationCacheNote = "";
