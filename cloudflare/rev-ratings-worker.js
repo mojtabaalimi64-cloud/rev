@@ -108,6 +108,10 @@ export default {
     }
    }
    // Admin-only list of station reports.
+   if(path==="/api/station-reports/published"&&method==="GET"){
+    const result=await env.DB.prepare("SELECT id,station_id,station_name,report_type,details,created_at,reviewed_at FROM rev_station_reports WHERE status='published' ORDER BY reviewed_at DESC LIMIT 200").all();
+    return reply(request,env,{success:true,items:result.results||[]});
+   }
    if(path==="/api/admin/station-reports"&&method==="GET"){
     if(!admin(request,env))return reply(request,env,{success:false,error:"Unauthorized"},401);
     const status=url.searchParams.get("status")||"all";
