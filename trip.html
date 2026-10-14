@@ -971,7 +971,7 @@ function updateTimeline(){
   const km=revTimeline.routeKm*fraction,point=timelinePointAt(revTimeline.coords,km);
   const eta=new Date(revTimeline.departure.getTime()+revTimeline.durationSeconds*fraction*1000);
   const hybrid=["phev","hev","mhev"].includes(revTimeline.vehicleType),electricKm=Number(revTimeline.electricKm)||0;
-  const switchedToFuel=hybrid&&km>=electricKm;
+  const switchedToFuel=hybrid&&(revTimeline.vehicleType!=="phev"||(electricKm<revTimeline.routeKm&&km>=electricKm));
   const soc=hybrid?(switchedToFuel?0:Math.max(0,100*(electricKm-km)/Math.max(.1,electricKm))):timelineBatteryAt(km);
   $("timelineProgress").style.width=(fraction*100)+"%";
   $("timelineCar").style.left="auto";$("timelineCar").style.right="calc("+(fraction*100)+"% - 22px)";
