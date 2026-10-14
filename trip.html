@@ -943,8 +943,8 @@ function applySharedTripParams(){
     const value=q.get(key),el=$(id);
     if(value===null||!el)continue;
     if(["origin","destination"].includes(key))el.value=value.slice(0,180);
-    else if(key==="date"&&/^\\d{4}\\/\\d{1,2}\\/\\d{1,2}$/.test(value))el.value=value;
-    else if(key==="time"&&/^([01]\\d|2[0-3]):[0-5]\\d$/.test(value))el.value=value;
+    else if(key==="date"&&/^\d{4}\/\d{1,2}\/\d{1,2}$/.test(value))el.value=value;
+    else if(key==="time"&&/^([01]\d|2[0-3]):[0-5]\d$/.test(value))el.value=value;
     else if(["battery","soc","consumption","reserve","targetSoc","radius"].includes(key)&&Number.isFinite(Number(value)))el.value=value;
     applied++;
   }
