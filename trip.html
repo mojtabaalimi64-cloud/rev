@@ -171,7 +171,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
         <div class="sub">برای هیبرید شارژی، بخش برقی و بنزینی جداگانه برآورد می‌شوند. در هیبرید معمولی و ملایم، شارژر عمومی برای ادامه سفر الزامی نیست.</div>
       </section>
       <label for="radius">فاصله قابل‌قبول شارژر از مسیر</label>
-      <select id="radius"><option value="5">۵ کیلومتر</option><option value="10" selected>۱۰ کیلومتر</option></select>
+      <select id="radius"><option value="5">۵ کیلومتر</option><option value="10">۱۰ کیلومتر</option><option value="20">۲۰ کیلومتر</option><option value="30">۳۰ کیلومتر</option><option value="50" selected>۵۰ کیلومتر</option></select><div class="sub" style="margin-top:6px">این محدوده برای ایستگاه‌های شارژ، تعمیرگاه‌ها و فروشگاه‌های ثبت‌شده اعمال می‌شود. پوشش داده‌ها به اطلاعات در دسترس بستگی دارد.</div>
       <button class="primary" id="planBtn">محاسبه مسیر و یافتن شارژرها</button>
       <button class="secondary" id="shareTripBtn" type="button" style="width:100%;margin-top:8px">اشتراک‌گذاری این سفر</button>
       <div class="status" id="status" aria-live="polite">برای شروع، دکمه محاسبه مسیر را بزنید.</div>
@@ -228,6 +228,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 const routeLayer = L.layerGroup().addTo(map);
 const stationLayer = L.layerGroup().addTo(map);
 const businessLayer = L.layerGroup().addTo(map);
+L.control.layers(null, {"ایستگاه‌های شارژ / سوخت":stationLayer,"تعمیرگاه‌ها و فروشگاه‌های قطعات":businessLayer}, {collapsed:false,position:"topright"}).addTo(map);
 let lastRoute = null;
 const $ = id => document.getElementById(id);
 function setStatus(message){ $("status").textContent = message; }
@@ -385,7 +386,7 @@ async function queryOverpass(routeCoords,radiusKm){
     const response=await fetch(ONLINE_STATIONS_API,{
       method:"POST", mode:"cors", cache:"no-store", signal:controller.signal,
       headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify({coords:sampleRouteCoordinates(routeCoords,16),radiusKm:Math.min(Number(radiusKm)||5,10)})
+      body:JSON.stringify({coords:sampleRouteCoordinates(routeCoords,Number(radiusKm)>10?10:16),radiusKm:Math.min(Number(radiusKm)||5,50)})
     });
     let payload;
     try{payload=await response.json();}
@@ -404,7 +405,7 @@ async function queryOverpass(routeCoords,radiusKm){
       return {...s,source:raw.source||payload.source||(payload.cached?"کش REV":"OpenStreetMap"),url:raw.source_url||raw.url||s.url,
         updatedAt:raw.updated_at||raw.updatedAt||payload.cached_at||s.updatedAt};
     }).filter(Boolean);
-    return routeFilter(normalized,routeCoords,Math.min(Number(radiusKm)||5,10));
+    return routeFilter(normalized,routeCoords,Math.min(Number(radiusKm)||5,50));
   }catch(e){
     if(e?.name==="AbortError") throw new Error("پاسخ سرویس آنلاین ایستگاه‌ها بیش از حد طول کشید. دوباره تلاش کنید.");
     throw e;
@@ -438,9 +439,9 @@ async function renderFuelStations(routeCoords,radiusKm){
   // Petrol stations are map markers only; they are not charging stops or a fuel-stop plan.
   // Keep the Overpass query small enough to avoid timeouts, and try the backup
   // provider when the primary responds successfully but has no matching records.
-  const sampled=sampleRouteCoordinates(routeCoords,20);
+  const sampled=sampleRouteCoordinates(routeCoords,Number(radiusKm)>10?12:20);
   if(sampled.length<2)return 0;
-  const radiusKmEffective=Math.max(2,Math.min(6,Number(radiusKm)||5));
+  const radiusKmEffective=Math.max(2,Math.min(50,Number(radiusKm)||5));
   const radiusMeters=radiusKmEffective*1000;
   const query='[out:json][timeout:30];('+sampled.map(p=>'nwr(around:'+radiusMeters+','+Number(p[1]).toFixed(5)+','+Number(p[0]).toFixed(5)+')[amenity=fuel];').join('')+');out center tags;';
   const endpoints=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
@@ -486,7 +487,7 @@ async function renderBusinessDirectory(routeCoords,radiusKm){
  businessLayer.clearLayers();const box=$('businessDirectory');if(!box)return;box.innerHTML='<div class="sub">در حال بررسی فهرست تعمیرگاه‌ها و فروشگاه‌های قطعات…</div>';
  try{const response=await fetch('./content.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('فهرست عمومی در دسترس نیست');const data=await response.json();
  const entries=[...(Array.isArray(data.serviceCenters)?data.serviceCenters.map(x=>({...x,_category:'تعمیرگاه مجاز',_key:'serviceCenters'})):[]),...(Array.isArray(data.partsStores)?data.partsStores.map(x=>({...x,_category:'فروشگاه قطعات',_key:'partsStores'})):[])];const metrics=routeMetrics(routeCoords);
- const near=entries.map(x=>({...x,lat:Number(x.latitude??x.lat),lon:Number(x.longitude??x.lon)})).filter(x=>x.status==='verified'&&Number.isFinite(x.lat)&&Number.isFinite(x.lon)&&x.lat>=-90&&x.lat<=90&&x.lon>=-180&&x.lon<=180).map(x=>({...x,...stationAlongRouteKm({lat:x.lat,lon:x.lon},metrics),_ratingId:String(x.id||((x.title||x.name||"فروشگاه")+"|"+(x.address||""))).slice(0,240)})).filter(x=>x.offRouteKm<=radiusKm);
+ const near=entries.map(x=>({...x,lat:Number(x.latitude??x.lat),lon:Number(x.longitude??x.lon)})).filter(x=>x.status==='verified'&&Number.isFinite(x.lat)&&Number.isFinite(x.lon)&&x.lat>=-90&&x.lat<=90&&x.lon>=-180&&x.lon<=180).map(x=>({...x,...stationAlongRouteKm({lat:x.lat,lon:x.lon},metrics),_ratingId:String(x.id||((x.title||x.name||"فروشگاه")+"|"+(x.address||""))).slice(0,240)})).filter(x=>x.offRouteKm<=Math.min(50,Number(radiusKm)||5));
  // Ratings contribute to ordering, with Bayesian smoothing so one vote has limited influence.
  await Promise.all(near.slice(0,30).map(async x=>{try{const rr=await fetch("https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/ratings?type=store&id="+encodeURIComponent(x._ratingId),{cache:"no-store"});const jj=await rr.json();if(rr.ok&&jj.success){x._ratingCount=Number(jj.count)||0;x._ratingAverage=jj.average==null?null:Number(jj.average);const n=x._ratingCount,avg=x._ratingAverage===null?3.5:x._ratingAverage;x._ratingScore=(avg*n+3.5*3)/(n+3);}else{x._ratingCount=0;x._ratingAverage=null;x._ratingScore=3.5;}}catch(e){x._ratingCount=0;x._ratingAverage=null;x._ratingScore=3.5;}}));
  near.sort((a,b)=>(b._ratingScore-a._ratingScore)||((a.offRouteKm-b.offRouteKm)*0.15)||a.routeKm-b.routeKm);
