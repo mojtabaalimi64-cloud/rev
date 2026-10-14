@@ -605,7 +605,7 @@ async function loadRatingOverrides(){
     if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
     ratingOverridesCache=Array.isArray(j.items)?j.items:[];
   }catch(e){ratingOverridesCache=[];console.warn('Could not load manual rating overrides',e)}
-  finally{ratingOverridesBusy=false;if(['stations','serviceCenters','partsStores','rating-admin'].includes(tab))draw()}
+  finally{ratingOverridesBusy=false;if(['stations','serviceCenters','partsStores','rating-admin','ratings'].includes(tab))draw()}
 }
 function draw(){
   if(['stations','serviceCenters','partsStores','rating-admin','ratings'].includes(tab)&&ratingOverridesCache===null&&!ratingOverridesBusy)loadRatingOverrides();
