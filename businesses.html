@@ -23,18 +23,20 @@ const typeName=t=>({store:'فروشگاه قطعات',repair:'تعمیرگاه',
 const statusName=s=>({approved:'تأییدشده توسط REV',pending:'در انتظار بررسی'})[s]||'';
 const apiUrl=API+'/api/businesses'+(typeFilter?'?type='+encodeURIComponent(typeFilter):'');
 function businessCard(x,products){return '<article class="card">'+(x.image_url?'<img class="profile-image" src="'+esc(x.image_url)+'" alt="'+esc(x.name)+'" loading="lazy">':'')+'<span class="tag">'+esc(typeName(x.business_type))+'</span><span class="tag">تأییدشده توسط REV</span><h3>'+esc(x.name)+'</h3><p class="muted">'+esc(x.city)+' · '+esc(x.address)+'</p><p>'+esc(x.description||'توضیحات تکمیلی ثبت نشده است.')+'</p>'+(x.phone?'<p>تلفن: <a href="tel:'+esc(x.phone)+'">'+esc(x.phone)+'</a></p>':'')+'<a class="btn" href="./businesses.html?id='+encodeURIComponent(x.id)+'">مشاهده پروفایل</a></article>'}
-function renderApi(data){
+function renderApi(data,legacyData={}){
  const all=data.businesses||[], products=data.products||[];
  if(selected){
   const x=all.find(y=>String(y.id)===selected);
-  if(!x){app.innerHTML='<h1>پروفایل پیدا نشد</h1><p>این پروفایل منتشر نشده یا شناسه آن معتبر نیست.</p><a href="./businesses.html">بازگشت به فهرست</a>';return true}
+  if(!x)return false;
   const own=products.filter(p=>p.business_id===x.id);
   app.innerHTML='<p><a href="./businesses.html">← بازگشت به فهرست مراکز</a></p><section class="profile"><span class="tag">'+esc(typeName(x.business_type))+'</span><span class="tag">تأییدشده توسط REV</span><h1>'+esc(x.name)+'</h1><div class="facts"><div class="fact"><small>شهر</small>'+esc(x.city)+'</div><div class="fact"><small>نشانی</small>'+esc(x.address)+'</div><div class="fact"><small>تلفن</small>'+(x.phone?'<a href="tel:'+esc(x.phone)+'">'+esc(x.phone)+'</a>':'درج نشده')+'</div><div class="fact"><small>وب‌سایت</small>'+(x.website?'<a target="_blank" rel="noopener noreferrer" href="'+esc(x.website)+'">باز کردن وب‌سایت</a>':'درج نشده')+'</div><div class="fact"><small>ساعات فعالیت</small>'+esc(x.opening_hours||'ثبت نشده')+'</div></div><h2>شرح خدمات</h2><p>'+esc(x.description||'اطلاعات ثبت نشده')+'</p><p>'+esc((JSON.parse(x.services_json||'[]')).join('، '))+'</p><h2>برندهای تحت پوشش</h2><p>'+esc((JSON.parse(x.brands_json||'[]')).join('، ')||'ثبت نشده')+'</p>'+(own.length?'<h2>محصولات تأییدشده</h2><div class="grid">'+own.map(p=>'<article class="card">'+(p.image_url?'<img class="profile-image" src="'+esc(p.image_url)+'" alt="'+esc(p.title)+'">':'')+'<h3>'+esc(p.title)+'</h3><p>'+esc(p.description||'')+'</p><p><strong>'+esc(p.price_text||'قیمت اعلام نشده')+'</strong></p>'+(p.product_url?'<a class="btn" target="_blank" rel="noopener noreferrer" href="'+esc(p.product_url)+'">جزئیات/سفارش</a>':'')+'</article>').join('')+'</div>':'')+(x.latitude!=null&&x.longitude!=null?'<a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/?mlat='+encodeURIComponent(x.latitude)+'&mlon='+encodeURIComponent(x.longitude)+'#map=16/'+encodeURIComponent(x.latitude)+'/'+encodeURIComponent(x.longitude)+'">مشاهده موقعیت روی نقشه</a>':'')+'</section>';
   return true;
  }
  if(all.length){
   const groups=[['charging','جایگاه‌های شارژ'],['repair','تعمیرگاه‌ها و مراکز خدمات'],['store','فروشگاه‌های قطعات']];
-  app.innerHTML='<h1>کسب‌وکارهای تأییدشده REV</h1><p class="muted">این فهرست از پایگاه داده REV می‌آید. فقط پروفایل‌هایی که مدیریت تأیید کرده نمایش داده می‌شوند.</p><div class="notice">تأیید REV به معنی تضمین کیفیت، مجوز قانونی یا در دسترس بودن لحظه‌ای خدمات نیست؛ پیش از مراجعه اطلاعات را بررسی کنید.</div>'+groups.filter(g=>!typeFilter||typeFilter===g[0]).map(g=>{const list=all.filter(x=>x.business_type===g[0]);return '<h2>'+g[1]+'</h2><div class="grid">'+(list.map(x=>businessCard(x,products)).join('')||'<div class="empty">مورد تأییدشده‌ای در این دسته ثبت نشده است.</div>')+'</div>'}).join('');
+  const legacy=[...(legacyData.serviceCenters||[]).map(x=>({...x,kind:'تعمیرگاه قدیمی',kindKey:'repair'})),...(legacyData.partsStores||[]).map(x=>({...x,kind:'فروشگاه قدیمی',kindKey:'store'}))];
+  const legacyHtml=legacy.length?'<h2>فهرست‌های موجود در مدیریت قبلی</h2><p class="muted">این ورودی‌ها از فهرست محتوای قبلی خوانده می‌شوند و وضعیت مجوز آن‌ها لزوماً توسط پنل جدید تأیید نشده است.</p><div class="grid">'+legacy.map(x=>'<article class="card">'+(x.image?'<img class="profile-image" src="'+esc(x.image)+'" alt="'+esc(x.title||x.name)+'">':'')+'<span class="tag">'+esc(x.kind)+'</span><h3>'+esc(x.title||x.name)+'</h3><p class="muted">'+esc(x.address||'نشانی ثبت نشده')+'</p><p>'+esc(x.description||x.notes||'')+'</p><a class="btn" href="./businesses.html?id='+encodeURIComponent(x.profileSlug||x.id||'')+'">مشاهده پروفایل</a></article>').join('')+'</div>':'';
+  app.innerHTML='<h1>کسب‌وکارهای REV</h1><p class="muted">پروفایل‌های جدید فقط پس از تأیید مدیریت در این فهرست نمایش داده می‌شوند.</p><div class="notice">تأیید REV به معنی تضمین کیفیت، مجوز قانونی یا در دسترس بودن لحظه‌ای خدمات نیست؛ پیش از مراجعه اطلاعات را بررسی کنید.</div>'+groups.filter(g=>!typeFilter||typeFilter===g[0]).map(g=>{const list=all.filter(x=>x.business_type===g[0]);return '<h2>'+g[1]+'</h2><div class="grid">'+(list.map(x=>businessCard(x,products)).join('')||'<div class="empty">مورد جدید تأییدشده‌ای در این دسته ثبت نشده است.</div>')+'</div>'}).join('')+legacyHtml;
   return true;
  }
  return false;
@@ -49,8 +51,10 @@ function renderLegacy(d){
  app.innerHTML='<h1>فهرست مراکز REV</h1><p class="muted">در حال حاضر فهرست‌های قدیمی مدیریت نیز نمایش داده می‌شوند.</p><h2>تعمیرگاه‌ها</h2><div class="grid">'+(repairs.map(card).join('')||'<div class="empty">تعمیرگاهی ثبت نشده است.</div>')+'</div><h2>فروشگاه‌های قطعات</h2><div class="grid">'+(shops.map(card).join('')||'<div class="empty">فروشگاهی ثبت نشده است.</div>')+'</div><p><a class="btn" href="./account.html">ثبت کسب‌وکار جدید</a></p>';
 }
 async function start(){
- try{const r=await fetch(apiUrl,{cache:'no-store'});const j=await r.json();if(r.ok&&j.success&&renderApi(j))return;}catch(e){console.warn('REV business API unavailable',e)}
- try{const r=await fetch('./content.json?v='+Date.now(),{cache:'no-store'});if(!r.ok)throw Error('فهرست در دسترس نیست');renderLegacy(await r.json())}
+ let legacy={};
+ try{const r=await fetch('./content.json?v='+Date.now(),{cache:'no-store'});if(r.ok)legacy=await r.json()}catch(e){}
+ try{const r=await fetch(apiUrl,{cache:'no-store'});const j=await r.json();if(r.ok&&j.success&&renderApi(j,legacy))return;}catch(e){console.warn('REV business API unavailable',e)}
+ try{if(Object.keys(legacy).length){renderLegacy(legacy);return}throw Error('فهرست در دسترس نیست')}
  catch(e){app.innerHTML='<div class="empty">فهرست بارگذاری نشد. '+esc(e.message)+'<p><a href="./account.html">ورود به پنل کاربری/کسب‌وکار</a></p></div>'}
 }
 start();
