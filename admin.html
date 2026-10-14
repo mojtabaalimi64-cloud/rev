@@ -599,10 +599,10 @@ function collect(){
 }
 root.addEventListener('input',e=>{
   const t=e.target,d=t.dataset;
-  if(d.usersSearch){usersSearchValue=t.value;usersPage=1;clearTimeout(usersDebounce);usersDebounce=setTimeout(()=>loadUsers(),300);return}
-  if(d.stationSearch){stationSearchValue=t.value;const pos=t.selectionStart;draw();const input=$('station-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
-  if(d.listSearch){listSearchValue=t.value;const q=listSearchValue.trim().toLocaleLowerCase();let n=0;root.querySelectorAll('.admin-list-row').forEach(row=>{const show=!q||String(row.dataset.search||'').toLocaleLowerCase().includes(q);row.hidden=!show;if(show)n++});const counter=$('list-count');if(counter)counter.textContent=n;return}
-  if(d.ratingSearch){ratingSearchValue=t.value;ratingSelected=null;ratingOverride=null;const pos=t.selectionStart;draw();const input=$('rating-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
+  if('usersSearch' in d){usersSearchValue=t.value;usersPage=1;clearTimeout(usersDebounce);usersDebounce=setTimeout(()=>loadUsers(),300);return}
+  if('stationSearch' in d){stationSearchValue=t.value;const pos=t.selectionStart;draw();const input=$('station-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
+  if('listSearch' in d){listSearchValue=t.value;const q=listSearchValue.trim().toLocaleLowerCase();let n=0;root.querySelectorAll('.admin-list-row').forEach(row=>{const show=!q||String(row.dataset.search||'').toLocaleLowerCase().includes(q);row.hidden=!show;if(show)n++});const counter=$('list-count');if(counter)counter.textContent=n;return}
+  if('ratingSearch' in d){ratingSearchValue=t.value;ratingSelected=null;ratingOverride=null;const pos=t.selectionStart;draw();const input=$('rating-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
   if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true}
   else if(d.c){c.contact[d.c]=t.value.trim();dirty=true}
   else if(d.s){c.shopInfo[d.s]=t.value;dirty=true}
