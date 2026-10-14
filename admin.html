@@ -137,6 +137,24 @@ async function load(){
     if(j.success && j.data && typeof j.data==='object'){
       c=j.data;
       note='اطلاعات از دیتابیس Cloudflare بارگذاری شد.';
+      // Merge business profiles that were published to content.json but have not
+      // yet been migrated into D1. Keep all D1 records and avoid duplicate IDs.
+      try{
+        const live=await fetch(LIVE_CONTENT+'?v='+Date.now(),{cache:'no-store'});
+        if(live.ok){
+          const publicData=await live.json();
+          let imported=0;
+          ['serviceCenters','partsStores'].forEach(k=>{
+            if(!Array.isArray(c[k]))c[k]=[];
+            const ids=new Set(c[k].map(x=>String(x.id||'' )).filter(Boolean));
+            (Array.isArray(publicData[k])?publicData[k]:[]).forEach(item=>{
+              const id=String(item.id||'');
+              if(id&&!ids.has(id)){c[k].push(item);ids.add(id);imported++;}
+            });
+          });
+          if(imported)note+=` ${imported} پروفایل تعمیرگاه/فروشگاه از محتوای منتشرشده بازیابی شد؛ برای ثبت دائمی در دیتابیس روی «انتشار تغییرات» بزنید.`;
+        }
+      }catch(mergeErr){console.warn('Business profile migration skipped',mergeErr)}
     }else{
       // First-time migration: seed the editor from the current public content.json.
       const old=await fetch(LIVE_CONTENT+'?v='+Date.now(),{cache:'no-store'});
