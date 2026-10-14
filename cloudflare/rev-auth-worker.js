@@ -172,6 +172,53 @@ export default {
     const u=await currentUser(request,env);
     return u?response(request,env,{success:true,user:u}):response(request,env,{success:false,user:null},401);
    }
+   // Private EV trip telemetry. Every route is scoped to the authenticated user.
+   if(path==="/api/driver/profile" && method==="GET") {
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:false,error:"برای مشاهده پروفایل راننده وارد حساب کاربری شوید."},401);
+    const row=await env.DB.prepare("SELECT COUNT(*) AS trips, COALESCE(SUM(distance_km),0) AS distance_km, COALESCE(SUM(energy_kwh),0) AS energy_kwh, SUM(CASE WHEN distance_km>0 AND energy_kwh>0 THEN energy_kwh END) AS measured_energy, SUM(CASE WHEN distance_km>0 AND energy_kwh>0 THEN distance_km END) AS measured_distance, MAX(ended_at) AS last_trip_at FROM rev_driver_trips WHERE user_id=?").bind(u.id).first();
+    const recent=await env.DB.prepare("SELECT id,vehicle_name,vehicle_type,started_at,ended_at,distance_km,energy_kwh,start_soc,end_soc,energy_source,route_saved,created_at FROM rev_driver_trips WHERE user_id=? ORDER BY COALESCE(ended_at,created_at) DESC LIMIT 100").bind(u.id).all();
+    const md=Number(row?.measured_distance)||0, me=Number(row?.measured_energy)||0;
+    return response(request,env,{success:true,profile:{tripCount:Number(row?.trips)||0,totalDistanceKm:Number(row?.distance_km)||0,totalEnergyKwh:Number(row?.energy_kwh)||0,averageKwhPer100Km:md>0&&me>0?me/md*100:null,lastTripAt:row?.last_trip_at||null},trips:recent.results||[]});
+   }
+   if(path==="/api/driver/trips" && method==="GET") {
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:false,error:"برای مشاهده سفرها وارد حساب کاربری شوید."},401);
+    const rows=await env.DB.prepare("SELECT id,vehicle_name,vehicle_type,started_at,ended_at,distance_km,energy_kwh,start_soc,end_soc,energy_source,route_saved,created_at FROM rev_driver_trips WHERE user_id=? ORDER BY created_at DESC LIMIT 100").bind(u.id).all();
+    return response(request,env,{success:true,trips:rows.results||[]});
+   }
+   if(path==="/api/driver/trips" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:false,error:"برای ثبت سفر وارد حساب کاربری شوید."},401);
+    const b=await request.json().catch(()=>null);
+    if(!b||typeof b!=="object") return response(request,env,{success:false,error:"داده سفر نامعتبر است."},400);
+    const distance=Number(b.distanceKm), energy=Number(b.energyKwh), startSoc=b.startSoc==null?null:Number(b.startSoc), endSoc=b.endSoc==null?null:Number(b.endSoc);
+    if(!Number.isFinite(distance)||distance<=0||distance>5000||!Number.isFinite(energy)||energy<0||energy>2000) return response(request,env,{success:false,error:"مسافت یا انرژی ثبت‌شده معتبر نیست."},400);
+    if((startSoc!==null&&(!Number.isFinite(startSoc)||startSoc<0||startSoc>100))||(endSoc!==null&&(!Number.isFinite(endSoc)||endSoc<0||endSoc>100))) return response(request,env,{success:false,error:"درصد شارژ باید بین صفر تا ۱۰۰ باشد."},400);
+    const started=String(b.startedAt||""); const ended=String(b.endedAt||"");
+    if(!started||!Number.isFinite(Date.parse(started))||!ended||!Number.isFinite(Date.parse(ended))||Date.parse(ended)<Date.parse(started)) return response(request,env,{success:false,error:"زمان شروع یا پایان سفر معتبر نیست."},400);
+    let routeJson=null;
+    if(b.saveRoute===true&&Array.isArray(b.routePoints)){
+      if(b.routePoints.length>5000) return response(request,env,{success:false,error:"تعداد نقاط مسیر بیش از حد مجاز است."},413);
+      const pts=[];
+      for(const p of b.routePoints){const lat=Number(p?.lat),lon=Number(p?.lon),ts=Number(p?.ts);if(!Number.isFinite(lat)||lat < -90||lat>90||!Number.isFinite(lon)||lon < -180||lon>180) return response(request,env,{success:false,error:"مختصات مسیر معتبر نیست."},400);pts.push({lat,lon,ts:Number.isFinite(ts)?ts:null});}
+      routeJson=JSON.stringify(pts);
+      if(routeJson.length>350000) return response(request,env,{success:false,error:"حجم مسیر بیش از حد مجاز است."},413);
+    }
+    const id=crypto.randomUUID(),now=new Date().toISOString(),vehicle=String(b.vehicleName||"خودروی ثبت‌نشده").trim().slice(0,100),vehicleType=["bev","phev","hev","mhev"].includes(b.vehicleType)?b.vehicleType:"bev",source=["obd","vehicle_api","gps_estimate","manual"].includes(b.energySource)?b.energySource:"gps_estimate";
+    await env.DB.prepare("INSERT INTO rev_driver_trips(id,user_id,vehicle_name,vehicle_type,started_at,ended_at,distance_km,energy_kwh,start_soc,end_soc,energy_source,route_json,route_saved,created_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?)").bind(id,u.id,vehicle,vehicleType,started,ended,distance,energy,startSoc,endSoc,source,routeJson,routeJson?1:0,now).run();
+    return response(request,env,{success:true,id,routeSaved:!!routeJson,message:"سفر در پروفایل خصوصی شما ثبت شد."},201);
+   }
+   if(path.startsWith("/api/driver/trips/") && path.endsWith("/delete") && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:false,error:"ابتدا وارد حساب کاربری شوید."},401);
+    const id=path.split("/")[4];
+    if(!id||id==="delete") return response(request,env,{success:false,error:"شناسه سفر معتبر نیست."},400);
+    const result=await env.DB.prepare("DELETE FROM rev_driver_trips WHERE id=? AND user_id=?").bind(id,u.id).run();
+    return response(request,env,{success:true,deleted:Number(result.meta?.changes)||0});
+   }
    if(path==="/api/auth/logout" && method==="POST") {
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
     const raw=(request.headers.get("Cookie")||"").split(";").map(x=>x.trim()).find(x=>x.startsWith(COOKIE_NAME+"="))?.slice(COOKIE_NAME.length+1);
