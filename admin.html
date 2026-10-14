@@ -422,7 +422,7 @@ const settings=()=>`<div class="box"><h3>حساب کاربران REV</h3>
   <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="auth-enabled"> فعال بودن ورود و ثبت‌نام کاربران</label>
   <p class="hint" id="auth-status">برای دریافت وضعیت، ابتدا Worker احراز هویت REV باید راه‌اندازی شده باشد. تا پیش از تنظیم سرویس ایمیل، فعال‌سازی امکان‌پذیر نیست.</p>
   <button class="btn main" data-a="auth-save">ذخیره وضعیت ورود و ثبت‌نام</button>
-  <p class="hint">این گزینه از طریق API امن و با رمز مدیریتی ذخیره می‌شود؛ خاموش بودن آن، مسیرهای ثبت‌نام و ورود کاربران عادی را می‌بندد و ورود مدیر سایت را تغییر نمی‌دهد.</p></div>
+  <p class="hint">این گزینه از طریق API امن و با رمز مدیریتی ذخیره می‌شود؛ خاموش بودن آن، مسیرهای ثبت‌نام و ورود کاربران عادی را می‌بندد و ورود مدیر سایت را تغییر نمی‌دهد.</p><p><a class="btn main" href="./admin-businesses.html" target="_blank" rel="noopener">مدیریت درخواست‌های فروشگاه، تعمیرگاه، جایگاه شارژ و محصولات ←</a></p><p><a href="./account.html" target="_blank" rel="noopener">مشاهده پنل کاربری و ثبت کسب‌وکار</a></p></div>
   <div class="box"><label for="pn">نام پادکست</label><input type="text" id="pn" value="${esc(c.podcast)}">
   <label for="ga">شناسه‌ی گوگل آنالیتیکس (اختیاری، مثل G-XXXXXXXX)</label><input type="text" id="ga" data-g="1" dir="ltr" value="${esc(c.gaId)}"><p class="hint">با این شناسه می‌توانید تعداد بازدید و منبع بازدیدکنندگان را ببینید.</p></div>`;
 const shopBox=()=>{const s=c.shopInfo;return `<div class="box"><h3>تنظیمات فروشگاه</h3>
