@@ -71,6 +71,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 .weather-summary{padding:12px;border-radius:11px;background:#17251c;border:1px solid #3d5439;margin:10px 0;font-size:13px}
 .weather-summary.warn{background:#281f14;border-color:#66502b;color:#ffd18a}
 .weather-credit{font-size:11px;color:var(--muted);margin-top:12px}
+.map-layers{display:flex;align-items:center;gap:10px 16px;flex-wrap:wrap;margin:0 0 10px;padding:10px 12px;background:#0c131b;border:1px solid var(--line);border-radius:12px}.map-layers>strong{font-size:12px;color:var(--muted)}.map-layer-toggle{display:inline-flex;align-items:center;gap:7px;margin:0;color:var(--text);font-size:13px;cursor:pointer;white-space:nowrap}.map-layer-toggle input{width:17px;height:17px;margin:0;accent-color:var(--accent)}.layer-dot{width:9px;height:9px;border-radius:50%;display:inline-block}.station-dot{background:#d7ff3f}.business-dot{background:#c084fc}@media(max-width:560px){.map-layers{align-items:flex-start;flex-direction:column;gap:9px}.map-layer-toggle{white-space:normal}}
 @media(max-width:520px){.weather-grid{grid-template-columns:1fr}}
 .directions-head{display:flex;justify-content:space-between;gap:10px;align-items:center;margin-bottom:10px}
 .directions-head h2{margin:0}
@@ -184,8 +185,9 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
       <details class="compact-disclosure" id="resultsDetails"><summary>نمایش بیشتر · ایستگاه‌های شارژ و توقف‌ها</summary><div class="disclosure-content"><div class="results" id="results"><h2 style="margin-top:10px">شارژرهای نزدیک مسیر</h2><div class="sub">پس از محاسبه مسیر، فهرست اینجا نمایش داده می‌شود.</div></div></div></details>
     </aside>
     <main class="panel">
-      <div class="map-heading"><h2>نقشه مسیر و ایستگاه‌های شارژ</h2><span class="map-tag">نقشه زنده · مسیر جاده‌ای</span></div>
-      <div id="map" role="img" aria-label="نقشه مسیر سفر و ایستگاه‌های شارژ"></div>
+      <div class="map-heading"><h2>نقشه مسیر و ایستگاه‌ها</h2><span class="map-tag">نقشه زنده · مسیر جاده‌ای</span></div>
+      <div class="map-layers" role="group" aria-label="نمایش لایه‌های نقشه"><strong>نمایش روی نقشه:</strong><label class="map-layer-toggle"><input id="toggleStations" type="checkbox" checked><span class="layer-dot station-dot"></span> ایستگاه‌های شارژ و سوخت</label><label class="map-layer-toggle"><input id="toggleBusinesses" type="checkbox" checked><span class="layer-dot business-dot"></span> تعمیرگاه‌ها و فروشگاه‌ها</label></div>
+      <div id="map" role="img" aria-label="نقشه مسیر سفر و ایستگاه‌ها"></div>
   <section class="timeline-panel" id="timelinePanel" aria-live="polite">
     <div class="timeline-head"><h2>حرکت روی مسیر · شبیه‌ساز سفر</h2><div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap"><button type="button" class="secondary" id="timelinePlayBtn" disabled>▶ شروع حرکت</button><span class="sub" id="timelineProgressText">ابتدا مسیر را محاسبه کنید</span></div></div>
     <div class="timeline-track-wrap" id="timelineTrackWrap">
@@ -228,9 +230,14 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 const routeLayer = L.layerGroup().addTo(map);
 const stationLayer = L.layerGroup().addTo(map);
 const businessLayer = L.layerGroup().addTo(map);
-L.control.layers(null, {"ایستگاه‌های شارژ / سوخت":stationLayer,"تعمیرگاه‌ها و فروشگاه‌های قطعات":businessLayer}, {collapsed:false,position:"topright"}).addTo(map);
+function setMapLayerVisibility(layer,visible){if(visible){if(!map.hasLayer(layer))layer.addTo(map)}else if(map.hasLayer(layer)){map.removeLayer(layer)}}
+
 let lastRoute = null;
 const $ = id => document.getElementById(id);
+const toggleStations=$("toggleStations");
+const toggleBusinesses=$("toggleBusinesses");
+if(toggleStations)toggleStations.addEventListener("change",()=>setMapLayerVisibility(stationLayer,toggleStations.checked));
+if(toggleBusinesses)toggleBusinesses.addEventListener("change",()=>setMapLayerVisibility(businessLayer,toggleBusinesses.checked));
 function setStatus(message){ $("status").textContent = message; }
 function num(id, fallback){ const n=Number($(id).value); return Number.isFinite(n)&&n>0?n:fallback; }
 function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
