@@ -8,7 +8,7 @@ function origins(env){return (env.ALLOWED_ORIGINS||DEFAULT_ORIGIN).split(",").ma
 function cors(req,env){
  const origin=req.headers.get("Origin")||"";
  return {Vary:"Origin",...(origins(env).includes(origin)?{"Access-Control-Allow-Origin":origin}:{}),
-  "Access-Control-Allow-Methods":"GET,POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type",
+  "Access-Control-Allow-Methods":"GET,POST,OPTIONS","Access-Control-Allow-Headers":"Content-Type, Authorization",
   "Access-Control-Max-Age":"86400"};
 }
 function json(req,env,data,status=200){return new Response(JSON.stringify(data),{status,headers:{"Content-Type":"application/json; charset=utf-8","Cache-Control":"no-store",...cors(req,env)}});}
@@ -29,6 +29,16 @@ export default {async fetch(req,env){
  if(method==="OPTIONS")return new Response(null,{status:204,headers:cors(req,env)});
  try{
   if(path==="/api/health"&&method==="GET")return json(req,env,{success:true,service:"REV Ratings API"});
+  if(path==="/api/admin/ratings"&&method==="GET"){
+   const auth=req.headers.get("Authorization")||"";
+   const expected=env.ADMIN_TOKEN||"";
+   if(!expected||auth!=="Bearer "+expected)return json(req,env,{success:false,error:"دسترسی مدیر تأیید نشد."},401);
+   const type=url.searchParams.get("type")||"store";
+   if(type!=="store"&&type!=="station")return json(req,env,{success:false,error:"نوع سابقه نامعتبر است."},400);
+   const limit=Math.min(1000,Math.max(1,Number(url.searchParams.get("limit")||500)));
+   const result=await env.DB.prepare("SELECT target_id AS id, rating, created_at FROM rev_ratings WHERE target_type=? ORDER BY created_at DESC LIMIT ?").bind(type,limit).all();
+   return json(req,env,{success:true,type,items:result.results||[]});
+  }
   if(path!=="/api/ratings")return json(req,env,{success:false,error:"Not found"},404);
   if(method==="GET"){
    const type=url.searchParams.get("type"),id=url.searchParams.get("id");
