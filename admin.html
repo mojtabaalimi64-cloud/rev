@@ -481,16 +481,19 @@ function ratingsPanel(){
     const votesAll=ratingsCache.filter(v=>v._type===type),groups=new Map();
     for(const vote of votesAll){const id=String(vote.id||'');if(!groups.has(id))groups.set(id,[]);groups.get(id).push(vote)}
     const cards=[...groups.entries()].map(([id,votes])=>{
-      const b=type==='store'?byId.get(id):null,avg=votes.reduce((sum,v)=>sum+Number(v.rating||0),0)/votes.length;
-      const name=b?.title||b?.name||(type==='station'?'شناسه ایستگاه: '+id:id);
+      const b=type==='store'?byId.get(id):null,rawAvg=votes.reduce((sum,v)=>sum+Number(v.rating||0),0)/votes.length,manual=overrides.find(x=>x.target_type===type&&String(x.target_id)===id),avg=manual?Number(manual.manual_average):rawAvg,shownCount=manual?Number(manual.manual_count):votes.length;
+      const name=manual?.display_name||b?.title||b?.name||(type==='station'?'شناسه ایستگاه: '+id:id);
       const history=votes.map(v=>'<div class="row" style="border-top:1px solid #e6ebee;padding:8px 0"><div><b>'+esc('★'.repeat(Number(v.rating)||0))+'</b><small>'+esc(new Date(v.created_at).toLocaleString('fa-IR'))+'</small></div><small>'+esc(Number(v.rating)||0)+' از ۵</small></div>').join('');
-      return '<div class="box"><h3>'+esc(name)+'</h3><p class="hint">'+esc(b?b._kind:(type==='station'?'ایستگاه شارژ':'مورد حذف‌شده یا شناسه تغییرکرده'))+' · میانگین '+avg.toLocaleString('fa-IR',{maximumFractionDigits:2})+' از ۵ · '+fmt(votes.length)+' رأی</p><p class="hint" style="margin:8px 0">شناسه رأی: <code dir="ltr">'+esc(id)+'</code></p>'+chart(votes)+'<details style="margin-top:12px"><summary>مشاهده سوابق دقیق ('+fmt(votes.length)+' رأی)</summary>'+history+'</details></div>';
+      return '<div class="box"><h3>'+esc(name)+'</h3><p class="hint">'+esc(b?b._kind:(type==='station'?'ایستگاه شارژ':'مورد حذف‌شده یا شناسه تغییرکرده'))+' · '+(manual?'امتیاز دستی نهایی':'میانگین رأی‌های ثبت‌شده')+' '+avg.toLocaleString('fa-IR',{maximumFractionDigits:2})+' از ۵ · '+fmt(shownCount)+' رأی'+(manual?' · تنظیم‌شده توسط مدیر':'')+'</p><p class="hint" style="margin:8px 0">شناسه رأی: <code dir="ltr">'+esc(id)+'</code></p>'+chart(votes)+'<details style="margin-top:12px"><summary>مشاهده سوابق دقیق ('+fmt(votes.length)+' رأی)</summary>'+history+'</details></div>';
     }).join('');
     const total=votesAll.length,avg=total?votesAll.reduce((sum,v)=>sum+Number(v.rating||0),0)/total:0;
     return '<div class="box"><h3>'+title+'</h3><p class="hint">تعداد رأی‌ها: <b>'+fmt(total)+'</b> · میانگین کل: <b>'+avg.toLocaleString('fa-IR',{maximumFractionDigits:2})+'/۵</b></p>'+chart(votesAll)+'</div>'+(cards||'<div class="box">هنوز رأیی در این دسته ثبت نشده است.</div>');
   };
+  const overrides=Array.isArray(ratingOverridesCache)?ratingOverridesCache:[];
+  const relevantOverrides=overrides.filter(x=>ratingHistoryFilter==='all'||x.target_type===ratingHistoryFilter);
+  const manualChart=relevantOverrides.length?'<div class="box"><h3>نمودار امتیازهای نهایی تنظیم‌شده دستی</h3><p class="hint">امتیازهای دستی در این نمودار نمایش داده می‌شوند؛ نمودار توزیع رأی‌های کاربران جدا از امتیاز دستی باقی می‌ماند.</p>'+relevantOverrides.slice(0,30).map(x=>{const avg=Math.max(0,Math.min(5,Number(x.manual_average)||0));return '<div style="display:grid;grid-template-columns:minmax(120px,1.4fr) minmax(70px,2fr) 90px;gap:9px;align-items:center;margin:9px 0"><span style="font-size:12px;overflow-wrap:anywhere">'+esc(x.display_name||x.public_code||x.target_id)+'</span><div style="height:12px;background:#e7edf0;border-radius:99px;overflow:hidden"><div style="height:100%;width:'+(avg/5*100)+'%;background:#168653;border-radius:99px"></div></div><b style="font-size:12px;text-align:left;white-space:nowrap">'+avg.toLocaleString('fa-IR',{maximumFractionDigits:1})+'/۵ · '+fmt(x.manual_count)+' رأی</b></div>'}).join('')+'</div>':'<div class="box"><h3>نمودار امتیازهای نهایی تنظیم‌شده دستی</h3><p class="hint">برای این دسته هنوز امتیاز دستی ثبت نشده است.</p></div>';
   const filters=[['all','همه'],['store','فروشگاه‌ها و تعمیرگاه‌ها'],['station','ایستگاه‌های شارژ']];
-  return '<div class="box"><h3>امتیازها و سابقه</h3><p class="hint">نمودار توزیع امتیازها و روند ثبت رأی‌ها به تفکیک دسته و هر مورد نمایش داده می‌شود. سابقه رأی‌ها ناشناس است و حداکثر ۱۰۰۰ رأی آخر هر دسته دریافت می‌شود.</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">'+filters.map(([k,label])=>'<button class="btn '+(ratingHistoryFilter===k?'main':'')+'" data-a="ratings-filter" data-k="'+k+'">'+label+'</button>').join('')+'<button class="btn" data-a="ratings-refresh">تازه‌سازی سابقه</button></div></div>'+(ratingHistoryFilter!=='station'?renderGroup('store','فروشگاه‌ها و تعمیرگاه‌ها'):'')+(ratingHistoryFilter!=='store'?renderGroup('station','ایستگاه‌های شارژ'):'');
+  return '<div class="box"><h3>امتیازها و سابقه</h3><p class="hint">نمودار توزیع امتیازها و روند ثبت رأی‌ها به تفکیک دسته و هر مورد نمایش داده می‌شود. سابقه رأی‌ها ناشناس است و حداکثر ۱۰۰۰ رأی آخر هر دسته دریافت می‌شود.</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">'+filters.map(([k,label])=>'<button class="btn '+(ratingHistoryFilter===k?'main':'')+'" data-a="ratings-filter" data-k="'+k+'">'+label+'</button>').join('')+'<button class="btn" data-a="ratings-refresh">تازه‌سازی سابقه</button></div></div>'+manualChart+(ratingHistoryFilter!=='station'?renderGroup('store','فروشگاه‌ها و تعمیرگاه‌ها'):'')+(ratingHistoryFilter!=='store'?renderGroup('station','ایستگاه‌های شارژ'):'');
 }
 function ratingTargets(){
   const out=[];
@@ -605,7 +608,7 @@ async function loadRatingOverrides(){
   finally{ratingOverridesBusy=false;if(['stations','serviceCenters','partsStores','rating-admin'].includes(tab))draw()}
 }
 function draw(){
-  if(['stations','serviceCenters','partsStores','rating-admin'].includes(tab)&&ratingOverridesCache===null&&!ratingOverridesBusy)loadRatingOverrides();
+  if(['stations','serviceCenters','partsStores','rating-admin','ratings'].includes(tab)&&ratingOverridesCache===null&&!ratingOverridesBusy)loadRatingOverrides();
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
