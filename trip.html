@@ -801,10 +801,11 @@ function updateTimeline(){
   $("timelineTime").textContent=eta.toLocaleString("fa-IR",{dateStyle:"short",timeStyle:"short"});
   $("timelineSoc").textContent=Math.round(soc)+"٪";
   $("timelineSoc").style.color=soc<=15?"#ff8d8d":"var(--accent)";
-  const risks=weatherRiskIcons(wx);if(point&&revTimeline.carMarker){revTimeline.carMarker.setLatLng(point);revTimeline.carMarker.setIcon(makeEvMapIcon(soc,risks));revTimeline.carMarker.setPopupContent("موقعیت خودرو روی مسیر · شارژ تخمینی باتری: "+Math.round(soc)+"٪"+(risks.length?" · "+risks.map(x=>x.title).join("، "):""));}
   const samples=revTimeline.weatherSamples||[];
   let wx=null;
   if(samples.length)wx=samples.reduce((best,x)=>Math.abs(x.routeKm-km)<Math.abs(best.routeKm-km)?x:best,samples[0]);
+  const risks=weatherRiskIcons(wx);
+  if(point&&revTimeline.carMarker){revTimeline.carMarker.setLatLng(point);revTimeline.carMarker.setIcon(makeEvMapIcon(soc,risks));revTimeline.carMarker.setPopupContent("موقعیت خودرو روی مسیر · شارژ تخمینی باتری: "+Math.round(soc)+"٪"+(risks.length?" · "+risks.map(x=>x.title).join("، "):""));}
   $("timelineWeather").textContent=wx?(Math.round(wx.weather.temperature)+"° · باد "+Math.round(wx.weather.windSpeed)+" km/h"):"در دسترس نیست";
   const upcoming=revTimeline.stationList.filter(x=>x.routeKm>=km).sort((a,b)=>a.routeKm-b.routeKm)[0];
   const nextStop=revTimeline.stops.filter(x=>x.routeKm>=km).sort((a,b)=>a.routeKm-b.routeKm)[0];
