@@ -59,8 +59,8 @@ const TYPES={
  ,serviceCenters:{label:'تعمیرگاه‌های مجاز خودرو برقی',one:'تعمیرگاه',fields:[['title','نام تعمیرگاه','text'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا صفحه رزرو','text'],['brands','برندهای تحت پوشش (با ویرگول جدا کنید)','text'],['services','خدمات (مثلاً عیب‌یابی، باتری، موتور، اینورتر، نرم‌افزار)','area'],['authorization','مرجع/مدرک مجوز و شماره آن','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری (مثلاً شنبه تا چهارشنبه ۹ تا ۱۸؛ پنجشنبه ۹ تا ۱۳)','area'],['description','توضیحات تکمیلی','area']]}
  ,partsStores:{label:'فروشگاه‌های قطعات خودرو برقی',one:'فروشگاه قطعات',fields:[['title','نام فروشگاه','text'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا لینک سفارش','text'],['brands','برندها و مدل‌های سازگار (با ویرگول جدا کنید)','text'],['products','دسته‌های قطعات (باتری، شارژر، اینورتر، موتور، کابل و...)','area'],['authorization','مرجع/مدرک نمایندگی یا مجوز','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری فروشگاه (روزها و بازه زمانی)','area'],['deliveryHours','ساعات ارسال/تحویل (اختیاری)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (اختیاری)','text'],['satisfactionCount','تعداد امتیازهای ثبت‌شده کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
 };
-const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
-let stationsCache=null, stationEdit=null, stationBusy=false;
+const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',ratings:'امتیازها و سابقه',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',set:'تنظیمات'};
+let stationsCache=null, stationEdit=null, stationBusy=false, ratingsCache=null, ratingsBusy=false;
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
 const CONTACT=[['email','ایمیل'],['phone','تلفن'],['telegram','تلگرام (نام کاربری یا لینک)'],['instagram','اینستاگرام (نام کاربری یا لینک)'],['youtube','یوتیوب (لینک کامل)'],['x','ایکس (نام کاربری یا لینک)'],['address','آدرس'],['note','متن کوتاه پایین صفحه‌ی تماس']];
@@ -204,11 +204,38 @@ function directoryIntro(){
  const isService=tab==='serviceCenters';
  return `<div class="box"><h3>${isService?'فهرست تعمیرگاه‌های مجاز':'فهرست فروشگاه‌های قطعات خودرو برقی'}</h3><p class="hint">هر دسته فهرست مستقل دارد. وضعیت «تأییدشده» را فقط پس از بررسی مجوز انتخاب کنید. برای نمایش روی نقشه، مختصات جغرافیایی لازم است. این بخش فعلاً مدیریت فهرست است و به‌تنهایی ثبت‌نام عمومی و احراز هویت ایجاد نمی‌کند.</p><p class="hint">مدارک هویتی یا اطلاعات حساس را در توضیحات عمومی وارد نکنید.</p></div>`;
 }
+async function loadRatings(){
+  if(ratingsBusy)return;ratingsBusy=true;note='در حال دریافت سابقه امتیازها...';draw();
+  try{
+    const r=await fetch('https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/admin/ratings?type=store&limit=1000',{headers:H(),cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    ratingsCache=Array.isArray(j.items)?j.items:[];
+    note=ratingsCache.length+' رأی فروشگاه/تعمیرگاه دریافت شد.';
+  }catch(e){ratingsCache=[];note='دریافت سابقه امتیازها ناموفق بود: '+(e.message||'خطای اتصال')+'؛ رمز مدیر را در تنظیمات Worker امتیازدهی بررسی کنید.'}
+  finally{ratingsBusy=false;if(tab==='ratings')draw()}
+}
+function ratingsPanel(){
+  if(ratingsCache===null){loadRatings();return '<div class="box">در حال دریافت سابقه امتیازها...</div>'}
+  const businesses=[...(c.partsStores||[]).map(x=>({...x,_kind:'فروشگاه قطعات'})),...(c.serviceCenters||[]).map(x=>({...x,_kind:'تعمیرگاه مجاز'}))];
+  const idFor=x=>String(x.id||((x.title||x.name||'فروشگاه')+'|'+(x.address||''))).slice(0,240);
+  const byId=new Map(businesses.map(x=>[idFor(x),x]));
+  const groups=new Map();
+  for(const vote of ratingsCache){const id=String(vote.id||'');if(!groups.has(id))groups.set(id,[]);groups.get(id).push(vote)}
+  const cards=[...groups.entries()].map(([id,votes])=>{
+    const b=byId.get(id),avg=votes.reduce((s,v)=>s+Number(v.rating||0),0)/votes.length;
+    const title=b?.title||b?.name||id;
+    const history=votes.map(v=>'<div class="row"><div><b>'+esc('★'.repeat(Number(v.rating)||0))+'</b><small>'+esc(new Date(v.created_at).toLocaleString('fa-IR'))+'</small></div><small>'+esc(Number(v.rating)||0)+' از ۵</small></div>').join('');
+    return '<div class="box"><h3>'+esc(title)+'</h3><p class="hint">'+esc(b?b._kind:'مورد حذف‌شده یا با شناسه تغییرکرده')+' · میانگین '+avg.toLocaleString('fa-IR',{maximumFractionDigits:2})+' از ۵ · '+votes.length.toLocaleString('fa-IR')+' رأی</p><p class="hint" style="margin:8px 0">شناسه مورد: <code dir="ltr">'+esc(id)+'</code></p><details><summary>مشاهده سابقه رأی‌ها ('+votes.length.toLocaleString('fa-IR')+')</summary>'+history+'</details></div>';
+  }).join('');
+  const total=ratingsCache.length, avg=total?ratingsCache.reduce((s,v)=>s+Number(v.rating||0),0)/total:0;
+  return '<div class="box"><h3>امتیازها و سابقه فروشگاه‌ها و تعمیرگاه‌ها</h3><p class="hint">این بخش رأی‌های ثبت‌شده در دیتابیس را نشان می‌دهد؛ رأی‌دهندگان به‌صورت ناشناس ذخیره می‌شوند و اطلاعات شخصی نمایش داده نمی‌شود. سابقه تا ۱۰۰۰ رأی آخر بارگذاری می‌شود.</p><p style="margin-top:10px">تعداد رأی‌ها: <b>'+total.toLocaleString('fa-IR')+'</b> · میانگین کل: <b>'+avg.toLocaleString('fa-IR',{maximumFractionDigits:2})+'/۵</b></p><button class="btn" data-a="ratings-refresh" style="margin-top:10px">تازه‌سازی سابقه</button></div>'+(cards||'<div class="box">هنوز رأیی برای فروشگاه یا تعمیرگاه ثبت نشده است.</div>');
+}
 function draw(){
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
-  const body=tab==='stations'?stationPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
+  const body=tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
 }
 
@@ -338,7 +365,7 @@ root.addEventListener('click',async e=>{
   const a=b.dataset.a, i=+b.dataset.i;
   if(a==='login'){tok=$('t').value.trim();gitTok=$('gt').value.trim();if(!tok){msg('رمز مدیریتی را وارد کنید.');return}sessionStorage.setItem('rev_admin_token',tok);if(gitTok)sessionStorage.setItem('rev_github_token',gitTok);else sessionStorage.removeItem('rev_github_token');c=null;draw()}
   else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
-  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations();if(tab==='set')loadAuthSettings()}
+  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations')loadStations();if(tab==='ratings')loadRatings();if(tab==='set')loadAuthSettings()}
   else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:(tab==='serviceCenters'||tab==='partsStores')?{status:'pending'}:tab==='ads'?{position:'left',enabled:'yes',order:'10'}:tab==='techSections'?{part:'battery',enabled:'yes',order:'10'}:{part:'battery'}};draw()}
   else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
   else if(a==='del'){if(confirm('این مورد حذف شود؟')){c[tab].splice(i,1);dirty=true;draw()}}
@@ -370,6 +397,7 @@ root.addEventListener('click',async e=>{
     if(edit.i<0)c[tab].unshift(it);else c[tab][edit.i]=it;
     edit=null;dirty=true;draw();
   }
+  else if(a==='ratings-refresh'){ratingsCache=null;loadRatings()}
   else if(a==='station-refresh'){stationsCache=null;loadStations()}
   else if(a==='station-new'){stationEdit={isNew:true,item:{source:'rev',status:'unknown'}};draw()}
   else if(a==='station-edit'){stationEdit={isNew:false,item:{...stationsCache[i]}};draw()}
