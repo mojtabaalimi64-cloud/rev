@@ -436,47 +436,52 @@ async function getIranStations(routeCoords,radiusKm){
 
 async function renderFuelStations(routeCoords,radiusKm){
   // Petrol stations are map markers only; they are not charging stops or a fuel-stop plan.
-  const sampled=sampleRouteCoordinates(routeCoords,36);
-  if(sampled.length<2)return;
-  const radiusMeters=Math.max(1500,Math.min(5000,(Number(radiusKm)||5)*1000));
-  // Use several route-corridor circles instead of a long Overpass poly filter,
-  // which can time out or return no data on busy public instances.
-  const query='[out:json][timeout:25];('+sampled.map(p=>'nwr(around:'+radiusMeters+','+Number(p[1]).toFixed(5)+','+Number(p[0]).toFixed(5)+')[amenity=fuel];').join('')+');out center tags;';
+  // Keep the Overpass query small enough to avoid timeouts, and try the backup
+  // provider when the primary responds successfully but has no matching records.
+  const sampled=sampleRouteCoordinates(routeCoords,20);
+  if(sampled.length<2)return 0;
+  const radiusKmEffective=Math.max(2,Math.min(6,Number(radiusKm)||5));
+  const radiusMeters=radiusKmEffective*1000;
+  const query='[out:json][timeout:30];('+sampled.map(p=>'nwr(around:'+radiusMeters+','+Number(p[1]).toFixed(5)+','+Number(p[0]).toFixed(5)+')[amenity=fuel];').join('')+');out center tags;';
   const endpoints=["https://overpass-api.de/api/interpreter","https://overpass.kumi.systems/api/interpreter"];
-  let payload=null,lastError=null;
+  let elements=[],lastError=null,hadValidResponse=false;
   for(const endpoint of endpoints){
-    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),22000);
+    const controller=new AbortController(),timer=setTimeout(()=>controller.abort(),30000);
     try{
       const response=await fetch(endpoint,{method:"POST",mode:"cors",cache:"no-store",signal:controller.signal,headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8","Accept":"application/json"},body:"data="+encodeURIComponent(query)});
       if(!response.ok)throw new Error("HTTP "+response.status);
-      payload=await response.json();
+      const payload=await response.json();
       if(!Array.isArray(payload.elements))throw new Error("پاسخ جایگاه‌های سوخت معتبر نیست");
-      break;
-    }catch(e){lastError=e;payload=null;}
+      hadValidResponse=true;
+      elements.push(...payload.elements);
+      // Empty data from one mirror is not proof that the other mirror is empty too.
+      if(payload.elements.length)break;
+    }catch(e){lastError=e;}
     finally{clearTimeout(timer);}
   }
-  if(!payload||!Array.isArray(payload.elements)){
+  if(!hadValidResponse){
     console.warn("REV fuel station map unavailable:",lastError);
-    return;
+    return 0;
   }
   const seen=new Set();
-  const stations=payload.elements.map(el=>{
+  const stations=elements.map(el=>{
     const lat=Number(el.lat??el.center?.lat),lon=Number(el.lon??el.center?.lon);
     if(!Number.isFinite(lat)||!Number.isFinite(lon))return null;
     const key=lat.toFixed(4)+","+lon.toFixed(4);
     if(seen.has(key))return null;seen.add(key);
     const offRoute=distanceToRoute([lat,lon],routeCoords);
-    if(offRoute>radiusMeters/1000)return null;
+    if(offRoute>radiusKmEffective)return null;
     return {lat,lon,name:el.tags?.name||el.tags?.brand||el.tags?.operator||"جایگاه سوخت",brand:el.tags?.brand||"",operator:el.tags?.operator||"",offRoute,kind:el.type,id:el.id};
   }).filter(Boolean).sort((a,b)=>a.offRoute-b.offRoute);
-  stations.slice(0,120).forEach(s=>{
-    const marker=L.circleMarker([s.lat,s.lon],{radius:7,color:"#20140a",weight:2,fillColor:"#ff9f43",fillOpacity:.98}).addTo(stationLayer);
+  stations.slice(0,150).forEach(s=>{
+    const marker=L.circleMarker([s.lat,s.lon],{radius:8,color:"#20140a",weight:2,fillColor:"#ff9f43",fillOpacity:1}).addTo(stationLayer);
     marker.bindPopup('<b>⛽ '+escapeHTML(s.name)+'</b><br>جایگاه سوخت در نزدیکی مسیر<br>فاصله مستقیم از مسیر: '+s.offRoute.toFixed(1)+' کیلومتر<br>'+(s.operator?'اپراتور: '+escapeHTML(s.operator)+'<br>':'')+'<a target="_blank" rel="noopener" href="https://www.openstreetmap.org/?mlat='+s.lat+'&mlon='+s.lon+'#map=16/'+s.lat+'/'+s.lon+'">مشاهده در OpenStreetMap</a>');
   });
-  if(stations.length)console.info("REV fuel stations shown on map:",stations.length);
+  console.info("REV fuel stations shown on map:",stations.length);
+  if(!stations.length)window.revFuelStationWarning="در داده‌های نقشه، جایگاه ثبت‌شده‌ای در شعاع "+radiusKmEffective+" کیلومتری مسیر پیدا نشد.";
+  else window.revFuelStationWarning="";
   return stations.length;
 }
-
 async function renderBusinessDirectory(routeCoords,radiusKm){
  businessLayer.clearLayers();const box=$('businessDirectory');if(!box)return;box.innerHTML='<div class="sub">در حال بررسی فهرست تعمیرگاه‌ها و فروشگاه‌های قطعات…</div>';
  try{const response=await fetch('./content.json?v='+Date.now(),{cache:'no-store'});if(!response.ok)throw new Error('فهرست عمومی در دسترس نیست');const data=await response.json();
