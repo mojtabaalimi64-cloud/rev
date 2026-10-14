@@ -29,3 +29,24 @@ CREATE TABLE IF NOT EXISTS rev_rating_overrides (
 );
 CREATE INDEX IF NOT EXISTS idx_rev_rating_overrides_code ON rev_rating_overrides(public_code);
 CREATE INDEX IF NOT EXISTS idx_rev_rating_overrides_name ON rev_rating_overrides(display_name);
+
+
+-- User-submitted reports about charging-station data. Reports are private to admins.
+CREATE TABLE IF NOT EXISTS rev_station_reports (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  station_id TEXT NOT NULL,
+  station_name TEXT NOT NULL,
+  report_type TEXT NOT NULL CHECK (report_type IN ('not_found','not_working','connector_wrong','power_wrong','location_wrong','duplicate','other')),
+  details TEXT NOT NULL DEFAULT '',
+  reporter_hash TEXT NOT NULL,
+  status TEXT NOT NULL DEFAULT 'new' CHECK (status IN ('new','in_review','resolved','invalid')),
+  created_at TEXT NOT NULL,
+  reviewed_at TEXT,
+  reviewed_by TEXT,
+  admin_note TEXT,
+  UNIQUE (station_id, reporter_hash)
+);
+CREATE INDEX IF NOT EXISTS idx_rev_station_reports_status_created
+  ON rev_station_reports(status, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_rev_station_reports_station
+  ON rev_station_reports(station_id, created_at DESC);
