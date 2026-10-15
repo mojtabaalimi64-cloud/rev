@@ -700,12 +700,14 @@ function plansPanel(){
         </label>
       </div>
       <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:12px">
+        <div><label>عنوان پلن</label><input type="text" data-plan-name="${id}" value="${esc(p.name||'')}" maxlength="90"></div>
+        <div><label>توضیح و امکانات پلن</label><textarea data-plan-summary="${id}" rows="3" maxlength="500">${esc(p.summary||'')}</textarea></div>
         <div><label>قیمت ماهانه (تومان)</label><input type="number" min="0" step="50000" data-plan-price="${id}" value="${Number(p.price)||0}" ${isFree?'disabled':''}></div>
         <div><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" data-plan-annual="${id}" ${p.annualEnabled?'checked':''} style="width:18px;height:18px;accent-color:#00806f"> ارائه تخفیف سالانه (۱۰ ماه به قیمت ۱۲ ماه)</label><p class="hint">در صورت فعال بودن، مبلغ سالانه برابر ۱۰ برابر قیمت ماهانه محاسبه می‌شود.</p></div>
       </div>
     </div>`;
   }).join('');
-  return `<section class="box"><h2>پلن‌های درآمدی REV</h2><p class="hint">هر پلن را می‌توانی مستقل فعال یا غیرفعال کنی. پلن غیرفعال باید از پیشنهادهای خرید جدید پنهان شود؛ اطلاعات مشتریان فعلی نباید با غیرفعال‌کردن پلن حذف شود. تغییرات را با دکمه «انتشار تغییرات» ذخیره کن.</p>${rows}<p class="hint">قیمت‌ها فعلاً پیشنهادی‌اند و با تغییر آن‌ها فقط تنظیمات پلن ذخیره می‌شود؛ اتصال پرداخت و نمایش عمومی پلن‌ها در مرحلهٔ جداگانه پیاده‌سازی می‌شود.</p></section>`;
+  return `<section class="box"><h2>پلن‌های درآمدی REV</h2><p class="hint">عنوان، توضیحات، قیمت و وضعیت هر پلن را تغییر بده. پلن غیرفعال از صفحه عمومی پلن‌ها پنهان می‌شود و درخواست جدید برای آن ثبت نمی‌شود؛ غیرفعال‌سازی به‌تنهایی اشتراک مشتریان قبلی را حذف یا لغو نمی‌کند. برای اعمال تغییرات در سایت، «انتشار تغییرات» را بزن.</p>${rows}<p class="hint">پلن‌های فعال در صفحه عمومی «پلن همکاری» نمایش داده می‌شوند. پرداخت آنلاین هنوز فعال نیست؛ دکمه درخواست، کاربر را به راه ارتباطی REV هدایت می‌کند.</p></section>`;
 }
 
 function draw(){
@@ -878,6 +880,8 @@ root.addEventListener('input',e=>{
   if('listSearch' in d){listSearchValue=t.value;const q=normalizeSearch(listSearchValue.trim());let n=0;root.querySelectorAll('.admin-list-row').forEach(row=>{const show=!q||normalizeSearch(row.dataset.search||'').includes(q);row.hidden=!show;if(show)n++});const counter=$('list-count');if(counter)counter.textContent=n;return}
   if('ratingSearch' in d){ratingSearchValue=t.value;ratingSelected=null;ratingOverride=null;const pos=t.selectionStart;draw();const input=$('rating-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
   if(d.planPrice){c.businessPlans[d.planPrice].price=Math.max(0,Number(t.value)||0);dirty=true}
+  if(d.planName){c.businessPlans[d.planName].name=t.value;dirty=true}
+  if(d.planSummary){c.businessPlans[d.planSummary].summary=t.value;dirty=true}
   if(d.site){c.siteSettings=c.siteSettings||{};if(d.site==='textOverrides'){try{c.siteSettings.textOverrides=JSON.parse(t.value||'{}');t.setCustomValidity('');}catch(_){t.setCustomValidity('JSON معتبر نیست');} }else if(['fontSize','menuSize'].includes(d.site)){c.siteSettings[d.site]=Math.max(d.site==='fontSize'?14:12,Math.min(d.site==='fontSize'?24:22,Number(t.value)||17));}else{c.siteSettings[d.site]=t.value;}dirty=true}
   if(d.menuLabel){c.siteSettings.menu=c.siteSettings.menu||{};c.siteSettings.menu[d.menuLabel]={...(c.siteSettings.menu[d.menuLabel]||{}),label:t.value};dirty=true}
 
