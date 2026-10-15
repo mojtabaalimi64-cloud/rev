@@ -240,7 +240,7 @@ const fnum=n=>n==null?'—':Number(n).toLocaleString('fa-IR');
 const TYPE_FA={sedan:'سدان',suv:'شاسی‌بلند',hatch:'هاچ‌بک',crossover:'کراس‌اور',wagon:'استیشن',fastback:'فست‌بک',coupe:'کوپه',convertible:'کروک',pickup:'پیکاپ',van:'ون',minivan:'مینی‌ون',other:'سایر'},POWERTRAIN_FA={BEV:'تمام‌برقی (BEV)',PHEV:'هیبرید شارژی (PHEV)',HEV:'هیبرید معمولی (HEV)',MHEV:'هیبرید ملایم (MHEV)',FCEV:'پیل سوختی هیدروژنی (FCEV)',ICE:'بنزینی/دیزلی'},FUEL_FA={gasoline:'بنزین',diesel:'گازوئیل',hydrogen:'هیدروژن',other:'سایر/نامشخص'},MKT_FA={iran:'موجود در بازار ایران',import:'وارداتی/غیررسمی',none:'خارج از بازار ایران'},DRV_FA={RWD:'عقب‌رو',FWD:'جلو‌رو',AWD:'چهارچرخ‌محرک', '4WD':'چهارچرخ‌محرک دو دیفرانسیل'};
 const $ = s => document.querySelector(s), app = $('#app');
 const partKeys = Object.keys(PARTS);
-const navList=()=>{const n=[['#/','شروع'],['trip.html','برنامه‌ریزی سفر'],['#/explore','کاوش فناوری'],['#/articles','مقالات'],['#/podcast','پادکست'],['news.html','اخبار'],['businesses.html','کسب‌وکارها'],['account.html','حساب کاربری']];if(SHOP_ENABLED)n.push(['#/shop','فروشگاه']);n.push(['#/contact','ارتباط با ما']);return n};
+const navList=()=>{const n=[['#/','شروع'],['#/explore','کاوش فناوری'],['#/articles','مقالات'],['#/podcast','پادکست'],['news.html','اخبار'],['businesses.html','کسب‌وکارها'],['account.html','حساب کاربری']];if(SHOP_ENABLED)n.push(['#/shop','فروشگاه']);n.push(['#/contact','ارتباط با ما']);return n};
 
 const artCard = a => `<a class="card" href="#/a/${a.slug}">${a.image?`<img class="cover" src="${esc(a.image)}" alt="" loading="lazy">`:''}<span class="tag">${PARTS[a.part].name}</span><h3>${a.title}</h3><p>${a.excerpt}</p></a>`;
 const artGrid = list => list.length ? `<div class="grid">${list.map(artCard).join('')}</div>` : `<div class="empty">هنوز مقاله‌ای در این بخش منتشر نشده است.</div>`;
@@ -257,7 +257,7 @@ function exploreHome(){
     </div>
     <div class="chips">${chips}</div>
   </div></div>
-  <section class="blk" style="padding:32px 0 0"><div class="wrap"><div class="pod"><div><h2 style="color:#fff;margin:0 0 12px">برنامه‌ریزی سفر با خودروی برقی و هیبریدی</h2><p>نزدیک‌ترین ایستگاه شارژ را پیدا کن و محل توقف‌های پیشنهادی مسیرت را ببین.</p></div><a class="btn" href="trip.html">شروع برنامه‌ریزی</a></div></div></section>
+  
 
   ${CARS.length>=2?carsSection():''}
   <section class="blk"><div class="wrap"><h2>تازه‌ترین مقالات</h2>${artGrid(ARTICLES.slice(0,3))}</div></section>
@@ -285,15 +285,15 @@ function home(){
       <div class="wrap start-content">
         <div class="start-eyebrow"><span class="start-logo">REV<span>⚡</span></span><span>حرکت به‌سوی آینده</span></div>
         <h1>هر مسیر،<br><em>شروع یک آینده تازه است.</em></h1>
-        <p class="start-lead">راهنمای فارسی خودروهای برقی؛ از انتخاب و شناخت فناوری تا برنامه‌ریزی سفر و پیدا کردن ایستگاه‌های شارژ.</p>
-        <div class="start-actions"><a class="btn start-primary" href="trip.html">برنامه‌ریزی سفر <span aria-hidden="true">←</span></a><a class="start-secondary" href="#/explore">کشف دنیای خودروهای برقی</a></div>
+        <p class="start-lead">راهنمای فارسی خودروهای برقی؛ از انتخاب و شناخت فناوری تا آشنایی با ایستگاه‌های شارژ.</p>
+        <div class="start-actions"><a class="start-secondary" href="#/explore">کشف دنیای خودروهای برقی</a></div>
         <div class="start-stats"><div><strong>آگاهانه</strong><span>انتخاب خودرو</span></div><div><strong>هوشمندانه</strong><span>برنامه‌ریزی مسیر</span></div><div><strong>روشن‌تر</strong><span>شناخت فناوری</span></div></div>
       </div>
     </section>
     <section class="start-links blk"><div class="wrap">
       <div class="start-section-head"><div><span class="start-kicker">REV / EXPLORE</span><h2>از کجا شروع کنیم؟</h2></div><p>هر چیزی که برای شناخت و استفاده از خودروهای برقی نیاز داری، یک قدم با تو فاصله دارد.</p></div>
       <div class="start-card-grid">
-        <a class="start-card start-card-feature" href="trip.html"><span class="start-card-icon">↗</span><span class="start-card-label">سفر و مسیر</span><h3>سفر برقی‌ات را برنامه‌ریزی کن</h3><p>مبدأ و مقصد را انتخاب کن، مسیر و توقف‌های شارژ را بررسی کن و با آمادگی بیشتری راه بیفت.</p><span class="start-card-link">شروع برنامه‌ریزی <b>←</b></span></a>
+        
         <a class="start-card" href="travel-plans.html"><span class="start-card-icon">⌁</span><span class="start-card-label">مسیر‌یابی</span><h3>برنامه‌های سفر من</h3><p>به برنامه‌ها و ابزارهای سفر REV دسترسی پیدا کن.</p><span class="start-card-link">مشاهده <b>←</b></span></a>
         <a class="start-card" href="businesses.html"><span class="start-card-icon">⌖</span><span class="start-card-label">نقشه خدمات</span><h3>شارژ، فروشگاه و تعمیرگاه</h3><p>مراکز مرتبط با خودروهای برقی را پیدا کن و اطلاعات هر مرکز را ببین.</p><span class="start-card-link">جست‌وجوی مراکز <b>←</b></span></a>
         <a class="start-card" href="#/explore"><span class="start-card-icon">ϟ</span><span class="start-card-label">دانش و فناوری</span><h3>خودروی برقی را بهتر بشناس</h3><p>از باتری و موتور تا شارژ، اینورتر و هوش مصنوعی.</p><span class="start-card-link">کاوش فناوری‌ها <b>←</b></span></a>
