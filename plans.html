@@ -38,7 +38,8 @@ async function init(){
   else el.innerHTML=keys.map(k=>{
    const p={...defaults[k],...plans[k]},free=k==='free';
    const annual=!!p.annualEnabled&&!free;
-   const benefits=(p.options||defaults[k].options||[]).filter(x=>x.enabled!==false).map(x=>x.label);
+   const optionMap=new Map([...(defaults[k].options||[]),...(p.options||[])].map(x=>[x.id,{...(defaults[k].options||[]).find(d=>d.id===x.id),...x}]));
+   const benefits=[...optionMap.values()].filter(x=>x.enabled!==false).map(x=>x.label);
    const subject=encodeURIComponent('درخواست پلن REV: '+p.name);
    const body=encodeURIComponent('سلام، برای پلن «'+p.name+'» در REV درخواست همکاری دارم. لطفاً جزئیات و روش پرداخت را ارسال کنید.');
    const email=data.contact?.email;
