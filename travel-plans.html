@@ -1,7 +1,33 @@
 <!doctype html>
 <html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="پلن دسترسی به مسیریاب و ناوبری سفر REV"><title>پلن مسیریابی سفر | REV</title><link rel="stylesheet" href="./rev-theme.css?v=1"><style>
 :root{--bg:#080b0d;--panel:#121a1f;--line:#2a343a;--muted:#aab6bc;--green:#39ff88;--text:#f5f7f8}*{box-sizing:border-box}body{margin:0;background:linear-gradient(145deg,#080b0d,#101c20);color:var(--text);font:16px/1.9 Vazirmatn,Vazir,Tahoma,sans-serif}.wrap{width:min(1040px,calc(100% - 28px));margin:auto}header{padding:16px 0;border-bottom:1px solid var(--line)}header .wrap{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}a{color:var(--green)}h1{font-size:clamp(26px,4vw,40px);line-height:1.5}.muted{color:var(--muted)}.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:16px;margin:24px 0}.card{border:1px solid var(--line);border-radius:18px;padding:22px;background:linear-gradient(145deg,#142126,#0e1519)}.price{font-size:28px;font-weight:900;color:var(--green)}.price small{font-size:13px;color:var(--muted)}li{margin:7px 0}.btn,button{display:inline-block;border:1px solid #3b5949;border-radius:10px;padding:10px 15px;background:var(--green);color:#07100b;text-decoration:none;font:inherit;font-weight:800;cursor:pointer}.secondary{background:transparent;color:var(--green)}.notice{border:1px solid #5c4c2e;background:#241e13;padding:14px;border-radius:12px;margin:18px 0;color:#ffdda0}.status{white-space:pre-wrap;margin-top:14px;padding:12px;border:1px solid var(--line);border-radius:10px}.actions{display:flex;gap:10px;flex-wrap:wrap}
-</style></head><body><header><div class="wrap"><strong style="color:var(--green);font-size:25px">REV · مسیریاب سفر</strong><nav><a href="./trip.html">برنامه‌ریز رایگان</a>　<a href="./account.html">حساب کاربری</a></nav></div></header><main class="wrap"><h1>دسترسی به مسیریابی پیشرفته</h1><p class="muted">برنامه‌ریزی اولیه سفر برای همه آزاد می‌ماند. برای ورود به صفحه مسیریابی، نمایش مسیر روی نقشه راننده و ابزارهای سفر، یکی از پلن‌های زیر را انتخاب کن.</p><div class="notice">درگاه پرداخت آنلاین هنوز به REV متصل نشده است. در این نسخه می‌توان درخواست خرید ثبت کرد؛ اشتراک فقط پس از تأیید پرداخت توسط مدیریت فعال می‌شود. ثبت درخواست به معنی پرداخت یا فعال‌شدن اشتراک نیست.</div><div id="plans" class="grid"><div class="card">در حال بارگذاری پلن‌ها…</div></div><section class="card"><h2>وضعیت اشتراک شما</h2><div id="accountStatus" class="muted">در حال بررسی…</div><div class="actions"><a class="btn secondary" href="./account.html">ورود / ساخت حساب</a><a class="btn secondary" href="./trip.html">بازگشت به برنامه‌ریز رایگان</a></div></section><div id="status" class="status" role="status">برای خرید پلن باید وارد حساب شوید.</div></main><script>
+</style></head><body>
+<nav id="revPersistentNav" aria-label="راهنمای دسترسی به امکانات REV" style="display:block!important;visibility:visible!important;opacity:1!important;position:fixed;z-index:2147483000;right:14px;top:92px;width:218px;max-height:calc(100vh - 112px);overflow:auto;padding:14px;border:1px solid #28523d;border-radius:18px;background:#080f0df7;box-shadow:0 12px 35px #0008;direction:rtl;font:13px/1.7 Vazirmatn,Tahoma,sans-serif">
+<div style="color:#39ff88;font-weight:900;font-size:21px;padding:0 8px 10px;border-bottom:1px solid #294038;margin-bottom:8px">REV <span style="font-size:11px;color:#d7e0e3;font-weight:500">راهنمای خدمات</span></div>
+<p style="font-size:11px;color:#9eafb5;margin:0 8px 8px">برای جابه‌جایی بین امکانات، یکی از گزینه‌ها را انتخاب کنید.</p>
+<div style="display:flex;flex-direction:column;gap:3px">
+<a href="./account.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">👤 صفحه کاربری من</a>
+<a href="./driver-profile.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">🚘 پروفایل راننده</a>
+<a href="./travel-plans.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">✦ پلن‌های مسیریابی</a>
+<a href="./safety-checklist.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">✓ چک‌لیست سفر</a>
+<a href="./businesses.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">⌖ فروشگاه‌ها و خدمات</a>
+<a href="./article-ev.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">▤ آموزش خودرو برقی</a>
+<a href="./news.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">📰 اخبار خودرو برقی</a>
+<a href="./index.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">⌂ صفحه اصلی REV</a>
+</div></nav>
+<style id="revPersistentNavForceStyle">
+@media(max-width:900px){#revPersistentNav{position:relative!important;top:auto!important;right:auto!important;width:auto!important;max-height:none!important;margin:10px 12px!important}#revPersistentNav>div:last-child{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important}#revPersistentNav a{padding:7px 9px!important}body.rev-has-persistent-nav{padding-right:0!important}}
+@media(min-width:901px){body.rev-has-persistent-nav{padding-right:246px!important}}
+#revPersistentNav a:hover{background:#173027!important;color:#39ff88!important}
+</style>
+<script>
+(function(){try{
+ document.body.classList.add('rev-has-persistent-nav');
+ var nav=document.getElementById('revPersistentNav');
+ if(nav){var here=location.pathname.split('/').pop()||'index.html';nav.querySelectorAll('a[href]').forEach(function(a){if(new URL(a.href,location.href).pathname.split('/').pop()===here){a.style.background='#173027';a.style.border='1px solid #285c42';a.style.color='#39ff88';a.setAttribute('aria-current','page');}});}
+}catch(e){}})();
+</script>
+<header><div class="wrap"><strong style="color:var(--green);font-size:25px">REV · مسیریاب سفر</strong><nav><a href="./trip.html">برنامه‌ریز رایگان</a>　<a href="./account.html">حساب کاربری</a></nav></div></header><main class="wrap"><h1>دسترسی به مسیریابی پیشرفته</h1><p class="muted">برنامه‌ریزی اولیه سفر برای همه آزاد می‌ماند. برای ورود به صفحه مسیریابی، نمایش مسیر روی نقشه راننده و ابزارهای سفر، یکی از پلن‌های زیر را انتخاب کن.</p><div class="notice">درگاه پرداخت آنلاین هنوز به REV متصل نشده است. در این نسخه می‌توان درخواست خرید ثبت کرد؛ اشتراک فقط پس از تأیید پرداخت توسط مدیریت فعال می‌شود. ثبت درخواست به معنی پرداخت یا فعال‌شدن اشتراک نیست.</div><div id="plans" class="grid"><div class="card">در حال بارگذاری پلن‌ها…</div></div><section class="card"><h2>وضعیت اشتراک شما</h2><div id="accountStatus" class="muted">در حال بررسی…</div><div class="actions"><a class="btn secondary" href="./account.html">ورود / ساخت حساب</a><a class="btn secondary" href="./trip.html">بازگشت به برنامه‌ریز رایگان</a></div></section><div id="status" class="status" role="status">برای خرید پلن باید وارد حساب شوید.</div></main><script>
 const API='https://rev-auth-api.mojtaba-alimi64.workers.dev',plansEl=document.getElementById('plans'),statusEl=document.getElementById('status'),accountEl=document.getElementById('accountStatus');
 const money=n=>Number(n||0).toLocaleString('fa-IR')+' تومان',esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 async function req(path,opts={}){const r=await fetch(API+path,{credentials:'include',cache:'no-store',...opts,headers:{'Content-Type':'application/json',...(opts.headers||{})}}),j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw Error(j.error||'خطای ارتباط با سرویس حساب REV');return j}
@@ -12,41 +38,4 @@ plansEl.addEventListener('click',async e=>{const b=e.target.closest('[data-buy]'
 init();
 </script><script src="./rev-site-settings.js?v=1" defer></script>
 
-<style id="revPersistentNavStyle">
-#revPersistentNav{position:fixed;z-index:10000;right:14px;top:92px;width:218px;max-height:calc(100vh - 112px);overflow:auto;padding:14px;border:1px solid #28523d;border-radius:18px;background:rgba(8,15,13,.97);box-shadow:0 12px 35px #0008;direction:rtl;font:13px/1.7 Vazirmatn,Tahoma,sans-serif}
-#revPersistentNav .rev-nav-brand{color:#39ff88;font-weight:900;font-size:21px;padding:0 8px 10px;border-bottom:1px solid #294038;margin-bottom:8px}
-#revPersistentNav .rev-nav-hint{font-size:11px;color:#9eafb5;margin:0 8px 8px}
-#revPersistentNav a{display:flex;align-items:center;gap:8px;padding:9px 10px;margin:3px 0;border:1px solid transparent;border-radius:10px;color:#e2ece7;text-decoration:none}
-#revPersistentNav a:hover,#revPersistentNav a[aria-current=page]{background:#173027;border-color:#285c42;color:#39ff88}
-body.rev-has-persistent-nav{padding-right:246px!important}
-@media(max-width:900px){#revPersistentNav{position:relative;top:auto;right:auto;width:auto;max-height:none;margin:10px 12px;padding:10px}#revPersistentNav .rev-nav-brand{display:inline-block;border:0;margin:0;padding:0 8px 4px}#revPersistentNav .rev-nav-hint{display:none}#revPersistentNav .rev-nav-links{display:flex;flex-wrap:wrap;gap:3px}#revPersistentNav a{padding:7px 9px;margin:0}body.rev-has-persistent-nav{padding-right:0!important}}
-</style>
-<nav id="revPersistentNav" aria-label="راهنمای دسترسی به امکانات REV">
-<div class="rev-nav-brand">REV <span style="font-size:11px;color:#d7e0e3;font-weight:500">پنل خدمات</span></div>
-<p class="rev-nav-hint">برای جابه‌جایی بین امکانات، یکی از گزینه‌ها را انتخاب کنید.</p>
-<div class="rev-nav-links">
-<a href="./account.html">👤 صفحه کاربری من</a>
-<a href="./driver-profile.html">🚘 پروفایل راننده</a>
-<a href="./travel-plans.html">✦ پلن‌های مسیریابی</a>
-<a href="./safety-checklist.html">✓ چک‌لیست سفر</a>
-<a href="./businesses.html">⌖ فروشگاه‌ها و خدمات</a>
-<a href="./article-ev.html">▤ آموزش خودرو برقی</a>
-<a href="./news.html">📰 اخبار خودرو برقی</a>
-<a href="./index.html">⌂ صفحه اصلی REV</a>
-</div></nav>
-<script>
-(function(){
-try{
- document.body.classList.add('rev-has-persistent-nav');
- var nav=document.getElementById('revPersistentNav');
- if(nav){
-  var here=location.pathname.split('/').pop()||'index.html';
-  nav.querySelectorAll('a[href]').forEach(function(a){
-   var u=new URL(a.href,location.href);
-   if(u.pathname.split('/').pop()===here){a.setAttribute('aria-current','page');}
-  });
- }
-}catch(e){}
-})();
-</script>
 </body></html>
