@@ -280,18 +280,17 @@ export default {
     if(!await enabled(env)) return response(request,env,{success:false,error:"ورود پیامکی فعلاً غیرفعال است؛ مدیر باید آن را فعال کند."},403);
     if(await rateLimited(request,env,"sms-request",5,600)) return response(request,env,{success:false,error:"درخواست کد بیش از حد است؛ کمی بعد دوباره تلاش کنید."},429);
     if(!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD)) return response(request,env,{success:false,error:"تنظیمات ملی‌پیامک کامل نیست."},503);
-    const b=await request.json().catch(()=>null), parsed=normalizeIranPhone(b?.phone), displayName=String(b?.displayName||"").trim().slice(0,80);
+    const b=await request.json().catch(()=>null), parsed=normalizeIranPhone(b?.phone);
     if(!parsed) return response(request,env,{success:false,error:"شماره همراه معتبر ایران وارد کنید."},400);
     const phone=parsed.e164, now=new Date().toISOString();
     let u=await env.DB.prepare("SELECT id,account_status FROM rev_users WHERE phone_e164=? LIMIT 1").bind(phone).first();
     let created=false;
     if(u && ["suspended","deleted"].includes(u.account_status)) return response(request,env,{success:false,error:"این حساب در حال حاضر قابل استفاده نیست."},403);
     if(!u) {
-      if(!displayName) return response(request,env,{success:false,error:"برای ساخت حساب جدید، نام خود را هم وارد کنید."},400);
       const id=crypto.randomUUID(), syntheticEmail=phone.replace("+","")+"@phone.rev.invalid";
       try {
         await env.DB.prepare("INSERT INTO rev_users(id,display_name,email_normalized,phone_e164,account_status,role,created_at,updated_at) VALUES(?,?,?,?, 'pending','member',?,?)")
-          .bind(id,displayName,syntheticEmail,phone,now,now).run();
+          .bind(id,"کاربر REV",syntheticEmail,phone,now,now).run();
       } catch(e) {
         return response(request,env,{success:false,error:"ساخت حساب انجام نشد؛ ممکن است این شماره قبلاً ثبت شده باشد."},409);
       }
