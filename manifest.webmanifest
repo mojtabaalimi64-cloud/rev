@@ -1,0 +1,15 @@
+{
+  "id": "./trip.html",
+  "name": "دستیار سفر REV",
+  "short_name": "REV سفر",
+  "description": "برنامه‌ریزی سفر با خودروی برقی، تخمین برد و نمایش جایگاه‌های شارژ",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./trip.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080b0d",
+  "theme_color": "#080b0d",
+  "orientation": "any",
+  "icons": [{"src": "./rev-app-icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable"}]
+}
