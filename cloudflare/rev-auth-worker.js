@@ -114,7 +114,14 @@ export default {
   const url=new URL(request.url), path=url.pathname, method=request.method;
   if(method==="OPTIONS") return new Response(null,{status:204,headers:corsHeaders(request,env)});
   try {
-   if(path==="/api/health" && method==="GET") return response(request,env,{success:true,service:"REV Auth",database:"configured"});
+   if(path==="/api/health" && method==="GET") {
+    try {
+     await env.DB.prepare("SELECT 1 AS ok").first();
+     return response(request,env,{success:true,service:"REV Auth",database:"connected"});
+    } catch(e) {
+     return response(request,env,{success:false,service:"REV Auth",database:"unavailable"},503);
+    }
+   }
    if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL)});
    if(path==="/api/admin/auth-settings" && method==="GET") {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
