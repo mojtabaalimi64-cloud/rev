@@ -167,6 +167,58 @@ function validIsoDate(value) {
 function validOptionalSoc(value) {
   return value === null || value === undefined || (Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 100);
 }
+
+async function ensureDriverShareSchema(env) {
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_live_trip_shares (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    token_hash TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    expires_at TEXT NOT NULL,
+    revoked_at TEXT,
+    latitude REAL,
+    longitude REAL,
+    accuracy_m REAL,
+    location_updated_at TEXT,
+    FOREIGN KEY (user_id) REFERENCES rev_users(id) ON DELETE CASCADE
+  )`).run();
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_live_trip_shares_user ON rev_live_trip_shares(user_id, created_at DESC)").run();
+}
+async function driverShareApi(request, env, url, method, user) {
+  await ensureDriverShareSchema(env);
+  if (url.pathname === "/api/driver/shares/view" && method === "GET") {
+    const token=String(url.searchParams.get("token")||"");
+    if (!/^[A-Za-z0-9_-]{40,60}$/.test(token)) return response(request,env,{success:false,error:"پیوند اشتراک معتبر نیست یا منقضی شده است."},404);
+    const row=await env.DB.prepare("SELECT latitude,longitude,accuracy_m,location_updated_at,expires_at FROM rev_live_trip_shares WHERE token_hash=? AND revoked_at IS NULL AND expires_at>? LIMIT 1").bind(await sha256(token),new Date().toISOString()).first();
+    if(!row) return response(request,env,{success:false,error:"این اشتراک پایان یافته یا لغو شده است."},404);
+    return response(request,env,{success:true,location:row.latitude==null||row.longitude==null?null:{latitude:row.latitude,longitude:row.longitude,accuracy_m:row.accuracy_m,updated_at:row.location_updated_at},expires_at:row.expires_at});
+  }
+  if (!user) return response(request,env,{success:false,error:"برای اشتراک زنده باید وارد حساب REV شوید."},401);
+  if (method !== "GET" && !sameOrigin(request, env)) return response(request,env,{success:false,error:"درخواست از مبدأ مجاز نیست."},403);
+  if (url.pathname === "/api/driver/shares" && method === "POST") {
+    let body={};try{body=await request.json();}catch{}
+    const hours=Math.max(1,Math.min(8,Number(body.hours)||2));
+    const id=crypto.randomUUID(),token=randomToken(32),now=new Date(),expires=new Date(now.getTime()+hours*3600000).toISOString();
+    await env.DB.prepare("INSERT INTO rev_live_trip_shares (id,user_id,token_hash,created_at,expires_at,revoked_at,latitude,longitude,accuracy_m,location_updated_at) VALUES (?,?,?,?,?,NULL,NULL,NULL,NULL,NULL)")
+      .bind(id,user.id,await sha256(token),now.toISOString(),expires).run();
+    return response(request,env,{success:true,id,token,expires_at:expires,message:"اشتراک زنده ساخته شد؛ برای شروع ارسال موقعیت، اجازه مکان‌یابی را تأیید کنید."},201);
+  }
+  const locationMatch=url.pathname.match(/^\/api\/driver\/shares\/([0-9a-f-]{36})\/location$/i);
+  if(locationMatch && method==="POST"){
+    let body;try{body=await request.json();}catch{return response(request,env,{success:false,error:"بدنه JSON معتبر نیست."},400);}
+    const lat=Number(body.latitude),lon=Number(body.longitude),accuracy=body.accuracy_m==null?null:Number(body.accuracy_m);
+    if(!Number.isFinite(lat)||Math.abs(lat)>90||!Number.isFinite(lon)||Math.abs(lon)>180||(accuracy!==null&&(!Number.isFinite(accuracy)||accuracy<0||accuracy>100000)))return response(request,env,{success:false,error:"مختصات معتبر نیست."},400);
+    const result=await env.DB.prepare("UPDATE rev_live_trip_shares SET latitude=?,longitude=?,accuracy_m=?,location_updated_at=? WHERE id=? AND user_id=? AND revoked_at IS NULL AND expires_at>?").bind(lat,lon,accuracy,new Date().toISOString(),locationMatch[1],user.id,new Date().toISOString()).run();
+    return response(request,env,{success:true,updated:Number(result.meta?.changes||0)>0},Number(result.meta?.changes||0)>0?200:404);
+  }
+  const revokeMatch=url.pathname.match(/^\/api\/driver\/shares\/([0-9a-f-]{36})\/revoke$/i);
+  if(revokeMatch && method==="POST"){
+    const result=await env.DB.prepare("UPDATE rev_live_trip_shares SET revoked_at=? WHERE id=? AND user_id=? AND revoked_at IS NULL").bind(new Date().toISOString(),revokeMatch[1],user.id).run();
+    return response(request,env,{success:true,revoked:Number(result.meta?.changes||0)>0});
+  }
+  return response(request,env,{success:false,error:"متد یا مسیر اشتراک پشتیبانی نمی‌شود."},405);
+}
+
 async function driverTripsApi(request, env, url, method, user) {
   if (!user) return response(request, env, {success:false,error:"برای استفاده از تاریخچه سفر وارد حساب کاربری شوید."}, 401);
   if (method !== "GET" && !sameOrigin(request, env)) return response(request, env, {success:false,error:"درخواست از مبدأ مجاز نیست."}, 403);
@@ -225,6 +277,10 @@ export default {
     }
    }
    if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL),smsConfigured:!!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD),smsPatternConfigured:!!(env.MELIPAYAMAK_OTP_BODY_ID||"557785")});
+   if(path==="/api/driver/shares" || path==="/api/driver/shares/view" || /^\/api\/driver\/shares\/[0-9a-f-]{36}\/(location|revoke)$/i.test(path)) {
+    const user=path==="/api/driver/shares/view" ? null : await currentUser(request,env);
+    return await driverShareApi(request,env,url,method,user);
+   }
    if(path==="/api/driver/trips" || /^\/api\/driver\/trips\/[0-9a-f-]{36}$/i.test(path) || path==="/api/driver/insights") {
     const user=await currentUser(request,env);
     return await driverTripsApi(request,env,url,method,user);
