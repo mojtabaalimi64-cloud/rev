@@ -55,7 +55,7 @@ async function passwordHash(password, salt, iterations=PBKDF2_ITERATIONS) {
 function validEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length<=254; }
 function normalizedEmail(s) { return String(s||"").trim().toLowerCase(); }
 function normalizeIranPhone(value) {
-  let s=String(value||"").replace(/[\\s()-]/g,"").replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  let s=String(value||"").replace(/[\s()-]/g,"").replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
   if(s.startsWith("+98")) s="0"+s.slice(3);
   else if(s.startsWith("0098")) s="0"+s.slice(4);
   else if(s.startsWith("98") && s.length===12) s="0"+s.slice(2);
@@ -298,8 +298,8 @@ export default {
    if(path==="/api/auth/sms/verify" && method==="POST") {
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
     if(await rateLimited(request,env,"sms-verify",10,600)) return response(request,env,{success:false,error:"تعداد تلاش‌ها زیاد است؛ کمی بعد دوباره تلاش کنید."},429);
-    const b=await request.json().catch(()=>null), parsed=normalizeIranPhone(b?.phone), code=String(b?.code||"").replace(/\\D/g,"");
-    if(!parsed || !/^\\d{6}$/.test(code)) return response(request,env,{success:false,error:"شماره همراه یا کد شش‌رقمی معتبر نیست."},400);
+    const b=await request.json().catch(()=>null), parsed=normalizeIranPhone(b?.phone), code=String(b?.code||"").replace(/\D/g,"");
+    if(!parsed || !/^\d{6}$/.test(code)) return response(request,env,{success:false,error:"شماره همراه یا کد شش‌رقمی معتبر نیست."},400);
     const now=new Date().toISOString(), phone=parsed.e164;
     const ch=await env.DB.prepare("SELECT id,user_id,token_hash,attempts,max_attempts FROM rev_verification_challenges WHERE channel='sms' AND purpose='login' AND destination_normalized=? AND consumed_at IS NULL AND expires_at>? AND attempts<max_attempts ORDER BY created_at DESC LIMIT 1").bind(phone,now).first();
     if(!ch) return response(request,env,{success:false,error:"کد منقضی یا نامعتبر است؛ دوباره کد بگیرید."},400);
