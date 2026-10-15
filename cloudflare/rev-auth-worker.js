@@ -98,7 +98,7 @@ function isPlanActive(a, now=Date.now()) {
   return !!a && a.plan_status==="active" && ["paid","waived"].includes(a.payment_status) && Number.isFinite(Date.parse(a.expires_at||"")) && Date.parse(a.expires_at)>now && (!a.starts_at || Date.parse(a.starts_at)<=now);
 }
 function effectiveFeatures(a, now=Date.now()) {
-  const free={listing:true,contact:true,edit:true,product_catalog:false};
+  const free={listing:true,contact:true,edit:true,product_catalog:false,logo:false,photos:false,hours:false,services:false,links:false,stats:false,highlight:false,priority:false,map_pin:false,report:false,campaign:false,banner:false,sponsored:false,social:false,custom:false};
   if(!isPlanActive(a,now)) return free;
   try { const f=JSON.parse(a.features_json||"{}"); return {...free,...f}; } catch { return free; }
 }
