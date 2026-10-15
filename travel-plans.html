@@ -11,17 +11,42 @@ try{const j=await req('/api/billing/me');if(j.subscription){accountEl.innerHTML=
 plansEl.addEventListener('click',async e=>{const b=e.target.closest('[data-buy]');if(!b)return;try{b.disabled=true;const j=await req('/api/billing/orders',{method:'POST',body:JSON.stringify({planCode:b.dataset.buy})});statusEl.textContent=j.message+'\nشناسه درخواست: '+j.order.id+'\nمبلغ: '+money(j.order.amountToman);await init()}catch(err){statusEl.textContent=err.message;if(/وارد حساب|login|session/i.test(err.message))statusEl.innerHTML=esc(err.message)+'<p><a href="./account.html">ورود یا ثبت‌نام</a></p>'}finally{b.disabled=false}});
 init();
 </script><script src="./rev-site-settings.js?v=1" defer></script>
+
+<style id="revPersistentNavStyle">
+#revPersistentNav{position:fixed;z-index:10000;right:14px;top:92px;width:218px;max-height:calc(100vh - 112px);overflow:auto;padding:14px;border:1px solid #28523d;border-radius:18px;background:rgba(8,15,13,.97);box-shadow:0 12px 35px #0008;direction:rtl;font:13px/1.7 Vazirmatn,Tahoma,sans-serif}
+#revPersistentNav .rev-nav-brand{color:#39ff88;font-weight:900;font-size:21px;padding:0 8px 10px;border-bottom:1px solid #294038;margin-bottom:8px}
+#revPersistentNav .rev-nav-hint{font-size:11px;color:#9eafb5;margin:0 8px 8px}
+#revPersistentNav a{display:flex;align-items:center;gap:8px;padding:9px 10px;margin:3px 0;border:1px solid transparent;border-radius:10px;color:#e2ece7;text-decoration:none}
+#revPersistentNav a:hover,#revPersistentNav a[aria-current=page]{background:#173027;border-color:#285c42;color:#39ff88}
+body.rev-has-persistent-nav{padding-right:246px!important}
+@media(max-width:900px){#revPersistentNav{position:relative;top:auto;right:auto;width:auto;max-height:none;margin:10px 12px;padding:10px}#revPersistentNav .rev-nav-brand{display:inline-block;border:0;margin:0;padding:0 8px 4px}#revPersistentNav .rev-nav-hint{display:none}#revPersistentNav .rev-nav-links{display:flex;flex-wrap:wrap;gap:3px}#revPersistentNav a{padding:7px 9px;margin:0}body.rev-has-persistent-nav{padding-right:0!important}}
+</style>
+<nav id="revPersistentNav" aria-label="راهنمای دسترسی به امکانات REV">
+<div class="rev-nav-brand">REV <span style="font-size:11px;color:#d7e0e3;font-weight:500">پنل خدمات</span></div>
+<p class="rev-nav-hint">برای جابه‌جایی بین امکانات، یکی از گزینه‌ها را انتخاب کنید.</p>
+<div class="rev-nav-links">
+<a href="./account.html">👤 صفحه کاربری من</a>
+<a href="./driver-profile.html">🚘 پروفایل راننده</a>
+<a href="./travel-plans.html">✦ پلن‌های مسیریابی</a>
+<a href="./safety-checklist.html">✓ چک‌لیست سفر</a>
+<a href="./businesses.html">⌖ فروشگاه‌ها و خدمات</a>
+<a href="./article-ev.html">▤ آموزش خودرو برقی</a>
+<a href="./news.html">📰 اخبار خودرو برقی</a>
+<a href="./index.html">⌂ صفحه اصلی REV</a>
+</div></nav>
 <script>
 (function(){
- try{
-  if(localStorage.getItem('rev_return_to_account')!=='1')return;
-  if(document.getElementById('revReturnProfile'))return;
-  const a=document.createElement('a');
-  a.id='revReturnProfile';a.href='./account.html';a.textContent='← بازگشت به پروفایل من';
-  a.setAttribute('aria-label','بازگشت به پروفایل من');
-  a.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483000;display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border:1px solid #39ff88;border-radius:999px;background:#0b1511;color:#39ff88;font:700 14px Vazirmatn,Tahoma,sans-serif;text-decoration:none;box-shadow:0 8px 28px #0008;direction:rtl';
-  document.body.appendChild(a);
- }catch(e){}
+try{
+ document.body.classList.add('rev-has-persistent-nav');
+ var nav=document.getElementById('revPersistentNav');
+ if(nav){
+  var here=location.pathname.split('/').pop()||'index.html';
+  nav.querySelectorAll('a[href]').forEach(function(a){
+   var u=new URL(a.href,location.href);
+   if(u.pathname.split('/').pop()===here){a.setAttribute('aria-current','page');}
+  });
+ }
+}catch(e){}
 })();
 </script>
 </body></html>
