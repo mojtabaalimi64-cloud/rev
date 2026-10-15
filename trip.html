@@ -1470,7 +1470,7 @@ $("continueTripBtn").addEventListener("click",continueToDriverProfile);
     sending=true;lastSentAt=now;
     api("/api/driver/shares/"+encodeURIComponent(shareId)+"/location",{method:"POST",body:JSON.stringify({latitude:position.coords.latitude,longitude:position.coords.longitude,accuracy_m:position.coords.accuracy})})
       .then(result=>{if(!result.updated)throw new Error("این لینک منقضی یا لغو شده است.");setStatus("اشتراک زنده فعال است · آخرین به‌روزرسانی: "+new Date().toLocaleTimeString("fa-IR"));})
-      .catch(e=>{setStatus(e.message,true);stopTracking(false);}).finally(()=>{sending=false;});
+      .catch(e=>{setStatus(e.message,true);stopSharing();}).finally(()=>{sending=false;});
   }
   function stopTracking(updateUi=true){if(watchId!==null&&navigator.geolocation)navigator.geolocation.clearWatch(watchId);watchId=null;if(updateUi){start.disabled=false;stop.disabled=true;}}
   async function startSharing(){
@@ -1493,7 +1493,9 @@ $("continueTripBtn").addEventListener("click",continueToDriverProfile);
   }
   start.addEventListener("click",startSharing);stop.addEventListener("click",stopSharing);
   $("revCopyShareLink").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(link.value);setStatus("لینک اشتراک کپی شد. آن را فقط برای افراد مورد اعتماد بفرست.");}catch{link.focus();link.select();setStatus("لینک انتخاب شد؛ آن را کپی کن.");}});
-  // A page reload must not silently restart GPS; the user must explicitly start a new session.
+  // A page reload must not silently restart GPS; an existing session can still be revoked.
+  const previousShare=localStorage.getItem(idKey);
+  if(previousShare){shareId=previousShare;start.disabled=true;stop.disabled=false;setStatus("یک اشتراک قبلی ممکن است هنوز فعال باشد. مکان‌یابی خودکار شروع نشده؛ برای لغو آن دکمه توقف را بزن.");}
 })();
 </script>
 
