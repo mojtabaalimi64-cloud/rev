@@ -3,6 +3,8 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="manifest" href="./manifest.webmanifest">
+<meta name="theme-color" content="#080b0d">
 <title>برنامه‌ریز سفر خودروهای برقی | REV</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
@@ -1440,6 +1442,12 @@ $("shareTripBtn").addEventListener("click",shareTrip);
 $("continueTripBtn").addEventListener("click",continueToDriverProfile);
 </script>
 <script src="./rev-site-settings.js?v=1" defer></script>
+<script>
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(error => console.warn("REV PWA registration failed:", error)));
+}
+</script>
+
 
 </body>
 </html>
