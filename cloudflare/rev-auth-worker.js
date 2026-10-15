@@ -54,6 +54,13 @@ async function passwordHash(password, salt, iterations=PBKDF2_ITERATIONS) {
 }
 function validEmail(s) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s) && s.length<=254; }
 function normalizedEmail(s) { return String(s||"").trim().toLowerCase(); }
+function normalizeIranPhone(value) {
+  let s=String(value||"").replace(/[\\s()-]/g,"").replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d));
+  if(s.startsWith("+98")) s="0"+s.slice(3);
+  else if(s.startsWith("0098")) s="0"+s.slice(4);
+  else if(s.startsWith("98") && s.length===12) s="0"+s.slice(2);
+  return /^09[0-9]{9}$/.test(s) ? {local:s,e164:"+98"+s.slice(1)} : null;
+}
 function passwordValid(s) { return typeof s==="string" && s.length>=12 && s.length<=128; }
 function sameOrigin(request, env) {
   const origin=request.headers.get("Origin");
@@ -77,6 +84,30 @@ async function enabled(env) {
 async function admin(request, env) {
   const h=request.headers.get("Authorization")||"";
   return !!env.ADMIN_TOKEN && h==="Bearer "+env.ADMIN_TOKEN;
+}
+async function sendOtpPattern(env,phone,code) {
+  if(!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD))
+    throw new Error("SMS_NOT_CONFIGURED");
+  const bodyId=String(env.MELIPAYAMAK_OTP_BODY_ID||"557785").trim();
+  const form=new URLSearchParams({
+    username:env.MELIPAYAMAK_USERNAME,
+    password:env.MELIPAYAMAK_PASSWORD,
+    text:String(code),
+    to:phone,
+    bodyId
+  });
+  const res=await fetch("https://rest.payamak-panel.com/api/SendSMS/BaseServiceNumber",{
+    method:"POST",
+    headers:{"Content-Type":"application/x-www-form-urlencoded"},
+    body:form.toString()
+  });
+  const raw=await res.text();
+  if(!res.ok) throw new Error("SMS_SEND_FAILED");
+  let value=raw;
+  try { value=JSON.parse(raw); } catch {}
+  const numeric=typeof value==="number"?value:(typeof value==="string"&&/^-?\\d+$/.test(value.trim())?Number(value):Number(value?.Value??value?.value??value?.RetStatus??NaN));
+  if(Number.isFinite(numeric) && numeric<=0) throw new Error("SMS_SEND_FAILED");
+  if(typeof value==="object" && value && (value.IsSuccess===false || value.success===false)) throw new Error("SMS_SEND_FAILED");
 }
 async function sendVerification(env,email,token) {
   if(!env.RESEND_API_KEY || !env.EMAIL_FROM || !env.SITE_URL) throw new Error("EMAIL_NOT_CONFIGURED");
@@ -106,7 +137,7 @@ async function currentUser(request,env) {
   const raw=(request.headers.get("Cookie")||"").split(";").map(x=>x.trim()).find(x=>x.startsWith(COOKIE_NAME+"="))?.slice(COOKIE_NAME.length+1);
   if(!raw) return null;
   const hash=await sha256(decodeURIComponent(raw));
-  return await env.DB.prepare("SELECT u.id,u.display_name,u.email_normalized,u.email_verified_at,u.phone_verified_at,u.account_status,u.role FROM rev_sessions s JOIN rev_users u ON u.id=s.user_id WHERE s.session_token_hash=? AND s.revoked_at IS NULL AND s.expires_at>? AND u.account_status='active' AND u.email_verified_at IS NOT NULL LIMIT 1")
+  return await env.DB.prepare("SELECT u.id,u.display_name,u.email_normalized,u.phone_e164,u.email_verified_at,u.phone_verified_at,u.account_status,u.role FROM rev_sessions s JOIN rev_users u ON u.id=s.user_id WHERE s.session_token_hash=? AND s.revoked_at IS NULL AND s.expires_at>? AND u.account_status='active' AND (u.email_verified_at IS NOT NULL OR u.phone_verified_at IS NOT NULL) LIMIT 1")
     .bind(hash,new Date().toISOString()).first();
 }
 export default {
@@ -122,7 +153,7 @@ export default {
      return response(request,env,{success:false,service:"REV Auth",database:"unavailable"},503);
     }
    }
-   if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL)});
+   if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL),smsConfigured:!!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD),smsPatternConfigured:!!(env.MELIPAYAMAK_OTP_BODY_ID||"557785")});
    if(path==="/api/admin/auth-settings" && method==="GET") {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
     const r=await env.DB.prepare("SELECT enabled,updated_at,updated_by FROM rev_auth_settings WHERE id=1").first();
@@ -132,7 +163,7 @@ export default {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
     const body=await request.json().catch(()=>null);
     if(!body || typeof body.enabled!=="boolean") return response(request,env,{success:false,error:"enabled must be boolean"},400);
-    if(body.enabled && !(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL)) return response(request,env,{success:false,error:"ایمیل هنوز تنظیم نشده است؛ فعال‌سازی ممکن نیست."},409);
+    if(body.enabled && !(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD)) return response(request,env,{success:false,error:"تنظیمات ملی‌پیامک هنوز کامل نیست؛ فعال‌سازی ممکن نیست."},409);
     await env.DB.prepare("INSERT INTO rev_auth_settings(id,enabled,updated_at,updated_by) VALUES(1,?,?,?) ON CONFLICT(id) DO UPDATE SET enabled=excluded.enabled,updated_at=excluded.updated_at,updated_by=excluded.updated_by")
       .bind(body.enabled?1:0,new Date().toISOString(),"admin").run();
     return response(request,env,{success:true,enabled:body.enabled});
@@ -228,7 +259,66 @@ export default {
     }
     return response(request,env,{success:true,status,message:status==="approved"?"اشتراک فعال شد.":"درخواست رد شد."});
    }
+   if(path==="/api/auth/sms/request" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    if(!await enabled(env)) return response(request,env,{success:false,error:"ورود پیامکی فعلاً غیرفعال است؛ مدیر باید آن را فعال کند."},403);
+    if(await rateLimited(request,env,"sms-request",5,600)) return response(request,env,{success:false,error:"درخواست کد بیش از حد است؛ کمی بعد دوباره تلاش کنید."},429);
+    if(!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD)) return response(request,env,{success:false,error:"تنظیمات ملی‌پیامک کامل نیست."},503);
+    const b=await request.json().catch(()=>null), parsed=normalizeIranPhone(b?.phone), displayName=String(b?.displayName||"").trim().slice(0,80);
+    if(!parsed) return response(request,env,{success:false,error:"شماره همراه معتبر ایران وارد کنید."},400);
+    const phone=parsed.e164, now=new Date().toISOString();
+    let u=await env.DB.prepare("SELECT id,account_status FROM rev_users WHERE phone_e164=? LIMIT 1").bind(phone).first();
+    let created=false;
+    if(u && ["suspended","deleted"].includes(u.account_status)) return response(request,env,{success:false,error:"این حساب در حال حاضر قابل استفاده نیست."},403);
+    if(!u) {
+      if(!displayName) return response(request,env,{success:false,error:"برای ساخت حساب جدید، نام خود را هم وارد کنید."},400);
+      const id=crypto.randomUUID(), syntheticEmail=phone.replace("+","")+"@phone.rev.invalid";
+      try {
+        await env.DB.prepare("INSERT INTO rev_users(id,display_name,email_normalized,phone_e164,account_status,role,created_at,updated_at) VALUES(?,?,?,?, 'pending','member',?,?)")
+          .bind(id,displayName,syntheticEmail,phone,now,now).run();
+      } catch(e) {
+        return response(request,env,{success:false,error:"ساخت حساب انجام نشد؛ ممکن است این شماره قبلاً ثبت شده باشد."},409);
+      }
+      u={id,account_status:"pending"}; created=true;
+    }
+    const code=String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,"0");
+    const exp=new Date(Date.now()+5*60000).toISOString();
+    await env.DB.prepare("UPDATE rev_verification_challenges SET consumed_at=? WHERE channel='sms' AND purpose='login' AND destination_normalized=? AND consumed_at IS NULL").bind(now,phone).run();
+    const challengeId=crypto.randomUUID();
+    await env.DB.prepare("INSERT INTO rev_verification_challenges(id,user_id,channel,destination_normalized,purpose,token_hash,attempts,max_attempts,created_at,expires_at,consumed_at,request_window_key) VALUES(?,?,'sms',?,'login',?,0,5,?,?,NULL,?)")
+      .bind(challengeId,u.id,phone,await sha256(phone+":"+code),now,exp,phone).run();
+    try { await sendOtpPattern(env,parsed.local,code); }
+    catch(e) {
+      await env.DB.prepare("UPDATE rev_verification_challenges SET consumed_at=? WHERE id=?").bind(new Date().toISOString(),challengeId).run();
+      if(created) await env.DB.prepare("DELETE FROM rev_users WHERE id=?").bind(u.id).run();
+      return response(request,env,{success:false,error:"ارسال کد انجام نشد؛ تنظیمات وب‌سرویس، اعتبار پنل و پترن 557785 را بررسی کنید."},502);
+    }
+    return response(request,env,{success:true,message:"اگر ارسال پیامک پذیرفته شده باشد، کد ورود تا ۵ دقیقه معتبر است.",phone:parsed.local});
+   }
+   if(path==="/api/auth/sms/verify" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    if(await rateLimited(request,env,"sms-verify",10,600)) return response(request,env,{success:false,error:"تعداد تلاش‌ها زیاد است؛ کمی بعد دوباره تلاش کنید."},429);
+    const b=await request.json().catch(()=>null), parsed=normalizeIranPhone(b?.phone), code=String(b?.code||"").replace(/\\D/g,"");
+    if(!parsed || !/^\\d{6}$/.test(code)) return response(request,env,{success:false,error:"شماره همراه یا کد شش‌رقمی معتبر نیست."},400);
+    const now=new Date().toISOString(), phone=parsed.e164;
+    const ch=await env.DB.prepare("SELECT id,user_id,token_hash,attempts,max_attempts FROM rev_verification_challenges WHERE channel='sms' AND purpose='login' AND destination_normalized=? AND consumed_at IS NULL AND expires_at>? AND attempts<max_attempts ORDER BY created_at DESC LIMIT 1").bind(phone,now).first();
+    if(!ch) return response(request,env,{success:false,error:"کد منقضی یا نامعتبر است؛ دوباره کد بگیرید."},400);
+    if(await sha256(phone+":"+code)!==ch.token_hash) {
+      await env.DB.prepare("UPDATE rev_verification_challenges SET attempts=attempts+1 WHERE id=?").bind(ch.id).run();
+      return response(request,env,{success:false,error:"کد واردشده صحیح نیست."},401);
+    }
+    const u=await env.DB.prepare("SELECT id,account_status FROM rev_users WHERE id=? AND phone_e164=? LIMIT 1").bind(ch.user_id,phone).first();
+    if(!u || ["suspended","deleted"].includes(u.account_status)) return response(request,env,{success:false,error:"حساب کاربری قابل استفاده نیست."},403);
+    await env.DB.batch([
+      env.DB.prepare("UPDATE rev_verification_challenges SET consumed_at=? WHERE id=?").bind(now,ch.id),
+      env.DB.prepare("UPDATE rev_users SET phone_verified_at=?,account_status='active',last_login_at=?,updated_at=? WHERE id=?").bind(now,now,now,u.id)
+    ]);
+    return await createSession(request,env,u.id);
+   }
    if(path==="/api/auth/register" && method==="POST") {
+    return response(request,env,{success:false,error:"ثبت‌نام از طریق شماره همراه و کد پیامکی انجام می‌شود."},410);
+   }
+   if(path==="/api/auth/register-email-disabled" && method==="POST") {
     if(await rateLimited(request,env,"register",3)) return response(request,env,{success:false,error:"تعداد درخواست‌ها زیاد است؛ یک دقیقه دیگر تلاش کنید."},429);
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
     if(!await enabled(env)) return response(request,env,{success:false,error:"ثبت‌نام و ورود فعلاً غیرفعال است."},403);
@@ -261,6 +351,9 @@ export default {
     return response(request,env,{success:true,message:"ایمیل تأیید شد؛ اکنون می‌توانید وارد شوید."});
    }
    if(path==="/api/auth/login" && method==="POST") {
+    return response(request,env,{success:false,error:"ورود با ایمیل غیرفعال شده است؛ از ورود پیامکی استفاده کنید."},410);
+   }
+   if(path==="/api/auth/login-email-disabled" && method==="POST") {
     if(await rateLimited(request,env,"login",8)) return response(request,env,{success:false,error:"تلاش‌های ورود بیش از حد است؛ یک دقیقه دیگر تلاش کنید."},429);
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
     if(!await enabled(env)) return response(request,env,{success:false,error:"ورود و ثبت‌نام فعلاً غیرفعال است."},403);
