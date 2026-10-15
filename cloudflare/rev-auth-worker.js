@@ -94,6 +94,14 @@ async function createSession(request,env,userId) {
     .bind(crypto.randomUUID(),userId,await sha256(raw),now.toISOString(),exp.toISOString()).run();
   return response(request,env,{success:true,user:{id:userId}},200,{"Set-Cookie":cookie(raw,SESSION_DAYS*86400)});
 }
+function isPlanActive(a, now=Date.now()) {
+  return !!a && a.plan_status==="active" && ["paid","waived"].includes(a.payment_status) && Number.isFinite(Date.parse(a.expires_at||"")) && Date.parse(a.expires_at)>now && (!a.starts_at || Date.parse(a.starts_at)<=now);
+}
+function effectiveFeatures(a, now=Date.now()) {
+  const free={listing:true,contact:true,edit:true,product_catalog:false};
+  if(!isPlanActive(a,now)) return free;
+  try { const f=JSON.parse(a.features_json||"{}"); return {...free,...f}; } catch { return free; }
+}
 async function currentUser(request,env) {
   const raw=(request.headers.get("Cookie")||"").split(";").map(x=>x.trim()).find(x=>x.startsWith(COOKIE_NAME+"="))?.slice(COOKIE_NAME.length+1);
   if(!raw) return null;
@@ -320,17 +328,25 @@ export default {
    if(path==="/api/businesses" && method==="GET") {
     const type=url.searchParams.get("type")||"";
     if(type&&!["store","repair","charging"].includes(type)) return response(request,env,{success:false,error:"نوع کسب‌وکار معتبر نیست."},400);
-    const rows=await env.DB.prepare("SELECT id,business_type,name,city,address,latitude,longitude,phone,website,description,services_json,brands_json,opening_hours,created_at,updated_at FROM rev_business_profiles WHERE status='approved' AND (?='' OR business_type=?) ORDER BY name LIMIT 500").bind(type,type).all();
-    const businesses=rows.results||[];
-    const prods=await env.DB.prepare("SELECT p.id,p.business_id,p.title,p.description,p.price_text,p.image_url,p.product_url,p.stock_status,p.updated_at FROM rev_business_products p JOIN rev_business_profiles b ON b.id=p.business_id WHERE p.status='approved' AND b.status='approved' ORDER BY p.updated_at DESC LIMIT 500").all();
+    const rows=await env.DB.prepare("SELECT b.id,b.business_type,b.name,b.city,b.address,b.latitude,b.longitude,b.phone,b.website,b.description,b.services_json,b.brands_json,b.opening_hours,b.created_at,b.updated_at,a.plan_code,a.plan_status,a.payment_status,a.expires_at,a.features_json FROM rev_business_profiles b LEFT JOIN rev_business_plan_assignments a ON a.business_id=b.id WHERE b.status='approved' AND (?='' OR b.business_type=?) ORDER BY b.name LIMIT 500").bind(type,type).all();
+    const now=Date.now(), businesses=(rows.results||[]).filter(b=>effectiveFeatures(b,now).listing!==false).map(b=>{
+     const f=effectiveFeatures(b,now), x={...b,plan_features:f};
+     if(f.contact===false){x.phone=null;x.address=null;}
+     if(f.hours===false)x.opening_hours=null;
+     if(f.services===false){x.services_json='[]';x.brands_json='[]';}
+     if(f.links===false)x.website=null;
+     return x;
+    });
+    const prods=await env.DB.prepare("SELECT p.id,p.business_id,p.title,p.description,p.price_text,p.image_url,p.product_url,p.stock_status,p.updated_at FROM rev_business_products p JOIN rev_business_profiles b ON b.id=p.business_id JOIN rev_business_plan_assignments a ON a.business_id=b.id WHERE p.status='approved' AND b.status='approved' AND a.plan_status='active' AND a.payment_status IN ('paid','waived') AND a.expires_at>? AND json_extract(a.features_json,'$.product_catalog')=1 ORDER BY p.updated_at DESC LIMIT 500").bind(new Date(now).toISOString()).all();
     return response(request,env,{success:true,businesses,products:prods.results||[]});
    }
    if(path==="/api/portal/me" && method==="GET") {
     const u=await currentUser(request,env);
     if(!u) return response(request,env,{success:false,error:"برای ورود به پنل ابتدا وارد حساب کاربری شوید."},401);
-    const businesses=await env.DB.prepare("SELECT * FROM rev_business_profiles WHERE owner_user_id=? ORDER BY updated_at DESC LIMIT 100").bind(u.id).all();
+    const businesses=await env.DB.prepare("SELECT b.*,a.plan_code,a.plan_name,a.plan_status,a.payment_status AS plan_payment_status,a.starts_at AS plan_starts_at,a.expires_at AS plan_expires_at,a.features_json AS plan_features_json,a.admin_note AS plan_admin_note FROM rev_business_profiles b LEFT JOIN rev_business_plan_assignments a ON a.business_id=b.id WHERE b.owner_user_id=? ORDER BY b.updated_at DESC LIMIT 100").bind(u.id).all();
+    const now=Date.now(), businessRows=(businesses.results||[]).map(b=>({...b,plan_features:effectiveFeatures({plan_status:b.plan_status,payment_status:b.plan_payment_status,starts_at:b.plan_starts_at,expires_at:b.plan_expires_at,features_json:b.plan_features_json},now),plan_is_active:isPlanActive({plan_status:b.plan_status,payment_status:b.plan_payment_status,starts_at:b.plan_starts_at,expires_at:b.plan_expires_at},now)}));
     const products=await env.DB.prepare("SELECT p.*,b.name AS business_name FROM rev_business_products p JOIN rev_business_profiles b ON b.id=p.business_id WHERE b.owner_user_id=? ORDER BY p.updated_at DESC LIMIT 200").bind(u.id).all();
-    return response(request,env,{success:true,user:u,businesses:businesses.results||[],products:products.results||[]});
+    return response(request,env,{success:true,user:u,businesses:businessRows,products:products.results||[]});
    }
    if(path==="/api/portal/businesses" && method==="POST") {
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
@@ -365,6 +381,9 @@ export default {
     const shop=await env.DB.prepare("SELECT id,status,business_type FROM rev_business_profiles WHERE id=? AND owner_user_id=? LIMIT 1").bind(businessId,u.id).first();
     if(!shop||shop.business_type!=="store") return response(request,env,{success:false,error:"فروشگاه انتخاب‌شده متعلق به شما نیست."},403);
     if(shop.status!=="approved") return response(request,env,{success:false,error:"ابتدا فروشگاه باید توسط مدیریت REV تأیید شود."},409);
+    const assignment=await env.DB.prepare("SELECT plan_code,plan_status,payment_status,starts_at,expires_at,features_json FROM rev_business_plan_assignments WHERE business_id=? LIMIT 1").bind(businessId).first();
+    if(!assignment || !isPlanActive(assignment,Date.now()) || effectiveFeatures(assignment,Date.now()).product_catalog!==true)
+      return response(request,env,{success:false,error:"ثبت محصول در پلن فعلی فعال نیست. برای فعال‌سازی پلن حرفه‌ای یا بالاتر را از مدیریت REV پیگیری کنید."},403);
     const price=String(b.priceText||"").trim().slice(0,100), image=String(b.imageUrl||"").trim().slice(0,500), productUrl=String(b.productUrl||"").trim().slice(0,500), desc=String(b.description||"").trim().slice(0,2000), stock=["in_stock","out_of_stock","preorder","unknown"].includes(b.stockStatus)?b.stockStatus:"unknown";
     if((image&&!/^https?:\/\//i.test(image))||(productUrl&&!/^https?:\/\//i.test(productUrl))) return response(request,env,{success:false,error:"لینک تصویر و محصول باید با http:// یا https:// شروع شود."},400);
     const id=crypto.randomUUID(),now=new Date().toISOString();
@@ -373,9 +392,29 @@ export default {
    }
    if(path==="/api/admin/businesses" && method==="GET") {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
-    const businesses=await env.DB.prepare("SELECT b.*,u.display_name AS owner_name,u.email_normalized AS owner_email FROM rev_business_profiles b JOIN rev_users u ON u.id=b.owner_user_id ORDER BY CASE b.status WHEN 'pending' THEN 0 WHEN 'needs_review' THEN 1 ELSE 2 END,b.updated_at DESC LIMIT 500").all();
+    const businesses=await env.DB.prepare("SELECT b.*,u.display_name AS owner_name,u.email_normalized AS owner_email,a.plan_code,a.plan_name,a.plan_status,a.payment_status AS plan_payment_status,a.starts_at AS plan_starts_at,a.expires_at AS plan_expires_at,a.features_json AS plan_features_json,a.admin_note AS plan_admin_note FROM rev_business_profiles b JOIN rev_users u ON u.id=b.owner_user_id LEFT JOIN rev_business_plan_assignments a ON a.business_id=b.id ORDER BY CASE b.status WHEN 'pending' THEN 0 WHEN 'needs_review' THEN 1 ELSE 2 END,b.updated_at DESC LIMIT 500").all();
     const products=await env.DB.prepare("SELECT p.*,b.name AS business_name,u.email_normalized AS owner_email FROM rev_business_products p JOIN rev_business_profiles b ON b.id=p.business_id JOIN rev_users u ON u.id=b.owner_user_id ORDER BY CASE p.status WHEN 'pending' THEN 0 ELSE 1 END,p.updated_at DESC LIMIT 500").all();
     return response(request,env,{success:true,businesses:businesses.results||[],products:products.results||[]});
+   }
+   if(path.startsWith("/api/admin/businesses/") && path.endsWith("/plan") && method==="POST") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    const id=path.split("/")[4], b=await request.json().catch(()=>null);
+    const code=String(b?.planCode||""), planName=String(b?.planName||"").trim().slice(0,120);
+    const planStatus=String(b?.planStatus||"pending_payment"), paymentStatus=String(b?.paymentStatus||"pending");
+    const expiresAt=String(b?.expiresAt||""), features=b?.features;
+    if(!id||!["free","professional","featured","sponsor"].includes(code)||!planName||!["active","pending_payment","expired","suspended","cancelled"].includes(planStatus)||!["paid","pending","waived","failed","refunded"].includes(paymentStatus)||!Number.isFinite(Date.parse(expiresAt))||!features||typeof features!=="object"||Array.isArray(features))
+      return response(request,env,{success:false,error:"اطلاعات پلن، پرداخت یا تاریخ انقضا معتبر نیست."},400);
+    if(planStatus==="active"&&!["paid","waived"].includes(paymentStatus))
+      return response(request,env,{success:false,error:"برای فعال‌کردن پلن، وضعیت پرداخت باید «پرداخت‌شده» یا «معاف/رایگان» باشد."},409);
+    const business=await env.DB.prepare("SELECT id FROM rev_business_profiles WHERE id=? LIMIT 1").bind(id).first();
+    if(!business)return response(request,env,{success:false,error:"کسب‌وکار پیدا نشد."},404);
+    const allowed=["listing","contact","edit","logo","photos","hours","services","links","stats","highlight","priority","map_pin","report","campaign","banner","sponsored","social","custom","product_catalog"];
+    const safeFeatures={}; for(const key of allowed) safeFeatures[key]=features[key]===true;
+    const now=new Date().toISOString(), startsAt=String(b.startsAt||now);
+    if(!Number.isFinite(Date.parse(startsAt)))return response(request,env,{success:false,error:"تاریخ شروع پلن معتبر نیست."},400);
+    await env.DB.prepare("INSERT INTO rev_business_plan_assignments(business_id,plan_code,plan_name,plan_status,payment_status,starts_at,expires_at,features_json,admin_note,assigned_by,created_at,updated_at) VALUES(?,?,?,?,?,?,?,?,?,?,?,?) ON CONFLICT(business_id) DO UPDATE SET plan_code=excluded.plan_code,plan_name=excluded.plan_name,plan_status=excluded.plan_status,payment_status=excluded.payment_status,starts_at=excluded.starts_at,expires_at=excluded.expires_at,features_json=excluded.features_json,admin_note=excluded.admin_note,assigned_by=excluded.assigned_by,updated_at=excluded.updated_at")
+      .bind(id,code,planName,planStatus,paymentStatus,startsAt,new Date(expiresAt).toISOString(),JSON.stringify(safeFeatures),String(b.note||"").trim().slice(0,500)||null,"admin",now,now).run();
+    return response(request,env,{success:true,message:"پلن، وضعیت پرداخت و تاریخ انقضا ذخیره شد."});
    }
    if(path.startsWith("/api/admin/businesses/") && path.endsWith("/review") && method==="POST") {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
