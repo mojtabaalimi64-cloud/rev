@@ -680,10 +680,10 @@ async function loadRatingOverrides(){
 
 function defaultBusinessPlans(){
   return {
-    free:{name:'پایه — رایگان',price:0,active:true,annualEnabled:false,summary:'ثبت نام، شهر، آدرس، تلفن و نمایش عادی در فهرست.'},
-    professional:{name:'حرفه‌ای',price:300000,active:true,annualEnabled:true,summary:'گالری تصاویر، ساعت کاری، خدمات، لینک‌ها و آمار بازدید و کلیک تماس.'},
-    featured:{name:'ویژه',price:1200000,active:false,annualEnabled:true,summary:'جایگاه برجسته در شهر/دسته‌بندی، پین تبلیغاتی نقشه و گزارش عملکرد.'},
-    sponsor:{name:'سازمانی و اسپانسری',price:5000000,active:false,annualEnabled:false,summary:'بنر، محتوای حمایت‌شده و همکاری چندکاناله با توافق اختصاصی.'}
+    free:{name:'پایه — رایگان',price:0,active:true,annualEnabled:false,summary:'ثبت نام، شهر، آدرس، تلفن و نمایش عادی در فهرست.',options:[{id:'listing',label:'نمایش عادی در فهرست کسب‌وکارها',enabled:true},{id:'contact',label:'نمایش شهر، نشانی و تلفن',enabled:true},{id:'edit',label:'امکان ثبت و ویرایش اطلاعات پایه',enabled:true}]},
+    professional:{name:'حرفه‌ای',price:300000,active:true,annualEnabled:true,summary:'پروفایل کامل‌تر و ابزارهای ارتباطی.',options:[{id:'listing',label:'تمام امکانات پایه',enabled:true},{id:'logo',label:'نمایش لوگوی کسب‌وکار',enabled:true},{id:'photos',label:'گالری تصاویر',enabled:true},{id:'hours',label:'نمایش ساعات کاری',enabled:true},{id:'services',label:'فهرست خدمات و تخصص‌ها',enabled:true},{id:'links',label:'لینک شبکه‌های اجتماعی و وب‌سایت',enabled:true},{id:'stats',label:'آمار بازدید و کلیک تماس',enabled:true}]},
+    featured:{name:'ویژه',price:1200000,active:false,annualEnabled:true,summary:'جایگاه برجسته و قابلیت‌های تبلیغاتی.',options:[{id:'listing',label:'تمام امکانات پایه',enabled:true},{id:'logo',label:'نمایش لوگو و تصاویر',enabled:true},{id:'hours',label:'نمایش ساعات کاری و خدمات',enabled:true},{id:'links',label:'لینک‌های ارتباطی',enabled:true},{id:'highlight',label:'نمایش برجسته در فهرست',enabled:true},{id:'priority',label:'اولویت نمایش در شهر و دسته‌بندی',enabled:true},{id:'map_pin',label:'پین تبلیغاتی روی نقشه، در صورت پشتیبانی',enabled:true},{id:'report',label:'گزارش عملکرد تبلیغات',enabled:true}]},
+    sponsor:{name:'سازمانی و اسپانسری',price:5000000,active:false,annualEnabled:false,summary:'همکاری تبلیغاتی و سازمانی اختصاصی.',options:[{id:'campaign',label:'طراحی کمپین اختصاصی',enabled:true},{id:'banner',label:'بنر تبلیغاتی',enabled:true},{id:'sponsored',label:'محتوای حمایت‌شده با برچسب مشخص',enabled:true},{id:'social',label:'معرفی در رسانه‌ها و شبکه‌های اجتماعی',enabled:true},{id:'report',label:'گزارش عملکرد کمپین',enabled:true},{id:'custom',label:'برنامه همکاری سفارشی',enabled:true}]}
   };
 }
 function plansPanel(){
@@ -704,6 +704,12 @@ function plansPanel(){
         <div><label>توضیح و امکانات پلن</label><textarea data-plan-summary="${id}" rows="3" maxlength="500">${esc(p.summary||'')}</textarea></div>
         <div><label>قیمت ماهانه (تومان)</label><input type="number" min="0" step="50000" data-plan-price="${id}" value="${Number(p.price)||0}" ${isFree?'disabled':''}></div>
         <div><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" data-plan-annual="${id}" ${p.annualEnabled?'checked':''} style="width:18px;height:18px;accent-color:#00806f"> ارائه تخفیف سالانه (۱۰ ماه به قیمت ۱۲ ماه)</label><p class="hint">در صورت فعال بودن، مبلغ سالانه برابر ۱۰ برابر قیمت ماهانه محاسبه می‌شود.</p></div>
+      </div>
+      <div style="margin-top:16px;padding:14px;border:1px solid #dce9df;border-radius:12px;background:#f7fbf8">
+        <strong>امکانات این پلن — هر مورد را جداگانه فعال یا غیرفعال کن</strong>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:10px">
+          ${(p.options||[]).map(o=>'<label style="display:flex;align-items:flex-start;gap:8px;margin:0;padding:8px;background:#fff;border:1px solid #e2ece5;border-radius:8px"><input type="checkbox" data-plan-option="${id}|'+o.id+'" '+(o.enabled!==false?'checked':'')+' style="margin-top:6px;accent-color:#00806f;width:17px;height:17px"><span>'+esc(o.label)+'</span></label>').join('')}
+        </div>
       </div>
     </div>`;
   }).join('');
@@ -899,6 +905,7 @@ root.addEventListener('change',e=>{
   if(p.menuEnabled){c.siteSettings=c.siteSettings||{};c.siteSettings.menu=c.siteSettings.menu||{};c.siteSettings.menu[p.menuEnabled]={...(c.siteSettings.menu[p.menuEnabled]||{}),enabled:e.target.checked};dirty=true;return}
 
   if(p.planAnnual){c.businessPlans[p.planAnnual].annualEnabled=e.target.checked;dirty=true;draw();return}
+  if(p.planOption){const [planId,optionId]=p.planOption.split('|');const option=(c.businessPlans[planId]?.options||[]).find(x=>x.id===optionId);if(option){option.enabled=e.target.checked;dirty=true;draw();}return}
   if(e.target.id==='sh'){c.shop=e.target.checked;dirty=true}
   if(e.target.id==='tc')wrap('{'+e.target.value+'|','}','متن رنگی');
   if(e.target.dataset.listSort){listSortValue=e.target.value;draw()}
