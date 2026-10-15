@@ -197,6 +197,8 @@ async function driverShareApi(request, env, url, method, user) {
   if (method !== "GET" && !sameOrigin(request, env)) return response(request,env,{success:false,error:"درخواست از مبدأ مجاز نیست."},403);
   if (url.pathname === "/api/driver/shares" && method === "POST") {
     let body={};try{body=await request.json();}catch{}
+    if(!body || typeof body!=="object" || Array.isArray(body)) body={};
+    if(await rateLimited(request,env,"driver-share-create",5,60)) return response(request,env,{success:false,error:"تعداد درخواست‌های اشتراک زیاد است؛ کمی بعد تلاش کنید."},429);
     const hours=Math.max(1,Math.min(8,Number(body.hours)||2));
     const id=crypto.randomUUID(),token=randomToken(32),now=new Date(),expires=new Date(now.getTime()+hours*3600000).toISOString();
     await env.DB.prepare("INSERT INTO rev_live_trip_shares (id,user_id,token_hash,created_at,expires_at,revoked_at,latitude,longitude,accuracy_m,location_updated_at) VALUES (?,?,?,?,?,NULL,NULL,NULL,NULL,NULL)")
@@ -231,6 +233,8 @@ async function driverTripsApi(request, env, url, method, user) {
   if (url.pathname === "/api/driver/trips" && method === "POST") {
     let body;
     try { body = await request.json(); } catch { return response(request,env,{success:false,error:"بدنه JSON معتبر نیست."},400); }
+    if (!body || typeof body !== "object" || Array.isArray(body)) return response(request,env,{success:false,error:"ساختار اطلاعات سفر معتبر نیست."},400);
+    if (await rateLimited(request,env,"driver-trip-create",20,60)) return response(request,env,{success:false,error:"تعداد درخواست‌ها زیاد است؛ کمی بعد دوباره تلاش کنید."},429);
     const vehicleType = ["bev","phev","hev","mhev"].includes(body.vehicle_type) ? body.vehicle_type : "bev";
     const vehicleName = String(body.vehicle_name || "خودروی ثبت‌نشده").trim().slice(0,100) || "خودروی ثبت‌نشده";
     const distance = Number(body.distance_km), energy = Number(body.energy_kwh);
