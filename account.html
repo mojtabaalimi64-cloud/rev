@@ -122,4 +122,17 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-edit-busin
 $('#productForm').addEventListener('submit',async e=>{e.preventDefault();const f=new FormData(e.currentTarget);try{const j=await api('/api/portal/products',{method:'POST',body:JSON.stringify({businessId:f.get('businessId'),title:f.get('title'),description:f.get('description'),priceText:f.get('priceText'),imageUrl:f.get('imageUrl'),productUrl:f.get('productUrl'),stockStatus:f.get('stockStatus')})});e.currentTarget.reset();await refresh();say(j.message||'محصول برای بررسی ثبت شد.','ok')}catch(x){say(x.message,'error')}});
 refresh();
 </script><script src="./rev-site-settings.js?v=1" defer></script>
+<script>
+(function(){
+ try{localStorage.removeItem('rev_return_to_account');}catch(e){}
+ document.addEventListener('click',function(ev){
+   const a=ev.target&&ev.target.closest?ev.target.closest('a[href]'):null;
+   if(!a)return;
+   try{
+    const u=new URL(a.href,location.href);
+    if(u.origin===location.origin && !/account\.html$/.test(u.pathname)) localStorage.setItem('rev_return_to_account','1');
+   }catch(e){}
+ },true);
+})();
+</script>
 </body></html>
