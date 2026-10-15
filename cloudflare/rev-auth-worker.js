@@ -313,7 +313,7 @@ export default {
    if(path==="/api/auth/sms/verify" && method==="POST") {
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
     if(await rateLimited(request,env,"sms-verify",10,600)) return response(request,env,{success:false,error:"تعداد تلاش‌ها زیاد است؛ کمی بعد دوباره تلاش کنید."},429);
-    const b=await request.json().catch(()=>null), parsed=normalizeIranPhone(b?.phone), code=String(b?.code||"").replace(/\D/g,"");
+    const b=await request.json().catch(()=>null), parsed=normalizeIranPhone(b?.phone), code=String(b?.code||"").replace(/[۰-۹]/g,d=>String("۰۱۲۳۴۵۶۷۸۹".indexOf(d))).replace(/[٠-٩]/g,d=>String("٠١٢٣٤٥٦٧٨٩".indexOf(d))).replace(/\D/g,"");
     if(!parsed || !/^\d{6}$/.test(code)) return response(request,env,{success:false,error:"شماره همراه یا کد شش‌رقمی معتبر نیست."},400);
     const now=new Date().toISOString(), phone=parsed.e164;
     const ch=await env.DB.prepare("SELECT id,user_id,token_hash,attempts,max_attempts FROM rev_verification_challenges WHERE channel='sms' AND purpose='login' AND destination_normalized=? AND consumed_at IS NULL AND expires_at>? AND attempts<max_attempts ORDER BY created_at DESC LIMIT 1").bind(phone,now).first();
