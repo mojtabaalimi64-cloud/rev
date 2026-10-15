@@ -475,6 +475,23 @@ export default {
     }
     return response(request,env,{success:true,id,status:"pending",message:"درخواست ثبت شد و پس از بررسی مدیریت REV نمایش داده می‌شود."},201);
    }
+   if(path.startsWith("/api/portal/businesses/") && path.endsWith("/plan-request") && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:false,error:"برای درخواست پلن ابتدا وارد حساب شوید."},401);
+    const parts=path.split("/"), id=parts[4], b=await request.json().catch(()=>null), code=String(b?.planCode||"");
+    const plans={professional:"پلن حرفه‌ای",featured:"پلن ویژه",sponsor:"پلن حامی / تبلیغاتی"};
+    if(!id||!plans[code]) return response(request,env,{success:false,error:"پلن انتخاب‌شده معتبر نیست."},400);
+    const business=await env.DB.prepare("SELECT id,business_type,status FROM rev_business_profiles WHERE id=? AND owner_user_id=? LIMIT 1").bind(id,u.id).first();
+    if(!business) return response(request,env,{success:false,error:"کسب‌وکار متعلق به حساب شما نیست."},404);
+    const current=await env.DB.prepare("SELECT plan_status,payment_status,starts_at,expires_at FROM rev_business_plan_assignments WHERE business_id=? LIMIT 1").bind(id).first();
+    if(current && isPlanActive(current,Date.now())) return response(request,env,{success:false,error:"این کسب‌وکار پلن فعال دارد؛ برای تغییر پلن با مدیریت REV هماهنگ کنید."},409);
+    const now=new Date().toISOString(), expires=new Date(Date.now()+365*86400000).toISOString();
+    const features={listing:false,contact:false,edit:false,logo:false,photos:false,hours:false,services:false,links:false,stats:false,highlight:false,priority:false,map_pin:false,report:false,campaign:false,banner:false,sponsored:false,social:false,custom:false,product_catalog:false};
+    await env.DB.prepare("INSERT INTO rev_business_plan_assignments(business_id,plan_code,plan_name,plan_status,payment_status,starts_at,expires_at,features_json,admin_note,assigned_by,created_at,updated_at) VALUES(?,?,?,'pending_payment','pending',?,?,?,?,?,?,?) ON CONFLICT(business_id) DO UPDATE SET plan_code=excluded.plan_code,plan_name=excluded.plan_name,plan_status='pending_payment',payment_status='pending',starts_at=excluded.starts_at,expires_at=excluded.expires_at,features_json=excluded.features_json,admin_note='درخواست پلن توسط صاحب کسب‌وکار؛ نیازمند بررسی و تأیید مدیر.',assigned_by=excluded.assigned_by,updated_at=excluded.updated_at")
+      .bind(id,code,plans[code],now,expires,JSON.stringify(features),"درخواست پلن توسط صاحب کسب‌وکار؛ نیازمند بررسی و تأیید مدیر.",u.id,now,now).run();
+    return response(request,env,{success:true,status:"pending_payment",message:"درخواست پلن ثبت شد و برای بررسی مدیریت REV ارسال شد. هیچ دسترسی پولی تا تأیید مدیر فعال نخواهد شد."},201);
+   }
    if(path==="/api/portal/products" && method==="POST") {
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
     const u=await currentUser(request,env);
