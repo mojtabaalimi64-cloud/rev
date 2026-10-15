@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#080b0d">
+<meta name="referrer" content="no-referrer">
+<title>موقعیت زنده سفر | REV</title>
+<style>
+:root{color-scheme:dark;--bg:#080b0d;--panel:#10171b;--line:#29383e;--muted:#9eafb5;--green:#39ff88;--text:#f5f7f8}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 85% 0%,#12352a 0,transparent 32%),var(--bg);color:var(--text);font:16px/1.85 Vazirmatn,Vazir,Tahoma,sans-serif}.wrap{width:min(760px,calc(100% - 28px));margin:7vh auto}.card{border:1px solid var(--line);border-radius:22px;padding:24px;background:linear-gradient(145deg,#101a1e,#0b1114);box-shadow:0 20px 70px #0005}.brand{font-size:30px;letter-spacing:3px;font-weight:950;color:var(--green)}h1{margin:4px 0;font-size:25px}p{color:#b8c7cb}.status{padding:13px;border:1px solid var(--line);border-radius:12px;background:#0b1114}.maplink{display:inline-block;margin-top:14px;padding:10px 14px;border:1px solid #35534a;border-radius:10px;color:var(--green);text-decoration:none;background:#14251d}.muted{font-size:12px;color:var(--muted)}[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main class="wrap"><section class="card">
+<div class="brand">REV</div><h1>موقعیت زنده سفر</h1>
+<p>این صفحه فقط آخرین موقعیتی را نمایش می‌دهد که صاحب لینک با رضایت خود به اشتراک گذاشته است. اطلاعات هویتی یا تاریخچه سفر نمایش داده نمی‌شود.</p>
+<div id="status" class="status" role="status" aria-live="polite">در حال بررسی لینک اشتراک…</div>
+<div id="location" hidden><p id="updated"></p><p id="accuracy" class="muted"></p><a id="map" class="maplink" target="_blank" rel="noopener noreferrer">نمایش موقعیت روی نقشه</a></div>
+<p class="muted">موقعیت ممکن است با تأخیر به‌روزرسانی شود. برای موارد اضطراری به این صفحه اتکا نکنید.</p>
+</section></main>
+<script>
+(() => {
+  const API="https://rev-auth-api.mojtaba-alimi64.workers.dev";
+  const token=new URLSearchParams(location.search).get("token")||"";
+  const $=id=>document.getElementById(id);
+  const setStatus=(text,error=false)=>{$("status").textContent=text;$("status").style.color=error?"#ffb4b4":"#d3dedf";$("status").style.borderColor=error?"#744347":"#29383e";};
+  let stopped=false;
+  async function refresh(){
+    if(stopped)return;
+    if(!/^[A-Za-z0-9_-]{40,60}$/.test(token)){setStatus("لینک اشتراک معتبر نیست.",true);stopped=true;return;}
+    try{
+      const res=await fetch(API+"/api/driver/shares/view?token="+encodeURIComponent(token),{headers:{"Accept":"application/json"},cache:"no-store",referrerPolicy:"no-referrer"});
+      const data=await res.json();
+      if(!res.ok||!data.success){setStatus(data.error||"این لینک پایان یافته یا لغو شده است.",true);$("location").hidden=true;stopped=true;return;}
+      if(!data.location){setStatus("لینک فعال است؛ هنوز موقعیتی از دستگاه دریافت نشده است.");$("location").hidden=true;return;}
+      const p=data.location,lat=Number(p.latitude),lon=Number(p.longitude);
+      if(!Number.isFinite(lat)||!Number.isFinite(lon)){setStatus("مختصات معتبر دریافت نشد.",true);return;}
+      $("location").hidden=false;
+      $("updated").textContent="آخرین موقعیت دریافتی: "+new Date(p.updated_at).toLocaleString("fa-IR");
+      $("accuracy").textContent=p.accuracy_m==null?"دقت GPS گزارش نشده است.":"دقت گزارش‌شده دستگاه: حدود "+Math.round(p.accuracy_m).toLocaleString("fa-IR")+" متر.";
+      $("map").href="https://www.openstreetmap.org/?mlat="+encodeURIComponent(lat)+"&mlon="+encodeURIComponent(lon)+"#map=16/"+encodeURIComponent(lat)+"/"+encodeURIComponent(lon);
+      setStatus("اشتراک معتبر است؛ صفحه به‌صورت خودکار به‌روزرسانی می‌شود.");
+    }catch(e){setStatus("اتصال به سرویس موقعیت برقرار نشد؛ اتصال اینترنت را بررسی کنید.",true);}
+  }
+  refresh();
+  const timer=setInterval(refresh,10000);
+  window.addEventListener("pagehide",()=>{stopped=true;clearInterval(timer);});
+})();
+</script>
+</body>
+</html>
