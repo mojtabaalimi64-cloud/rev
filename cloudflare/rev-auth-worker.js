@@ -364,6 +364,9 @@ export default {
     if(id){
      const old=await env.DB.prepare("SELECT id,status FROM rev_business_profiles WHERE id=? AND owner_user_id=? LIMIT 1").bind(id,u.id).first();
      if(!old) return response(request,env,{success:false,error:"این پروفایل متعلق به حساب شما نیست."},404);
+     const assignment=await env.DB.prepare("SELECT plan_status,payment_status,starts_at,expires_at,features_json FROM rev_business_plan_assignments WHERE business_id=? LIMIT 1").bind(id).first();
+     if(assignment && isPlanActive(assignment,Date.now()) && effectiveFeatures(assignment,Date.now()).edit!==true)
+       return response(request,env,{success:false,error:"ویرایش پروفایل در پلن فعلی غیرفعال است؛ با مدیریت REV هماهنگ کنید."},403);
      await env.DB.prepare("UPDATE rev_business_profiles SET business_type=?,name=?,city=?,address=?,latitude=?,longitude=?,phone=?,website=?,description=?,services_json=?,brands_json=?,opening_hours=?,license_details=?,status='pending',moderation_note=NULL,updated_at=? WHERE id=? AND owner_user_id=?").bind(type,name,city,address,lat,lon,phone,website,description,services,brands,opening,license,now,id,u.id).run();
      await env.DB.prepare("UPDATE rev_business_products SET status='pending',updated_at=? WHERE business_id=? AND status='approved'").bind(now,id).run();
     } else {
