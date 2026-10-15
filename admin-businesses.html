@@ -7,6 +7,36 @@
 <section class="card"><label>توکن مدیریت (همان ADMIN_TOKEN تنظیم‌شده در Cloudflare، بدون ارسال به کسی)<input id="token" type="password" autocomplete="current-password"></label><button class="primary" id="load">بارگذاری درخواست‌ها</button><button id="clear">پاک‌کردن توکن</button><div id="notice" class="notice">توکن را وارد کنید تا درخواست‌ها از API خوانده شوند.</div></section>
 <div class="tabs"><button data-kind="business" class="active">کسب‌وکارها</button><button data-kind="product">محصولات</button></div><section class="card"><div id="list">هنوز داده‌ای بارگذاری نشده است.</div></section></main>
 <script>
+/* REV panel recovery + visible diagnostics */
+(function () {
+  function showError(message) {
+    const box = document.getElementById('notice');
+    if (box) box.textContent = 'خطای اجرای پنل: ' + String(message || 'خطای نامشخص') + ' — صفحه را با Ctrl+F5 تازه‌سازی کنید.';
+  }
+  window.addEventListener('error', function (event) {
+    showError((event.message || 'JavaScript error') + (event.filename ? ' (' + event.filename.split('/').pop() + ':' + event.lineno + ')' : ''));
+  });
+  window.addEventListener('unhandledrejection', function (event) {
+    const reason = event.reason;
+    showError(reason && reason.message ? reason.message : reason);
+  });
+  document.addEventListener('click', function (event) {
+    const tab = event.target.closest && event.target.closest('[data-kind]');
+    if (!tab) return;
+    try {
+      if (typeof kind !== 'undefined') kind = tab.dataset.kind;
+      document.querySelectorAll('[data-kind]').forEach(function (button) {
+        button.classList.toggle('active', button === tab);
+      });
+      if (typeof draw === 'function') draw();
+      else showError('کد اصلی پنل بارگذاری نشده است؛ صفحه را با Ctrl+F5 تازه‌سازی کنید.');
+    } catch (error) {
+      showError(error && error.message ? error.message : error);
+    }
+  }, true);
+})();
+</script>
+<script>
 const API='https://rev-auth-api.mojtaba-alimi64.workers.dev', $=s=>document.querySelector(s), esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));let kind='business',items={business:[],product:[]};
 function say(t){$('#notice').textContent=t}
 async function req(path,opts={}){const r=await fetch(API+path,{cache:'no-store',...opts,headers:{'Content-Type':'application/json','Authorization':'Bearer '+$('#token').value.trim(),...(opts.headers||{})}});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw Error(j.error||'درخواست ناموفق بود: '+r.status);return j}
