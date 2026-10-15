@@ -47,3 +47,11 @@ jobs:
           test -n "$CLOUDFLARE_API_TOKEN" || (echo 'Missing CLOUDFLARE_API_TOKEN secret' && exit 1)
           test -n "$CLOUDFLARE_ACCOUNT_ID" || (echo 'Missing CLOUDFLARE_ACCOUNT_ID secret' && exit 1)
           npx --yes wrangler@4 deploy --config wrangler.toml --keep-vars
+
+      - name: Smoke-test deployed Worker
+        run: |
+          set -e
+          curl --fail --silent --show-error 'https://rev-auth-api.mojtaba-alimi64.workers.dev/api/health' -o /tmp/rev-auth-health.json
+          node -e "const fs=require('fs');const x=JSON.parse(fs.readFileSync('/tmp/rev-auth-health.json','utf8'));if(x.success!==true||x.service!=='REV Auth')process.exit(1);console.log('REV Auth health endpoint OK')"
+          curl --fail --silent --show-error 'https://rev-auth-api.mojtaba-alimi64.workers.dev/api/auth/status' -o /tmp/rev-auth-status.json
+          node -e "const fs=require('fs');const x=JSON.parse(fs.readFileSync('/tmp/rev-auth-status.json','utf8'));if(x.success!==true||typeof x.enabled!=='boolean'||typeof x.emailConfigured!=='boolean')process.exit(1);console.log('REV Auth status endpoint OK; registration remains controlled by server configuration')"
