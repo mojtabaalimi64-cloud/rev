@@ -23,6 +23,9 @@ jobs:
         with:
           node-version: '22'
 
+      - name: Validate Worker JavaScript syntax
+        run: node --check cloudflare/rev-auth-worker.js
+
       - name: Create isolated Wrangler configuration
         env:
           D1_DATABASE_ID: ${{ secrets.REV_AUTH_D1_DATABASE_ID }}
