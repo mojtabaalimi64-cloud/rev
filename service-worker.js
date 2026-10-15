@@ -8,7 +8,7 @@ self.addEventListener("fetch", event => {
   const url = new URL(request.url);
   // Do not cache APIs, shared URLs with query parameters, third-party services, or private pages.
   if (url.origin !== self.location.origin || url.search || /\\/api\\//i.test(url.pathname)) return;
-  const isTripDocument = url.pathname.endsWith("/trip.html") || url.pathname.endsWith("/rev/");
+  const isTripDocument = url.pathname.endsWith("/trip.html");
   if (!isTripDocument) return;
   event.respondWith(fetch(request).then(response => {
     if (response && response.ok && response.type === "basic") { const copy = response.clone(); caches.open(REV_CACHE).then(cache => cache.put("./trip.html", copy)); }
