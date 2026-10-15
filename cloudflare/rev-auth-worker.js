@@ -33,10 +33,10 @@ function response(request, env, data, status=200, extra={}) {
   }});
 }
 function cookie(token, maxAge) {
-  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=None; Secure; Partitioned; Max-Age=${maxAge}`;
+  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; Secure; SameSite=None; Partitioned; Max-Age=${maxAge}`;
 }
 function clearCookie() {
-  return `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=None; Secure; Partitioned; Max-Age=0`;
+  return `${COOKIE_NAME}=; Path=/; HttpOnly; Secure; SameSite=None; Partitioned; Max-Age=0`;
 }
 function b64url(bytes) {
   let s=""; for (const b of new Uint8Array(bytes)) s+=String.fromCharCode(b);
