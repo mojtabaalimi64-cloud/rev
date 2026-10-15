@@ -137,7 +137,7 @@ async function currentUser(request,env) {
   const raw=(request.headers.get("Cookie")||"").split(";").map(x=>x.trim()).find(x=>x.startsWith(COOKIE_NAME+"="))?.slice(COOKIE_NAME.length+1);
   if(!raw) return null;
   const hash=await sha256(decodeURIComponent(raw));
-  return await env.DB.prepare("SELECT u.id,u.display_name,u.email_normalized,u.phone_e164,u.email_verified_at,u.phone_verified_at,u.account_status,u.role FROM rev_sessions s JOIN rev_users u ON u.id=s.user_id WHERE s.session_token_hash=? AND s.revoked_at IS NULL AND s.expires_at>? AND u.account_status='active' AND (u.email_verified_at IS NOT NULL OR u.phone_verified_at IS NOT NULL) LIMIT 1")
+  return await env.DB.prepare("SELECT u.id,u.display_name,u.email_normalized,u.phone_e164,u.email_verified_at,u.phone_verified_at,u.account_status,u.role,u.created_at FROM rev_sessions s JOIN rev_users u ON u.id=s.user_id WHERE s.session_token_hash=? AND s.revoked_at IS NULL AND s.expires_at>? AND u.account_status='active' AND (u.email_verified_at IS NOT NULL OR u.phone_verified_at IS NOT NULL) LIMIT 1")
     .bind(hash,new Date().toISOString()).first();
 }
 export default {
