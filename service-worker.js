@@ -7,7 +7,7 @@ self.addEventListener("fetch", event => {
   if (request.method !== "GET") return;
   const url = new URL(request.url);
   // Do not cache APIs, shared URLs with query parameters, third-party services, or private pages.
-  if (url.origin !== self.location.origin || url.search || /\\/api\\//i.test(url.pathname)) return;
+  if (url.origin !== self.location.origin || url.search || url.pathname.includes("/api/")) return;
   const isTripDocument = url.pathname.endsWith("/trip.html");
   if (!isTripDocument) return;
   event.respondWith(fetch(request).then(response => {
