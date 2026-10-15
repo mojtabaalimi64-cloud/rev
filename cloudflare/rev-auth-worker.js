@@ -140,6 +140,77 @@ async function currentUser(request,env) {
   return await env.DB.prepare("SELECT u.id,u.display_name,u.email_normalized,u.phone_e164,u.email_verified_at,u.phone_verified_at,u.account_status,u.role,u.created_at FROM rev_sessions s JOIN rev_users u ON u.id=s.user_id WHERE s.session_token_hash=? AND s.revoked_at IS NULL AND s.expires_at>? AND u.account_status='active' AND (u.email_verified_at IS NOT NULL OR u.phone_verified_at IS NOT NULL) LIMIT 1")
     .bind(hash,new Date().toISOString()).first();
 }
+
+async function ensureDriverTripsSchema(env) {
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_driver_trips (
+    id TEXT PRIMARY KEY,
+    user_id TEXT NOT NULL,
+    vehicle_name TEXT NOT NULL DEFAULT 'خودروی ثبت‌نشده',
+    vehicle_type TEXT NOT NULL DEFAULT 'bev' CHECK (vehicle_type IN ('bev','phev','hev','mhev')),
+    started_at TEXT NOT NULL,
+    ended_at TEXT NOT NULL,
+    distance_km REAL NOT NULL CHECK (distance_km > 0 AND distance_km <= 5000),
+    energy_kwh REAL NOT NULL CHECK (energy_kwh >= 0 AND energy_kwh <= 2000),
+    start_soc REAL CHECK (start_soc IS NULL OR (start_soc >= 0 AND start_soc <= 100)),
+    end_soc REAL CHECK (end_soc IS NULL OR (end_soc >= 0 AND end_soc <= 100)),
+    energy_source TEXT NOT NULL DEFAULT 'manual' CHECK (energy_source IN ('obd','vehicle_api','gps_estimate','manual')),
+    route_json TEXT,
+    route_saved INTEGER NOT NULL DEFAULT 0 CHECK (route_saved IN (0,1)),
+    created_at TEXT NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES rev_users(id) ON DELETE CASCADE
+  )`).run();
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_driver_trips_user_date ON rev_driver_trips(user_id, ended_at DESC)").run();
+}
+function validIsoDate(value) {
+  return typeof value === "string" && value.length <= 40 && Number.isFinite(Date.parse(value));
+}
+function validOptionalSoc(value) {
+  return value === null || value === undefined || (Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 100);
+}
+async function driverTripsApi(request, env, url, method, user) {
+  if (!user) return response(request, env, {success:false,error:"برای استفاده از تاریخچه سفر وارد حساب کاربری شوید."}, 401);
+  if (method !== "GET" && !sameOrigin(request, env)) return response(request, env, {success:false,error:"درخواست از مبدأ مجاز نیست."}, 403);
+  await ensureDriverTripsSchema(env);
+  if (url.pathname === "/api/driver/trips" && method === "GET") {
+    const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get("limit") || "50", 10) || 50));
+    const rows = await env.DB.prepare("SELECT id,vehicle_name,vehicle_type,started_at,ended_at,distance_km,energy_kwh,start_soc,end_soc,energy_source,created_at FROM rev_driver_trips WHERE user_id=? ORDER BY ended_at DESC LIMIT ?").bind(user.id, limit).all();
+    return response(request, env, {success:true,trips:rows.results || []});
+  }
+  if (url.pathname === "/api/driver/trips" && method === "POST") {
+    let body;
+    try { body = await request.json(); } catch { return response(request,env,{success:false,error:"بدنه JSON معتبر نیست."},400); }
+    const vehicleType = ["bev","phev","hev","mhev"].includes(body.vehicle_type) ? body.vehicle_type : "bev";
+    const vehicleName = String(body.vehicle_name || "خودروی ثبت‌نشده").trim().slice(0,100) || "خودروی ثبت‌نشده";
+    const distance = Number(body.distance_km), energy = Number(body.energy_kwh);
+    const started = body.started_at, ended = body.ended_at;
+    const source = ["obd","vehicle_api","gps_estimate","manual"].includes(body.energy_source) ? body.energy_source : "manual";
+    if (!Number.isFinite(distance) || distance <= 0 || distance > 5000 || !Number.isFinite(energy) || energy < 0 || energy > 2000 || !validIsoDate(started) || !validIsoDate(ended) || Date.parse(ended) < Date.parse(started) || !validOptionalSoc(body.start_soc) || !validOptionalSoc(body.end_soc)) {
+      return response(request,env,{success:false,error:"اطلاعات سفر معتبر نیست؛ مسافت، انرژی، زمان‌ها و درصد باتری را بررسی کنید."},400);
+    }
+    const id = crypto.randomUUID(), now = new Date().toISOString();
+    await env.DB.prepare("INSERT INTO rev_driver_trips (id,user_id,vehicle_name,vehicle_type,started_at,ended_at,distance_km,energy_kwh,start_soc,end_soc,energy_source,route_json,route_saved,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL,0,?)")
+      .bind(id,user.id,vehicleName,vehicleType,new Date(started).toISOString(),new Date(ended).toISOString(),distance,energy,body.start_soc == null ? null : Number(body.start_soc),body.end_soc == null ? null : Number(body.end_soc),source,now).run();
+    return response(request,env,{success:true,id,message:"سفر در تاریخچه خصوصی حساب شما ثبت شد."},201);
+  }
+  const match = url.pathname.match(/^\/api\/driver\/trips\/([0-9a-f-]{36})$/i);
+  if (match && method === "DELETE") {
+    const result = await env.DB.prepare("DELETE FROM rev_driver_trips WHERE id=? AND user_id=?").bind(match[1],user.id).run();
+    return response(request,env,{success:true,deleted:Number(result.meta?.changes || 0) > 0});
+  }
+  if (url.pathname === "/api/driver/insights" && method === "GET") {
+    const rows = await env.DB.prepare("SELECT distance_km,energy_kwh,vehicle_type,energy_source,ended_at FROM rev_driver_trips WHERE user_id=? ORDER BY ended_at DESC LIMIT 100").bind(user.id).all();
+    const trips = rows.results || [];
+    const usable = trips.filter(t => Number(t.distance_km)>0 && Number(t.energy_kwh)>=0);
+    const rates = usable.map(t => Number(t.energy_kwh)/Number(t.distance_km)*100).filter(Number.isFinite);
+    const sorted = [...rates].sort((a,b)=>a-b);
+    const median = sorted.length ? (sorted.length%2 ? sorted[(sorted.length-1)/2] : (sorted[sorted.length/2-1]+sorted[sorted.length/2])/2) : null;
+    const totalKm = usable.reduce((sum,t)=>sum+Number(t.distance_km),0);
+    const totalKwh = usable.reduce((sum,t)=>sum+Number(t.energy_kwh),0);
+    return response(request,env,{success:true,sample_count:usable.length,total_distance_km:Math.round(totalKm*10)/10,total_energy_kwh:Math.round(totalKwh*10)/10,average_kwh_per_100km:totalKm>0?Math.round(totalKwh/totalKm*1000)/10:null,median_kwh_per_100km:median===null?null:Math.round(median*10)/10,confidence:usable.length<3?"نمونه کم؛ این آمار برای پیش‌بینی قابل اتکا نیست.":usable.length<8?"برآورد اولیه بر اساس سفرهای ثبت‌شده شما.":"برآورد شخصی بر اساس تاریخچه ثبت‌شده؛ شرایط مسیر و هوا همچنان اثرگذارند.",recent:usable.slice(0,5)});
+  }
+  return response(request,env,{success:false,error:"متد یا مسیر پشتیبانی نمی‌شود."},405);
+}
+
 export default {
  async fetch(request,env) {
   const url=new URL(request.url), path=url.pathname, method=request.method;
@@ -154,6 +225,10 @@ export default {
     }
    }
    if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL),smsConfigured:!!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD),smsPatternConfigured:!!(env.MELIPAYAMAK_OTP_BODY_ID||"557785")});
+   if(path==="/api/driver/trips" || /^\/api\/driver\/trips\/[0-9a-f-]{36}$/i.test(path) || path==="/api/driver/insights") {
+    const user=await currentUser(request,env);
+    return await driverTripsApi(request,env,url,method,user);
+   }
    if(path==="/api/admin/users" && method==="GET") {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
     const q=String(url.searchParams.get("q")||"").trim().slice(0,160);
