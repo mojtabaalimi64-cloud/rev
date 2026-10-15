@@ -154,6 +154,22 @@ export default {
     }
    }
    if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL),smsConfigured:!!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD),smsPatternConfigured:!!(env.MELIPAYAMAK_OTP_BODY_ID||"557785")});
+   if(path==="/api/admin/users" && method==="GET") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    const q=String(url.searchParams.get("q")||"").trim().slice(0,160);
+    const sortAllowed={created_at:"created_at",display_name:"display_name",email_normalized:"email_normalized",account_status:"account_status",last_login_at:"last_login_at"};
+    const sort=sortAllowed[url.searchParams.get("sort")]||"created_at";
+    const order=url.searchParams.get("order")==="asc"?"ASC":"DESC";
+    const page=Math.max(1,Math.min(100000,parseInt(url.searchParams.get("page")||"1",10)||1));
+    const limit=Math.max(1,Math.min(50,parseInt(url.searchParams.get("limit")||"50",10)||50));
+    const offset=(page-1)*limit, like="%"+q.toLowerCase()+"%";
+    const where=q?"WHERE lower(COALESCE(display_name,'')) LIKE ? OR lower(COALESCE(email_normalized,'')) LIKE ? OR lower(COALESCE(phone_e164,'')) LIKE ? OR lower(id) LIKE ? OR upper(replace(id,'-','')) LIKE ?":"";
+    const binds=q?[like,like,like,like,"%"+q.replace(/^REV-US-/i,"").replace(/-/g,"").toUpperCase()+"%"]:[];
+    const totalRow=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_users "+where).bind(...binds).first();
+    const rows=await env.DB.prepare("SELECT id,display_name,email_normalized,phone_e164,email_verified_at,phone_verified_at,account_status,role,created_at,updated_at,last_login_at FROM rev_users "+where+" ORDER BY "+sort+" "+order+" LIMIT ? OFFSET ?").bind(...binds,limit,offset).all();
+    const data=(rows.results||[]).map(u=>({...u,public_code:"REV-US-"+String(u.id||"").replace(/-/g,"").toUpperCase()}));
+    return response(request,env,{success:true,data,total:Number(totalRow?.total)||0,page,limit});
+   }
    if(path==="/api/admin/auth-settings" && method==="GET") {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
     const r=await env.DB.prepare("SELECT enabled,updated_at,updated_by FROM rev_auth_settings WHERE id=1").first();
