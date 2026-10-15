@@ -444,7 +444,8 @@ export default {
    if(path==="/api/businesses" && method==="GET") {
     const type=url.searchParams.get("type")||"";
     if(type&&!["store","repair","charging"].includes(type)) return response(request,env,{success:false,error:"نوع کسب‌وکار معتبر نیست."},400);
-    const rows=await env.DB.prepare("SELECT b.id,b.business_type,b.name,b.city,b.address,b.latitude,b.longitude,b.phone,b.website,b.description,b.services_json,b.brands_json,b.opening_hours,b.created_at,b.updated_at,a.plan_code,a.plan_status,a.payment_status,a.starts_at,a.expires_at,a.features_json FROM rev_business_profiles b LEFT JOIN rev_business_plan_assignments a ON a.business_id=b.id WHERE b.status='approved' AND (?='' OR b.business_type=?) ORDER BY b.name LIMIT 500").bind(type,type).all();
+    const nowIso=new Date().toISOString();
+    const rows=await env.DB.prepare("SELECT b.id,b.business_type,b.name,b.city,b.address,b.latitude,b.longitude,b.phone,b.website,b.description,b.services_json,b.brands_json,b.opening_hours,b.created_at,b.updated_at,a.plan_code,a.plan_status,a.payment_status,a.starts_at,a.expires_at,a.features_json FROM rev_business_profiles b JOIN rev_business_plan_assignments a ON a.business_id=b.id WHERE b.status='approved' AND a.plan_status='active' AND a.payment_status IN ('paid','waived') AND a.expires_at>? AND a.starts_at<=? AND json_extract(a.features_json,'$.listing')=1 AND (?='' OR b.business_type=?) ORDER BY b.name LIMIT 500").bind(nowIso,nowIso,type,type).all();
     const now=Date.now(), businesses=(rows.results||[]).filter(b=>effectiveFeatures(b,now).listing!==false).map(b=>{
      const f=effectiveFeatures(b,now), x={...b,plan_features:f};
      if(f.contact===false){x.phone=null;x.address=null;}
