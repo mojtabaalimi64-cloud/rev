@@ -1442,6 +1442,61 @@ $("shareTripBtn").addEventListener("click",shareTrip);
 $("continueTripBtn").addEventListener("click",continueToDriverProfile);
 </script>
 
+
+<section id="revLiveSharePanel" dir="rtl" style="width:min(1180px,calc(100% - 28px));margin:26px auto;padding:20px;border:1px solid #29383e;border-radius:20px;background:linear-gradient(145deg,#101a1e,#0b1114);color:#f5f7f8;font-family:Vazirmatn,Vazir,Tahoma,sans-serif">
+  <div style="color:#39ff88;font-size:12px;font-weight:800">REV LIVE TRIP</div>
+  <h2 style="margin:3px 0 6px;font-size:23px">اشتراک‌گذاری زنده موقعیت سفر</h2>
+  <p style="margin:0;color:#a9b8bd;font-size:14px">با رضایت خودت، موقعیت فعلی دستگاه برای یک لینک خصوصی ارسال می‌شود. لینک حداکثر ۸ ساعت اعتبار دارد و هر لحظه می‌توانی اشتراک را متوقف کنی. موقعیت فقط هنگام فعال بودن این قابلیت ارسال می‌شود.</p>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
+    <label style="font-size:13px;color:#c8d3d6">مدت اعتبار <select id="revShareHours" style="margin-inline-start:6px;padding:8px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#fff;font:inherit"><option value="1">۱ ساعت</option><option value="2" selected>۲ ساعت</option><option value="4">۴ ساعت</option><option value="8">۸ ساعت</option></select></label>
+    <button id="revStartLiveShare" type="button" style="border:1px solid #39ff88;border-radius:10px;background:#39ff88;color:#07100b;font-weight:800;padding:10px 15px;cursor:pointer;font:inherit">شروع اشتراک زنده</button>
+    <button id="revStopLiveShare" type="button" disabled style="border:1px solid #704044;border-radius:10px;background:#211518;color:#ffb4b4;padding:10px 15px;cursor:pointer;font:inherit">توقف و لغو لینک</button>
+  </div>
+  <div id="revShareStatus" role="status" aria-live="polite" style="margin-top:12px;padding:10px 12px;border:1px solid #29383e;border-radius:10px;background:#0b1114;color:#c4d0d4;font-size:13px">اشتراک زنده خاموش است.</div>
+  <div id="revShareLinkWrap" hidden style="margin-top:10px"><label for="revShareLink" style="display:block;color:#a9b8bd;font-size:12px;margin-bottom:5px">لینک برای خانواده یا دوستان</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="revShareLink" readonly style="flex:1;min-width:220px;padding:10px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#39ff88;font:inherit"><button id="revCopyShareLink" type="button" style="border:1px solid #35534a;border-radius:10px;background:#14251d;color:#39ff88;padding:9px 13px;cursor:pointer;font:inherit">کپی لینک</button></div></div>
+  <p style="font-size:12px;color:#9eafb5;margin:12px 0 0">برای کارکردن، GPS دستگاه و اینترنت باید روشن باشد. در این نسخه فقط آخرین مختصات ذخیره می‌شود؛ این قابلیت جایگزین خدمات اضطراری نیست.</p>
+</section>
+<script>
+(() => {
+  const API="https://rev-auth-api.mojtaba-alimi64.workers.dev";
+  const $=id=>document.getElementById(id);
+  const status=$("revShareStatus"),start=$("revStartLiveShare"),stop=$("revStopLiveShare"),wrap=$("revShareLinkWrap"),link=$("revShareLink");
+  let shareId=null,watchId=null,lastSentAt=0,sending=false;
+  const idKey="rev_live_share_id";
+  const setStatus=(message,error=false)=>{status.textContent=message;status.style.color=error?"#ffb4b4":"#c4d0d4";status.style.borderColor=error?"#744347":"#29383e";};
+  async function api(path,options={}){const res=await fetch(API+path,{...options,credentials:"include",headers:{"Accept":"application/json",...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})}});let data={};try{data=await res.json()}catch{}if(!res.ok)throw new Error(res.status===401?"برای اشتراک زنده ابتدا وارد حساب REV شو.":(data.error||"ارتباط با سرویس اشتراک برقرار نشد."));return data;}
+  function sendPosition(position){
+    const now=Date.now();if(sending||now-lastSentAt<12000)return;
+    sending=true;lastSentAt=now;
+    api("/api/driver/shares/"+encodeURIComponent(shareId)+"/location",{method:"POST",body:JSON.stringify({latitude:position.coords.latitude,longitude:position.coords.longitude,accuracy_m:position.coords.accuracy})})
+      .then(result=>{if(!result.updated)throw new Error("این لینک منقضی یا لغو شده است.");setStatus("اشتراک زنده فعال است · آخرین به‌روزرسانی: "+new Date().toLocaleTimeString("fa-IR"));})
+      .catch(e=>{setStatus(e.message,true);stopTracking(false);}).finally(()=>{sending=false;});
+  }
+  function stopTracking(updateUi=true){if(watchId!==null&&navigator.geolocation)navigator.geolocation.clearWatch(watchId);watchId=null;if(updateUi){start.disabled=false;stop.disabled=true;}}
+  async function startSharing(){
+    if(!navigator.geolocation){setStatus("مرورگر این دستگاه از مکان‌یابی پشتیبانی نمی‌کند.",true);return;}
+    if(!window.isSecureContext){setStatus("برای دسترسی امن به GPS، صفحه باید روی HTTPS باز شود.",true);return;}
+    start.disabled=true;setStatus("در حال ایجاد لینک امن…");
+    try{
+      const created=await api("/api/driver/shares",{method:"POST",body:JSON.stringify({hours:Number($("revShareHours").value)})});
+      shareId=created.id;localStorage.setItem(idKey,shareId);
+      link.value=new URL("share-trip.html?token="+encodeURIComponent(created.token),location.href).href;wrap.hidden=false;
+      stop.disabled=false;setStatus("لینک ساخته شد؛ اجازه مکان‌یابی را تأیید کن تا موقعیت به‌روزرسانی شود.");
+      watchId=navigator.geolocation.watchPosition(sendPosition,error=>{setStatus("مکان‌یابی انجام نشد: "+(error.message||"مجوز GPS را بررسی کن."),true);}, {enableHighAccuracy:true,maximumAge:10000,timeout:20000});
+    }catch(e){setStatus(e.message,true);start.disabled=false;}
+  }
+  async function stopSharing(){
+    stop.disabled=true;stopTracking();
+    try{if(shareId)await api("/api/driver/shares/"+encodeURIComponent(shareId)+"/revoke",{method:"POST",body:"{}"});setStatus("اشتراک متوقف و لینک لغو شد.");}
+    catch(e){setStatus(e.message,true);}
+    localStorage.removeItem(idKey);shareId=null;link.value="";wrap.hidden=true;start.disabled=false;
+  }
+  start.addEventListener("click",startSharing);stop.addEventListener("click",stopSharing);
+  $("revCopyShareLink").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(link.value);setStatus("لینک اشتراک کپی شد. آن را فقط برای افراد مورد اعتماد بفرست.");}catch{link.focus();link.select();setStatus("لینک انتخاب شد؛ آن را کپی کن.");}});
+  // A page reload must not silently restart GPS; the user must explicitly start a new session.
+})();
+</script>
+
 <section id="revTripHistoryPanel" dir="rtl" style="width:min(1180px,calc(100% - 28px));margin:26px auto;padding:20px;border:1px solid #29383e;border-radius:20px;background:linear-gradient(145deg,#101a1e,#0b1114);color:#f5f7f8;font-family:Vazirmatn,Vazir,Tahoma,sans-serif">
   <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
     <div><div style="color:#39ff88;font-size:12px;font-weight:800">REV DRIVER INSIGHTS</div><h2 style="margin:3px 0 6px;font-size:23px">تاریخچه سفر و تحلیل مصرف</h2><p style="margin:0;color:#a9b8bd;font-size:14px">سفرهای انجام‌شده را ثبت کن تا میانگین مصرف واقعی حساب تو به‌مرور دقیق‌تر شود. اطلاعات در حساب کاربری ذخیره می‌شود.</p></div>
