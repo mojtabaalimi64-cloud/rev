@@ -456,9 +456,30 @@ export default {
     const prods=await env.DB.prepare("SELECT p.id,p.business_id,p.title,p.description,p.price_text,p.image_url,p.product_url,p.stock_status,p.updated_at FROM rev_business_products p JOIN rev_business_profiles b ON b.id=p.business_id JOIN rev_business_plan_assignments a ON a.business_id=b.id WHERE p.status='approved' AND b.status='approved' AND a.plan_status='active' AND a.payment_status IN ('paid','waived') AND a.expires_at>? AND a.starts_at<=? AND json_extract(a.features_json,'$.product_catalog')=1 ORDER BY p.updated_at DESC LIMIT 500").bind(new Date(now).toISOString(),new Date(now).toISOString()).all();
     return response(request,env,{success:true,businesses,products:prods.results||[]});
    }
+   if(path==="/api/portal/profile" && method==="POST") {
+    if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
+    const u=await currentUser(request,env);
+    if(!u) return response(request,env,{success:false,error:"برای تغییر پروفایل وارد حساب شوید."},401);
+    const b=await request.json().catch(()=>null), displayName=String(b?.displayName||"").trim().slice(0,80);
+    if(!displayName) return response(request,env,{success:false,error:"نام نمایشی را وارد کنید."},400);
+    const avatar=b?.avatarData;
+    if(avatar!==undefined && avatar!==null && avatar!=="" && (typeof avatar!=="string" || avatar.length>350000 || !/^data:image\/(jpeg|png|webp);base64,/.test(avatar))) return response(request,env,{success:false,error:"تصویر نامعتبر یا بیش از حد بزرگ است."},400);
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_user_profiles (user_id TEXT PRIMARY KEY, avatar_data TEXT, updated_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES rev_users(id))").run();
+    const existing=await env.DB.prepare("SELECT avatar_data FROM rev_user_profiles WHERE user_id=?").bind(u.id).first();
+    const avatarData=avatar===undefined?(existing?.avatar_data||null):avatar;
+    const now=new Date().toISOString();
+    await env.DB.batch([
+      env.DB.prepare("UPDATE rev_users SET display_name=?,updated_at=? WHERE id=?").bind(displayName,now,u.id),
+      env.DB.prepare("INSERT INTO rev_user_profiles(user_id,avatar_data,updated_at) VALUES(?,?,?) ON CONFLICT(user_id) DO UPDATE SET avatar_data=excluded.avatar_data,updated_at=excluded.updated_at").bind(u.id,avatarData,now)
+    ]);
+    return response(request,env,{success:true,user:{...u,display_name:displayName,avatar_data:avatarData}});
+   }
    if(path==="/api/portal/me" && method==="GET") {
     const u=await currentUser(request,env);
     if(!u) return response(request,env,{success:false,error:"برای ورود به پنل ابتدا وارد حساب کاربری شوید."},401);
+    await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_user_profiles (user_id TEXT PRIMARY KEY, avatar_data TEXT, updated_at TEXT NOT NULL, FOREIGN KEY(user_id) REFERENCES rev_users(id))").run();
+    const profile=await env.DB.prepare("SELECT avatar_data FROM rev_user_profiles WHERE user_id=?").bind(u.id).first();
+    u.avatar_data=profile?.avatar_data||null;
     const businesses=await env.DB.prepare("SELECT b.*,a.plan_code,a.plan_name,a.plan_status,a.payment_status AS plan_payment_status,a.starts_at AS plan_starts_at,a.expires_at AS plan_expires_at,a.features_json AS plan_features_json,a.admin_note AS plan_admin_note FROM rev_business_profiles b LEFT JOIN rev_business_plan_assignments a ON a.business_id=b.id WHERE b.owner_user_id=? ORDER BY b.updated_at DESC LIMIT 100").bind(u.id).all();
     const now=Date.now(), businessRows=(businesses.results||[]).map(b=>({...b,plan_features:effectiveFeatures({plan_status:b.plan_status,payment_status:b.plan_payment_status,starts_at:b.plan_starts_at,expires_at:b.plan_expires_at,features_json:b.plan_features_json},now),plan_is_active:isPlanActive({plan_status:b.plan_status,payment_status:b.plan_payment_status,starts_at:b.plan_starts_at,expires_at:b.plan_expires_at},now)}));
     const products=await env.DB.prepare("SELECT p.*,b.name AS business_name FROM rev_business_products p JOIN rev_business_profiles b ON b.id=p.business_id WHERE b.owner_user_id=? ORDER BY p.updated_at DESC LIMIT 200").bind(u.id).all();
