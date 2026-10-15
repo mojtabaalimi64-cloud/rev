@@ -11,4 +11,17 @@ try{const j=await req('/api/billing/me');if(j.subscription){accountEl.innerHTML=
 plansEl.addEventListener('click',async e=>{const b=e.target.closest('[data-buy]');if(!b)return;try{b.disabled=true;const j=await req('/api/billing/orders',{method:'POST',body:JSON.stringify({planCode:b.dataset.buy})});statusEl.textContent=j.message+'\nشناسه درخواست: '+j.order.id+'\nمبلغ: '+money(j.order.amountToman);await init()}catch(err){statusEl.textContent=err.message;if(/وارد حساب|login|session/i.test(err.message))statusEl.innerHTML=esc(err.message)+'<p><a href="./account.html">ورود یا ثبت‌نام</a></p>'}finally{b.disabled=false}});
 init();
 </script><script src="./rev-site-settings.js?v=1" defer></script>
+<script>
+(function(){
+ try{
+  if(localStorage.getItem('rev_return_to_account')!=='1')return;
+  if(document.getElementById('revReturnProfile'))return;
+  const a=document.createElement('a');
+  a.id='revReturnProfile';a.href='./account.html';a.textContent='← بازگشت به پروفایل من';
+  a.setAttribute('aria-label','بازگشت به پروفایل من');
+  a.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483000;display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border:1px solid #39ff88;border-radius:999px;background:#0b1511;color:#39ff88;font:700 14px Vazirmatn,Tahoma,sans-serif;text-decoration:none;box-shadow:0 8px 28px #0008;direction:rtl';
+  document.body.appendChild(a);
+ }catch(e){}
+})();
+</script>
 </body></html>
