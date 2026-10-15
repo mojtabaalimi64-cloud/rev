@@ -86,13 +86,13 @@ function draw(){
  $('#serviceNav').classList.toggle('hidden',!loggedIn);
  $('#topUser').classList.toggle('hidden',!loggedIn);
  $('#logout').classList.toggle('hidden',!loggedIn);
- $('#profileWelcome').classList.toggle('hidden',!loggedIn);
+ const profileWelcome=$('#profileWelcome');if(profileWelcome)profileWelcome.classList.toggle('hidden',!loggedIn);
  const displayName=me?.display_name||'کاربر REV', avatarText=initials(displayName);
  $('#topUserName').textContent=displayName;
  $('#topUserPhone').textContent=me?.phone_e164||'حساب کاربری REV';
  if(currentAvatarData){$('#topAvatar').innerHTML='<img alt="" src="'+currentAvatarData+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';$('#welcomeAvatar').innerHTML='<img alt="" src="'+currentAvatarData+'" style="width:100%;height:100%;object-fit:cover;border-radius:inherit">';}else{$('#topAvatar').textContent=avatarText;$('#welcomeAvatar').textContent=avatarText;}
  const preview=$('#profileAvatarPreview');if(preview){preview.src=currentAvatarData||'';preview.style.display=currentAvatarData?'block':'none';}const profileName=$('#memberProfileForm [name="displayName"]');if(profileName)profileName.value=me?.display_name||'';
- $('#welcomeName').textContent='سلام، '+displayName+'؛ خوش آمدید';
+ const welcomeName=$('#welcomeName');if(welcomeName)welcomeName.textContent='سلام، '+displayName+'؛ خوش آمدید';
  $('#profileBox').innerHTML=me?'<h2>سلام '+esc(me.display_name||'کاربر REV')+'</h2><p>موبایل: '+esc(me.phone_e164||'تأیید نشده')+'</p><p>وضعیت حساب: '+esc(me.account_status||'')+'</p><p class="muted">سفرها و مصرف خودرو در صفحه <a href="./driver-profile.html">پروفایل راننده</a> در دسترس است.</p>':'برای نمایش پروفایل وارد شوید.';
  const canCatalog=b=>b.plan_is_active===true&&b.plan_features?.product_catalog===true;
  $('#businessList').innerHTML=portalData.businesses.length?portalData.businesses.map(b=>{
