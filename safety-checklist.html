@@ -13,6 +13,32 @@
 <link rel="stylesheet" href="./rev-theme.css?v=1">
 </head>
 <body>
+<nav id="revPersistentNav" aria-label="راهنمای دسترسی به امکانات REV" style="display:block!important;visibility:visible!important;opacity:1!important;position:fixed;z-index:2147483000;right:14px;top:92px;width:218px;max-height:calc(100vh - 112px);overflow:auto;padding:14px;border:1px solid #28523d;border-radius:18px;background:#080f0df7;box-shadow:0 12px 35px #0008;direction:rtl;font:13px/1.7 Vazirmatn,Tahoma,sans-serif">
+<div style="color:#39ff88;font-weight:900;font-size:21px;padding:0 8px 10px;border-bottom:1px solid #294038;margin-bottom:8px">REV <span style="font-size:11px;color:#d7e0e3;font-weight:500">راهنمای خدمات</span></div>
+<p style="font-size:11px;color:#9eafb5;margin:0 8px 8px">برای جابه‌جایی بین امکانات، یکی از گزینه‌ها را انتخاب کنید.</p>
+<div style="display:flex;flex-direction:column;gap:3px">
+<a href="./account.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">👤 صفحه کاربری من</a>
+<a href="./driver-profile.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">🚘 پروفایل راننده</a>
+<a href="./travel-plans.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">✦ پلن‌های مسیریابی</a>
+<a href="./safety-checklist.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">✓ چک‌لیست سفر</a>
+<a href="./businesses.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">⌖ فروشگاه‌ها و خدمات</a>
+<a href="./article-ev.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">▤ آموزش خودرو برقی</a>
+<a href="./news.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">📰 اخبار خودرو برقی</a>
+<a href="./index.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">⌂ صفحه اصلی REV</a>
+</div></nav>
+<style id="revPersistentNavForceStyle">
+@media(max-width:900px){#revPersistentNav{position:relative!important;top:auto!important;right:auto!important;width:auto!important;max-height:none!important;margin:10px 12px!important}#revPersistentNav>div:last-child{display:flex!important;flex-direction:row!important;flex-wrap:wrap!important}#revPersistentNav a{padding:7px 9px!important}body.rev-has-persistent-nav{padding-right:0!important}}
+@media(min-width:901px){body.rev-has-persistent-nav{padding-right:246px!important}}
+#revPersistentNav a:hover{background:#173027!important;color:#39ff88!important}
+</style>
+<script>
+(function(){try{
+ document.body.classList.add('rev-has-persistent-nav');
+ var nav=document.getElementById('revPersistentNav');
+ if(nav){var here=location.pathname.split('/').pop()||'index.html';nav.querySelectorAll('a[href]').forEach(function(a){if(new URL(a.href,location.href).pathname.split('/').pop()===here){a.style.background='#173027';a.style.border='1px solid #285c42';a.style.color='#39ff88';a.setAttribute('aria-current','page');}});}
+}catch(e){}})();
+</script>
+
 <div class="wrap">
 <header class="head"><a class="brand" href="index.html">REV</a><a class="link" href="index.html">بازگشت به صفحه اصلی</a></header>
 <section class="hero"><div class="eyebrow">پیش از حرکت · چک‌لیست کاربردی</div><h1>چک‌لیست ایمنی سفر با خودروی برقی و هیبریدی</h1><p>موارد زیر را قبل از سفر بررسی کنید. با علامت‌زدن هر مورد، شاخص آمادگی شما به‌روز می‌شود.</p></section>
@@ -82,42 +108,5 @@ update();
 </script>
 <script src="./rev-site-settings.js?v=1" defer></script>
 
-<style id="revPersistentNavStyle">
-#revPersistentNav{position:fixed;z-index:10000;right:14px;top:92px;width:218px;max-height:calc(100vh - 112px);overflow:auto;padding:14px;border:1px solid #28523d;border-radius:18px;background:rgba(8,15,13,.97);box-shadow:0 12px 35px #0008;direction:rtl;font:13px/1.7 Vazirmatn,Tahoma,sans-serif}
-#revPersistentNav .rev-nav-brand{color:#39ff88;font-weight:900;font-size:21px;padding:0 8px 10px;border-bottom:1px solid #294038;margin-bottom:8px}
-#revPersistentNav .rev-nav-hint{font-size:11px;color:#9eafb5;margin:0 8px 8px}
-#revPersistentNav a{display:flex;align-items:center;gap:8px;padding:9px 10px;margin:3px 0;border:1px solid transparent;border-radius:10px;color:#e2ece7;text-decoration:none}
-#revPersistentNav a:hover,#revPersistentNav a[aria-current=page]{background:#173027;border-color:#285c42;color:#39ff88}
-body.rev-has-persistent-nav{padding-right:246px!important}
-@media(max-width:900px){#revPersistentNav{position:relative;top:auto;right:auto;width:auto;max-height:none;margin:10px 12px;padding:10px}#revPersistentNav .rev-nav-brand{display:inline-block;border:0;margin:0;padding:0 8px 4px}#revPersistentNav .rev-nav-hint{display:none}#revPersistentNav .rev-nav-links{display:flex;flex-wrap:wrap;gap:3px}#revPersistentNav a{padding:7px 9px;margin:0}body.rev-has-persistent-nav{padding-right:0!important}}
-</style>
-<nav id="revPersistentNav" aria-label="راهنمای دسترسی به امکانات REV">
-<div class="rev-nav-brand">REV <span style="font-size:11px;color:#d7e0e3;font-weight:500">پنل خدمات</span></div>
-<p class="rev-nav-hint">برای جابه‌جایی بین امکانات، یکی از گزینه‌ها را انتخاب کنید.</p>
-<div class="rev-nav-links">
-<a href="./account.html">👤 صفحه کاربری من</a>
-<a href="./driver-profile.html">🚘 پروفایل راننده</a>
-<a href="./travel-plans.html">✦ پلن‌های مسیریابی</a>
-<a href="./safety-checklist.html">✓ چک‌لیست سفر</a>
-<a href="./businesses.html">⌖ فروشگاه‌ها و خدمات</a>
-<a href="./article-ev.html">▤ آموزش خودرو برقی</a>
-<a href="./news.html">📰 اخبار خودرو برقی</a>
-<a href="./index.html">⌂ صفحه اصلی REV</a>
-</div></nav>
-<script>
-(function(){
-try{
- document.body.classList.add('rev-has-persistent-nav');
- var nav=document.getElementById('revPersistentNav');
- if(nav){
-  var here=location.pathname.split('/').pop()||'index.html';
-  nav.querySelectorAll('a[href]').forEach(function(a){
-   var u=new URL(a.href,location.href);
-   if(u.pathname.split('/').pop()===here){a.setAttribute('aria-current','page');}
-  });
- }
-}catch(e){}
-})();
-</script>
 </body>
 </html>
