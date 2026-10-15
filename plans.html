@@ -21,10 +21,10 @@
 <footer class="footer"><div class="wrap">REV — خودروهای برقی، فناوری و آیندهٔ حمل‌ونقل</div></footer>
 <script>
 const defaults={
- free:{name:'پایه — رایگان',price:0,active:true,annualEnabled:false,summary:'ثبت نام، شهر، آدرس، تلفن و نمایش عادی در فهرست.'},
- professional:{name:'حرفه‌ای',price:300000,active:true,annualEnabled:true,summary:'گالری تصاویر، ساعت کاری، خدمات، لینک‌ها و آمار بازدید و کلیک تماس.'},
- featured:{name:'ویژه',price:1200000,active:false,annualEnabled:true,summary:'جایگاه برجسته در شهر/دسته‌بندی، پین تبلیغاتی نقشه و گزارش عملکرد.'},
- sponsor:{name:'سازمانی و اسپانسری',price:5000000,active:false,annualEnabled:false,summary:'بنر، محتوای حمایت‌شده و همکاری چندکاناله با توافق اختصاصی.'}
+ free:{name:'پایه — رایگان',price:0,active:true,annualEnabled:false,summary:'ثبت نام، شهر، آدرس، تلفن و نمایش عادی در فهرست.',options:[{id:'listing',label:'نمایش عادی در فهرست کسب‌وکارها',enabled:true},{id:'contact',label:'نمایش شهر، نشانی و تلفن',enabled:true},{id:'edit',label:'امکان ثبت و ویرایش اطلاعات پایه',enabled:true}]},
+ professional:{name:'حرفه‌ای',price:300000,active:true,annualEnabled:true,summary:'پروفایل کامل‌تر و ابزارهای ارتباطی.',options:[{id:'listing',label:'تمام امکانات پایه',enabled:true},{id:'logo',label:'نمایش لوگوی کسب‌وکار',enabled:true},{id:'photos',label:'گالری تصاویر',enabled:true},{id:'hours',label:'نمایش ساعات کاری',enabled:true},{id:'services',label:'فهرست خدمات و تخصص‌ها',enabled:true},{id:'links',label:'لینک شبکه‌های اجتماعی و وب‌سایت',enabled:true},{id:'stats',label:'آمار بازدید و کلیک تماس',enabled:true}]},
+ featured:{name:'ویژه',price:1200000,active:false,annualEnabled:true,summary:'جایگاه برجسته و قابلیت‌های تبلیغاتی.',options:[{id:'listing',label:'تمام امکانات پایه',enabled:true},{id:'logo',label:'نمایش لوگو و تصاویر',enabled:true},{id:'hours',label:'نمایش ساعات کاری و خدمات',enabled:true},{id:'links',label:'لینک‌های ارتباطی',enabled:true},{id:'highlight',label:'نمایش برجسته در فهرست',enabled:true},{id:'priority',label:'اولویت نمایش در شهر و دسته‌بندی',enabled:true},{id:'map_pin',label:'پین تبلیغاتی روی نقشه، در صورت پشتیبانی',enabled:true},{id:'report',label:'گزارش عملکرد تبلیغات',enabled:true}]},
+ sponsor:{name:'سازمانی و اسپانسری',price:5000000,active:false,annualEnabled:false,summary:'همکاری تبلیغاتی و سازمانی اختصاصی.',options:[{id:'campaign',label:'طراحی کمپین اختصاصی',enabled:true},{id:'banner',label:'بنر تبلیغاتی',enabled:true},{id:'sponsored',label:'محتوای حمایت‌شده با برچسب مشخص',enabled:true},{id:'social',label:'معرفی در رسانه‌ها و شبکه‌های اجتماعی',enabled:true},{id:'report',label:'گزارش عملکرد کمپین',enabled:true},{id:'custom',label:'برنامه همکاری سفارشی',enabled:true}]}
 };
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const toman=n=>Number(n||0).toLocaleString('fa-IR')+' تومان';
@@ -38,12 +38,7 @@ async function init(){
   else el.innerHTML=keys.map(k=>{
    const p={...defaults[k],...plans[k]},free=k==='free';
    const annual=!!p.annualEnabled&&!free;
-   const benefits={
-    free:['ثبت نام، شهر، نشانی و تلفن','نمایش عادی در فهرست کسب‌وکارها','امکان اصلاح اطلاعات'],
-    professional:['همهٔ امکانات پایه','لوگو، تصاویر، ساعات کاری و خدمات','لینک‌های ارتباطی','آمار بازدید و کلیک تماس پس از فعال‌سازی آمار'],
-    featured:['همهٔ امکانات حرفه‌ای','جایگاه برجسته در شهر و دسته‌بندی','جایگاه تبلیغاتی روی نقشه، در صورت فراهم بودن','گزارش عملکرد تبلیغات'],
-    sponsor:['کمپین همکاری متناسب با هدف برند','بنر یا محتوای حمایت‌شده با برچسب روشن','معرفی در رسانه‌ها طبق قرارداد','گزارش عملکرد و برنامه‌ریزی اختصاصی']
-   }[k];
+   const benefits=(p.options||defaults[k].options||[]).filter(x=>x.enabled!==false).map(x=>x.label);
    const subject=encodeURIComponent('درخواست پلن REV: '+p.name);
    const body=encodeURIComponent('سلام، برای پلن «'+p.name+'» در REV درخواست همکاری دارم. لطفاً جزئیات و روش پرداخت را ارسال کنید.');
    const email=data.contact?.email;
