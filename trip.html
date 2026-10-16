@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <link rel="manifest" href="./manifest.webmanifest">
-<meta name="theme-color" content="#080b0d">
+<meta name="theme-color" content="#ffffff">
 <title>برنامه‌ریز سفر خودروهای برقی | REV</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
@@ -123,7 +123,7 @@ button:disabled{opacity:.65;cursor:wait;transform:none}
 .datePickerWrap{display:flex;gap:6px;align-items:stretch}.datePickerWrap input{flex:1;min-width:0}.pickerButton{min-width:44px;padding:8px 12px;border:1px solid #344454;border-radius:10px;background:#182530;color:var(--text);font-size:20px;cursor:pointer}.calendarDialog{width:min(340px,calc(100vw - 32px));border:1px solid #344454;border-radius:16px;padding:16px;background:#121a23;color:var(--text);box-shadow:0 16px 50px #0008}.calendarDialog::backdrop{background:#0009}.calendarHeader{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:12px}.calendarHeader button,.calendarActions button,.timeDialogActions button{border:1px solid #344454;border-radius:8px;padding:6px 10px;background:#1b2a36;color:var(--text);cursor:pointer}.calendarGrid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;text-align:center}.calendarGrid span{font-size:12px;color:var(--muted);padding:5px 0}.calendarGrid button{border:1px solid transparent;border-radius:8px;padding:7px 0;background:transparent;color:var(--text);cursor:pointer}.calendarGrid button.selected{background:var(--accent);color:#10150a}.calendarGrid button.today{border-color:var(--accent)}.calendarActions,.timeDialogActions{display:flex;justify-content:space-between;gap:8px;margin-top:12px}.timeDialog input{font-size:24px;text-align:center;width:100%}
 
 /* REV visual-only redesign preview: original HTML, IDs, scripts and integrations retained */
-:root{--bg:#080b0d;--panel:#101619;--line:#263238;--text:#f3f7f8;--muted:#a5b4ba;--accent:#39ff88;--blue:#00806f;--danger:#ff8d8d}
+:root{--bg:#ffffff;--panel:#101619;--line:#263238;--text:#f3f7f8;--muted:#a5b4ba;--accent:#0866ff;--blue:#064fc4;--danger:#ff8d8d}
 html{background:#06111b}
 body{background:radial-gradient(ellipse at 12% 0%,#103149 0,transparent 35%),linear-gradient(135deg,#06111b,#091725 58%,#07121c);color:var(--text);font-family:Tahoma,Arial,sans-serif}
 .wrap{max-width:1800px;padding:18px 22px}
@@ -182,9 +182,22 @@ button{border-radius:10px}
 
 <link rel="stylesheet" href="./rev-theme.css?v=1">
 
+
+<style id="rev-blue-white-global">
+:root{color-scheme:light!important;--rev-blue:#0866ff;--rev-blue-dark:#064fc4;--rev-white:#fff;--rev-ink:#142238}
+html,body{background:#fff!important;color:#142238!important;color-scheme:light!important}
+body{background-color:#fff!important}
+header,.header,.app-header,main,.main,.app,.app-shell,.page,.page-content,.content,.container,.panel,.profile-panel,.section,.card,.tile,.sheet,.modal-content,.drawer-content,.form-card,.list-card{background-color:#fff!important;color:#142238}
+button,.btn,.button,[role="button"],input[type="submit"],input[type="button"],.primary,.primary-btn,.action-btn,.submit-btn,.nav-button{background-color:#0866ff!important;border-color:#0866ff!important;color:#fff!important}
+button:active,.btn:active,.button:active,[role="button"]:active{background-color:#064fc4!important}
+.nav,.bottom-nav,.bottom-navigation{background:#fff!important;color:#0866ff!important;border-top:1px solid #e2eaf5!important;box-shadow:0 -3px 14px #1422380d!important}
+.nav a,.bottom-nav a,.bottom-navigation a{color:#0866ff!important}
+.nav a.active,.bottom-nav a.active,.bottom-navigation a.active{background:#edf4ff!important;color:#064fc4!important}
+.badge,.status-badge,.accent,.success,.success-text{color:#0866ff!important}
+</style>
 </head>
 <body>
-<a id="revTripReturnAccount" href="https://mojtabaalimi64-cloud.github.io/rev-mobile/" style="position:fixed;left:16px;top:16px;z-index:10001;display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border:1px solid #39ff88;border-radius:999px;background:#0b1511;color:#39ff88;font:700 14px Vazirmatn,Tahoma,sans-serif;text-decoration:none;box-shadow:0 8px 28px #0008;direction:rtl">← بازگشت به اپ REV</a>
+<a id="revTripReturnAccount" href="https://mojtabaalimi64-cloud.github.io/rev-mobile/" style="position:fixed;left:16px;top:16px;z-index:10001;display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border:1px solid #0866ff;border-radius:999px;background:#0b1511;color:#0866ff;font:700 14px Vazirmatn,Tahoma,sans-serif;text-decoration:none;box-shadow:0 8px 28px #0008;direction:rtl">← بازگشت به اپ REV</a>
 <div class="wrap">
   <header class="head">
     <div><div class="logo">REV</div><div class="sub">برنامه‌ریز سفر با خودروی برقی — نسخه آزمایشی ایران</div></div>
@@ -1167,7 +1180,7 @@ async function renderStations(stations,routeCoords,routeKm,params){
     const planned=plannedIds.has(String(s.id));
     const stationPublishedReports=publishedFor(s);
     const marker=L.circleMarker([s.lat,s.lon],{radius:planned?10:7,color:stationPublishedReports.length?'#d93025':'#0b1016',weight:stationPublishedReports.length?3:2,fillColor:stationPublishedReports.length?'#ff7043':(planned?'#64b5ff':'#d7ff3f'),fillOpacity:.98}).addTo(stationLayer);
-    marker.bindPopup(`<div style="min-width:190px">${stationPublishedReports.length?'<div style="background:#fff0eb;color:#a12616;padding:7px;border-radius:7px;margin-bottom:8px;font-weight:800">⚠ هشدار تأییدشده توسط REV</div>'+stationPublishedReports.map(r=>'<div style="border-right:3px solid #d93025;padding:4px 7px;margin-bottom:6px"><b>'+escapeHTML(({not_found:'جایگاه در محل وجود ندارد',not_working:'خراب یا غیرفعال',connector_wrong:'کانکتور اشتباه',power_wrong:'توان شارژ اشتباه',location_wrong:'موقعیت اشتباه',duplicate:'جایگاه تکراری',violation:'تخلف یا اطلاعات مشکوک',other:'گزارش مشکل'})[r.report_type]||r.report_type||'گزارش مشکل')+'</b>'+(r.details?'<br>'+escapeHTML(r.details):'')+'</div>').join(''):''}${(s.image_url||s.image)?'<img src="'+escapeHTML(s.image_url||s.image)+'" alt="" style="display:block;width:220px;max-height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px">':''}<b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>امتیاز رضایت: ${s._ratingAverage==null?'بدون امتیاز':Number(s._ratingAverage).toLocaleString('fa-IR',{maximumFractionDigits:1})+'/۵ · '+Number(s._ratingCount||0).toLocaleString('fa-IR')+' رأی'}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+' kW':'نامشخص'}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br>منبع: ${escapeHTML(s.source||"نامشخص")}<br>${escapeHTML(formatStationUpdatedAt(s.updatedAt))}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a><br><button type="button" class="rev-map-report-button" style="margin-top:9px;padding:7px 10px;border:0;border-radius:7px;background:#39ff88;color:#080b0d;font-weight:800;cursor:pointer">گزارش خرابی یا تخلف این جایگاه</button></div>`);
+    marker.bindPopup(`<div style="min-width:190px">${stationPublishedReports.length?'<div style="background:#fff0eb;color:#a12616;padding:7px;border-radius:7px;margin-bottom:8px;font-weight:800">⚠ هشدار تأییدشده توسط REV</div>'+stationPublishedReports.map(r=>'<div style="border-right:3px solid #d93025;padding:4px 7px;margin-bottom:6px"><b>'+escapeHTML(({not_found:'جایگاه در محل وجود ندارد',not_working:'خراب یا غیرفعال',connector_wrong:'کانکتور اشتباه',power_wrong:'توان شارژ اشتباه',location_wrong:'موقعیت اشتباه',duplicate:'جایگاه تکراری',violation:'تخلف یا اطلاعات مشکوک',other:'گزارش مشکل'})[r.report_type]||r.report_type||'گزارش مشکل')+'</b>'+(r.details?'<br>'+escapeHTML(r.details):'')+'</div>').join(''):''}${(s.image_url||s.image)?'<img src="'+escapeHTML(s.image_url||s.image)+'" alt="" style="display:block;width:220px;max-height:140px;object-fit:cover;border-radius:8px;margin-bottom:8px">':''}<b>${escapeHTML(s.name)}</b><br>${escapeHTML(s.address)}<br>امتیاز رضایت: ${s._ratingAverage==null?'بدون امتیاز':Number(s._ratingAverage).toLocaleString('fa-IR',{maximumFractionDigits:1})+'/۵ · '+Number(s._ratingCount||0).toLocaleString('fa-IR')+' رأی'}<br>فاصله مستقیم از مسیر: ${s.routeDistance.toFixed(1)} km<br>توان ثبت‌شده: ${s.power?s.power+' kW':'نامشخص'}<br>وضعیت ثبت‌شده: ${escapeHTML(s.status)}<br>منبع: ${escapeHTML(s.source||"نامشخص")}<br>${escapeHTML(formatStationUpdatedAt(s.updatedAt))}<br><a target="_blank" rel="noopener" href="${s.url}">جزئیات ایستگاه</a><br><button type="button" class="rev-map-report-button" style="margin-top:9px;padding:7px 10px;border:0;border-radius:7px;background:#0866ff;color:#ffffff;font-weight:800;cursor:pointer">گزارش خرابی یا تخلف این جایگاه</button></div>`);
     const item=document.createElement('div');item.className='station';
     const ratingLabel=s._ratingCount?('★ '+s._ratingAverage.toFixed(1)+'/۵ · '+s._ratingCount+' رأی'):'بدون امتیاز';
     item.innerHTML=`<strong>${planned?'★ توقف پیشنهادی: ':''}${escapeHTML(s.name)} <span class="pill" style="display:inline-block">${escapeHTML(ratingLabel)}</span></strong><small>${escapeHTML(s.address||'نشانی کامل ثبت نشده')}</small><div><span class="pill">${s.routeDistance.toFixed(1)} کیلومتر فاصله از جاده</span><span class="pill">کیلومتر ${Math.round(s.routeKm??0)} مسیر</span><span class="pill">${s.power?s.power+' kW':'توان نامشخص'}</span><span class="pill">${escapeHTML(s.status)}</span></div><div class="sub">${escapeHTML(s.connectors.join('، ')||'نوع کانکتور نامشخص')}${s.operator?' · '+escapeHTML(s.operator):''}</div><div class="sub">${escapeHTML(s.source||"منبع نامشخص")} · ${escapeHTML(formatStationUpdatedAt(s.updatedAt))}</div><div style="margin-top:6px"><a href="${s.url}" target="_blank" rel="noopener" style="color:#64b5ff">مشاهده جزئیات</a> · <a href="https://www.openstreetmap.org/?mlat=${s.lat}&mlon=${s.lon}#map=16/${s.lat}/${s.lon}" target="_blank" rel="noopener" style="color:#64b5ff">نمایش روی نقشه</a></div>`;
@@ -1188,7 +1201,7 @@ async function renderStations(stations,routeCoords,routeKm,params){
         <label style="font-size:12px">توضیح تکمیلی (اختیاری)
           <textarea name="details" maxlength="600" rows="2" placeholder="مثلاً جایگاه جابه‌جا شده یا شارژر خاموش است" style="display:block;width:100%;margin-top:4px;padding:8px;border-radius:8px;background:#101a22;color:#f5f7f8;border:1px solid #52616b;resize:vertical"></textarea>
         </label>
-        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="submit" style="padding:7px 12px;border:0;border-radius:8px;background:#39ff88;color:#080b0d;font-weight:800;cursor:pointer">ارسال گزارش</button><span class="station-report-message" role="status" style="font-size:12px;color:#b7c4cb"></span></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap"><button type="submit" style="padding:7px 12px;border:0;border-radius:8px;background:#0866ff;color:#ffffff;font-weight:800;cursor:pointer">ارسال گزارش</button><span class="station-report-message" role="status" style="font-size:12px;color:#b7c4cb"></span></div>
       </form>`;
     item.appendChild(reportBox);
     // Let users open the existing report form directly from a charging-station map popup.
@@ -1215,7 +1228,7 @@ async function renderStations(stations,routeCoords,routeKm,params){
         const details=document.createElement("textarea");details.name="details";details.maxLength=600;details.rows=2;details.placeholder="توضیحات تکمیلی (اختیاری)";
         details.style.cssText="width:100%;padding:7px;border-radius:7px;background:#101a22;color:#f5f7f8;border:1px solid #52616b;resize:vertical";
         const submit=document.createElement("button");submit.type="submit";submit.textContent="ارسال گزارش";
-        submit.style.cssText="padding:7px 10px;border:0;border-radius:7px;background:#39ff88;color:#080b0d;font-weight:800;cursor:pointer";
+        submit.style.cssText="padding:7px 10px;border:0;border-radius:7px;background:#0866ff;color:#ffffff;font-weight:800;cursor:pointer";
         const message=document.createElement("div");message.setAttribute("role","status");message.style.cssText="font-size:12px;color:#b7c4cb";
         inlineForm.append(typeLabel,details,submit,message);button.insertAdjacentElement("afterend",inlineForm);
         inlineForm.addEventListener("click",e=>e.stopPropagation());
@@ -1226,7 +1239,7 @@ async function renderStations(stations,routeCoords,routeKm,params){
           try{
             const response=await fetch("https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/station-reports",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({station_id:reportId,station_name:String(s.name||"ایستگاه شارژ").slice(0,180),report_type:typeSelect.value,details:details.value,voter:stationReportVoterId()})});
             const result=await response.json().catch(()=>({}));
-            if(response.ok&&result.success){message.textContent="گزارش با موفقیت ثبت شد.";message.style.color="#39ff88";submit.textContent="ثبت شد";}
+            if(response.ok&&result.success){message.textContent="گزارش با موفقیت ثبت شد.";message.style.color="#0866ff";submit.textContent="ثبت شد";}
             else if(response.status===409){message.textContent="برای این ایستگاه قبلاً گزارشی ثبت کرده‌اید.";submit.disabled=true;}
             else throw new Error(result.error||"ارسال گزارش ناموفق بود");
           }catch(err){message.textContent=err.message||"خطا در ارسال گزارش؛ دوباره تلاش کنید.";submit.disabled=false;}
