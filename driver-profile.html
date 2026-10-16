@@ -75,6 +75,16 @@ a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap
       <div id="signInHint" hidden class="note">برای ذخیره خصوصی سفرها، حساب کاربری REV باید فعال باشد و ورود از طریق سرویس احراز هویت انجام شده باشد.</div>
       <p class="note">GPS فقط پس از فشردن دکمه شروع فعال می‌شود. برای ثبت پیوسته، صفحه را باز نگه دارید؛ قفل‌شدن گوشی ممکن است ردیابی را متوقف کند.</p>
     </section>
+    <section class="panel" id="revGroupCodePanel">
+      <div class="section-title"><h2>کد اختصاصی سفر گروهی</h2><span class="pill">REV Group</span></div>
+      <p class="note">این کد را فقط با همسفرهایی به اشتراک بگذارید که می‌خواهید برای سفر گروهی دعوت کنید. کد، رمز ورود به حساب شما نیست.</p>
+      <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px">
+        <strong id="revGroupCode" style="font-size:28px;letter-spacing:4px;direction:ltr;color:var(--green);background:rgba(57,255,136,.08);border:1px solid rgba(57,255,136,.3);border-radius:12px;padding:7px 14px;min-width:150px;text-align:center">••••••</strong>
+        <button id="revGroupCodeCopy" class="btn secondary" type="button">کپی کد</button>
+        <button id="revGroupCodeRefresh" class="btn secondary" type="button">تغییر کد</button>
+      </div>
+      <div id="revGroupCodeStatus" class="status" aria-live="polite">برای دریافت کد، وارد حساب کاربری شوید.</div>
+    </section>
     <section class="panel" id="plannedTripCard" hidden>
       <div class="section-title"><h2>برنامه سفر تأییدشده</h2><span class="pill">آماده شروع</span></div>
       <div id="plannedTripSummary" class="status">اطلاعات مسیر از برنامه‌ریز سفر دریافت می‌شود.</div>
@@ -368,5 +378,14 @@ window.addEventListener('load',()=>setTimeout(()=>{if(map){restoreTripAfterMapRe
 if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
   window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(error => console.warn("REV PWA registration failed:", error)));
 }
+</script>
+<script>
+(function(){
+ const api=typeof AUTH_API==="string"?AUTH_API:"https://rev-auth-api.mojtaba-alimi64.workers.dev";
+ const codeEl=document.getElementById("revGroupCode"),statusEl=document.getElementById("revGroupCodeStatus"),copyBtn=document.getElementById("revGroupCodeCopy"),refreshBtn=document.getElementById("revGroupCodeRefresh");
+ if(!codeEl||!statusEl)return;
+ async function requestCode(method="GET"){statusEl.textContent="در حال دریافت کد از حساب REV…";refreshBtn.disabled=true;try{const r=await fetch(api+"/api/driver/groups/code",{method,credentials:"include",cache:"no-store",headers:method==="POST"?{"Content-Type":"application/json"}:undefined,body:method==="POST"?"{}":undefined});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw Error(j.error||"برای نمایش کد باید وارد حساب REV شوید.");codeEl.textContent=j.code;statusEl.textContent="کد فعال شماست. برای حفظ حریم خصوصی، آن را فقط با همسفرهای موردنظر به اشتراک بگذارید.";}catch(e){codeEl.textContent="••••••";statusEl.textContent=e.message||"دریافت کد ناموفق بود.";}finally{refreshBtn.disabled=false;}}
+ copyBtn.addEventListener("click",async()=>{const value=codeEl.textContent.trim();if(!/^\d{5,6}$/.test(value)){statusEl.textContent="ابتدا وارد حساب شوید تا کد دریافت شود.";return;}try{await navigator.clipboard.writeText(value);statusEl.textContent="کد سفر گروهی کپی شد.";}catch(e){statusEl.textContent="کد را به‌صورت دستی انتخاب و کپی کنید.";}});refreshBtn.addEventListener("click",()=>{if(confirm("با تغییر کد، کد قبلی دیگر برای دعوت همسفرهای جدید قابل استفاده نخواهد بود. ادامه می‌دهید؟"))requestCode("POST");});requestCode();
+})();
 </script>
 </body></html>
