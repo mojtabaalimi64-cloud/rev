@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="./rev-mobile-theme.css?v=20261017-3">
 </head><body>
 <aside id="revPersistentNav" aria-label="راهنمای دسترسی به امکانات REV" style="display:block!important;visibility:visible!important;opacity:1!important;position:fixed;z-index:2147483000;right:14px;top:92px;width:218px;max-height:calc(100vh - 112px);overflow:auto;padding:14px;border:1px solid #e2eaf4;border-radius:18px;background:#ffffff!important;box-shadow:0 8px 24px rgba(23,37,59,.12);direction:rtl;font:13px/1.7 Vazirmatn,Tahoma,sans-serif">
-<div style="color:#39ff88;font-weight:900;font-size:21px;padding:0 8px 10px;border-bottom:1px solid #294038;margin-bottom:8px">REV <span style="font-size:11px;color:#d7e0e3;font-weight:500">راهنمای خدمات</span></div>
+<div style="color:#0866ff;font-weight:900;font-size:21px;padding:0 8px 10px;border-bottom:1px solid #e2eaf4;margin-bottom:8px">REV <span style="font-size:11px;color:#65758b;font-weight:500">راهنمای خدمات</span></div>
 <p style="font-size:11px;color:#9eafb5;margin:0 8px 8px">برای جابه‌جایی بین امکانات، یکی از گزینه‌ها را انتخاب کنید.</p>
 <div style="display:flex;flex-direction:column;gap:3px">
 <a href="./account.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">👤 صفحه کاربری من</a>
@@ -21,13 +21,13 @@
 <style id="revPersistentNavForceStyle">
 @media(max-width:900px){#revPersistentNav{position:fixed!important;top:92px!important;right:10px!important;width:min(218px,42vw)!important;max-height:calc(100vh - 112px)!important;margin:0!important}#revPersistentNav>div:last-child{display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important}#revPersistentNav a{padding:7px 9px!important}body.rev-has-persistent-nav{padding-right:0!important}}
 @media(min-width:901px){body.rev-has-persistent-nav{padding-right:246px!important}}
-#revPersistentNav a:hover{background:#173027!important;color:#39ff88!important}
+#revPersistentNav a:hover{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
 </style>
 <script>
 (function(){try{
  document.body.classList.add('rev-has-persistent-nav');
  var nav=document.getElementById('revPersistentNav');
- if(nav){var here=location.pathname.split('/').pop()||'index.html';nav.querySelectorAll('a[href]').forEach(function(a){if(new URL(a.href,location.href).pathname.split('/').pop()===here){a.style.background='#173027';a.style.border='1px solid #285c42';a.style.color='#39ff88';a.setAttribute('aria-current','page');}});}
+ if(nav){var here=location.pathname.split('/').pop()||'index.html';nav.querySelectorAll('a[href]').forEach(function(a){if(new URL(a.href,location.href).pathname.split('/').pop()===here){a.style.background='#edf4ff';a.style.border='1px solid #dce8ff';a.style.color='#0866ff';a.setAttribute('aria-current','page');}});}
 }catch(e){}})();
 </script>
 <header><div class="wrap"><strong style="color:var(--green);font-size:25px">REV · مسیریاب سفر</strong><nav><a href="./trip.html">برنامه‌ریز رایگان</a>　<a href="./account.html">حساب کاربری</a></nav></div></header><main class="wrap"><h1>حالت آزمایشی REV</h1><p class="muted">در دوره ساخت و آزمایش، همه امکانات نرم‌افزار بدون خرید پلن در دسترس قرار می‌گیرند. خرید و ثبت درخواست پلن موقتاً غیرفعال شده است.</p><section class="card"><h2 style="color:var(--green)">دسترسی آزمایشی فعال</h2><p>برای آزمایش امکانات، وارد حساب کاربری شوید یا مستقیماً به داشبورد راننده و برنامه‌ریز سفر بروید. اطلاعات واقعی سفر فقط پس از ثبت و با اجازه شما ذخیره می‌شود.</p><div class="actions"><a class="btn" href="./account.html">حساب کاربری REV</a><a class="btn secondary" href="./driver-profile.html">پروفایل راننده</a><a class="btn secondary" href="./trip.html">برنامه‌ریز سفر</a><a class="btn secondary" href="./nearby-map.html#groupTripPanel">سفرهای گروهی</a></div><p class="muted" style="margin-top:18px">پلن‌ها و پرداخت پس از تکمیل و آزمایش قابلیت‌های اصلی دوباره بررسی خواهند شد.</p></section></main><script src="./rev-site-settings.js?v=20261017-2" defer></script>
