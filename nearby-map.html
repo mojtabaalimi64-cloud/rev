@@ -323,7 +323,38 @@ function placeRouteCarAtStart(coords){if(!coords||!coords.length)return;if(route
  if(invites.length){groupPanel.hidden=false;groupStatus.textContent="دعوت سفر گروهی پیدا شد؛ برای فعال‌شدن نشانگرها، دعوت را بپذیرید و اجازه GPS را بدهید.";}
  else if(groupInviteLink&&!invites.length&&!groupIds.length){groupPanel.hidden=false;groupStatus.textContent="دعوت فعالی برای این حساب پیدا نشد. با حسابی که دعوت به آن ارسال شده وارد شوید؛ اگر هنوز دعوت ارسال نشده، دعوت‌کننده باید کد شما را در بخش سفر گروهی وارد کند.";}
  if(groupIds.length&&j.settings?.share_location!==false){if(groupGpsWatch===null&&navigator.geolocation)groupGpsWatch=navigator.geolocation.watchPosition(async pos=>{const payload={latitude:pos.coords.latitude,longitude:pos.coords.longitude,accuracy_m:pos.coords.accuracy,speed_kmh:pos.coords.speed==null?null:Math.max(0,pos.coords.speed*3.6)};for(const id of groupIds){try{await groupApi("/api/driver/groups/"+id+"/location","POST",payload);}catch(e){groupStatus.textContent=e.message||"ارسال موقعیت گروهی ناموفق بود.";}}},err=>{groupStatus.textContent=err.code===1?"برای نمایش موقعیت در سفر گروهی اجازه GPS بدهید.":"دریافت GPS همسفرها موقتاً در دسترس نیست.";},{enableHighAccuracy:true,maximumAge:3000,timeout:15000});}else{if(groupGpsWatch!==null&&navigator.geolocation){navigator.geolocation.clearWatch(groupGpsWatch);groupGpsWatch=null;}if(groupIds.length&&j.settings?.share_location===false)groupStatus.textContent="اشتراک موقعیت شما از تنظیمات پروفایل خاموش است؛ هم‌سفرها موقعیت زنده شما را نمی‌بینند.";}}catch(e){groupStatus.textContent=e.message||"برای دیدن سفرهای گروهی وارد حساب REV شوید.";}finally{groupPollBusy=false;}}
- groupPollTimer=setInterval(()=>{if(!document.hidden)refreshGroups();},8000);refreshGroups();
+ groupPollTimer=setInterval(()=>{if(!document.hidden)refreshGroups();},8000);
+// نمایش برنامه سفر ارسالی از صفحه برنامه‌ریز (trip.html?tripPlan)
+try{
+var tripPlanParams=new URLSearchParams(location.search);
+if(tripPlanParams.has('tripPlan')&&!window.revTripPlanOpened){
+window.revTripPlanOpened=true;
+var tpd=null;
+try{tpd=JSON.parse(sessionStorage.getItem('rev_trip_plan_view')||'null');}catch(e){}
+if(tpd&&Array.isArray(tpd.route)&&tpd.route.length>1){
+var tpll=tpd.route.map(function(c){return [c[1],c[0]];});
+if(window.revTripPlanLayer){try{map.removeLayer(window.revTripPlanLayer);}catch(e){}}
+window.revTripPlanLayer=L.polyline(tpll,{color:'#0887a7',weight:6,opacity:.95}).addTo(map);
+try{map.fitBounds(window.revTripPlanLayer.getBounds(),{padding:[45,45],maxZoom:13});}catch(e){}
+var oLL=tpll[0],dLL=tpll[tpll.length-1];
+try{
+L.marker(oLL,{keyboard:false}).addTo(map).bindPopup('<b>\u0645\u0628\u062f\u0623</b><br>'+esc(tpd.origin||''));
+L.marker(dLL,{keyboard:false}).addTo(map).bindPopup('<b>\u0645\u0642\u0635\u062f</b><br>'+esc(tpd.destination||''));
+(tpd.stations||[]).forEach(function(st){
+if(st&&isFinite(st.lat)&&isFinite(st.lon)){
+L.marker([Number(st.lat),Number(st.lon)],{icon:stationPinIcon({business_type:'charging'}),keyboard:false}).addTo(map).bindPopup('<b>\u26a1 '+esc(st.name||'\u0627\u06cc\u0633\u062a\u06af\u0627\u0647 \u0634\u0627\u0631\u0698')+'</b>');}
+});
+}catch(e){}
+var tpsm=tpd.summary||{};
+try{
+detailsContent.innerHTML='<span class="detail-type">\u0628\u0631\u0646\u0627\u0645\u0647 \u0633\u0641\u0631</span><h2 class="detail-name">'+esc(tpd.origin||'\u0645\u0628\u062f\u0623')+' \u2190 '+esc(tpd.destination||'\u0645\u0642\u0635\u062f')+'</h2><div class="detail-meta">\u0645\u0633\u0627\u0641\u062a: '+esc(tpsm.km!=null?Number(tpsm.km).toFixed(0)+' \u06a9\u06cc\u0644\u0648\u0645\u062a\u0631':'\u2014')+'<br>\u062a\u0648\u0642\u0641 \u0634\u0627\u0631\u0698 \u067e\u06cc\u0634\u0646\u0647\u0627\u062f\u06cc: '+esc(tpsm.stops!=null?tpsm.stops:'\u2014')+'</div><div class="detail-actions"><a href="./trip.html">\u0628\u0627\u0632\u06af\u0634\u062a \u0628\u0647 \u0628\u0631\u0646\u0627\u0645\u0647\u200c\u0631\u06cc\u0632</a></div>';
+detailsPanel.hidden=false;
+setTimeout(function(){try{map.invalidateSize();}catch(e){}},120);
+}catch(e){}
+}}}
+catch(e){}
+
+refreshGroups();
 
  load();
 })();
