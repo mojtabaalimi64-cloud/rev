@@ -58,6 +58,85 @@ header{background:rgba(10,13,16,.92)!important;border-bottom:1px solid var(--rev
 
 </style>
 <link rel="stylesheet" href="./rev-theme.css?v=1">
+
+<style id="rev-account-polish">
+:root{--rev-bg:#0f1115;--rev-bg-deep:#0a0d10;--rev-surface:#1a1e24;--rev-surface-2:#15191f;--rev-surface-3:#20262e;--rev-line:rgba(255,255,255,.09);--rev-text:#f7f9fb;--rev-muted:#a0a9b5;--rev-green:#00e699;--rev-green-dark:#00c875;--rev-cyan:#00bcd4;--rev-amber:#ffad42;--rev-red:#ff6674}
+body{min-height:100vh;background:radial-gradient(ellipse at 85% -10%,rgba(0,230,153,.10),transparent 36%),radial-gradient(ellipse at 0% 80%,rgba(0,188,212,.045),transparent 34%),#0f1115!important;color:#f7f9fb!important}
+header{background:rgba(15,17,21,.88)!important;border-bottom:1px solid rgba(255,255,255,.09)!important;box-shadow:0 8px 28px rgba(0,0,0,.12)}
+header .wrap{max-width:960px}
+.head{min-height:66px}
+.logo{font-size:27px;letter-spacing:2px;color:#00e699!important}
+.head-actions .inline-link{border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:8px 12px;background:#1a1e24;color:#e8eef2;font-size:12px}
+.head-actions .inline-link:hover{border-color:#00e699;color:#00e699}
+main.wrap{width:min(100% - 28px,680px)!important;padding:24px 0 44px!important}
+.dashboard{display:block!important;max-width:100%;margin:0 auto}
+.sidebar{display:none!important}
+.content{width:100%;min-width:0}
+#notice{max-width:620px;margin:0 auto 14px;padding:10px 14px;background:#171d22!important;border:1px solid rgba(255,255,255,.09)!important;color:#b8c3cc!important;font-size:12px;line-height:1.8}
+#notice.ok{border-color:rgba(0,230,153,.28)!important;color:#7bf0bf!important;background:rgba(0,230,153,.055)!important}
+#notice.error{border-color:rgba(255,102,116,.3)!important;color:#ff9ba5!important;background:rgba(255,102,116,.055)!important}
+#tab-profile{max-width:620px;margin:0 auto}
+.profile-heading{position:relative;padding:8px 3px 20px}
+.profile-heading:before{content:"";display:block;width:42px;height:4px;border-radius:99px;background:linear-gradient(90deg,#00e699,#00bcd4);margin-bottom:14px}
+.profile-heading .eyebrow{font-size:11px;letter-spacing:1.5px;color:#00e699}
+.profile-heading h1{font-size:clamp(25px,5vw,32px);font-weight:800;letter-spacing:-.4px;color:#f7f9fb;margin:4px 0}
+.profile-heading p{font-size:13px;color:#a0a9b5;margin:0}
+.profile-card,.profile-settings{position:relative;overflow:hidden;padding:22px!important;margin:0 0 14px!important;border:1px solid rgba(255,255,255,.085)!important;border-radius:20px!important;background:linear-gradient(145deg,#1a1e24 0%,#15191f 100%)!important;box-shadow:0 14px 38px rgba(0,0,0,.18)!important}
+.profile-card:before,.profile-settings:before{content:"";position:absolute;top:0;right:22px;width:64px;height:2px;background:linear-gradient(90deg,#00bcd4,#00e699);opacity:.9}
+.profile-photo-row{align-items:center;gap:16px;padding:2px 0 20px;margin-bottom:18px;border-bottom:1px solid rgba(255,255,255,.08)}
+.profile-avatar{width:84px!important;height:84px!important;flex:0 0 84px!important;border:2px solid rgba(0,230,153,.65);box-shadow:0 0 0 5px rgba(0,230,153,.07);background:linear-gradient(135deg,#00e699,#00bcd4)!important;color:#07150f!important;border-radius:50%!important}
+.profile-photo-copy strong{font-size:15px;color:#f7f9fb}
+.profile-photo-copy small,.setting-row small{font-size:12px;color:#a0a9b5;line-height:1.8}
+.file-button{border:1px solid rgba(0,230,153,.32)!important;background:rgba(0,230,153,.075)!important;color:#00e699!important;border-radius:10px!important;padding:7px 13px!important;font-size:12px;font-weight:700}
+.file-button:hover{background:rgba(0,230,153,.14)!important}
+.profile-fields{gap:0 14px}
+.profile-fields label,.profile-settings label{font-size:12px;color:#c8d0d8;font-weight:600}
+.profile-fields input,.profile-settings select{width:100%;min-height:46px;margin:6px 0 14px;padding:11px 13px!important;border:1px solid #343b44!important;border-radius:12px!important;background:#10141a!important;color:#f7f9fb!important;font-size:13px;box-shadow:none!important}
+.profile-fields input::placeholder{color:#727e8b!important}
+.profile-fields input:focus,.profile-settings select:focus{border-color:#00e699!important;box-shadow:0 0 0 3px rgba(0,230,153,.09)!important;outline:none}
+.profile-fields input[readonly]{color:#a0a9b5!important;background:#14181e!important;border-style:solid!important}
+.profile-actions{gap:9px;margin-top:2px}
+.profile-actions button,.setting-buttons button,.profile-footer button{min-height:42px;border-radius:11px!important;padding:9px 15px!important;font-size:12px;font-weight:700}
+.profile-actions .primary{background:#00e699!important;color:#06140e!important;border:1px solid #00e699!important}
+.profile-actions #removeAvatar{background:#20252d!important;border:1px solid #39414b!important;color:#c8d0d8!important}
+#profileSaveStatus{margin:10px 0 0;color:#00e699!important}
+.profile-settings h2{font-size:16px!important;font-weight:800;margin:0 0 16px!important;color:#f7f9fb}
+.setting-row{padding-bottom:16px;margin-bottom:16px;border-bottom:1px solid rgba(255,255,255,.08)}
+.setting-row strong{font-size:13px;color:#f7f9fb}
+.setting-buttons button{background:#20252d!important;border:1px solid #39414b!important;color:#e5ebef!important}
+.setting-buttons button:hover{border-color:#00e699!important;color:#00e699!important}
+.profile-settings select{margin-top:7px;margin-bottom:7px}
+#rev-pref-status{margin:8px 0 0;color:#87939f!important}
+.profile-footer{padding:5px 2px 20px}
+.profile-footer #profileLogout{background:rgba(255,102,116,.07)!important;border:1px solid rgba(255,102,116,.28)!important;color:#ff9ba5!important}
+.profile-footer a{font-size:12px;color:#00e699!important}
+#tab-account .auth-wrap{max-width:500px;margin:10px auto}
+#tab-account .auth-title{text-align:right;margin:0 0 18px}
+#tab-account .auth-title:before{content:"";display:block;width:42px;height:4px;border-radius:99px;background:linear-gradient(90deg,#00e699,#00bcd4);margin:0 0 14px}
+#tab-account .auth-title h1{font-size:clamp(25px,5vw,32px);font-weight:800;color:#f7f9fb;margin:4px 0}
+#tab-account .auth-title p{font-size:13px;color:#a0a9b5}
+#tab-account .card{background:linear-gradient(145deg,#1a1e24,#15191f)!important;border:1px solid rgba(255,255,255,.085)!important;border-radius:20px!important;box-shadow:0 14px 38px rgba(0,0,0,.18)!important}
+#tab-account label{font-size:12px;color:#c8d0d8}
+#tab-account input:not([type=checkbox]),#tab-account select{background:#10141a!important;border:1px solid #343b44!important;color:#f7f9fb!important;border-radius:12px!important;min-height:46px}
+#tab-account button.primary,#tab-account [type=submit]{background:#00e699!important;color:#06140e!important;border-color:#00e699!important;font-weight:800}
+#tab-business,#tab-products{display:none!important}
+@media(max-width:560px){
+ main.wrap{width:calc(100% - 24px)!important;padding:17px 0 32px!important}
+ .head{min-height:58px}
+ .logo{font-size:24px}
+ .head-actions .inline-link{padding:7px 10px;font-size:11px}
+ #notice{font-size:11px;padding:9px 11px}
+ .profile-heading{padding:5px 2px 16px}
+ .profile-card,.profile-settings{padding:16px!important;border-radius:17px!important}
+ .profile-photo-row{gap:12px;padding-bottom:16px}
+ .profile-avatar{width:72px!important;height:72px!important;flex-basis:72px!important}
+ .profile-fields{grid-template-columns:minmax(0,1fr)!important}
+ .profile-fields input{margin-bottom:12px}
+ .profile-actions button{flex:1}
+ .profile-footer{font-size:12px}
+ .setting-row{gap:10px}
+}
+</style>
 </head>
 <body>
 <header><div class="wrap"><div class="head"><a class="logo" href="./">REV</a><div class="head-actions"><div id="topUser" class="top-user hidden"><div id="topAvatar" class="avatar" aria-label="آواتار کاربر">ر</div><div class="user-meta"><strong id="topUserName">کاربر REV</strong><small id="topUserPhone">حساب کاربری</small></div></div><a class="inline-link" href="./">بازگشت به سایت ↗</a><button id="logout" class="hidden" type="button">خروج از حساب</button></div></div></div></header>
