@@ -25,6 +25,17 @@ main{display:block!important;width:100%!important;height:100dvh!important;max-wi
 .bottom-nav{z-index:900!important}
 .bottom-nav-inner{grid-template-columns:repeat(4,minmax(0,1fr))!important}
 .bottom-nav a:last-child{display:none!important}
+
+.search-history-panel{position:fixed;z-index:840;left:14px;right:14px;bottom:calc(140px + env(safe-area-inset-bottom));max-height:0;overflow:hidden;opacity:0;transform:translateY(14px);pointer-events:none;background:#fff;color:#172235;border:1px solid #e4e9ef;border-radius:22px;box-shadow:0 10px 35px #0002;transition:max-height .24s ease,opacity .2s ease,transform .24s ease}
+.search-history-panel.open{max-height:min(48dvh,390px);opacity:1;transform:translateY(0);pointer-events:auto;overflow:auto}
+.search-history-head{display:flex;align-items:center;justify-content:space-between;padding:15px 17px 8px;font-size:13px;font-weight:800}
+#clearSearchHistory{border:0;background:transparent;color:#0866ff;font:inherit;font-size:11px;padding:5px}
+#searchHistoryList{padding:0 10px 10px}
+.history-item{display:flex;align-items:center;gap:10px;width:100%;padding:11px 8px;border:0;border-top:1px solid #edf0f4;background:#fff;color:#253348;text-align:right;font:13px Tahoma,Vazirmatn,sans-serif;cursor:pointer}
+.history-item svg{width:18px;height:18px;flex:0 0 18px;stroke:#8190a2;fill:none;stroke-width:1.8}
+.history-empty{padding:14px 8px;color:#8793a3;font-size:12px}
+.map-search-bar.expanded .map-search-form{border-color:#b8d0ff}
+@media(min-width:701px){.search-history-panel{left:calc(50% - 260px);right:calc(50% - 260px);bottom:105px}}
 .map-search-bar{position:fixed;z-index:850;left:14px;right:14px;bottom:calc(76px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;direction:rtl;pointer-events:none}
 .map-search-form{height:54px;min-width:0;flex:1;display:flex;align-items:center;gap:9px;padding:0 17px;background:#fff;border:1px solid #e4e9ef;border-radius:999px;box-shadow:0 5px 22px #0002;pointer-events:auto}
 .map-search-form svg{width:21px;height:21px;flex:0 0 21px;stroke:#687789;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
@@ -121,8 +132,22 @@ main{display:block!important;width:100%!important;height:100dvh!important;max-wi
  async function locate(){if(!navigator.geolocation){status.textContent="این مرورگر از مکان‌یابی پشتیبانی نمی‌کند.";return;}status.textContent="در حال دریافت موقعیت؛ اجازه دسترسی را تأیید کنید…";navigator.geolocation.getCurrentPosition(async p=>{userLocation=[p.coords.latitude,p.coords.longitude];if(userMarker)map.removeLayer(userMarker);let avatar="";try{const r=await fetch(BUSINESS_API+"/api/portal/me",{method:"GET",credentials:"include",cache:"no-store"});if(r.ok){const j=await r.json();const candidate=j?.user?.avatar_data;if(j.success&&typeof candidate==="string"&&/^data:image\/(jpeg|png|webp);base64,/.test(candidate)&&candidate.length<=350000)avatar=candidate;}}catch(e){}if(avatar){const icon=L.divIcon({className:"rev-user-location-icon",html:'<span class="rev-user-photo-marker"><img src="'+avatar+'" alt=""></span>',iconSize:[42,42],iconAnchor:[21,21],popupAnchor:[0,-22]});userMarker=L.marker(userLocation,{icon,zIndexOffset:1000}).bindPopup("موقعیت فعلی شما").addTo(map);}else{userMarker=L.circleMarker(userLocation,{radius:8,color:"#fff",weight:3,fillColor:"#0866ff",fillOpacity:1}).bindPopup("موقعیت فعلی شما").addTo(map);}map.setView(userLocation,13);render();userMarker.openPopup();},()=>{status.textContent="موقعیت دریافت نشد؛ مجوز مکان‌یابی و GPS را بررسی کنید. نقشه را می‌توانید دستی جابه‌جا کنید."},{enableHighAccuracy:true,timeout:15000,maximumAge:60000});}
  document.getElementById("locate").addEventListener("click",locate);
  const searchForm=document.getElementById("placeSearchForm"),searchInput=document.getElementById("placeSearch");
+ const searchBar=document.getElementById("mapSearchBar"),historyPanel=document.getElementById("searchHistoryPanel"),historyList=document.getElementById("searchHistoryList");
+ const historyKey="rev_map_search_history_v1";let searchHistory=[];
+ try{const saved=JSON.parse(localStorage.getItem(historyKey)||"[]");if(Array.isArray(saved))searchHistory=saved.filter(x=>typeof x==="string").slice(0,8);}catch(e){}
+ function renderSearchHistory(){historyList.innerHTML="";if(!searchHistory.length){historyList.innerHTML='<div class="history-empty">هنوز جست‌وجویی ثبت نشده است. مکان موردنظرت را جست‌وجو کن.</div>';document.getElementById("clearSearchHistory").hidden=true;return;}document.getElementById("clearSearchHistory").hidden=false;searchHistory.forEach(function(term){const b=document.createElement("button");b.type="button";b.className="history-item";b.innerHTML='<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4M11 7v4l3 2"></path></svg><span></span>';b.querySelector("span").textContent=term;b.addEventListener("click",function(){searchInput.value=term;closeSearchHistory();searchForm.requestSubmit();});historyList.appendChild(b);});}
+ function openSearchHistory(){historyPanel.classList.add("open");historyPanel.setAttribute("aria-hidden","false");searchBar.classList.add("expanded");renderSearchHistory();}
+ function closeSearchHistory(){historyPanel.classList.remove("open");historyPanel.setAttribute("aria-hidden","true");searchBar.classList.remove("expanded");}
+ renderSearchHistory();searchInput.addEventListener("focus",openSearchHistory);searchInput.addEventListener("click",openSearchHistory);
+ document.getElementById("clearSearchHistory").addEventListener("click",function(){searchHistory=[];try{localStorage.removeItem(historyKey);}catch(e){}renderSearchHistory();});
+ let dragStartY=null,dragStartX=null;
+ searchBar.addEventListener("pointerdown",function(e){if(e.target.closest("input,button"))return;dragStartY=e.clientY;dragStartX=e.clientX;});
+ searchBar.addEventListener("pointerup",function(e){if(dragStartY===null)return;const dy=e.clientY-dragStartY,dx=e.clientX-dragStartX;if(dy < -24&&Math.abs(dy)>Math.abs(dx))openSearchHistory();else if(dy>24&&Math.abs(dy)>Math.abs(dx))closeSearchHistory();dragStartY=null;dragStartX=null;});
+ document.addEventListener("pointerdown",function(e){if(!historyPanel.contains(e.target)&&!searchBar.contains(e.target))closeSearchHistory();});
+
  searchForm.addEventListener("submit",async function(event){
   event.preventDefault();const query=searchInput.value.trim();if(!query)return;
+  searchHistory=[query,...searchHistory.filter(x=>x.toLocaleLowerCase()!==query.toLocaleLowerCase())].slice(0,8);try{localStorage.setItem(historyKey,JSON.stringify(searchHistory));}catch(e){}renderSearchHistory();closeSearchHistory();
   status.textContent="در حال جست‌وجوی مکان…";
   try{
    const response=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=fa&q="+encodeURIComponent(query),{headers:{"Accept":"application/json"}});
