@@ -118,6 +118,23 @@ label{font-size:12px;color:var(--muted)}
 .bottom-nav a.active{color:var(--teal);background:var(--teal-soft);font-weight:900}
 .bottom-nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
+
+/* driver behavior analysis */
+.analysis-grid{display:grid;grid-template-columns:1fr;gap:12px;margin-top:12px}
+@media(min-width:640px){.analysis-grid{grid-template-columns:1fr 1fr}}
+.analysis-box{background:#fbfdff;border:1px solid var(--line);border-radius:14px;padding:14px}
+.analysis-box h3{font-size:13px;margin:0 0 4px;font-weight:900;color:var(--teal-dark)}
+.analysis-box .sub{font-size:11px;color:var(--muted);margin-bottom:8px}
+.predict-hero{display:flex;gap:14px;align-items:center;background:linear-gradient(135deg,#0887a7,#066d88);color:#fff;border-radius:14px;padding:16px;margin-bottom:12px}
+.predict-hero .big{font-size:34px;font-weight:950;font-variant-numeric:tabular-nums;line-height:1.1}
+.predict-hero small{opacity:.9;font-size:11px}
+.predict-rows{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.predict-cell{background:#f7fafc;border:1px solid var(--line);border-radius:11px;padding:9px 11px;font-size:12px}
+.predict-cell b{display:block;font-size:16px;font-variant-numeric:tabular-nums}
+.trend-up{color:#1ea56c;font-weight:800}.trend-down{color:#cf4444;font-weight:800}
+.legend{display:flex;gap:12px;font-size:11px;color:var(--muted);margin-top:6px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-left:4px;vertical-align:baseline}
+
 </style>
 
 <style id="navigationGateStyle">#navigationGate{position:fixed;inset:0;z-index:999999;display:grid;place-items:center;padding:18px;background:linear-gradient(145deg,#080b0d,#102126);color:#f5f7f8;font:16px/1.9 Vazirmatn,Vazir,Tahoma,sans-serif}#navigationGate[hidden]{display:none!important}.gate-card{width:min(100%,600px);padding:26px;border:1px solid #2a343a;border-radius:18px;background:#121a1f;box-shadow:0 20px 70px #0008}.gate-card h1{font-size:26px;line-height:1.5}.gate-card p{color:#aab6bc}.gate-card a,.gate-card button{display:inline-block;margin:6px 5px 0 0;border-radius:10px;padding:10px 14px;text-decoration:none;font:inherit;font-weight:800;cursor:pointer}.gate-primary{background:#39ff88;color:#07100b;border:1px solid #39ff88}.gate-secondary{background:transparent;color:#39ff88;border:1px solid #395648}#navigationGateStatus{margin-top:12px;color:#ffdda0;white-space:pre-wrap;font-size:13px}</style>
@@ -216,6 +233,13 @@ body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
       <div class="live-stats"><div class="live-stat"><div class="sub">مدت سفر</div><b id="elapsed">۰ دقیقه</b></div><div class="live-stat"><div class="sub">مسافت GPS</div><b id="gpsDistance">۰٫۰ km</b></div><div class="live-stat"><div class="sub">سرعت فعلی</div><b id="liveSpeed">— km/h</b></div><div class="live-stat"><div class="sub">بیشترین سرعت</div><b id="liveMaxSpeed">— km/h</b></div><div class="live-stat"><div class="sub">سرعت میانگین</div><b id="liveAvgSpeed">— km/h</b></div><div class="live-stat"><div class="sub">شتاب/ترمز شدیدِ احتمالی</div><b id="liveDrivingEvents">۰ / ۰</b></div><div class="live-stat"><div class="sub">نقاط GPS</div><b id="pointCount">۰</b></div></div><p class="note">سرعت از GPS گوشی تخمین زده می‌شود و ممکن است خطا داشته باشد. شتاب و ترمز شدید فقط نشانه‌های احتمالی‌اند، نه ارزیابی قطعی راننده.</p>
       <p class="note">انرژی محاسبه‌شده از درصد شارژ، تخمینی است و به ظرفیت واقعی باتری، دما و کالیبراسیون خودرو بستگی دارد.</p>
     </section>
+<section data-tab="trip" class="panel" id="driverAnalysisCard">
+<div class="section-title"><h2>📊 تحلیل رفتار راننده</h2><span class="pill">بر اساس سفرهای ثبت‌شده</span></div>
+<p class="note">نمودارها از داده‌های واقعی GPS و انرژی سفرهای شما ساخته می‌شوند؛ بدون داده، نموداری ساخته نمی‌شود.</p>
+<div id="driverAnalysisBody"><div class="muted">در حال بارگذاری تحلیل…</div></div>
+<div style="margin-top:10px"><button type="button" class="secondary" id="driverAnalysisRefresh">↻ به‌روزرسانی تحلیل</button></div>
+</section>
+
     <section data-tab="car" class="panel">
       <div class="section-title"><h2>اتصال OBD / API خودرو</h2><span class="pill">آماده بررسی سازگاری</span></div>
       <p class="note">اتصال واقعی OBD به نوع خودرو و آداپتور بستگی دارد. این نسخه قابلیت مرورگر را بررسی می‌کند و ادعای اتصال به ECU یا خواندن واقعی باتری ندارد؛ برای آداپتورهای Bluetooth Classic معمولاً اپ بومی/پل محلی لازم است.</p>
@@ -413,10 +437,10 @@ function setTrackStatus(msg,warn=false){$('trackStatus').textContent=msg;$('trac
 function haversine(a,b){const rad=x=>x*Math.PI/180,R=6371,dLat=rad(b.lat-a.lat),dLon=rad(b.lon-a.lon),v=Math.sin(dLat/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLon/2)**2;return 2*R*Math.asin(Math.sqrt(v))}
 function updateLive(){ $('gpsDistance').textContent=fmt(gpsDistance)+' km';$('pointCount').textContent=fmt(routePoints.length,0);$('elapsed').textContent=startedAt?fmt(Math.max(0,((endedAt||Date.now())-startedAt)/60000),0)+' دقیقه':'۰ دقیقه';const elapsedHours=startedAt?Math.max(0.001,((endedAt||Date.now())-startedAt)/3600000):0,avg=elapsedHours>0?gpsDistance/elapsedHours:null;$("liveSpeed").textContent=currentSpeedKmh===null?"— km/h":fmt(currentSpeedKmh)+" km/h";$("liveMaxSpeed").textContent=maxSpeedKmh?fmt(maxSpeedKmh)+" km/h":"— km/h";$("liveAvgSpeed").textContent=avg===null?"— km/h":fmt(avg)+" km/h";$("liveDrivingEvents").textContent=fmt(hardAccelCount,0)+" / "+fmt(hardBrakeCount,0);}
 function resetTrack(){routePoints=[];gpsDistance=0;lastPoint=null;startedAt=null;endedAt=null;currentSpeedKmh=null;maxSpeedKmh=0;hardAccelCount=0;hardBrakeCount=0;if(trackLine){trackLine.remove();trackLine=null}if(trackMarkers){trackMarkers.clearLayers()}updateLive()}
-function addPoint(pos){const rawSpeed=pos.coords.speed,p={lat:pos.coords.latitude,lon:pos.coords.longitude,ts:pos.timestamp||Date.now(),accuracy:pos.coords.accuracy,speedKmh:typeof rawSpeed==="number"&&Number.isFinite(rawSpeed)&&rawSpeed>=0?rawSpeed*3.6:null};if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon)||p.accuracy>100)return;currentSpeedKmh=p.speedKmh;if(p.speedKmh!==null)maxSpeedKmh=Math.max(maxSpeedKmh,p.speedKmh);if(plannedRouteLine&&routePoints.length===0&&map){map.fitBounds(plannedRouteLine.getBounds(),{padding:[25,25],maxZoom:12});}if(lastPoint){const seconds=(p.ts-lastPoint.ts)/1000,delta=haversine(lastPoint,p);if(p.speedKmh!==null&&lastPoint.speedKmh!==null&&seconds>=1.5&&seconds<=12){const accel=((p.speedKmh-lastPoint.speedKmh)/3.6)/seconds;if(lastPoint.speedKmh>15&&p.speedKmh>15&&accel>=2.5)hardAccelCount++;if(lastPoint.speedKmh>15&&p.speedKmh>15&&accel<=-3)hardBrakeCount++;}if(delta<0.003){updateLive();return}if(delta>2&&Date.now()-lastPoint.ts<30000){setTrackStatus('یک جهش غیرعادی GPS نادیده گرفته شد؛ ثبت سفر ادامه دارد.');updateLive();return}gpsDistance+=delta}routePoints.push(p);lastPoint=p;if(trackLine)trackLine.setLatLngs(routePoints.map(x=>[x.lat,x.lon]));else trackLine=L.polyline(routePoints.map(x=>[x.lat,x.lon]),{color:'#39ff88',weight:5}).addTo(map);if(routePoints.length===1)L.circleMarker([p.lat,p.lon],{radius:6,color:'#39ff88'}).addTo(trackMarkers);map.panTo([p.lat,p.lon],{animate:true,duration:.25});updateLive();setTrackStatus('GPS فعال است. دقت آخرین موقعیت: حدود '+fmt(p.accuracy,0)+' متر. سرعت از GPS گوشی خوانده می‌شود؛ برای پایان سفر، دکمه پایان سفر را بزنید.')}
+function addPoint(pos){const rawSpeed=pos.coords.speed,rawAlt=pos.coords.altitude,p={lat:pos.coords.latitude,lon:pos.coords.longitude,ts:pos.timestamp||Date.now(),accuracy:pos.coords.accuracy,alt:typeof rawAlt==="number"&&Number.isFinite(rawAlt)?Math.round(rawAlt*10)/10:null,speedKmh:typeof rawSpeed==="number"&&Number.isFinite(rawSpeed)&&rawSpeed>=0?rawSpeed*3.6:null};if(!Number.isFinite(p.lat)||!Number.isFinite(p.lon)||p.accuracy>100)return;currentSpeedKmh=p.speedKmh;if(p.speedKmh!==null)maxSpeedKmh=Math.max(maxSpeedKmh,p.speedKmh);if(plannedRouteLine&&routePoints.length===0&&map){map.fitBounds(plannedRouteLine.getBounds(),{padding:[25,25],maxZoom:12});}if(lastPoint){const seconds=(p.ts-lastPoint.ts)/1000,delta=haversine(lastPoint,p);if(p.speedKmh!==null&&lastPoint.speedKmh!==null&&seconds>=1.5&&seconds<=12){const accel=((p.speedKmh-lastPoint.speedKmh)/3.6)/seconds;if(lastPoint.speedKmh>15&&p.speedKmh>15&&accel>=2.5)hardAccelCount++;if(lastPoint.speedKmh>15&&p.speedKmh>15&&accel<=-3)hardBrakeCount++;}if(delta<0.003){updateLive();return}if(delta>2&&Date.now()-lastPoint.ts<30000){setTrackStatus('یک جهش غیرعادی GPS نادیده گرفته شد؛ ثبت سفر ادامه دارد.');updateLive();return}gpsDistance+=delta}routePoints.push(p);lastPoint=p;if(trackLine)trackLine.setLatLngs(routePoints.map(x=>[x.lat,x.lon]));else trackLine=L.polyline(routePoints.map(x=>[x.lat,x.lon]),{color:'#39ff88',weight:5}).addTo(map);if(routePoints.length===1)L.circleMarker([p.lat,p.lon],{radius:6,color:'#39ff88'}).addTo(trackMarkers);map.panTo([p.lat,p.lon],{animate:true,duration:.25});updateLive();setTrackStatus('GPS فعال است. دقت آخرین موقعیت: حدود '+fmt(p.accuracy,0)+' متر. سرعت از GPS گوشی خوانده می‌شود؛ برای پایان سفر، دکمه پایان سفر را بزنید.')}
 function startGps(){if(!currentUser){setTrackStatus('برای ثبت خصوصی سفر، ابتدا باید وارد حساب کاربری شوید.',true);return}if(!navigator.geolocation){setTrackStatus(/Instagram|FBAN|FBAV/i.test(navigator.userAgent)?'مرورگر داخلی اینستاگرام دسترسی GPS را پشتیبانی نمی‌کند یا محدود کرده است؛ از منوی مرورگر گزینه باز کردن در Chrome را بزنید و دوباره اجازه موقعیت مکانی بدهید.':'این مرورگر GPS وب را پشتیبانی نمی‌کند؛ صفحه را در Chrome یا مرورگر سازگار باز کنید.',true);return}if(!window.isSecureContext){setTrackStatus('ثبت GPS به اتصال امن HTTPS نیاز دارد.',true);return}if(watchId!==null)return;const planned=sessionStorage.getItem('rev_planned_route')||localStorage.getItem('rev_planned_route');if(planned&&map){try{const route=JSON.parse(planned);if(Array.isArray(route.coordinates)&&route.coordinates.length>1){drawPlannedRoute(route.coordinates,route.origin||'مبدأ',route.destination||'مقصد');map.fitBounds(plannedRouteLine.getBounds(),{padding:[25,25],maxZoom:12})}}catch(e){}}resetTrack();startedAt=Date.now();$('startGps').disabled=true;$('startNavigationBtn').disabled=true;$('stopGps').disabled=false;$('clearGps').disabled=false;watchId=navigator.geolocation.watchPosition(addPoint,e=>{setTrackStatus(({1:'اجازه GPS داده نشده است.',2:'موقعیت فعلی در دسترس نیست.',3:'زمان دریافت موقعیت تمام شد.'}[e.code]||'خطا در دریافت GPS: '+e.message),true);if(e.code===1)stopTrackingOnly()}, {enableHighAccuracy:true,maximumAge:2000,timeout:15000});timer=setInterval(updateLive,10000);setTrackStatus('در انتظار اولین موقعیت GPS… صفحه را باز نگه دارید.')}
 function stopTrackingOnly(){if(watchId!==null)navigator.geolocation.clearWatch(watchId);watchId=null;if(timer)clearInterval(timer);timer=null;$('startGps').disabled=false;$('startNavigationBtn').disabled=false;$('stopGps').disabled=true;endedAt=Date.now();updateLive()}
-async function stopGps(){if(watchId===null)return;stopTrackingOnly();if(routePoints.length<2||gpsDistance<0.05){setTrackStatus('مسیر برای ثبت کافی نیست؛ حداقل دو نقطه و ۵۰ متر لازم است.',true);return}const startSoc=Number($('startSoc').value),endSoc=Number($('endSoc').value),capacity=Number($('batteryKwh').value);if(!Number.isFinite(startSoc)||!Number.isFinite(endSoc)||startSoc<0||startSoc>100||endSoc<0||endSoc>100||!Number.isFinite(capacity)||capacity<=0){setTrackStatus('ظرفیت باتری و درصد شارژ ابتدا و انتها را بررسی کنید.',true);return}let energy=Number($('energyKwh').value);let source='manual';if(!Number.isFinite(energy)||energy<=0){energy=Math.max(0,capacity*(startSoc-endSoc)/100);source='gps_estimate'}const saveRoute=$('saveRoute').checked;const elapsedHours=Math.max(0.001,(endedAt-startedAt)/3600000),speedSamples=routePoints.map(p=>p.speedKmh).filter(v=>Number.isFinite(v)&&v>=0),drivingStats={max_speed_kmh:Math.round(maxSpeedKmh*10)/10,average_speed_kmh:Math.round((gpsDistance/elapsedHours)*10)/10,gps_speed_sample_count:speedSamples.length,hard_acceleration_events:hardAccelCount,hard_braking_events:hardBrakeCount,speed_source:'phone_gps',estimated:true};const payload={vehicle_name:$('vehicleName').value.trim()||'خودروی ثبت‌نشده',vehicle_type:$('vehicleType').value,started_at:new Date(startedAt).toISOString(),ended_at:new Date(endedAt).toISOString(),distance_km:gpsDistance,energy_kwh:energy,start_soc:startSoc,end_soc:endSoc,energy_source:source,save_route:saveRoute,route_points:saveRoute?routePoints.map(p=>({lat:p.lat,lon:p.lon,ts:p.ts,accuracy:p.accuracy,speed_kmh:p.speedKmh})):[],driving_stats:drivingStats};setTrackStatus('در حال ذخیره سفر در پروفایل خصوصی…');try{const r=await fetch(AUTH_API+'/api/driver/trips',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||'ذخیره سفر ناموفق بود؛ وضعیت ورود و تنظیمات دامنه API را بررسی کنید.');setTrackStatus('سفر ذخیره شد. مسافت '+fmt(gpsDistance)+' کیلومتر؛ بیشترین سرعت '+fmt(maxSpeedKmh)+' km/h؛ میانگین '+fmt(gpsDistance/elapsedHours)+' km/h؛ شتاب/ترمز شدید احتمالی '+fmt(hardAccelCount,0)+' / '+fmt(hardBrakeCount,0)+'؛ انرژی '+fmt(energy)+' kWh.');await loadProfile()}catch(e){setTrackStatus('ذخیره نشد: '+e.message+'\nمسیر فعلی تا زمان ترک صفحه فقط در حافظه همین صفحه است؛ دوباره وارد حساب شوید و تلاش کنید.',true)}}
+async function stopGps(){if(watchId===null)return;stopTrackingOnly();if(routePoints.length<2||gpsDistance<0.05){setTrackStatus('مسیر برای ثبت کافی نیست؛ حداقل دو نقطه و ۵۰ متر لازم است.',true);return}const startSoc=Number($('startSoc').value),endSoc=Number($('endSoc').value),capacity=Number($('batteryKwh').value);if(!Number.isFinite(startSoc)||!Number.isFinite(endSoc)||startSoc<0||startSoc>100||endSoc<0||endSoc>100||!Number.isFinite(capacity)||capacity<=0){setTrackStatus('ظرفیت باتری و درصد شارژ ابتدا و انتها را بررسی کنید.',true);return}let energy=Number($('energyKwh').value);let source='manual';if(!Number.isFinite(energy)||energy<=0){energy=Math.max(0,capacity*(startSoc-endSoc)/100);source='gps_estimate'}const saveRoute=$('saveRoute').checked;const elapsedHours=Math.max(0.001,(endedAt-startedAt)/3600000),speedSamples=routePoints.map(p=>p.speedKmh).filter(v=>Number.isFinite(v)&&v>=0),drivingStats={max_speed_kmh:Math.round(maxSpeedKmh*10)/10,average_speed_kmh:Math.round((gpsDistance/elapsedHours)*10)/10,gps_speed_sample_count:speedSamples.length,hard_acceleration_events:hardAccelCount,hard_braking_events:hardBrakeCount,speed_source:'phone_gps',estimated:true};const payload={vehicle_name:$('vehicleName').value.trim()||'خودروی ثبت‌نشده',vehicle_type:$('vehicleType').value,started_at:new Date(startedAt).toISOString(),ended_at:new Date(endedAt).toISOString(),distance_km:gpsDistance,energy_kwh:energy,start_soc:startSoc,end_soc:endSoc,energy_source:source,save_route:saveRoute,route_points:saveRoute?routePoints.map(p=>({lat:p.lat,lon:p.lon,ts:p.ts,accuracy:p.accuracy,alt:p.alt??null,speed_kmh:p.speedKmh})):[],driving_stats:drivingStats};setTrackStatus('در حال ذخیره سفر در پروفایل خصوصی…');try{const r=await fetch(AUTH_API+'/api/driver/trips',{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||'ذخیره سفر ناموفق بود؛ وضعیت ورود و تنظیمات دامنه API را بررسی کنید.');setTrackStatus('سفر ذخیره شد. مسافت '+fmt(gpsDistance)+' کیلومتر؛ بیشترین سرعت '+fmt(maxSpeedKmh)+' km/h؛ میانگین '+fmt(gpsDistance/elapsedHours)+' km/h؛ شتاب/ترمز شدید احتمالی '+fmt(hardAccelCount,0)+' / '+fmt(hardBrakeCount,0)+'؛ انرژی '+fmt(energy)+' kWh.');await loadProfile()}catch(e){setTrackStatus('ذخیره نشد: '+e.message+'\nمسیر فعلی تا زمان ترک صفحه فقط در حافظه همین صفحه است؛ دوباره وارد حساب شوید و تلاش کنید.',true)}}
 function clearGps(){if(watchId!==null)stopTrackingOnly();resetTrack();setTrackStatus('مسیر موقت از حافظه صفحه پاک شد.');$('clearGps').disabled=true}
 let avatarStorageKey='rev_driver_avatar_guest';
 function loadSavedDriverVehicleSettings(){try{const v=JSON.parse(localStorage.getItem("rev_driver_vehicle_profile")||"null");if(!v)return;const set=(id,val)=>{const el=$(id);if(el&&val!==undefined&&val!==null)el.value=val;};set("vehicleName",v.vehicle_name);set("vehicleType",v.vehicle_type);set("batteryKwh",v.battery_kwh);set("vehicleConsumption",v.consumption);}catch(e){}}
@@ -507,4 +531,155 @@ setTab(initial,false);
 <a class="active" href="./trips.html" aria-current="page" aria-label="سفرها"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 15l4-4 3 3 4-5M14 9h4v4"/></svg>سفرها</a>
 <a href="./businesses.html" aria-label="خدمات"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 12h18M10 12v2h4v-2"/></svg>خدمات</a>
 </div></nav>
+<script>
+/* REV driver behavior analysis — charts from real trip data only */
+(function(){
+var AUTH='https://rev-auth-api.mojtaba-alimi64.workers.dev';
+var body=document.getElementById('driverAnalysisBody');
+var done=false,busy=false;
+function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]});}
+function fa(v,d){var n=Number(v);if(!isFinite(n))return'—';try{return new Intl.NumberFormat('fa-IR',{maximumFractionDigits:(d==null?1:d)}).format(n)}catch(e){return String(n)}}
+function shortDate(iso){try{return new Date(iso).toLocaleDateString('fa-IR',{month:'numeric',day:'numeric'})}catch(e){return''}}
+function havKm(a,b,c,d){var R=6371,t=Math.PI/180,h=Math.sin((c-a)*t/2)*Math.sin((c-a)*t/2)+Math.cos(a*t)*Math.cos(c*t)*Math.sin((d-b)*t/2)*Math.sin((d-b)*t/2);return 2*R*Math.asin(Math.sqrt(h))}
+function bars(items){
+  var W=360,H=185,pL=36,pB=30,pT=18;
+  var max=Math.max.apply(null,items.map(function(x){return x.value}).concat([1]))*1.2;
+  var n=items.length,slot=(W-pL-10)/Math.max(n,1),bw=Math.max(9,Math.min(38,slot*0.62));
+  var s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img">';
+  for(var gi=0;gi<=3;gi++){var y=pT+(H-pT-pB)*gi/3;
+    s+='<line x1="'+pL+'" y1="'+y+'" x2="'+W+'" y2="'+y+'" stroke="#e4edf3"/>';
+    s+='<text x="'+(pL-5)+'" y="'+(y+4)+'" font-size="9" fill="#7e93a6" text-anchor="end">'+Math.round(max*(1-gi/3))+'</text>';}
+  items.forEach(function(it,i){
+    var h=Math.max(2,(H-pT-pB)*(it.value/max));
+    var x=pL+slot*i+(slot-bw)/2,y=H-pB-h;
+    s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="4" fill="'+(it.color||'#0887a7')+'"/>';
+    s+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(y-5).toFixed(1)+'" font-size="9.5" fill="#14293b" text-anchor="middle" font-weight="700">'+esc(it.top)+'</text>';
+    s+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(H-10)+'" font-size="9" fill="#7e93a6" text-anchor="middle">'+esc(it.label)+'</text>';});
+  return s+'</svg>';
+}
+function grouped(items){
+  var W=360,H=185,pL=30,pB=30,pT=18;
+  var max=Math.max.apply(null,items.map(function(x){return Math.max(x.a,x.b)}).concat([1]))*1.25;
+  var n=items.length,slot=(W-pL-10)/Math.max(n,1),bw=Math.max(7,Math.min(20,slot*0.3));
+  var s='<svg viewBox="0 0 '+W+' '+H+'" style="width:100%;height:auto;display:block" role="img">';
+  for(var gi=0;gi<=3;gi++){var y=pT+(H-pT-pB)*gi/3;
+    s+='<line x1="'+pL+'" y1="'+y+'" x2="'+W+'" y2="'+y+'" stroke="#e4edf3"/>';
+    s+='<text x="'+(pL-5)+'" y="'+(y+4)+'" font-size="9" fill="#7e93a6" text-anchor="end">'+Math.round(max*(1-gi/3))+'</text>';}
+  items.forEach(function(it,i){
+    var cx=pL+slot*i+slot/2;
+    [['a','#e8a13d'],['b','#cf4444']].forEach(function(cfg,ki){
+      var v=it[cfg[0]],h=Math.max(2,(H-pT-pB)*(v/max));
+      var x=cx-bw+(ki===0?-bw/2:bw/2),y=H-pB-h;
+      s+='<rect x="'+x.toFixed(1)+'" y="'+y.toFixed(1)+'" width="'+bw.toFixed(1)+'" height="'+h.toFixed(1)+'" rx="3" fill="'+cfg[1]+'"/>';
+      if(v>0)s+='<text x="'+(x+bw/2).toFixed(1)+'" y="'+(y-4).toFixed(1)+'" font-size="8.5" fill="#14293b" text-anchor="middle" font-weight="700">'+fa(v,0)+'</text>';});
+    s+='<text x="'+cx.toFixed(1)+'" y="'+(H-10)+'" font-size="9" fill="#7e93a6" text-anchor="middle">'+esc(it.label)+'</text>';});
+  return s+'</svg>';
+}
+function gradeStats(trips){
+  var up=[],flat=[],down=[],pts=0;
+  trips.forEach(function(t){
+    var rp=t.route||t.route_points||t.routePoints||[];
+    for(var i=1;i<rp.length;i++){
+      var a=rp[i-1],b=rp[i];
+      if(a==null||b==null||a.alt==null||b.alt==null)continue;
+      var d=havKm(a.lat,a.lon,b.lat,b.lon);
+      if(!(d>0.02))continue;
+      var sp=Number(b.speed_kmh);
+      if(!isFinite(sp)||sp<5)continue;
+      pts++;
+      var gr=(b.alt-a.alt)/(d*1000)*100;
+      if(gr>2)up.push(sp);else if(gr<-2)down.push(sp);else flat.push(sp);
+    }});
+  function avg(a){return a.length?a.reduce(function(x,y){return x+y},0)/a.length:null}
+  return{up:avg(up),flat:avg(flat),down:avg(down),points:pts};
+}
+async function load(force){
+  if(!body||busy||(done&&!force))return;busy=true;
+  body.innerHTML='<div class="muted">در حال بارگذاری تحلیل…</div>';
+  try{
+    var r=await fetch(AUTH+'/api/driver/trips?limit=50',{credentials:'include',cache:'no-store'});
+    var j=await r.json().catch(function(){return{}});
+    if(!r.ok||!j.success)throw new Error('برای دیدن تحلیل رفتار راننده، وارد حساب REV شوید.');
+    var trips=(j.trips||[]).filter(function(t){return t&&t.ended_at});
+    var ins=null;
+    try{var r2=await fetch(AUTH+'/api/driver/insights',{credentials:'include',cache:'no-store'});
+      var j2=await r2.json().catch(function(){return{}});if(r2.ok&&j2&&j2.success!==false)ins=j2;}catch(e){}
+    render(trips,ins);done=true;
+  }catch(e){body.innerHTML='<div class="muted">'+esc(e.message)+'</div>';}
+  busy=false;
+}
+function render(trips,ins){
+  if(!trips.length){body.innerHTML='<div class="muted">هنوز سفری ثبت نشده است. بعد از اولین سفر با GPS، تحلیل رفتار راننده اینجا نمایش داده می‌شود.</div>';return;}
+  var byDate=trips.slice().sort(function(a,b){return new Date(a.ended_at)-new Date(b.ended_at)});
+  var last12=byDate.slice(-12);
+  var html='';
+  /* --- prediction hero --- */
+  var rated=byDate.map(function(t){
+    var d=Number(t.distance_km),e=Number(t.energy_kwh);
+    return(d>0&&e>0)?{t:t,rate:e/d*100}:null}).filter(Boolean);
+  if(rated.length){
+    var recent=rated.slice(-5),ws=0,wt=0;
+    recent.forEach(function(x,i){var w=recent.length-i;ws+=x.rate*w;wt+=w});
+    var pred=ws/wt;
+    var older=rated.slice(-10,-5),oldAvg=older.length?older.reduce(function(s,x){return s+x.rate},0)/older.length:null;
+    var trend='';
+    if(oldAvg!=null&&Math.abs(pred-oldAvg)>0.3){
+      trend=pred<oldAvg?'<span class="trend-up">◀ مصرفت بهتر شده</span>':'<span class="trend-down">◀ مصرفت بیشتر شده</span>';
+    }
+    var battEl=document.getElementById('batteryKwh');
+    var batt=battEl?Number(battEl.value):NaN;
+    html+='<div class="predict-hero"><div><div class="big">'+fa(pred,1)+'</div><small>kWh/100km<br>پیش‌بینی سفر بعدی</small></div>'
+      +'<div style="flex:1"><div class="predict-rows">'
+      +'<div class="predict-cell" style="background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.25);color:#fff">انرژی ۱۰۰ کیلومتر<b>'+fa(pred,1)+' kWh</b></div>'
+      +(isFinite(batt)&&batt>0?'<div class="predict-cell" style="background:rgba(255,255,255,.14);border-color:rgba(255,255,255,.25);color:#fff">برد تخمینی<b>'+fa(batt/pred*100,0)+' km</b></div>':'')
+      +'</div><div style="margin-top:8px;font-size:11px">'+trend+' <span style="opacity:.85">بر اساس '+fa(recent.length,0)+' سفر اخیر</span></div></div></div>';
+  }
+  /* --- charts grid --- */
+  html+='<div class="analysis-grid">';
+  // speed
+  var sp=last12.map(function(t){var v=Number((t.driving_stats||{}).average_speed_kmh);return isFinite(v)?{label:shortDate(t.ended_at),top:fa(v,0),value:v}:null}).filter(Boolean);
+  html+='<div class="analysis-box"><h3>میانگین سرعت سفرها</h3><div class="sub">km/h · بر اساس GPS گوشی</div>'
+    +(sp.length?bars(sp):'<div class="muted">داده سرعت ثبت نشده است.</div>')+'</div>';
+  // consumption
+  var cs=last12.map(function(t){var d=Number(t.distance_km),e=Number(t.energy_kwh);return(d>0&&e>0)?{label:shortDate(t.ended_at),top:fa(e/d*100,1),value:e/d*100}:null}).filter(Boolean);
+  html+='<div class="analysis-box"><h3>مصرف انرژی سفرها</h3><div class="sub">kWh/100km</div>'
+    +(cs.length?bars(cs.map(function(x){x.color='#0b93b8';return x})): '<div class="muted">برای رسم نمودار، سفرهای دارای داده انرژی ثبت کنید.</div>')+'</div>';
+  // events
+  var ev=last12.map(function(t){var ds=t.driving_stats||{};var a=Number(ds.hard_acceleration_events)||0,b=Number(ds.hard_braking_events)||0;
+    return(a>0||b>0||ds.average_speed_kmh!=null)?{label:shortDate(t.ended_at),a:a,b:b}:null}).filter(Boolean);
+  html+='<div class="analysis-box"><h3>رویدادهای رانندگی</h3><div class="sub">تعداد در هر سفر</div>'
+    +(ev.length?grouped(ev)+'<div class="legend"><span><i style="background:#e8a13d"></i>شتاب تند</span><span><i style="background:#cf4444"></i>ترمز شدید</span></div>':'<div class="muted">رویدادی ثبت نشده است.</div>')+'</div>';
+  // grade
+  var gr=gradeStats(trips);
+  var gradeBox;
+  if(gr.points>10){
+    var gi=[{label:'سربالایی',top:gr.up!=null?fa(gr.up,0):'—',value:gr.up||0,color:'#e8a13d'},
+            {label:'هموار',top:gr.flat!=null?fa(gr.flat,0):'—',value:gr.flat||0,color:'#0887a7'},
+            {label:'سرپایینی',top:gr.down!=null?fa(gr.down,0):'—',value:gr.down||0,color:'#1ea56c'}];
+    gradeBox='<h3>میانگین سرعت در شیب مسیر</h3><div class="sub">km/h · از '+fa(gr.points,0)+' نقطه دارای ارتفاع</div>'+bars(gi);
+  }else{
+    gradeBox='<h3>میانگین سرعت در شیب مسیر</h3><div class="sub">سربالایی / هموار / سرپایینی</div><div class="muted">ثبت ارتفاع از این نسخه فعال شد؛ با سفرهای بعدی که با GPS ثبت می‌کنی، این نمودار پر می‌شود.</div>';
+  }
+  html+='<div class="analysis-box">'+gradeBox+'</div>';
+  html+='</div>';
+  if(ins&&ins.sample_count!=null){
+    html+='<p class="note" style="margin-top:10px">'+fa(ins.sample_count,0)+' سفر در تحلیل لحاظ شده'
+      +(ins.average_kwh_per_100km!=null?' · میانگین کل: '+fa(ins.average_kwh_per_100km,1)+' kWh/100km':'')+'.</p>';
+  }
+  body.innerHTML=html;
+}
+var ref=document.getElementById('driverAnalysisRefresh');
+if(ref)ref.addEventListener('click',function(){load(true)});
+var tabs=document.getElementById('dpTabs');
+if(tabs)tabs.addEventListener('click',function(e){
+  var b=e.target.closest?e.target.closest('button[data-tab-btn]'):null;
+  if(b&&b.getAttribute('data-tab-btn')==='trip')load(false);
+});
+try{
+  var tripPanel=document.querySelector('[data-tab="trip"]');
+  if(tripPanel&&!tripPanel.classList.contains('tab-hidden'))load(false);
+}catch(e){}
+})();
+</script>
+
 </body></html>
