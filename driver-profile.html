@@ -85,6 +85,14 @@ a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap
       </div>
       <div id="revGroupCodeStatus" class="status" aria-live="polite">برای دریافت کد، وارد حساب کاربری شوید.</div>
     </section>
+    <section class="panel" id="revGroupTravelSettings">
+      <div class="section-title"><h2>تنظیمات سفرهای گروهی</h2><span class="pill">حریم خصوصی</span></div>
+      <label style="display:flex;align-items:flex-start;gap:10px;margin:0;color:var(--text);font-size:13px">
+        <input id="revGroupShareLocation" type="checkbox" checked style="margin-top:6px;flex:0 0 auto">
+        <span><strong>اشتراک موقعیت من با هم‌سفرهای پذیرفته‌شده</strong><br><span class="note">وقتی این گزینه خاموش باشد، موقعیت زنده شما برای اعضای سفر گروهی نمایش داده نمی‌شود. موقعیت فقط در سفر گروهی فعال و پس از اجازه GPS به اشتراک گذاشته می‌شود.</span></span>
+      </label>
+      <div id="revGroupSettingsStatus" class="status" role="status" aria-live="polite">در حال دریافت تنظیمات حساب…</div>
+    </section>
     <section class="panel" id="plannedTripCard" hidden>
       <div class="section-title"><h2>برنامه سفر تأییدشده</h2><span class="pill">آماده شروع</span></div>
       <div id="plannedTripSummary" class="status">اطلاعات مسیر از برنامه‌ریز سفر دریافت می‌شود.</div>
@@ -204,6 +212,16 @@ const oldLoadPlannedTrip=loadPlannedTrip;
 loadPlannedTrip=function(){if(!map){const q=new URLSearchParams(location.search);if(q.has('origin')&&q.has('destination')){$('plannedTripCard').hidden=false;$('plannedRouteBanner').hidden=false;$('plannedRouteBanner').textContent='در حال آماده‌سازی نقشه و بارگذاری برنامه سفر…'};return}oldLoadPlannedTrip()};
 window.addEventListener('load',()=>setTimeout(()=>{if(map){restoreTripAfterMapReady();map.invalidateSize()}},400));
 </script>
+<script>
+(function(){
+ const API=typeof AUTH_API==="string"?AUTH_API:"https://rev-auth-api.mojtaba-alimi64.workers.dev";
+ const toggle=document.getElementById("revGroupShareLocation"),status=document.getElementById("revGroupSettingsStatus");
+ if(!toggle||!status)return;
+ async function loadSettings(){status.textContent="در حال دریافت تنظیمات حساب…";try{const r=await fetch(API+"/api/driver/groups/settings",{credentials:"include",cache:"no-store"}),j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw Error(j.error||"برای تنظیمات سفر گروهی وارد حساب شوید.");toggle.checked=j.settings?.share_location!==false;status.textContent=toggle.checked?"اشتراک موقعیت گروهی فعال است.":"اشتراک موقعیت گروهی غیرفعال است.";}catch(e){toggle.checked=true;status.textContent=e.message||"بارگذاری تنظیمات انجام نشد.";}}
+ toggle.addEventListener("change",async()=>{const wanted=toggle.checked;toggle.disabled=true;status.textContent="در حال ذخیره تنظیمات در حساب REV…";try{const r=await fetch(API+"/api/driver/groups/settings",{method:"POST",credentials:"include",cache:"no-store",headers:{"Content-Type":"application/json"},body:JSON.stringify({share_location:wanted})}),j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw Error(j.error||"ذخیره تنظیمات ناموفق بود.");status.textContent=wanted?"تنظیم ذخیره شد؛ موقعیت فقط در سفر گروهی پذیرفته‌شده نمایش داده می‌شود.":"تنظیم ذخیره شد؛ موقعیت شما از دید هم‌سفرها پنهان می‌شود.";}catch(e){toggle.checked=!wanted;status.textContent=e.message||"ذخیره تنظیمات ناموفق بود.";}finally{toggle.disabled=false;}});
+ loadSettings();
+})();
+</script>
 <script src="./rev-site-settings.js?v=1" defer></script>
 
 <section id="revLiveSharePanel" dir="rtl" style="width:min(1180px,calc(100% - 28px));margin:26px auto;padding:20px;border:1px solid #29383e;border-radius:20px;background:linear-gradient(145deg,#101a1e,#0b1114);color:#f5f7f8;font-family:Vazirmatn,Vazir,Tahoma,sans-serif">
@@ -306,41 +324,31 @@ window.addEventListener('load',()=>setTimeout(()=>{if(map){restoreTripAfterMapRe
   }
   function renderTrips(trips) {
     const root=$("revTripsList"); root.replaceChildren();
-    if(!trips.length){const p=document.createElement("p");p.textContent="هنوز سفری ثبت نشده است. بعد از اولین سفر، فرم بالا را تکمیل کن.";p.style.color="#9eafb5";root.append(p);return;}
+    if(!trips.length){const p=document.createElement("p");p.textContent="هنوز سفری ثبت نشده است. بعد از اولین سفر، اطلاعات در این جدول نمایش داده می‌شود.";p.style.color="#9eafb5";root.append(p);return;}
+    const wrap=document.createElement("div");wrap.style.cssText="width:100%;overflow-x:auto;border:1px solid #29383e;border-radius:12px";
+    const table=document.createElement("table");table.style.cssText="width:100%;min-width:900px;border-collapse:collapse;text-align:right;font-size:12px;background:#0c1316";
+    const headers=["تاریخ پایان","خودرو","مسافت (km)","انرژی (kWh)","مصرف (kWh/100km)","سرعت GPS","عملیات"];
+    const thead=document.createElement("thead"),hr=document.createElement("tr");
+    headers.forEach(label=>{const th=document.createElement("th");th.textContent=label;th.style.cssText="padding:12px 10px;background:#14211c;color:#a8f5cc;border-bottom:1px solid #29383e;white-space:nowrap";hr.append(th);});thead.append(hr);table.append(thead);
+    const tbody=document.createElement("tbody");
     for(const trip of trips){
-      const card=document.createElement("article");card.style.cssText="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:12px;border:1px solid #29383e;border-radius:12px;background:#0c1316";
-      const info=document.createElement("div");
-      const title=document.createElement("strong");title.textContent=trip.vehicle_name+" · "+fa(trip.distance_km)+" کیلومتر";
-      const detail=document.createElement("div");detail.style.cssText="color:#9eafb5;font-size:12px;margin-top:4px";
+      const tr=document.createElement("tr");tr.style.borderBottom="1px solid #253238";
       const rate=Number(trip.distance_km)>0?Number(trip.energy_kwh)/Number(trip.distance_km)*100:null;
-      detail.textContent=new Date(trip.ended_at).toLocaleString("fa-IR")+" · "+fa(trip.energy_kwh)+" kWh · "+(rate===null?"مصرف نامشخص":fa(rate)+" kWh/100km");
-      info.style.cssText="flex:1;min-width:220px";
-      info.append(title,detail);
       const ds=trip.driving_stats;
-      const summary=document.createElement("div");summary.style.cssText="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px";
-      const speedBadge=document.createElement("span");speedBadge.style.cssText="display:inline-flex;align-items:center;border:1px solid #285b4a;border-radius:8px;padding:4px 8px;background:#10231c;color:#8fffc2;font-size:12px";
-      speedBadge.textContent=ds?"سرعت بیشینه "+fa(ds.max_speed_kmh??0)+" · میانگین "+fa(ds.average_speed_kmh??0)+" km/h":"آمار سرعت برای این سفر ثبت نشده";
-      summary.append(speedBadge);
-      const detailButton=document.createElement("button");detailButton.type="button";detailButton.textContent="جزئیات رانندگی ▾";detailButton.setAttribute("aria-expanded","false");detailButton.style.cssText="border:1px solid #34474e;border-radius:8px;background:#111b20;color:#d8e4e8;padding:5px 9px;cursor:pointer;font:inherit;font-size:12px";
-      const drivingDetails=document.createElement("div");drivingDetails.hidden=true;drivingDetails.style.cssText="margin-top:9px;padding:10px;border-radius:9px;background:#091013;border:1px solid #24343a;color:#b8c8ce;font-size:12px;line-height:1.9";
-      if(ds){
-        const rows=[
-          ["بیشترین سرعت",fa(ds.max_speed_kmh??0)+" km/h"],
-          ["سرعت میانگین",fa(ds.average_speed_kmh??0)+" km/h"],
-          ["شتاب‌گیری شدید احتمالی",fa(ds.hard_acceleration_events??0)+" مورد"],
-          ["ترمز شدید احتمالی",fa(ds.hard_braking_events??0)+" مورد"],
-          ["نمونه‌های سرعت GPS",fa(ds.gps_speed_sample_count??0)],
-          ["منبع اطلاعات","GPS گوشی · تخمینی"]
-        ];
-        for(const [label,value] of rows){const row=document.createElement("div");row.style.cssText="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap";const l=document.createElement("span");l.textContent=label;const v=document.createElement("strong");v.textContent=value;v.style.color="#e4f2f5";row.append(l,v);drivingDetails.append(row);}
-        const disclaimer=document.createElement("p");disclaimer.textContent="این شاخص‌ها تخمینی‌اند و به‌تنهایی برای قضاوت قطعی درباره راننده کافی نیستند.";disclaimer.style.cssText="margin:8px 0 0;color:#82979f";drivingDetails.append(disclaimer);
-      }else{drivingDetails.textContent="این سفر پیش از فعال‌شدن ثبت آمار رانندگی ذخیره شده یا داده سرعتی برای آن در دسترس نیست.";}
-      detailButton.addEventListener("click",()=>{const open=drivingDetails.hidden;drivingDetails.hidden=!open;detailButton.setAttribute("aria-expanded",String(open));detailButton.textContent=open?"بستن جزئیات ▴":"جزئیات رانندگی ▾";});
-      summary.append(detailButton);info.append(summary,drivingDetails);
-      const remove=document.createElement("button");remove.type="button";remove.textContent="حذف";remove.style.cssText="border:1px solid #704044;border-radius:9px;background:#211518;color:#ffb4b4;padding:7px 11px;cursor:pointer;font:inherit";
-      remove.addEventListener("click",async()=>{if(!confirm("این سفر از تاریخچه حساب شما حذف شود؟"))return;try{await api("/api/driver/trips/"+encodeURIComponent(trip.id),{method:"DELETE"});setStatus("سفر حذف شد.");await refresh();}catch(e){setStatus(e.message,true);}});
-      card.append(info,remove);root.append(card);
+      const values=[new Date(trip.ended_at).toLocaleString("fa-IR"),trip.vehicle_name||"خودروی ثبت‌نشده",fa(trip.distance_km),fa(trip.energy_kwh),rate===null?"—":fa(rate),ds?"بیشینه "+fa(ds.max_speed_kmh??0)+" · میانگین "+fa(ds.average_speed_kmh??0):"ثبت نشده"];
+      values.forEach((value,index)=>{const td=document.createElement("td");td.textContent=value;td.style.cssText="padding:11px 10px;color:"+(index===4?"#39ff88":"#d5e0e3")+";white-space:nowrap";tr.append(td);});
+      const actions=document.createElement("td");actions.style.cssText="padding:8px 10px;white-space:nowrap";
+      const detailButton=document.createElement("button");detailButton.type="button";detailButton.textContent="جزئیات";detailButton.style.cssText="border:1px solid #34474e;border-radius:7px;background:#111b20;color:#d8e4e8;padding:5px 8px;cursor:pointer;font:inherit;font-size:11px;margin:0 0 0 5px";
+      const remove=document.createElement("button");remove.type="button";remove.textContent="حذف";remove.style.cssText="border:1px solid #704044;border-radius:7px;background:#211518;color:#ffb4b4;padding:5px 8px;cursor:pointer;font:inherit;font-size:11px;margin:0";
+      const details=document.createElement("tr");details.hidden=true;const detailCell=document.createElement("td");detailCell.colSpan=7;detailCell.style.cssText="padding:10px 14px;background:#10171a;color:#bdcbd0;line-height:2";
+      const start=new Date(trip.started_at).toLocaleString("fa-IR");
+      detailCell.textContent="شروع: "+start+" | پایان: "+new Date(trip.ended_at).toLocaleString("fa-IR")+" | شارژ شروع: "+(trip.start_soc==null?"ثبت نشده":fa(trip.start_soc)+"٪")+" | شارژ پایان: "+(trip.end_soc==null?"ثبت نشده":fa(trip.end_soc)+"٪")+" | "+(ds?"شتاب‌گیری شدید احتمالی: "+fa(ds.hard_acceleration_events??0)+" | ترمز شدید احتمالی: "+fa(ds.hard_braking_events??0):"آمار تکمیلی GPS ثبت نشده")+" | داده‌های سرعت GPS تخمینی هستند.";
+      details.append(detailCell);
+      detailButton.addEventListener("click",()=>{details.hidden=!details.hidden;detailButton.textContent=details.hidden?"جزئیات":"بستن";});
+      remove.addEventListener("click",async()=>{if(!confirm("این سفر از تاریخچه حساب شما حذف شود؟"))return;remove.disabled=true;try{await api("/api/driver/trips/"+encodeURIComponent(trip.id),{method:"DELETE"});setStatus("سفر حذف شد.");await refresh();}catch(e){setStatus(e.message,true);remove.disabled=false;}});
+      actions.append(detailButton,remove);tr.append(actions);tbody.append(tr,details);
     }
+    table.append(tbody);wrap.append(table);root.append(wrap);
   }
   async function refresh(){
     setStatus("در حال دریافت تاریخچه خصوصی سفر…");
