@@ -20,10 +20,6 @@ button,input,select,textarea{font:inherit}
 .head-title{font-size:15px;font-weight:900}
 .head .actions{display:flex;gap:8px;flex-wrap:wrap}
 /* slim external nav */
-.profile-nav{display:flex;gap:8px;overflow-x:auto;padding:4px 2px;margin:0 0 12px;scrollbar-width:none}
-.profile-nav::-webkit-scrollbar{display:none}
-.profile-nav a{flex:0 0 auto;padding:7px 13px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap}
-.profile-nav a:hover{color:var(--teal);border-color:var(--teal-line)}
 /* tab bar */
 .dp-tabs{position:sticky;top:10px;z-index:60;display:flex;gap:6px;padding:6px;margin:0 0 14px;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
 .dp-tabs button{flex:1;border:0;border-radius:11px;background:transparent;color:var(--muted);font-weight:800;font-size:13px;padding:11px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px}
@@ -114,6 +110,14 @@ label{font-size:12px;color:var(--muted)}
 @media(min-width:700px){.wrap{max-width:860px}.field-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.live-stats{grid-template-columns:repeat(4,minmax(0,1fr))}#trackMap{height:380px}}
 @media(prefers-color-scheme:dark){:root{color-scheme:light}}
 
+
+/* bottom nav — site standard */
+.bottom-nav{position:fixed;z-index:100;bottom:0;left:0;right:0;background:#fff;border-top:1px solid var(--line);padding:8px 12px calc(8px + env(safe-area-inset-bottom));box-shadow:0 -6px 22px rgba(20,41,59,.07)}
+.bottom-nav-inner{max-width:620px;margin:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
+.bottom-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#93a5b5;font-size:10px;font-weight:700;padding:6px 2px;border-radius:11px;min-height:54px}
+.bottom-nav a.active{color:var(--teal);background:var(--teal-soft);font-weight:900}
+.bottom-nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+body{padding-bottom:calc(92px + env(safe-area-inset-bottom))}
 </style>
 
 <style id="navigationGateStyle">#navigationGate{position:fixed;inset:0;z-index:999999;display:grid;place-items:center;padding:18px;background:linear-gradient(145deg,#080b0d,#102126);color:#f5f7f8;font:16px/1.9 Vazirmatn,Vazir,Tahoma,sans-serif}#navigationGate[hidden]{display:none!important}.gate-card{width:min(100%,600px);padding:26px;border:1px solid #2a343a;border-radius:18px;background:#121a1f;box-shadow:0 20px 70px #0008}.gate-card h1{font-size:26px;line-height:1.5}.gate-card p{color:#aab6bc}.gate-card a,.gate-card button{display:inline-block;margin:6px 5px 0 0;border-radius:10px;padding:10px 14px;text-decoration:none;font:inherit;font-weight:800;cursor:pointer}.gate-primary{background:#39ff88;color:#07100b;border:1px solid #39ff88}.gate-secondary{background:transparent;color:#39ff88;border:1px solid #395648}#navigationGateStatus{margin-top:12px;color:#ffdda0;white-space:pre-wrap;font-size:13px}</style>
@@ -121,31 +125,8 @@ label{font-size:12px;color:var(--muted)}
 <script src="./rev-site-settings.js?v=20261017-3" defer></script>
 </head>
 <body>
-<aside id="revPersistentNav" aria-label="راهنمای دسترسی به امکانات REV" style="display:block!important;visibility:visible!important;opacity:1!important;position:fixed;z-index:2147483000;right:14px;top:92px;width:218px;max-height:calc(100vh - 112px);overflow:auto;padding:14px;border:1px solid #e2eaf4;border-radius:18px;background:#ffffff!important;box-shadow:0 8px 24px rgba(23,37,59,.12);direction:rtl;font:13px/1.7 Vazirmatn,Tahoma,sans-serif">
-<div style="color:#0866ff;font-weight:900;font-size:21px;padding:0 8px 10px;border-bottom:1px solid #e2eaf4;margin-bottom:8px">REV <span style="font-size:11px;color:#65758b;font-weight:500">راهنمای خدمات</span></div>
-<p style="font-size:11px;color:#9eafb5;margin:0 8px 8px">برای جابه‌جایی بین امکانات، یکی از گزینه‌ها را انتخاب کنید.</p>
-<div style="display:flex;flex-direction:column;gap:3px">
-<a href="./account.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">👤 صفحه کاربری من</a>
-<a href="./driver-profile.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">🚘 پروفایل راننده</a>
 
-<a href="./safety-checklist.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">✓ چک‌لیست سفر</a>
-<a href="./businesses.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">⌖ فروشگاه‌ها و خدمات</a>
-<a href="./article-ev.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">▤ آموزش خودرو برقی</a>
-<a href="./news.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">📰 اخبار خودرو برقی</a>
-<a href="./index.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">⌂ صفحه اصلی REV</a>
-</div></aside>
-<style id="revPersistentNavForceStyle">
-@media(max-width:900px){#revPersistentNav{position:fixed!important;top:92px!important;right:10px!important;width:min(218px,42vw)!important;max-height:calc(100vh - 112px)!important;margin:0!important}#revPersistentNav>div:last-child{display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important}#revPersistentNav a{padding:7px 9px!important}body.rev-has-persistent-nav{padding-right:0!important}}
-@media(min-width:901px){body.rev-has-persistent-nav{padding-right:246px!important}}
-#revPersistentNav a:hover{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
-</style>
-<script>
-(function(){try{
- document.body.classList.add('rev-has-persistent-nav');
- var nav=document.getElementById('revPersistentNav');
- if(nav){var here=location.pathname.split('/').pop()||'index.html';nav.querySelectorAll('a[href]').forEach(function(a){if(new URL(a.href,location.href).pathname.split('/').pop()===here){a.style.background='#edf4ff';a.style.border='1px solid #dce8ff';a.style.color='#0866ff';a.setAttribute('aria-current','page');}});}
-}catch(e){}})();
-</script>
+
 <!-- موقت توسعه: محدودیت پلن غیرفعال است؛ همه قابلیت‌ها برای آزمایش در دسترس‌اند. -->
 <div class="wrap">
 <header class="head">
@@ -153,7 +134,6 @@ label{font-size:12px;color:var(--muted)}
   <div class="head-title">پروفایل راننده و ثبت سفر GPS</div>
   
 </header>
-<nav class="profile-nav" aria-label="پیوندهای اصلی"><a href="./">صفحه اصلی</a><a href="./trip.html">برنامه‌ریز سفر</a><a href="./nearby-map.html">نقشه و ایستگاه‌ها</a><a href="./businesses.html">کسب‌وکارها</a><a href="./account.html">حساب کاربری</a></nav>
 <div class="dashboard">
   <aside class="sidebar">
     <section class="panel">
@@ -521,4 +501,10 @@ else if(SEC2TAB[h])initial=SEC2TAB[h];
 setTab(initial,false);
 })();
 </script>
+<nav class="bottom-nav" aria-label="پیمایش اصلی REV"><div class="bottom-nav-inner">
+<a href="./" aria-label="خانه"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7M5.5 9v11h13V9M9.5 20v-6h5v6"/></svg>خانه</a>
+<a href="./nearby-map.html" aria-label="نقشه"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>نقشه</a>
+<a class="active" href="./trips.html" aria-current="page" aria-label="سفرها"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 15l4-4 3 3 4-5M14 9h4v4"/></svg>سفرها</a>
+<a href="./businesses.html" aria-label="خدمات"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 12h18M10 12v2h4v-2"/></svg>خدمات</a>
+</div></nav>
 </body></html>
