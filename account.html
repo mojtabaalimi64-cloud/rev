@@ -120,6 +120,18 @@ main.wrap{width:min(100% - 28px,680px)!important;padding:24px 0 44px!important}
 #tab-account input:not([type=checkbox]),#tab-account select{background:#10141a!important;border:1px solid #343b44!important;color:#f7f9fb!important;border-radius:12px!important;min-height:46px}
 #tab-account button.primary,#tab-account [type=submit]{background:#00e699!important;color:#06140e!important;border-color:#00e699!important;font-weight:800}
 #tab-business,#tab-products{display:none!important}
+
+/* هماهنگی کامل بخش اعلان‌ها با پوسته تیره REV */
+#accountNotifications .notification-list{gap:10px;margin-top:12px}
+#accountNotifications .notification-item{background:linear-gradient(145deg,#20262e,#171c22)!important;border:1px solid rgba(255,255,255,.10)!important;border-radius:14px!important;color:#f7f9fb!important;box-shadow:0 8px 22px rgba(0,0,0,.12)}
+#accountNotifications .notification-item.unread{background:linear-gradient(145deg,rgba(0,230,153,.12),#171f20)!important;border-color:rgba(0,230,153,.48)!important;box-shadow:inset -3px 0 0 #00e699,0 8px 22px rgba(0,0,0,.12)}
+#accountNotifications .notification-item strong{color:#00e699!important;font-size:13px;line-height:1.8}
+#accountNotifications .notification-item p{color:#e1e7ec!important;line-height:1.9}
+#accountNotifications .notification-item small{display:block;color:#a0a9b5!important;margin-top:5px}
+#accountNotifications .muted,#accountNotifications .small{color:#a0a9b5!important}
+#accountNotifications .actions button,#accountNotifications .notification-item .btn.secondary{background:#20262e!important;border:1px solid rgba(0,230,153,.28)!important;color:#00e699!important;border-radius:11px!important;min-height:42px;font-weight:700}
+#accountNotifications .actions button:hover,#accountNotifications .notification-item .btn.secondary:hover{background:rgba(0,230,153,.10)!important;border-color:#00e699!important}
+#accountNotificationBadge{background:rgba(0,230,153,.08)!important;border:1px solid rgba(0,230,153,.25)!important;border-radius:999px;padding:5px 9px;color:#00e699!important}
 @media(max-width:560px){
  main.wrap{width:calc(100% - 24px)!important;padding:17px 0 32px!important}
  .head{min-height:58px}
