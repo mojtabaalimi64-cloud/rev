@@ -1,4 +1,4 @@
-const REV_CACHE = "rev-trip-shell-v1";
+const REV_CACHE = "rev-trip-shell-v2";
 const REV_SHELL = ["./trip.html", "./manifest.webmanifest", "./rev-app-icon.svg"];
 self.addEventListener("install", event => { event.waitUntil(caches.open(REV_CACHE).then(cache => cache.addAll(REV_SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener("activate", event => { event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith("rev-trip-shell-") && key !== REV_CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim())); });
