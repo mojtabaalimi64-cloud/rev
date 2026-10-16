@@ -2,51 +2,41 @@
 <html lang="fa" dir="rtl">
 <head>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#ffffff">
 <meta name="description" content="فهرست تعمیرگاه‌ها و فروشگاه‌های قطعات در REV">
 <title>فهرست مراکز خدمات و قطعات | REV</title>
 <style>
-:root{--bg:#ffffff;--panel:#121A1F;--paper:#F5F7F8;--line:#2A343A;--muted:#AAB6BC;--#0866ff:#0866ff;--teal:#064fc4}
+:root{--bg:#ffffff;--panel:#121A1F;--paper:#F5F7F8;--line:#2A343A;--muted:#AAB6BC;--accent:#0866ff;--teal:#064fc4}
 *{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#ffffff,#101d22);color:#f5f7f8;font:16px/1.9 Vazirmatn,Vazir,Tahoma,sans-serif}
-a{color:var(--#0866ff)}.wrap{width:min(1100px,calc(100% - 28px));margin:auto}
-header{padding:20px 0;border-bottom:1px solid #26343a}header .wrap{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.logo{font-size:28px;font-weight:900;letter-spacing:2px;color:var(--#0866ff)}.nav{display:flex;gap:12px;flex-wrap:wrap}.nav a{border:1px solid #35464d;border-radius:10px;padding:6px 12px;text-decoration:none}
+a{color:var(--accent)}.wrap{width:min(1100px,calc(100% - 28px));margin:auto}
+header{padding:20px 0;border-bottom:1px solid #26343a}header .wrap{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.logo{font-size:28px;font-weight:900;letter-spacing:2px;color:var(--accent)}.nav{display:flex;gap:12px;flex-wrap:wrap}.nav a{border:1px solid #35464d;border-radius:10px;padding:6px 12px;text-decoration:none}
 main{padding:28px 0 60px}h1{font-size:clamp(25px,4vw,38px);line-height:1.5;margin:0 0 8px}h2{font-size:22px;margin:28px 0 14px}.muted{color:var(--muted);font-size:14px}.notice{border:1px solid #a57d35;background:#2a2112;padding:12px 16px;border-radius:12px;color:#ffdda0;margin:18px 0}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card,.profile{background:linear-gradient(145deg,#152126,#10171b);border:1px solid #2b3b42;border-radius:16px;padding:18px}.card h3,.profile h2{margin:0 0 5px}.tag{display:inline-block;background:#24352d;border:1px solid #3e7558;color:#aaffca;border-radius:99px;padding:1px 10px;font-size:12px;margin:3px 0}.btn{display:inline-block;background:var(--#0866ff);color:#07100b;text-decoration:none;border-radius:9px;padding:7px 13px;font-weight:800;margin-top:10px}.profile{max-width:780px;margin:18px auto;padding:clamp(18px,4vw,32px)}.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:18px 0}.fact{border:1px solid #2b3b42;border-radius:10px;padding:10px}.fact small{display:block;color:var(--muted)}.empty{padding:20px;border:1px dashed #46565c;border-radius:12px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card,.profile{background:linear-gradient(145deg,#152126,#10171b);border:1px solid #2b3b42;border-radius:16px;padding:18px}.card h3,.profile h2{margin:0 0 5px}.tag{display:inline-block;background:#24352d;border:1px solid #3e7558;color:#aaffca;border-radius:99px;padding:1px 10px;font-size:12px;margin:3px 0}.btn{display:inline-block;background:var(--accent);color:#07100b;text-decoration:none;border-radius:9px;padding:7px 13px;font-weight:800;margin-top:10px}.profile{max-width:780px;margin:18px auto;padding:clamp(18px,4vw,32px)}.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:18px 0}.fact{border:1px solid #2b3b42;border-radius:10px;padding:10px}.fact small{display:block;color:var(--muted)}.empty{padding:20px;border:1px dashed #46565c;border-radius:12px}
 .profile-image{width:100%;height:180px;object-fit:cover;border-radius:10px;margin-bottom:10px;background:#172128}.profile-hero{display:block;width:100%;max-height:420px;object-fit:cover;border-radius:14px;margin:12px 0 20px;background:#172128}/* پوسته مشترک REV برای بخش خدمات و سفرها */
-:root{color-scheme:dark;--bg:#ffffff;--panel:#10171b;--panel2:#151f24;--line:#29383e;--muted:#9eafb5;--#0866ff:#0866ff;--teal:#064fc4;--text:#f5f7f8}
+:root{color-scheme:dark;--bg:#ffffff;--panel:#10171b;--panel2:#151f24;--line:#29383e;--muted:#9eafb5;--accent:#0866ff;--teal:#064fc4;--text:#f5f7f8}
 body{background:radial-gradient(ellipse at 85% 0%,#12352a 0,transparent 35%),var(--bg);color:var(--text)}
 header{border-color:var(--line)!important}
 header .nav a,.nav a{color:var(--muted)}
-header .nav a:hover,.nav a:hover{color:var(--#0866ff)}
+header .nav a:hover,.nav a:hover{color:var(--accent)}
 .panel,.card,.business-card,.item,.service-card{background:linear-gradient(145deg,rgba(21,31,36,.98),rgba(13,20,23,.98));border-color:var(--line);border-radius:16px;color:var(--text)}
-button,.button{background:#11251b;color:var(--#0866ff);border:1px solid #285341;border-radius:11px}
+button,.button{background:#11251b;color:var(--accent);border:1px solid #285341;border-radius:11px}
 input,select,textarea{background:#0c1215;color:var(--text);border:1px solid var(--line);border-radius:10px}
-a{color:var(--#0866ff)}
+a{color:var(--accent)}
 .bottom-nav{position:fixed;z-index:1000;inset:auto 0 0;background:rgba(8,11,13,.97);border-top:1px solid #26343a;box-shadow:0 -5px 22px rgba(57,255,136,.07);padding:8px 12px calc(8px + env(safe-area-inset-bottom));backdrop-filter:blur(16px)}
 .bottom-nav-inner{max-width:620px;margin:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
 .bottom-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#91a1a6;font-size:10px;padding:5px 2px;border-radius:11px;text-decoration:none;min-height:52px}
-.bottom-nav a.active{color:var(--#0866ff);background:#11251b;font-weight:800}
+.bottom-nav a.active{color:var(--accent);background:#11251b;font-weight:800}
 .bottom-nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
 body{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
 </style>
 <link rel="stylesheet" href="./rev-theme.css?v=1">
 
-<style id="rev-blue-white-global">
-:root{color-scheme:light!important;--rev-blue:#0866ff;--rev-blue-dark:#064fc4;--rev-white:#fff;--rev-ink:#142238}
-html,body{background:#fff!important;color:#142238!important;color-scheme:light!important}
-body{background-color:#fff!important}
-header,.header,.app-header,main,.main,.app,.app-shell,.page,.page-content,.content,.container,.panel,.profile-panel,.section,.card,.tile,.sheet,.modal-content,.drawer-content,.form-card,.list-card{background-color:#fff!important;color:#142238}
-button,.btn,.button,[role="button"],input[type="submit"],input[type="button"],.primary,.primary-btn,.action-btn,.submit-btn,.nav-button{background-color:#0866ff!important;border-color:#0866ff!important;color:#fff!important}
-button:active,.btn:active,.button:active,[role="button"]:active{background-color:#064fc4!important}
-.nav,.bottom-nav,.bottom-navigation{background:#fff!important;color:#0866ff!important;border-top:1px solid #e2eaf5!important;box-shadow:0 -3px 14px #1422380d!important}
-.nav a,.bottom-nav a,.bottom-navigation a{color:#0866ff!important}
-.nav a.active,.bottom-nav a.active,.bottom-navigation a.active{background:#edf4ff!important;color:#064fc4!important}
-.badge,.status-badge,.accent,.success,.success-text{color:#0866ff!important}
-</style>
 
-<link rel="stylesheet" href="./rev-mobile-theme.css?v=20261017-2">
+
+<link rel="stylesheet" href="./rev-mobile-theme.css?v=20261017-3">
 </head>
 <body>
-<aside id="revPersistentNav" aria-label="راهنمای دسترسی به امکانات REV" style="display:block!important;visibility:visible!important;opacity:1!important;position:fixed;z-index:2147483000;right:14px;top:92px;width:218px;max-height:calc(100vh - 112px);overflow:auto;padding:14px;border:1px solid #28523d;border-radius:18px;background:#080f0df7!important;box-shadow:0 12px 35px #0008;direction:rtl;font:13px/1.7 Vazirmatn,Tahoma,sans-serif">
+<aside id="revPersistentNav" aria-label="راهنمای دسترسی به امکانات REV" style="display:block!important;visibility:visible!important;opacity:1!important;position:fixed;z-index:2147483000;right:14px;top:92px;width:218px;max-height:calc(100vh - 112px);overflow:auto;padding:14px;border:1px solid #e2eaf4;border-radius:18px;background:#ffffff!important;box-shadow:0 8px 24px rgba(23,37,59,.12);direction:rtl;font:13px/1.7 Vazirmatn,Tahoma,sans-serif">
 <div style="color:#0866ff;font-weight:900;font-size:21px;padding:0 8px 10px;border-bottom:1px solid #294038;margin-bottom:8px">REV <span style="font-size:11px;color:#d7e0e3;font-weight:500">راهنمای خدمات</span></div>
 <p style="font-size:11px;color:#9eafb5;margin:0 8px 8px">برای جابه‌جایی بین امکانات، یکی از گزینه‌ها را انتخاب کنید.</p>
 <div style="display:flex;flex-direction:column;gap:3px">
