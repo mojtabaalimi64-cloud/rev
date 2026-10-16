@@ -28,6 +28,17 @@ a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap
 #planWithVehicle{grid-column:1/-1;justify-self:start;margin:0}
 .map-heading{order:0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.map-heading button{margin:0}.planned-route-banner{order:1}.map-legend{order:4}
 @media(max-width:700px){.sidebar{grid-template-columns:1fr}.map-overlay{grid-template-columns:1fr}#trackMap{height:55vh;min-height:320px}.map-toggles{display:grid;grid-template-columns:1fr}.wrap{padding:10px}.map-shell{padding:9px}}
+/* هدف لمسی بزرگ برای اشتراک موقعیت؛ مناسب صفحه‌نمایش موبایل */
+.rev-share-location-toggle{display:flex;align-items:center;gap:16px;min-height:118px;padding:20px;margin:14px 0 8px;border:2px solid rgba(57,255,136,.45);border-radius:18px;background:linear-gradient(135deg,rgba(57,255,136,.12),rgba(0,128,111,.12));cursor:pointer;touch-action:manipulation;transition:border-color .2s,background .2s}
+.rev-share-location-toggle:has(input:checked){border-color:#39ff88;background:linear-gradient(135deg,rgba(57,255,136,.18),rgba(0,128,111,.16));box-shadow:0 0 0 3px rgba(57,255,136,.06)}
+.rev-share-location-toggle input{appearance:none;-webkit-appearance:none;flex:0 0 36px;width:36px;height:36px;margin:0;border:2px solid #7d9090;border-radius:9px;background:#0b1114;display:grid;place-content:center;cursor:pointer}
+.rev-share-location-toggle input:checked{background:#39ff88;border-color:#39ff88}
+.rev-share-location-toggle input:checked:before{content:"✓";font-size:27px;font-weight:900;line-height:1;color:#07120b}
+.rev-share-location-copy{display:flex;flex-direction:column;gap:7px;min-width:0}
+.rev-share-location-copy strong{font-size:15px;line-height:1.7;color:var(--text)}
+.rev-share-location-note{font-size:12px;line-height:1.9;color:var(--muted)}
+.rev-share-location-action{font-size:12px;font-weight:800;color:var(--green)}
+@media(max-width:480px){.rev-share-location-toggle{min-height:132px;padding:18px 15px;gap:13px}.rev-share-location-toggle input{flex-basis:38px;width:38px;height:38px}.rev-share-location-copy strong{font-size:14px}}
 </style>
 
 <link rel="stylesheet" href="./rev-theme.css?v=1">
@@ -86,9 +97,9 @@ a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap
     </section>
     <section class="panel" id="revGroupTravelSettings">
       <div class="section-title"><h2>تنظیمات سفرهای گروهی</h2><span class="pill">حریم خصوصی</span></div>
-      <label style="display:flex;align-items:flex-start;gap:10px;margin:0;color:var(--text);font-size:13px">
-        <input id="revGroupShareLocation" type="checkbox" checked style="margin-top:6px;flex:0 0 auto">
-        <span><strong>اشتراک موقعیت من با هم‌سفرهای پذیرفته‌شده</strong><br><span class="note">وقتی این گزینه خاموش باشد، موقعیت زنده شما برای اعضای سفر گروهی نمایش داده نمی‌شود. موقعیت فقط در سفر گروهی فعال و پس از اجازه GPS به اشتراک گذاشته می‌شود.</span></span>
+      <label class="rev-share-location-toggle" for="revGroupShareLocation">
+        <input id="revGroupShareLocation" type="checkbox" checked>
+        <span class="rev-share-location-copy"><strong>اشتراک موقعیت من با هم‌سفرهای پذیرفته‌شده</strong><span class="rev-share-location-note">برای فعال یا غیرفعال‌کردن، هر جای این کادر بزرگ را لمس کنید. موقعیت فقط در سفر گروهی فعال، پس از پذیرش دعوت و با اجازه GPS نمایش داده می‌شود.</span><span class="rev-share-location-action">☑ لمس کنید تا وضعیت اشتراک تغییر کند</span></span>
       </label>
       <div id="revGroupSettingsStatus" class="status" role="status" aria-live="polite">در حال دریافت تنظیمات حساب…</div>
     </section>
