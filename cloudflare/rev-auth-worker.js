@@ -164,6 +164,7 @@ async function ensureDriverTripsSchema(env) {
     FOREIGN KEY (user_id) REFERENCES rev_users(id) ON DELETE CASCADE
   )`).run();
   await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_driver_trips_user_date ON rev_driver_trips(user_id, ended_at DESC)").run();
+  try { await env.DB.prepare("ALTER TABLE rev_driver_trips ADD COLUMN driving_stats_json TEXT").run(); } catch (e) { /* Column already exists on upgraded databases. */ }
 }
 function validIsoDate(value) {
   return typeof value === "string" && value.length <= 40 && Number.isFinite(Date.parse(value));
@@ -171,6 +172,7 @@ function validIsoDate(value) {
 function validOptionalSoc(value) {
   return value === null || value === undefined || (Number.isFinite(Number(value)) && Number(value) >= 0 && Number(value) <= 100);
 }
+function boundedMetric(value,min,max){const n=Number(value);return Number.isFinite(n)?Math.max(min,Math.min(max,n)):0;}
 
 async function ensureDriverShareSchema(env) {
   await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_live_trip_shares (
@@ -231,8 +233,9 @@ async function driverTripsApi(request, env, url, method, user) {
   await ensureDriverTripsSchema(env);
   if (url.pathname === "/api/driver/trips" && method === "GET") {
     const limit = Math.max(1, Math.min(100, parseInt(url.searchParams.get("limit") || "50", 10) || 50));
-    const rows = await env.DB.prepare("SELECT id,vehicle_name,vehicle_type,started_at,ended_at,distance_km,energy_kwh,start_soc,end_soc,energy_source,created_at FROM rev_driver_trips WHERE user_id=? ORDER BY ended_at DESC LIMIT ?").bind(user.id, limit).all();
-    return response(request, env, {success:true,trips:rows.results || []});
+    const rows = await env.DB.prepare("SELECT id,vehicle_name,vehicle_type,started_at,ended_at,distance_km,energy_kwh,start_soc,end_soc,energy_source,route_saved,driving_stats_json,created_at FROM rev_driver_trips WHERE user_id=? ORDER BY ended_at DESC LIMIT ?").bind(user.id, limit).all();
+    const trips=(rows.results||[]).map(row=>{let driving_stats=null;try{driving_stats=row.driving_stats_json?JSON.parse(row.driving_stats_json):null;}catch{}const {driving_stats_json,...safe}=row;return {...safe,driving_stats};});
+    return response(request, env, {success:true,trips});
   }
   if (url.pathname === "/api/driver/trips" && method === "POST") {
     let body;
@@ -244,12 +247,17 @@ async function driverTripsApi(request, env, url, method, user) {
     const distance = Number(body.distance_km), energy = Number(body.energy_kwh);
     const started = body.started_at, ended = body.ended_at;
     const source = ["obd","vehicle_api","gps_estimate","manual"].includes(body.energy_source) ? body.energy_source : "manual";
+    const saveRoute = body.save_route === true;
+    const points = Array.isArray(body.route_points) ? body.route_points.slice(0,5000) : [];
+    const routeJson = saveRoute && points.length ? JSON.stringify(points.filter(p=>p && Number.isFinite(Number(p.lat)) && Math.abs(Number(p.lat))<=90 && Number.isFinite(Number(p.lon)) && Math.abs(Number(p.lon))<=180).map(p=>({lat:Number(p.lat),lon:Number(p.lon),ts:Number(p.ts)||null,accuracy:Number.isFinite(Number(p.accuracy))?Number(p.accuracy):null,speed_kmh:Number.isFinite(Number(p.speed_kmh))?Math.max(0,Math.min(350,Number(p.speed_kmh))):null}))) : null;
+    const ds=body.driving_stats&&typeof body.driving_stats==="object"&&!Array.isArray(body.driving_stats)?body.driving_stats:{};
+    const drivingStats={max_speed_kmh:boundedMetric(ds.max_speed_kmh,0,350),average_speed_kmh:boundedMetric(ds.average_speed_kmh,0,250),gps_speed_sample_count:boundedMetric(ds.gps_speed_sample_count,0,5000),hard_acceleration_events:boundedMetric(ds.hard_acceleration_events,0,10000),hard_braking_events:boundedMetric(ds.hard_braking_events,0,10000),speed_source:"phone_gps",estimated:true};
     if (!Number.isFinite(distance) || distance <= 0 || distance > 5000 || !Number.isFinite(energy) || energy < 0 || energy > 2000 || !validIsoDate(started) || !validIsoDate(ended) || Date.parse(ended) < Date.parse(started) || !validOptionalSoc(body.start_soc) || !validOptionalSoc(body.end_soc)) {
       return response(request,env,{success:false,error:"اطلاعات سفر معتبر نیست؛ مسافت، انرژی، زمان‌ها و درصد باتری را بررسی کنید."},400);
     }
     const id = crypto.randomUUID(), now = new Date().toISOString();
-    await env.DB.prepare("INSERT INTO rev_driver_trips (id,user_id,vehicle_name,vehicle_type,started_at,ended_at,distance_km,energy_kwh,start_soc,end_soc,energy_source,route_json,route_saved,created_at) VALUES (?,?,?,?,?,?,?,?,?,?,?,NULL,0,?)")
-      .bind(id,user.id,vehicleName,vehicleType,new Date(started).toISOString(),new Date(ended).toISOString(),distance,energy,body.start_soc == null ? null : Number(body.start_soc),body.end_soc == null ? null : Number(body.end_soc),source,now).run();
+    await env.DB.prepare("INSERT INTO rev_driver_trips (id,user_id,vehicle_name,vehicle_type,started_at,ended_at,distance_km,energy_kwh,start_soc,end_soc,energy_source,route_json,route_saved,created_at,driving_stats_json) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)")
+      .bind(id,user.id,vehicleName,vehicleType,new Date(started).toISOString(),new Date(ended).toISOString(),distance,energy,body.start_soc == null ? null : Number(body.start_soc),body.end_soc == null ? null : Number(body.end_soc),source,routeJson,routeJson?1:0,now,JSON.stringify(drivingStats)).run();
     return response(request,env,{success:true,id,message:"سفر در تاریخچه خصوصی حساب شما ثبت شد."},201);
   }
   const match = url.pathname.match(/^\/api\/driver\/trips\/([0-9a-f-]{36})$/i);
