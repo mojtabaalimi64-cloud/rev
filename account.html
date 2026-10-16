@@ -299,7 +299,7 @@ async function loadAccountNotifications(showBrowser=true){
    if(n.type==='group_invite'){const link=document.createElement('a');link.href='./nearby-map.html#groupTripPanel';link.className='btn secondary';link.textContent='مشاهده و پاسخ به دعوت';link.style.marginTop='8px';item.append(link);}
    list.append(item);
   }
-  if(showBrowser&&fresh.length){try{localStorage.setItem('rev_seen_notifications',JSON.stringify([...new Set([...storedIds,...fresh.map(n=>n.id)])].slice(-100));}catch(e){}}
+  if(showBrowser&&fresh.length){try{localStorage.setItem('rev_seen_notifications',JSON.stringify([...new Set([...storedIds,...fresh.map(n=>n.id)])].slice(-100)));}catch(e){}}
   status.textContent=items.length.toLocaleString('fa-IR')+' اعلان در ۳۰ روز اخیر.';
  }catch(e){status.textContent=e.message||'دریافت اعلان‌ها ممکن نشد.';list.innerHTML='<p class="muted">سرویس اعلان در دسترس نیست. پس از انتشار نسخه جدید API دوباره تلاش کنید.</p>';}
 }
