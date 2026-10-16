@@ -29,6 +29,12 @@
 </div><div id="status" class="status" role="status" aria-live="polite">در حال دریافت اطلاعات سفرها…</div>
 </section>
 <section class="panel">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>سابقه سفرهای گروهی</h2><a class="small-link" href="./nearby-map.html">بازکردن نقشه ↗</a></div>
+<p class="muted">هر سفر گروهی جداگانه ثبت می‌شود؛ با انتخاب «نمایش مسیر» می‌توانید مسیر ذخیره‌شده را روی نقشه ببینید.</p>
+<div id="groupTripHistoryStatus" class="status">در حال دریافت سابقه سفرهای گروهی…</div>
+<div id="groupTripHistoryTable"></div>
+</section>
+<section class="panel">
 <div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>آخرین سفرها</h2><a class="small-link" href="./driver-profile.html#tripHistory">تاریخچه کامل ↗</a></div>
 <div id="recentTrips" class="loading">در حال بارگذاری…</div>
 </section>
@@ -76,7 +82,20 @@ $('status').textContent=e.message||'دریافت اطلاعات ممکن نشد.
 $('recentTrips').innerHTML='<div class="empty">برای مشاهده تاریخچه شخصی، وارد حساب REV شوید. اگر وارد حساب هستید، اتصال سرویس سفر را بررسی کنید.<br><a class="small-link" href="./account.html">ورود به حساب کاربری ↗</a></div>';
 }
 }
+async function loadGroupHistory(){
+const box=$('groupTripHistoryTable'),status=$('groupTripHistoryStatus');
+try{
+const r=await fetch(API+'/api/driver/groups',{credentials:'include',cache:'no-store'});
+const j=await r.json().catch(()=>({}));
+if(!r.ok||!j.success)throw new Error(j.error||'برای مشاهده سابقه سفر گروهی وارد حساب REV شوید.');
+const rows=Array.isArray(j.history)?j.history:[];
+status.textContent=rows.length?'سابقه سفرهای گروهی حساب شما دریافت شد.':'هنوز سفر گروهی در سابقه شما ثبت نشده است.';
+box.innerHTML=rows.length?'<div style="overflow-x:auto"><table style="width:100%;min-width:520px;border-collapse:collapse;font-size:12px"><thead><tr><th style="text-align:right;padding:9px;border-bottom:1px solid var(--line)">نام سفر</th><th style="padding:9px;border-bottom:1px solid var(--line)">وضعیت</th><th style="padding:9px;border-bottom:1px solid var(--line)">تاریخ</th><th style="padding:9px;border-bottom:1px solid var(--line)">همسفرها</th><th style="padding:9px;border-bottom:1px solid var(--line)">مسافت</th><th style="padding:9px;border-bottom:1px solid var(--line)">جزئیات</th></tr></thead><tbody>'+rows.map(g=>'<tr><td style="padding:9px;border-bottom:1px solid var(--line)">'+safe(g.name)+'</td><td style="padding:9px;border-bottom:1px solid var(--line)">'+(g.group_status==='ended'?'پایان‌یافته':g.member_status==='declined'?'ردشده':g.member_status==='invited'?'دعوت‌شده':'فعال')+'</td><td style="padding:9px;border-bottom:1px solid var(--line)">'+safe(date(g.ended_at||g.started_at||g.created_at))+'</td><td style="padding:9px;border-bottom:1px solid var(--line)">'+number(g.accepted_count)+'</td><td style="padding:9px;border-bottom:1px solid var(--line)">'+(g.distance_km==null?'—':number(g.distance_km)+' km')+'</td><td style="padding:9px;border-bottom:1px solid var(--line)"><button type="button" data-show-group-route="'+safe(g.id)+'" style="background:var(--green);color:#07120b;border:0;border-radius:8px;padding:7px 10px;font-weight:800">نمایش مسیر</button></td></tr>').join('')+'</tbody></table></div>':'<div class="empty">سابقه سفر گروهی خالی است.</div>';
+box.onclick=e=>{const b=e.target.closest('[data-show-group-route]');if(!b)return;const g=rows.find(x=>x.id===b.dataset.showGroupRoute);if(!g)return;let geo;try{geo=typeof g.route_json==='string'?JSON.parse(g.route_json):g.route_json}catch(_){}if(!geo||geo.type!=='LineString'||!Array.isArray(geo.coordinates)||geo.coordinates.length<2){status.textContent='برای این سفر مسیر ذخیره‌شده‌ای وجود ندارد.';return;}sessionStorage.setItem('rev_group_history_route',JSON.stringify({id:g.id,name:g.name,route_json:geo,origin_label:g.origin_label,destination_label:g.destination_label}));location.href='./nearby-map.html?showGroupHistory='+encodeURIComponent(g.id);};
+}catch(e){status.textContent=e.message||'دریافت سابقه سفرهای گروهی ممکن نشد.';box.innerHTML='<div class="empty">برای مشاهده سابقه، وارد حساب REV شوید. <a class="small-link" href="./account.html">ورود ↗</a></div>';}
+}
 load();
+loadGroupHistory();
 })();
 </script>
 <script src="./rev-announcements.js?v=1" defer></script>
