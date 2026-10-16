@@ -92,3 +92,23 @@ hr,.share,.share a,.share button{border-color:#e2eaf4!important}
 @media(prefers-color-scheme:dark){
  html,body{background:#fff!important;color:#17253b!important;color-scheme:light!important}
 }
+
+/* v4: enforce the shared white/blue design after every page's original styles */
+:root{color-scheme:light!important}
+html,body{background:#fff!important;color:#17253b!important;color-scheme:light!important}
+body,main,header,footer,nav,section,article,aside,.start-page,.start-hero,.start-links,.hero,.pod,.parts-bar,.start-bottom{background:#fff!important;color:#17253b!important}
+header,.bar,.nav,.parts-bar,.parts-bar .wrap,.start-links,.start-bottom,footer,.foot{background:#fff!important;color:#17253b!important;border-color:#e2eaf4!important}
+.start-hero,.start-page,.hero{background:#fff!important;color:#17253b!important}
+.start-content h1,.start-content h2,.start-content h3,.start-stats strong,.start-logo,.start-section-head h2,.start-bottom h3{color:#17253b!important}
+.start-lead,.start-eyebrow,.start-stats span,.start-section-head p,.start-bottom p,.start-card p{color:#65758b!important}
+.start-card,.start-card-feature,.start-bottom,.card,.panel,.box,.section-card,.metric,.trip-card,.station-card,.result-card,.list,.item,.modal-content,.sheet,.drawer-content,.profile-card,.service-card,.trip-summary,.trip-details,.feature-card,.feature-placeholder{background:#fff!important;color:#17253b!important;border:1px solid #e2eaf4!important;box-shadow:0 4px 18px rgba(23,37,59,.045)!important}
+.start-card h3,.start-card-feature h3,.start-card-label,.start-card-link{color:#0866ff!important}
+.start-card-icon,.start-card-feature .start-card-icon,.icon,.ico,.icon-box,.feature-icon,.direction-icon,.layer-dot-box{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
+.start-primary,.start-actions .start-primary,button,.btn,.button,.primary,.primary-btn,.action-btn,.submit-btn,[type=submit],input[type=button],input[type=submit]{background:#0866ff!important;color:#fff!important;border-color:#0866ff!important}
+.start-secondary,.secondary,.secondary-btn,.ghost-btn,.back-link{background:#fff!important;color:#0866ff!important;border:1px solid #dce6f4!important}
+.nav a,.parts-bar a,.start-secondary,.foot a{color:#0866ff!important}
+.nav a.on,.nav a:hover,.chip.on,.chip:hover,.bottom-nav a.active,.bottom a.active{background:#edf4ff!important;color:#0866ff!important}
+input,select,textarea,option{background:#fff!important;color:#17253b!important;border-color:#dce6f4!important;color-scheme:light!important}
+p,li,label,small,.muted,.sub,.subtitle,.description,.hint,.meta,.spec{color:inherit}
+.map-tag,.hs span,.map-layer-toggle{background:#fff!important;color:#17253b!important;border-color:#dce8f4!important}
+@media(prefers-color-scheme:dark){html,body,main,header,footer,section,.start-page,.start-hero,.hero{background:#fff!important;color:#17253b!important;color-scheme:light!important}}
