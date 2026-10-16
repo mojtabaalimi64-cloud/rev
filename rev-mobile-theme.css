@@ -1,30 +1,94 @@
-/* REV mobile app — shared electric-blue & white identity */
+/* REV App Visual Identity v3 — white surfaces, electric-blue actions, soft-blue icons */
 :root{
  color-scheme:light!important;
- --rev-blue:#0866ff;--rev-blue-dark:#064fc4;--rev-blue-soft:#edf4ff;
+ --rev-blue:#0866ff;--rev-blue-dark:#0754d6;--rev-blue-soft:#edf4ff;
  --rev-ink:#17253b;--rev-muted:#65758b;--rev-line:#e2eaf4;--rev-white:#fff;
- --bg:#fff!important;--panel:#fff!important;--panel2:#f3f7ff!important;
+ --bg:#fff!important;--panel:#fff!important;--panel2:#f5f8fd!important;
  --surface:#fff!important;--line:#e2eaf4!important;--text:#17253b!important;
  --muted:#65758b!important;--accent:#0866ff!important;--blue:#0866ff!important;
- --teal:#064fc4!important;--green:#0866ff!important;
+ --teal:#0866ff!important;--green:#0866ff!important;--danger:#dc3545!important;
 }
-html{background:#fff!important;color-scheme:light!important}
-body{background:#fff!important;color:#17253b!important;color-scheme:light!important}
-header,.topbar,.app-header{background:rgba(255,255,255,.97)!important;color:#17253b!important;border-color:#e2eaf4!important}
-h1,h2,h3,h4,label,strong,b,legend{color:inherit}
+html,body{background:#fff!important;color:#17253b!important;color-scheme:light!important}
+body{font-family:Vazirmatn,Vazir,IRANSansX,"Segoe UI",Tahoma,sans-serif!important}
+header,.topbar,.app-header,.head,.bar,.phead,footer,.foot,
+header[style],.head[style]{background:#fff!important;color:#17253b!important;border-color:#e2eaf4!important;box-shadow:0 2px 12px rgba(23,37,59,.04)!important}
+.start-page,.start-hero,.hero,.start-page .start-hero,.pod{background:#fff!important;color:#17253b!important}
+.start-map{opacity:.12!important}
+h1,h2,h3,h4,h5,h6,p,li,label,strong,b,legend,span,div{ text-shadow:none }
+h1,h2,h3,h4,h5,h6,p,li,label,strong,b,legend{color:inherit}
 a{ -webkit-tap-highlight-color:transparent}
-button,.btn,.primary,.primary-btn,[type=submit],.submit-btn,.action-btn{background:#0866ff!important;border-color:#0866ff!important;color:#fff!important}
-button.secondary,.btn.secondary,.secondary-btn,.ghost-btn,[data-variant=secondary]{background:#fff!important;color:#0866ff!important;border:1px solid #dce6f4!important}
-input,select,textarea{background:#fff!important;color:#17253b!important;border-color:#dce6f4!important;color-scheme:light!important}
-.card,.panel,.box,.section-card,.metric,.trip-card,.station-card,.result-card,.list,.item,.modal-content,.sheet,.drawer-content{background:#fff!important;color:#17253b!important;border-color:#e2eaf4!important;box-shadow:0 4px 18px rgba(23,37,59,.045)}
-small,.muted,.subtitle,.description,.hint{color:#65758b!important}
-.icon,.ico,.icon-box,.feature-icon{background:#edf4ff!important;color:#0866ff!important}
-.bottom,.bottom-nav,.tabbar,.mobile-nav,.nav-bar{background:#fff!important;border-top:1px solid #e2eaf4!important;box-shadow:0 -5px 20px rgba(23,37,59,.08)!important}
-.bottom a,.bottom-nav a,.tabbar a,.mobile-nav a,.nav-bar a{color:#65758b!important}
-.bottom a.active,.bottom-nav a.active,.tabbar a.active,.mobile-nav a.active,.nav-bar a.active{background:#edf4ff!important;color:#0866ff!important}
-.badge,.pill,.chip{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
-hr{border-color:#e2eaf4!important}
+a:not(.btn):not(.primary):not(.primary-btn):not(.submit-btn){color:#0866ff}
+button,.btn,.primary,.primary-btn,[type=submit],.submit-btn,.action-btn,
+button.primary,.actions button.primary,.detail-actions .detail-route-button{
+ background:#0866ff!important;border-color:#0866ff!important;color:#fff!important;
+ box-shadow:0 3px 10px rgba(8,102,255,.12)!important
+}
+button.secondary,.btn.secondary,.secondary-btn,.ghost-btn,[data-variant=secondary],
+.back-link,.actions button.secondary,.detail-actions a,.detail-actions button{
+ background:#fff!important;color:#0866ff!important;border:1px solid #dce6f4!important;box-shadow:none!important
+}
+input,select,textarea,option{
+ background:#fff!important;color:#17253b!important;border:1px solid #dce6f4!important;
+ color-scheme:light!important;box-shadow:none
+}
+input:focus,select:focus,textarea:focus{border-color:#0866ff!important;box-shadow:0 0 0 3px rgba(8,102,255,.12)!important}
+.card,.panel,.box,.section-card,.metric,.trip-card,.station-card,.result-card,.list,.item,
+.modal-content,.sheet,.drawer-content,.cform,.tblwrap,.news li,.pod,.weather-panel,
+.weather-card,.weather-summary,.directions,.plan-box,.feature-placeholder,.feature-card,
+#details-panel,.details-panel,.profile-card,.service-card,.trip-summary,.trip-details,
+#electricFields,#fuelFields,.status,.stat,.map-layers,.review-empty,.detail-tabs{
+ background:#fff!important;color:#17253b!important;border-color:#e2eaf4!important;
+ box-shadow:0 4px 18px rgba(23,37,59,.045)!important
+}
+.card p,.panel p,.sub,.muted,.subtitle,.description,.hint,small,.meta,.spec,.detail-meta,
+.review-entry small,.weather-credit,.weather-time,.weather-detail,.plan-meta,.stat span,
+#status,.note,.phead p,.hero p.lead{color:#65758b!important}
+.icon,.ico,.icon-box,.feature-icon,.direction-icon,.layer-dot-box{
+ background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important
+}
+.bottom,.bottom-nav,.tabbar,.mobile-nav,.nav-bar,.bottom-nav[style]{
+ background:#fff!important;border-top:1px solid #e2eaf4!important;
+ box-shadow:0 -5px 20px rgba(23,37,59,.08)!important
+}
+.bottom-nav-inner{background:transparent!important}
+.bottom a,.bottom-nav a,.tabbar a,.mobile-nav a,.nav-bar a{
+ color:#65758b!important;background:transparent!important
+}
+.bottom a.active,.bottom-nav a.active,.tabbar a.active,.mobile-nav a.active,.nav-bar a.active,
+.bottom-nav a[aria-current=page],.bottom-nav a[aria-selected=true]{
+ background:#edf4ff!important;color:#0866ff!important
+}
+.badge,.pill,.chip,.tag,.map-tag,.detail-type,.feature-chips span{
+ background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important
+}
+.nav a,.parts-bar,.parts-bar .wrap{background:#fff!important;color:#65758b!important}
+.nav a.on,.nav a:hover,.chip.on,.chip:hover{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
+hr,.share,.share a,.share button{border-color:#e2eaf4!important}
+.tblwrap table th,.cmp thead th{background:#edf4ff!important;color:#17253b!important}
+.cmp td.win{background:#e7f7ee!important;color:#176b45!important}
 .leaflet-container{background:#eef3f8!important;color:#17253b!important}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff!important;color:#17253b!important}
-.leaflet-control a{color:#0866ff!important}
-@media(prefers-color-scheme:dark){html,body{background:#fff!important;color:#17253b!important;color-scheme:light!important}}
+.leaflet-popup-content a,.leaflet-control a{color:#0866ff!important}
+.leaflet-bar a,.leaflet-bar a:hover{background:#fff!important;color:#0866ff!important;border-color:#e2eaf4!important}
+.leaflet-control-attribution{background:rgba(255,255,255,.9)!important;color:#65758b!important}
+.logo,.brand,.phead .back{color:#0866ff!important;text-shadow:none!important}
+.stage{background:#edf4ff!important}
+.stage .hs span{background:#fff!important;color:#17253b!important;border-color:#dce6f4!important}
+.stage .hs i{background:#0866ff!important}
+.plan-box h2,.plan-stop,.plan-alert,.plan-ok,.weather-card .weather-wind,
+.weather-panel h2,.map-tag,.map-layer-toggle,.direction-icon{color:#0866ff!important}
+.plan-stop,.direction-item,.station,.rating-summary,.review-entry{border-color:#e2eaf4!important}
+.station:hover{background:#f5f8fd!important}
+.weather-content.weather-fade:not(.weather-expanded)::after{background:linear-gradient(transparent,#fff)!important}
+.weather-more{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
+.weather-summary.warn{background:#fff7e8!important;border-color:#f2d8a8!important;color:#865800!important}
+.weather-summary{background:#f5f8fd!important}
+.plan-box{background:#f5f8fd!important;border-color:#dce6f4!important}
+.plan-stop strong,.station strong,.feature-placeholder strong{color:#17253b!important}
+.detail-tab{background:#fff!important;color:#65758b!important;border-color:transparent!important}
+.detail-tab[aria-selected=true]{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
+.feature-chips span{color:#0866ff!important}
+.detail-name{color:#17253b!important}
+@media(prefers-color-scheme:dark){
+ html,body{background:#fff!important;color:#17253b!important;color-scheme:light!important}
+}
