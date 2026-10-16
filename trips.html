@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080b0d"><title>سفرهای من | REV</title>
+<style>
+:root{color-scheme:dark;--bg:#080b0d;--panel:#10171b;--panel2:#151f24;--line:#29383e;--muted:#9eafb5;--green:#39ff88;--teal:#00806f;--text:#f5f7f8;--amber:#ffdda0;--red:#ff8d96}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 85% 0%,#12352a 0,transparent 35%),var(--bg);color:var(--text);font:15px/1.8 Vazirmatn,Vazir,IRANSansX,Tahoma,sans-serif;padding-bottom:calc(86px + env(safe-area-inset-bottom))}a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}.wrap{width:min(100% - 28px,760px);margin:auto}.top{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:18px 0 12px}.logo{font-size:26px;font-weight:950;letter-spacing:3px;color:var(--green)}.eyebrow{font-size:11px;color:var(--muted)}h1{font-size:24px;line-height:1.4;margin:12px 0 4px}h2{font-size:16px;margin:0 0 12px}.muted{color:var(--muted);font-size:12px}.panel{background:linear-gradient(145deg,rgba(21,31,36,.98),rgba(13,20,23,.98));border:1px solid var(--line);border-radius:18px;padding:16px;margin:13px 0}.hero{border-color:#285341;background:linear-gradient(135deg,#10271d,#10171b 65%);padding:19px}.hero p{color:#c1d1c8;font-size:13px;margin:6px 0 16px}.actions{display:grid;grid-template-columns:1fr 1fr;gap:9px}.btn{display:flex;justify-content:center;align-items:center;gap:7px;padding:12px 10px;border-radius:12px;border:1px solid #35464d;background:#172126;font-size:13px;font-weight:800;text-align:center}.btn.primary{background:var(--green);color:#07120b;border-color:var(--green)}.metrics{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}.metric{padding:13px;border:1px solid var(--line);border-radius:13px;background:#0c1215}.metric small{display:block;color:var(--muted);font-size:11px}.metric strong{display:block;font-size:22px;line-height:1.6;font-variant-numeric:tabular-nums}.unit{font-size:10px;color:var(--muted);font-weight:500}.trip{padding:13px 0;border-bottom:1px solid var(--line)}.trip:last-child{border-bottom:0;padding-bottom:0}.trip-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800}.pill{display:inline-block;font-size:10px;border:1px solid #285341;color:var(--green);border-radius:99px;padding:2px 8px;white-space:nowrap}.trip-meta{font-size:12px;color:var(--muted);margin-top:5px}.empty{border:1px dashed #3a4b51;border-radius:12px;padding:17px;color:var(--muted);font-size:13px;text-align:center}.status{font-size:12px;color:var(--muted);margin-top:10px;min-height:22px}.bottom-nav{position:fixed;z-index:50;inset:auto 0 0;background:rgba(8,11,13,.96);border-top:1px solid #26343a;backdrop-filter:blur(16px);padding:8px 12px calc(8px + env(safe-area-inset-bottom))}.bottom-nav-inner{max-width:620px;margin:auto;display:grid;grid-template-columns:repeat(4,1fr);gap:5px}.bottom-nav a{display:flex;flex-direction:column;align-items:center;gap:3px;color:#91a1a6;font-size:10px;padding:5px 2px;border-radius:11px}.bottom-nav a.active{color:var(--green);background:#11251b;font-weight:800}.bottom-nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}.small-link{color:var(--green);font-size:12px;font-weight:700}.loading{color:var(--muted);font-size:12px}@media(min-width:600px){.metrics{grid-template-columns:repeat(4,minmax(0,1fr))}.hero{padding:24px}.hero h1{font-size:28px}}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header class="top"><a href="./" class="logo" aria-label="REV خانه">REV</a><a class="small-link" href="./account.html">حساب کاربری ↗</a></header>
+<div class="eyebrow">داشبورد رانندگی و سفر</div>
+<h1>سفرهای من</h1><p class="muted">برنامه‌ریزی مسیر، ثبت سفرهای واقعی و بررسی مصرف خودروی برقی در یک جا.</p>
+<section class="panel hero">
+<div class="eyebrow" style="color:#83d9a9">DRIVER CENTER</div>
+<h2 style="font-size:20px;margin:5px 0">آماده‌ی سفر بعدی هستی؟</h2>
+<p>مسیر را با توجه به برد خودرو و ایستگاه‌های شارژ برنامه‌ریزی کن؛ بعد از سفر، اطلاعات واقعی را ثبت کن تا گزارش مصرفت دقیق‌تر شود.</p>
+<div class="actions"><a class="btn primary" href="./trip.html">⚡ برنامه‌ریزی سفر</a><a class="btn" href="./driver-profile.html">◉ ثبت سفر با GPS</a></div>
+</section>
+<section class="panel">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>خلاصه رانندگی</h2><a class="small-link" href="./driver-profile.html">جزئیات کامل ↗</a></div>
+<div class="metrics">
+<div class="metric"><small>تعداد سفرهای ثبت‌شده</small><strong id="tripCount">—</strong></div>
+<div class="metric"><small>مسافت کل</small><strong><span id="distance">—</span> <span class="unit">km</span></strong></div>
+<div class="metric"><small>انرژی مصرفی</small><strong><span id="energy">—</span> <span class="unit">kWh</span></strong></div>
+<div class="metric"><small>میانگین مصرف واقعی</small><strong><span id="consumption">—</span> <span class="unit">kWh/100km</span></strong></div>
+</div><div id="status" class="status" role="status" aria-live="polite">در حال دریافت اطلاعات سفرها…</div>
+</section>
+<section class="panel">
+<div style="display:flex;justify-content:space-between;align-items:center;gap:10px"><h2>آخرین سفرها</h2><a class="small-link" href="./driver-profile.html#tripHistory">تاریخچه کامل ↗</a></div>
+<div id="recentTrips" class="loading">در حال بارگذاری…</div>
+</section>
+<section class="panel">
+<h2>دسترسی سریع</h2>
+<div class="actions">
+<a class="btn" href="./driver-profile.html">🚘 پروفایل راننده</a>
+<a class="btn" href="./travel-plans.html">▤ برنامه‌های ذخیره‌شده</a>
+<a class="btn" href="./nearby-map.html">⌖ نقشه و ایستگاه‌های شارژ</a>
+<a class="btn" href="./safety-checklist.html">✓ چک‌لیست سفر</a>
+</div>
+<p class="muted" style="margin:12px 0 0">ثبت خودکار مسیر با GPS فقط پس از اجازه شما و شروع ردیابی انجام می‌شود. برای گزارش دقیق‌تر مصرف، سفرهای ثبت‌شده باید داده‌ی مسافت و انرژی داشته باشند.</p>
+</section>
+</div>
+<nav class="bottom-nav" aria-label="پیمایش اصلی REV"><div class="bottom-nav-inner">
+<a href="https://mojtabaalimi64-cloud.github.io/rev-mobile/" aria-label="خانه"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7M5.5 9v11h13V9M9.5 20v-6h5v6"/></svg>خانه</a>
+<a href="./nearby-map.html" aria-label="نقشه"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>نقشه</a>
+<a class="active" href="./trips.html" aria-current="page" aria-label="سفرها"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 15l4-4 3 3 4-5M14 9h4v4"/></svg>سفرها</a>
+<a href="./businesses.html" aria-label="خدمات"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 12h18M10 12v2h4v-2"/></svg>خدمات</a>
+</div></nav>
+<script>
+(function(){
+const API='https://rev-auth-api.mojtaba-alimi64.workers.dev';
+const $=id=>document.getElementById(id);
+const number=v=>v==null||v===''?'—':new Intl.NumberFormat('fa-IR',{maximumFractionDigits:1}).format(Number(v));
+const safe=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const date=v=>{try{return new Date(v).toLocaleString('fa-IR',{dateStyle:'medium',timeStyle:'short'})}catch(_){return 'تاریخ نامشخص'}};
+async function load(){
+try{
+const r=await fetch(API+'/api/driver/profile',{credentials:'include',cache:'no-store'});
+const j=await r.json().catch(()=>({}));
+if(!r.ok||!j.success)throw new Error(j.error||'برای مشاهده آمار شخصی، ابتدا وارد حساب REV شوید.');
+const p=j.profile||{}, trips=Array.isArray(j.trips)?j.trips:[];
+$('tripCount').textContent=number(p.tripCount??trips.length);
+$('distance').textContent=number(p.totalDistanceKm);
+$('energy').textContent=number(p.totalEnergyKwh);
+$('consumption').textContent=p.averageKwhPer100Km==null?'—':number(p.averageKwhPer100Km);
+$('status').textContent='اطلاعات از سفرهای ذخیره‌شده در حساب شما دریافت شد.';
+$('recentTrips').innerHTML=trips.length?trips.slice(0,5).map(t=>{
+const d=Number(t.distance_km),e=Number(t.energy_kwh),rate=d>0&&e>0?number(e/d*100):'—';
+return '<article class="trip"><div class="trip-title"><span>'+safe(t.vehicle_name||'سفر با خودرو')+'</span><span class="pill">'+safe(t.energy_source||'ثبت‌شده')+'</span></div><div class="trip-meta">'+safe(date(t.started_at))+' · '+number(t.distance_km)+' کیلومتر · '+number(t.energy_kwh)+' کیلووات‌ساعت</div><div class="trip-meta">مصرف این سفر: '+rate+' kWh/100 km</div></article>';
+}).join(''):'<div class="empty">هنوز سفری در حساب شما ثبت نشده است.<br>برای شروع، از «ثبت سفر با GPS» یا فرم ثبت سفر در پروفایل راننده استفاده کنید.</div>';
+}catch(e){
+$('status').textContent=e.message||'دریافت اطلاعات ممکن نشد.';
+$('recentTrips').innerHTML='<div class="empty">برای مشاهده تاریخچه شخصی، وارد حساب REV شوید. اگر وارد حساب هستید، اتصال سرویس سفر را بررسی کنید.<br><a class="small-link" href="./account.html">ورود به حساب کاربری ↗</a></div>';
+}
+}
+load();
+})();
+</script>
+<script src="./rev-announcements.js?v=1" defer></script>
+</body></html>
