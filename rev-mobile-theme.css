@@ -130,7 +130,9 @@ tbody tr:nth-child(even),tbody tr:hover{background:#f5f8fd!important}
  background:#fff!important;color:#17253b!important;border-color:#e2eaf4!important;box-shadow:0 8px 24px rgba(23,37,59,.12)!important;
 }
 #revPersistentNav a,.rev-persistent-nav a,#serviceNav a{color:#0866ff!important;background:#fff!important;border-color:#e2eaf4!important}
-#revPersistentNav a.active,.rev-persistent-nav a.active,#serviceNav a.active{background:#edf4ff!important;color:#0866ff!important}
+#revPersistentNav a.active,#revPersistentNav a[aria-current=page],.rev-persistent-nav a.active,.rev-persistent-nav a[aria-current=page],#serviceNav a.active,#serviceNav a[aria-current=page]{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
+#revPersistentNav>div:first-child,.rev-persistent-nav>div:first-child{color:#0866ff!important;border-bottom-color:#e2eaf4!important}
+#revPersistentNav>div:first-child span,.rev-persistent-nav>div:first-child span{color:#65758b!important}
 #revReturnProfile{background:#fff!important;color:#0866ff!important;border:1px solid #0866ff!important;box-shadow:0 8px 24px rgba(23,37,59,.12)!important}
 @media(max-width:760px){
  .wrap,.container,.page-wrap,.main-container{max-width:100%!important}
