@@ -140,7 +140,7 @@ main{display:block!important;width:100%!important;height:100dvh!important;max-wi
  const historyToggle=document.getElementById("historyToggle");
   function openSearchHistory(){historyPanel.classList.add("open");historyPanel.setAttribute("aria-hidden","false");searchBar.classList.add("expanded");historyToggle.setAttribute("aria-expanded","true");renderSearchHistory();}
   function closeSearchHistory(){historyPanel.classList.remove("open");historyPanel.setAttribute("aria-hidden","true");searchBar.classList.remove("expanded");historyToggle.setAttribute("aria-expanded","false");}
-  historyToggle.addEventListener("click",function(){if(historyPanel.classList.contains("open"))closeSearchHistory();else openSearchHistory();});
+  historyToggle.addEventListener("click",function(){if(dragMoved){dragMoved=false;return;}if(historyPanel.classList.contains("open"))closeSearchHistory();else openSearchHistory();});
   renderSearchHistory();searchInput.addEventListener("focus",openSearchHistory);searchInput.addEventListener("click",openSearchHistory);
  document.getElementById("clearSearchHistory").addEventListener("click",function(){searchHistory=[];try{localStorage.removeItem(historyKey);}catch(e){}renderSearchHistory();});
  let dragStartY=null,dragStartX=null,dragMoved=false;
