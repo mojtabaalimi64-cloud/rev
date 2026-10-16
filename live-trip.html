@@ -27,7 +27,7 @@ const token=new URLSearchParams(location.search).get("token");
 const $=id=>document.getElementById(id);
 const map=L.map("map").setView([32.4,53.7],5);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap"}).addTo(map);
-let marker=null,firstFix=true,stopped=false,timer=null;
+let marker=null,firstFix=true,stopped=false,timer=null,routeLayer=null,destinationMarker=null,routeKey="";
 const faTime=value=>{if(!value)return"—";const d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit"});};
 function fail(message){$("status").textContent=message;$("status").style.color="#ffb4aa";}
 async function update(){
@@ -39,6 +39,7 @@ async function update(){
   $("status").textContent="اشتراک فعال است · آخرین اطلاعات دریافت شد";
   $("status").style.color="#39ff88";
   const t=j.telemetry||{},p=j.location;
+  if(t.route_json&&t.route_json!==routeKey){try{const geo=typeof t.route_json==="string"?JSON.parse(t.route_json):t.route_json;if(geo&&geo.type==="LineString"&&Array.isArray(geo.coordinates)&&geo.coordinates.length>1){if(routeLayer)map.removeLayer(routeLayer);routeLayer=L.geoJSON(geo,{style:{color:"#0866ff",weight:6,opacity:.92,lineCap:"round",lineJoin:"round"}}).addTo(map);routeKey=typeof t.route_json==="string"?t.route_json:JSON.stringify(t.route_json);if(destinationMarker)map.removeLayer(destinationMarker);const end=geo.coordinates[geo.coordinates.length-1];const label=String(t.destination||"ثبت‌شده").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));destinationMarker=L.marker([end[1],end[0]],{title:t.destination||"مقصد"}).addTo(map).bindPopup("<b>مقصد سفر</b><br>"+label);map.fitBounds(routeLayer.getBounds(),{padding:[30,30],maxZoom:14});}}catch(e){}}
   $("destination").textContent=t.destination||"ثبت نشده";$("speed").textContent=t.speed_kmh==null?"در دسترس نیست":Math.round(t.speed_kmh).toLocaleString("fa-IR")+" km/h";
   $("eta").textContent=t.eta_minutes==null?"تخمین در دسترس نیست":Math.round(t.eta_minutes).toLocaleString("fa-IR")+" دقیقه";
   $("remaining").textContent=t.distance_remaining_km==null?"—":Number(t.distance_remaining_km).toLocaleString("fa-IR",{maximumFractionDigits:1})+" km";
@@ -48,7 +49,7 @@ async function update(){
    if(!Number.isFinite(ll[0])||!Number.isFinite(ll[1]))return;
    if(!marker)marker=L.marker(ll,{title:"خودروی در حال سفر"}).addTo(map).bindPopup("موقعیت به‌اشتراک‌گذاشته‌شده");
    else marker.setLatLng(ll);
-   if(firstFix){map.setView(ll,16);firstFix=false;}else map.panTo(ll,{animate:true,duration:.4});
+   if(firstFix){if(!routeLayer)map.setView(ll,16);firstFix=false;}else if(!routeLayer)map.panTo(ll,{animate:true,duration:.4});
   }else $("status").textContent="لینک فعال است؛ منتظر اولین موقعیت GPS راننده هستیم.";
   if(t.trip_ended_at){stopped=true;if(timer)clearInterval(timer);$("status").textContent="راننده این سفر را پایان داده است.";}
  }catch(e){$("status").textContent="اتصال موقتاً برقرار نیست؛ تلاش مجدد انجام می‌شود.";$("status").style.color="#e9c46a";}
