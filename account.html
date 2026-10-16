@@ -277,7 +277,6 @@ async function refresh(){try{const j=await api('/api/portal/me');me=j.user;porta
 $('#sendSmsCode').addEventListener('click',async()=>{const phone=$('#smsRequest [name="phone"]').value.trim();if(!phone){$('#smsRequest [name="phone"]').reportValidity();return}const btn=$('#sendSmsCode');btn.disabled=true;try{const j=await api('/api/auth/sms/request',{method:'POST',body:JSON.stringify({phone})});say(j.message||'کد ورود ارسال شد.','ok');$('#smsRequest [name="code"]').focus()}catch(x){say(x.message,'error')}finally{btn.disabled=false}});
 $('#smsRequest').addEventListener('submit',async e=>{e.preventDefault();const form=e.currentTarget,codeInput=form.querySelector('[name="code"]'),phone=String(form.querySelector('[name="phone"]').value||'').trim(),code=String(codeInput.value||'').trim();try{await api('/api/auth/sms/verify',{method:'POST',body:JSON.stringify({phone,code})});codeInput.value='';await refresh()}catch(x){say(x.message,'error')}finally{codeInput.value='';codeInput.focus()}});
 let accountNotificationTimer=null;
-const seenAccountNotificationIds=new Set();
 async function loadAccountNotifications(showBrowser=true){
  const status=$('#accountNotificationsStatus'),list=$('#accountNotificationsList'),badge=$('#accountNotificationBadge');
  if(!me){status.textContent='برای مشاهده اعلان‌ها وارد حساب شوید.';list.replaceChildren();return;}
@@ -285,6 +284,11 @@ async function loadAccountNotifications(showBrowser=true){
   const j=await api('/api/driver/notifications'),items=j.notifications||[];
   badge.textContent=Number(j.unread_count||0).toLocaleString('fa-IR')+' اعلان جدید';
   list.replaceChildren();
+  let storedIds=[];try{storedIds=JSON.parse(localStorage.getItem('rev_seen_notifications')||'[]')}catch(e){}
+  const fresh=items.filter(n=>!n.read_at&&!storedIds.includes(n.id));
+  if(showBrowser&&'Notification' in window&&Notification.permission==='granted'){
+   fresh.forEach(n=>{try{const notice=new Notification(n.title||'اعلان REV',{body:n.body||'',tag:n.id});notice.onclick=()=>{window.focus();window.location.href='./nearby-map.html#groupTripPanel';notice.close();};}catch(e){}});
+  }
   if(!items.length){const p=document.createElement('p');p.className='muted';p.textContent='فعلاً اعلانی ندارید.';list.append(p);}
   for(const n of items){
    const item=document.createElement('div');item.className='notification-item'+(!n.read_at?' unread':'');
@@ -294,13 +298,8 @@ async function loadAccountNotifications(showBrowser=true){
    item.append(title,body,time);
    if(n.type==='group_invite'){const link=document.createElement('a');link.href='./nearby-map.html#groupTripPanel';link.className='btn secondary';link.textContent='مشاهده و پاسخ به دعوت';link.style.marginTop='8px';item.append(link);}
    list.append(item);
-   if(showBrowser&&!seenAccountNotificationIds.has(n.id)){seenAccountNotificationIds.add(n.id);try{const stored=JSON.parse(localStorage.getItem('rev_seen_notifications')||'[]');stored.push(n.id);localStorage.setItem('rev_seen_notifications',JSON.stringify([...new Set(stored)].slice(-100));}catch(e){}}
   }
-  let storedIds=[];try{storedIds=JSON.parse(localStorage.getItem('rev_seen_notifications')||'[]')}catch(e){}
-  const fresh=items.filter(n=>!n.read_at&&!storedIds.includes(n.id));
-  if(showBrowser&&'Notification' in window&&Notification.permission==='granted'){
-   fresh.forEach(n=>{try{const notice=new Notification(n.title||'اعلان REV',{body:n.body||'',tag:n.id});notice.onclick=()=>{window.focus();window.location.href='./nearby-map.html#groupTripPanel';notice.close();};}catch(e){}});
-  }
+  if(showBrowser&&fresh.length){try{localStorage.setItem('rev_seen_notifications',JSON.stringify([...new Set([...storedIds,...fresh.map(n=>n.id)])].slice(-100));}catch(e){}}
   status.textContent=items.length.toLocaleString('fa-IR')+' اعلان در ۳۰ روز اخیر.';
  }catch(e){status.textContent=e.message||'دریافت اعلان‌ها ممکن نشد.';list.innerHTML='<p class="muted">سرویس اعلان در دسترس نیست. پس از انتشار نسخه جدید API دوباره تلاش کنید.</p>';}
 }
