@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080b0d"><title>اشتراک زنده سفر | REV</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#080b0d;color:#f5f7f8;font:14px/1.8 Vazirmatn,Vazir,Tahoma,sans-serif}header{padding:15px 16px;background:#10191d;border-bottom:1px solid #2a343a}header strong{font-size:18px;color:#39ff88}main{width:min(760px,calc(100% - 20px));margin:14px auto}.card{background:#11191d;border:1px solid #2a343a;border-radius:16px;padding:14px;margin-bottom:12px}.status{font-size:12px;color:#b8c7cc}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-top:12px}.stat{background:#172126;border:1px solid #2b3a40;border-radius:12px;padding:12px}.stat small{display:block;color:#aab6bc;font-size:11px}.stat b{font-size:18px;display:block;margin-top:4px;overflow-wrap:anywhere}#map{height:52vh;min-height:300px;border-radius:14px;overflow:hidden;background:#dce5e8}.note{font-size:11px;color:#aab6bc;margin-top:10px}a{color:#39ff88}@media(max-width:420px){main{width:calc(100% - 12px);margin:8px auto}.grid{gap:6px}.stat{padding:9px}.stat b{font-size:15px}#map{height:48vh}}
+</style>
+</head>
+<body>
+<header><strong>REV</strong> · وضعیت زنده سفر</header>
+<main>
+<section class="card"><div id="status" class="status">در حال دریافت وضعیت سفر…</div><div class="grid">
+<div class="stat"><small>سرعت فعلی GPS</small><b id="speed">—</b></div>
+<div class="stat"><small>زمان تقریبی رسیدن</small><b id="eta">—</b></div>
+<div class="stat"><small>مسافت مستقیم تا مقصد</small><b id="remaining">—</b></div>
+<div class="stat"><small>آخرین به‌روزرسانی</small><b id="updated">—</b></div>
+</div><div class="note">سرعت و موقعیت فقط بر اساس آخرین اطلاعاتی نمایش داده می‌شود که راننده اجازه داده است. زمان رسیدن تخمینی است و ممکن است با شرایط جاده تغییر کند. با لغو اشتراک توسط راننده، این صفحه دیگر به‌روزرسانی نخواهد شد.</div></section>
+<div id="map" aria-label="موقعیت زنده خودرو روی نقشه"></div>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+const API="https://rev-auth-api.mojtaba-alimi64.workers.dev";
+const token=new URLSearchParams(location.search).get("token");
+const $=id=>document.getElementById(id);
+const map=L.map("map").setView([32.4,53.7],5);
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap"}).addTo(map);
+let marker=null,firstFix=true,stopped=false,timer=null;
+const faTime=value=>{if(!value)return"—";const d=new Date(value);return Number.isNaN(d.getTime())?"—":d.toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit"});};
+function fail(message){$("status").textContent=message;$("status").style.color="#ffb4aa";}
+async function update(){
+ if(stopped||!token){fail("لینک اشتراک معتبر نیست.");return;}
+ try{
+  const r=await fetch(API+"/api/driver/shares/view?token="+encodeURIComponent(token),{cache:"no-store"});
+  const j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.success){stopped=true;if(timer)clearInterval(timer);fail(j.error||"این اشتراک پایان یافته یا لغو شده است.");return;}
+  $("status").textContent="اشتراک فعال است · آخرین اطلاعات دریافت شد";
+  $("status").style.color="#39ff88";
+  const t=j.telemetry||{},p=j.location;
+  $("speed").textContent=t.speed_kmh==null?"در دسترس نیست":Math.round(t.speed_kmh).toLocaleString("fa-IR")+" km/h";
+  $("eta").textContent=t.eta_minutes==null?"تخمین در دسترس نیست":Math.round(t.eta_minutes).toLocaleString("fa-IR")+" دقیقه";
+  $("remaining").textContent=t.distance_remaining_km==null?"—":Number(t.distance_remaining_km).toLocaleString("fa-IR",{maximumFractionDigits:1})+" km";
+  $("updated").textContent=p?faTime(p.updated_at):"در انتظار GPS";
+  if(p){
+   const ll=[Number(p.latitude),Number(p.longitude)];
+   if(!Number.isFinite(ll[0])||!Number.isFinite(ll[1]))return;
+   if(!marker)marker=L.marker(ll,{title:"خودروی در حال سفر"}).addTo(map).bindPopup("موقعیت به‌اشتراک‌گذاشته‌شده");
+   else marker.setLatLng(ll);
+   if(firstFix){map.setView(ll,16);firstFix=false;}else map.panTo(ll,{animate:true,duration:.4});
+  }else $("status").textContent="لینک فعال است؛ منتظر اولین موقعیت GPS راننده هستیم.";
+  if(t.trip_ended_at){stopped=true;if(timer)clearInterval(timer);$("status").textContent="راننده این سفر را پایان داده است.";}
+ }catch(e){$("status").textContent="اتصال موقتاً برقرار نیست؛ تلاش مجدد انجام می‌شود.";$("status").style.color="#e9c46a";}
+}
+if(!token){fail("توکن اشتراک در لینک وجود ندارد.");}
+else{update();timer=setInterval(update,5000);}
+})();
+</script>
+</body>
+</html>
