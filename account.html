@@ -56,7 +56,7 @@ header{background:rgba(10,13,16,.92)!important;border-bottom:1px solid var(--rev
 #tab-profile .hero,#tab-profile .service-grid,#tab-profile .section-head,#tab-profile>.grid{display:none!important}
 @media(max-width:560px){.wrap{width:calc(100% - 24px)}main{padding-top:16px}.profile-card,.profile-settings{padding:15px}.profile-fields{grid-template-columns:1fr}.profile-photo-row{align-items:flex-start}.profile-avatar{width:72px!important;height:72px!important;flex-basis:72px!important}.setting-row{align-items:flex-start;flex-direction:column}.profile-footer{padding-bottom:30px}}
 
-#accountTripsTable{width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}#accountTripsTable table{width:100%;min-width:760px;border-collapse:collapse;text-align:right;font-size:12px}#accountTripsTable th{padding:11px;background:#14211c;color:#a8f5cc;white-space:nowrap}#accountTripsTable td{padding:10px;border-top:1px solid var(--line);white-space:nowrap}#accountTripsTable tr.trip-detail-row td{white-space:normal;background:#10171a;color:#bdcbd0;line-height:2}.group-code-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:13px;margin:12px 0;border:1px solid var(--line);border-radius:12px;background:rgba(9,12,16,.38)}.group-code-row small,.group-share-toggle small{display:block;color:var(--muted);font-size:11px}.group-code-row strong{display:block;font-size:26px;letter-spacing:5px;color:var(--green);direction:ltr}.group-share-toggle{display:flex!important;gap:11px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:12px}.group-share-toggle input{margin-top:6px;flex:0 0 auto}.group-share-toggle span{flex:1}.group-share-toggle small{margin-top:4px;line-height:1.8}.trip-action-btn{padding:5px 9px;font-size:11px;margin:0 3px}.trip-action-btn.danger{background:#642c32;color:white}@media(max-width:560px){.group-code-row{align-items:flex-start}.group-code-row .actions{width:100%}.group-code-row .actions button{flex:1}}</style>
+#accountTripsTable{width:100%;overflow-x:auto;border:1px solid var(--line);border-radius:12px;margin-top:10px}#accountTripsTable table{width:100%;min-width:760px;border-collapse:collapse;text-align:right;font-size:12px}#accountTripsTable th{padding:11px;background:#14211c;color:#a8f5cc;white-space:nowrap}#accountTripsTable td{padding:10px;border-top:1px solid var(--line);white-space:nowrap}#accountTripsTable tr.trip-detail-row td{white-space:normal;background:#10171a;color:#bdcbd0;line-height:2}.group-code-row{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:13px;margin:12px 0;border:1px solid var(--line);border-radius:12px;background:rgba(9,12,16,.38)}.group-code-row small,.group-share-toggle small{display:block;color:var(--muted);font-size:11px}.group-code-row strong{display:block;font-size:26px;letter-spacing:5px;color:var(--green);direction:ltr}.group-share-toggle{display:flex!important;gap:11px;align-items:flex-start;padding:12px;border:1px solid var(--line);border-radius:12px}.group-share-toggle input{margin-top:6px;flex:0 0 auto}.group-share-toggle span{flex:1}.group-share-toggle small{margin-top:4px;line-height:1.8}.trip-action-btn{padding:5px 9px;font-size:11px;margin:0 3px}.trip-action-btn.danger{background:#642c32;color:white}@media(max-width:560px){.group-code-row{align-items:flex-start}.group-code-row .actions{width:100%}.group-code-row .actions button{flex:1}}\n.notification-list{display:grid;gap:8px;margin-top:10px}.notification-item{border:1px solid var(--line,#dce7df);border-radius:12px;padding:12px;background:var(--card,#fff)}.notification-item.unread{border-color:#39ff88;background:rgba(57,255,136,.07)}.notification-item strong{display:block;font-size:13px;margin-bottom:5px}.notification-item p{margin:0 0 7px;font-size:12px;line-height:1.8}.notification-item small{color:var(--muted,#718078);font-size:10px}\n</style>
 <link rel="stylesheet" href="./rev-theme.css?v=1">
 
 <style id="rev-account-polish">
@@ -205,6 +205,14 @@ main.wrap{width:min(100% - 28px,680px)!important;padding:24px 0 44px!important}
     <div id="accountGroupSettingsStatus" class="status" aria-live="polite">در حال دریافت تنظیمات سفر گروهی…</div>
     <div class="actions"><a class="btn secondary" href="./nearby-map.html#groupTripPanel">رفتن به نقشه و مدیریت دعوت‌ها</a></div>
   </div>
+  <div class="card profile-settings" id="accountNotifications">
+    <div class="section-title"><h2>اعلان‌ها و دعوت‌ها</h2><span id="accountNotificationBadge" class="status">۰ اعلان جدید</span></div>
+    <p class="muted small">دعوت‌های سفر گروهی در این بخش ثبت می‌شوند. برای دیدن اعلان مرورگر، اجازه اعلان را فعال کنید.</p>
+    <div class="actions"><button type="button" id="accountEnableBrowserNotifications" class="secondary">فعال‌سازی اعلان مرورگر</button><button type="button" id="accountMarkNotificationsRead" class="secondary">خواندن همه</button></div>
+    <div id="accountNotificationsStatus" class="status" aria-live="polite">در حال دریافت اعلان‌ها…</div>
+    <div id="accountNotificationsList" class="notification-list"><p class="muted">در حال بارگذاری…</p></div>
+    <p class="muted small">اعلان مرورگر در این مرحله هنگام بازبودن حساب REV بررسی می‌شود؛ برای دریافت اعلان حتی پس از بستن سایت، بعداً باید Web Push و سرویس‌ورکر نیز تنظیم شوند.</p>
+  </div>
   <div class="profile-footer"><button id="profileLogout" type="button">خروج از حساب</button><a href="https://mojtabaalimi64-cloud.github.io/rev-mobile/">بازگشت به خانه REV ←</a></div>
   <div id="profileBox" class="hidden"></div>
 </div>
@@ -265,9 +273,42 @@ function draw(){
  if(!eligibleStores.length){$('#productBusiness').insertAdjacentHTML('afterend','<p class="muted small" id="productEntitlementNotice">ثبت محصول فقط برای فروشگاه تأییدشده با پلن فعال و قابلیت «مدیریت فهرست محصولات» مجاز است. برای فعال‌سازی با مدیریت REV هماهنگ کنید.</p>')}else{$('#productEntitlementNotice')?.remove()}
  $('#productList').innerHTML=portalData.products.length?portalData.products.map(p=>'<div class="product"><strong>'+esc(p.title)+'</strong> <span class="status">'+esc(status(p.status))+'</span><p>'+esc(p.price_text||'قیمت درج نشده')+'</p>'+(p.moderation_note?'<p class="error">'+esc(p.moderation_note)+'</p>':'')+'</div>').join(''):'هنوز محصولی ثبت نکرده‌اید.';
 }
-async function refresh(){try{const j=await api('/api/portal/me');me=j.user;portalData=j;currentAvatarData=j.user?.avatar_data||'';draw();setTab('profile');setTextIfPresent('#dashboardTitle','سلام، '+(me?.display_name||'عضو REV'));setTextIfPresent('#dashboardSubtitle','همه خدمات، سفرها و درخواست‌های شما از این داشبورد مدیریت می‌شوند.');say('به مرکز کاربری REV خوش آمدید.','ok');loadAccountTrips();loadAccountGroupSettings();}catch(e){me=null;portalData={businesses:[],products:[]};draw();setTab('account');say('برای دسترسی به پنل و خدمات شخصی ابتدا وارد شوید. '+e.message)}}
+async function refresh(){try{const j=await api('/api/portal/me');me=j.user;portalData=j;currentAvatarData=j.user?.avatar_data||'';draw();setTab('profile');setTextIfPresent('#dashboardTitle','سلام، '+(me?.display_name||'عضو REV'));setTextIfPresent('#dashboardSubtitle','همه خدمات، سفرها و درخواست‌های شما از این داشبورد مدیریت می‌شوند.');say('به مرکز کاربری REV خوش آمدید.','ok');loadAccountTrips();loadAccountGroupSettings();loadAccountNotifications(false);if(accountNotificationTimer===null)accountNotificationTimer=setInterval(()=>{if(document.visibilityState==='visible')loadAccountNotifications(true)},30000);}catch(e){me=null;portalData={businesses:[],products:[]};draw();setTab('account');say('برای دسترسی به پنل و خدمات شخصی ابتدا وارد شوید. '+e.message)}}
 $('#sendSmsCode').addEventListener('click',async()=>{const phone=$('#smsRequest [name="phone"]').value.trim();if(!phone){$('#smsRequest [name="phone"]').reportValidity();return}const btn=$('#sendSmsCode');btn.disabled=true;try{const j=await api('/api/auth/sms/request',{method:'POST',body:JSON.stringify({phone})});say(j.message||'کد ورود ارسال شد.','ok');$('#smsRequest [name="code"]').focus()}catch(x){say(x.message,'error')}finally{btn.disabled=false}});
 $('#smsRequest').addEventListener('submit',async e=>{e.preventDefault();const form=e.currentTarget,codeInput=form.querySelector('[name="code"]'),phone=String(form.querySelector('[name="phone"]').value||'').trim(),code=String(codeInput.value||'').trim();try{await api('/api/auth/sms/verify',{method:'POST',body:JSON.stringify({phone,code})});codeInput.value='';await refresh()}catch(x){say(x.message,'error')}finally{codeInput.value='';codeInput.focus()}});
+let accountNotificationTimer=null;
+const seenAccountNotificationIds=new Set();
+async function loadAccountNotifications(showBrowser=true){
+ const status=$('#accountNotificationsStatus'),list=$('#accountNotificationsList'),badge=$('#accountNotificationBadge');
+ if(!me){status.textContent='برای مشاهده اعلان‌ها وارد حساب شوید.';list.replaceChildren();return;}
+ try{
+  const j=await api('/api/driver/notifications'),items=j.notifications||[];
+  badge.textContent=Number(j.unread_count||0).toLocaleString('fa-IR')+' اعلان جدید';
+  list.replaceChildren();
+  if(!items.length){const p=document.createElement('p');p.className='muted';p.textContent='فعلاً اعلانی ندارید.';list.append(p);}
+  for(const n of items){
+   const item=document.createElement('div');item.className='notification-item'+(!n.read_at?' unread':'');
+   const title=document.createElement('strong');title.textContent=n.title||'اعلان REV';
+   const body=document.createElement('p');body.textContent=n.body||'';
+   const time=document.createElement('small');time.textContent=new Date(n.created_at).toLocaleString('fa-IR');
+   item.append(title,body,time);
+   if(n.type==='group_invite'){const link=document.createElement('a');link.href='./nearby-map.html#groupTripPanel';link.className='btn secondary';link.textContent='مشاهده و پاسخ به دعوت';link.style.marginTop='8px';item.append(link);}
+   list.append(item);
+   if(showBrowser&&!seenAccountNotificationIds.has(n.id)){seenAccountNotificationIds.add(n.id);try{const stored=JSON.parse(localStorage.getItem('rev_seen_notifications')||'[]');stored.push(n.id);localStorage.setItem('rev_seen_notifications',JSON.stringify([...new Set(stored)].slice(-100));}catch(e){}}
+  }
+  let storedIds=[];try{storedIds=JSON.parse(localStorage.getItem('rev_seen_notifications')||'[]')}catch(e){}
+  const fresh=items.filter(n=>!n.read_at&&!storedIds.includes(n.id));
+  if(showBrowser&&'Notification' in window&&Notification.permission==='granted'){
+   fresh.forEach(n=>{try{const notice=new Notification(n.title||'اعلان REV',{body:n.body||'',tag:n.id});notice.onclick=()=>{window.focus();window.location.href='./nearby-map.html#groupTripPanel';notice.close();};}catch(e){}});
+  }
+  status.textContent=items.length.toLocaleString('fa-IR')+' اعلان در ۳۰ روز اخیر.';
+ }catch(e){status.textContent=e.message||'دریافت اعلان‌ها ممکن نشد.';list.innerHTML='<p class="muted">سرویس اعلان در دسترس نیست. پس از انتشار نسخه جدید API دوباره تلاش کنید.</p>';}
+}
+$('#accountEnableBrowserNotifications')?.addEventListener('click',async()=>{
+ if(!('Notification' in window)){say('این مرورگر از اعلان مرورگر پشتیبانی نمی‌کند.','error');return;}
+ try{const permission=await Notification.requestPermission();if(permission==='granted'){say('اعلان مرورگر فعال شد.','ok');loadAccountNotifications(false);}else say('اجازه اعلان داده نشد؛ دعوت‌ها همچنان در حساب REV نمایش داده می‌شوند.','error');}catch(e){say('فعال‌سازی اعلان مرورگر ممکن نشد.','error');}
+});
+$('#accountMarkNotificationsRead')?.addEventListener('click',async()=>{try{await api('/api/driver/notifications/read',{method:'POST',body:'{}'});await loadAccountNotifications(false);say('اعلان‌ها خوانده‌شده علامت‌گذاری شدند.','ok');}catch(e){say(e.message||'به‌روزرسانی اعلان‌ها ناموفق بود.','error');}});
 async function loadAccountTrips(){
  const status=$('#accountTripsStatus'),root=$('#accountTripsTable');if(!me){status.textContent='برای مشاهده تاریخچه سفرها وارد حساب شوید.';root.replaceChildren();return;}
  status.textContent='در حال دریافت تاریخچه سفرها…';
