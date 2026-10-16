@@ -5,45 +5,119 @@
 <meta name="theme-color" content="#ffffff"><title>پروفایل راننده و تحلیل مصرف | REV</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" onerror="this.onerror=null;this.href='https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css'">
 <style>
-:root{color-scheme:dark;--bg:#0f1115;--panel:#1a1e24;--panel2:#15191f;--line:rgba(255,255,255,.09);--text:#fff;--muted:#9ca3af;--green:#00e699;--teal:#00c875;--cyan:#00bcd4;--amber:#ff9800;--red:#ff646e;--shadow:0 18px 55px rgba(0,0,0,.22)}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 80% -10%,rgba(0,230,153,.08),transparent 35%),var(--bg);color:var(--text);font-family:Vazirmatn,Vazir,IRANSansX,Tahoma,sans-serif;line-height:1.7}
-a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap{max-width:1500px;margin:auto;padding:22px}.head{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:15px 18px;margin-bottom:12px;background:rgba(26,30,36,.88);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow)}.profile-nav{display:flex;gap:8px;flex-wrap:nowrap;overflow-x:auto;padding:10px;margin:0 0 18px;border:1px solid var(--line);border-radius:15px;background:rgba(26,30,36,.78);scrollbar-width:thin}.profile-nav a{flex:0 0 auto;padding:8px 12px;border-radius:9px;background:#222831;color:var(--text);font-size:12px;font-weight:750;white-space:nowrap}.profile-nav a:hover,.profile-nav a:focus{background:var(--green);color:#07140e}.planned-route-banner{margin:8px 0 10px;padding:10px 12px;border-radius:10px;border:1px solid rgba(0,188,212,.35);background:rgba(0,188,212,.08);font-size:12px;color:#c8f8ff}.planned-route-banner[hidden]{display:none}.brand{display:flex;align-items:center;gap:14px}.logo{font-size:30px;font-weight:950;letter-spacing:2px;color:var(--green);line-height:1}.brandline{font-size:12px;color:var(--muted);margin-top:4px}.user-avatar{width:48px;height:48px;display:grid;place-items:center;flex:0 0 auto;border-radius:50%;border:2px solid var(--green);background:linear-gradient(145deg,#263a35,#101a17);color:var(--green);font-size:19px;font-weight:900}.head-title{font-weight:850;font-size:18px}.sub,.muted{color:var(--muted);font-size:13px}.actions{display:flex;gap:8px;flex-wrap:wrap;align-items:center}.panel,.card{background:linear-gradient(145deg,rgba(29,34,41,.98),rgba(23,27,33,.98));border:1px solid var(--line);border-radius:18px;padding:17px;box-shadow:var(--shadow);min-width:0}.card{margin:0}.panel h2,.panel h3{margin-top:0}.dashboard{display:grid;grid-template-columns:minmax(290px,.39fr) minmax(0,.61fr);gap:18px;direction:ltr;align-items:start}.sidebar,.workspace{direction:rtl;min-width:0;display:grid;gap:16px;align-content:start}.identity{display:flex;gap:13px;align-items:center}.identity .user-avatar{width:58px;height:58px;font-size:22px}.identity-name{font-size:17px;font-weight:850}.vehicle-chip,.pill{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(0,230,153,.28);border-radius:99px;padding:3px 10px;font-size:11px;color:var(--green);background:rgba(0,230,153,.07)}.section-title{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:13px}.section-title h2,.section-title h3{margin:0;font-size:16px}.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.metric-card{padding:14px;border:1px solid var(--line);border-radius:14px;background:rgba(9,12,16,.38);min-width:0}.metric{font-size:25px;font-weight:900;color:var(--green);line-height:1.35;overflow-wrap:anywhere}.metric-label{font-size:12px;color:var(--muted)}.metric-unit{font-size:11px;color:var(--muted)}.two{display:grid;grid-template-columns:1fr;gap:14px}.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px 12px}label{display:block;margin:7px 0 4px;font-size:12px;color:#cbd2da}input:not([type=checkbox]),select{width:100%;min-width:0;padding:10px 11px;border-radius:10px;border:1px solid #39414b;background:#10141a;color:var(--text);outline:none}input:focus,select:focus{border-color:var(--green);box-shadow:0 0 0 3px rgba(0,230,153,.1)}input[type=checkbox]{accent-color:var(--green)}button,.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;border:0;border-radius:10px;padding:10px 14px;font:inherit;font-size:13px;font-weight:800;cursor:pointer;text-decoration:none;background:var(--green);color:#06140e;margin-top:8px;transition:transform .15s,opacity .15s}button:hover,.btn:hover{transform:translateY(-1px)}button.secondary,.btn.secondary{background:#252c34;color:var(--text);border:1px solid #3a424d}button.danger{background:#642c32;color:white}button:disabled{opacity:.45;cursor:not-allowed;transform:none}.status{margin-top:10px;padding:11px 12px;border-radius:11px;background:#10151a;border:1px solid var(--line);white-space:pre-wrap;font-size:12px;color:#d4dbe2;overflow-wrap:anywhere}.status.warn{border-color:rgba(255,152,0,.5);color:#ffc46b}.note{font-size:11px;color:var(--muted)}.map-shell{position:relative;padding:10px;background:#171b21;border:1px solid var(--line);border-radius:18px;overflow:hidden}.map-heading{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:6px 6px 12px}.map-heading h2{font-size:17px;margin:0}.live-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--green);box-shadow:0 0 12px rgba(0,230,153,.7);margin-left:6px}#trackMap{height:480px;border-radius:13px;border:1px solid var(--line);background:#10151b;z-index:1}.map-overlay{position:absolute;z-index:500;top:65px;left:22px;width:min(285px,calc(100% - 44px));padding:14px;background:rgba(17,21,27,.94);border:1px solid rgba(255,255,255,.12);border-radius:14px;backdrop-filter:blur(12px);box-shadow:0 12px 35px rgba(0,0,0,.3)}.map-overlay-title{font-size:12px;font-weight:850;margin-bottom:6px}.map-overlay select{padding:8px}.map-toggles{display:grid;gap:7px;margin-top:10px}.map-toggles label{display:flex;align-items:center;gap:8px;margin:0;color:#d3dae0;font-size:11px}.map-legend{display:flex;flex-wrap:wrap;gap:13px;padding:11px 5px 3px;font-size:11px;color:var(--muted)}.legend-key{display:inline-flex;align-items:center;gap:6px}.legend-dot{width:8px;height:8px;border-radius:50%;display:inline-block}.gps-actions{display:flex;gap:8px;flex-wrap:wrap}.live-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin-top:12px}.live-stat{background:#10151a;border:1px solid var(--line);border-radius:12px;padding:11px}.live-stat b{font-size:14px}.trip{padding:12px 0;border-bottom:1px solid var(--line)}.trip:last-child{border:0}.barrow{display:grid;grid-template-columns:minmax(70px,1fr) 2fr 65px;align-items:center;gap:8px;margin:10px 0;font-size:11px}.bar{height:8px;border-radius:20px;background:#303741;overflow:hidden}.bar>i{display:block;height:100%;background:linear-gradient(90deg,var(--teal),var(--green));border-radius:20px}.trip-table-wrap{overflow-x:auto}.footer{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:18px 5px 6px;margin-top:18px;color:var(--muted);font-size:12px}.footer-links{display:flex;gap:15px;flex-wrap:wrap}.footer a{color:#c4ccd4}.health-visual{display:flex;align-items:center;gap:14px}.health-ring{width:92px;height:92px;flex:0 0 92px;border-radius:50%;display:grid;place-items:center;background:conic-gradient(var(--green) 0deg,#2b333b 0deg);position:relative}.health-ring:before{content:"";position:absolute;inset:8px;background:#1a1e24;border-radius:50%}.health-ring span{position:relative;font-weight:900;font-size:17px}.health-info{min-width:0}.health-info strong{display:block;font-size:14px}.accent-cyan{color:var(--cyan)}.accent-amber{color:var(--amber)}.trip-heading{display:flex;align-items:center;justify-content:space-between;gap:10px}
-@media(max-width:980px){.dashboard{grid-template-columns:1fr}.workspace{grid-row:1}.sidebar{grid-row:2}#trackMap{height:390px}.head{align-items:flex-start;flex-wrap:wrap}.head-title{font-size:16px}}
-@media(max-width:560px){.wrap{padding:10px}.head{padding:13px;border-radius:15px}.brand{gap:10px}.logo{font-size:25px}.user-avatar{width:42px;height:42px}.head-title{width:100%}.panel,.card{padding:13px;border-radius:15px}.grid{grid-template-columns:repeat(2,minmax(0,1fr))}.metric{font-size:21px}.field-grid{grid-template-columns:1fr}.map-overlay{position:relative;top:auto;left:auto;width:auto;margin:0 0 9px}.map-shell{display:flex;flex-direction:column}#trackMap{height:330px}.map-heading{align-items:flex-start}.live-stats{grid-template-columns:repeat(3,minmax(0,1fr));gap:6px}.live-stat{padding:9px 7px}.live-stat b{font-size:12px}.gps-actions button{flex:1}.footer{padding-inline:4px}}
-/* Driver-first layout: identity, driving stats and battery status appear first. */
-.dashboard{grid-template-columns:minmax(0,1fr);gap:14px}
-.sidebar{grid-row:1;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
-.workspace{grid-row:2;gap:14px}
-#driverStats{order:2}
-#driverStats + .panel{order:3}
-#tripHistorySection{order:8}
-#plannedTripCard{order:0}#trackMapSection{order:1;display:grid;grid-template-columns:minmax(0,1fr);gap:8px}#gpsControls{order:2}
-#trackMap{order:2;height:min(62vh,620px);min-height:360px;width:100%;background:#151a20}
-.map-overlay{order:3;position:static;top:auto;left:auto;width:auto;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px 12px;padding:12px;background:#12171d;border-radius:12px;box-shadow:none}
-.map-overlay-title{grid-column:1/-1;margin:0}
-.map-overlay label{margin:0;align-self:end}
-.map-overlay input:not([type=checkbox]),.map-overlay select{margin-top:3px}
-.map-toggles{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:12px}
-#driverWeather{grid-column:1/-1;margin:0}
-#planWithVehicle{grid-column:1/-1;justify-self:start;margin:0}
-.map-heading{order:0;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}.map-heading button{margin:0}.planned-route-banner{order:1}.map-legend{order:4}
-@media(max-width:700px){.sidebar{grid-template-columns:1fr}.map-overlay{grid-template-columns:1fr}#trackMap{height:55vh;min-height:320px}.map-toggles{display:grid;grid-template-columns:1fr}.wrap{padding:10px}.map-shell{padding:9px}}
-/* هدف لمسی بزرگ برای اشتراک موقعیت؛ مناسب صفحه‌نمایش موبایل */
-.rev-share-location-toggle{display:flex;align-items:center;gap:16px;min-height:118px;padding:20px;margin:14px 0 8px;border:2px solid rgba(57,255,136,.45);border-radius:18px;background:linear-gradient(135deg,rgba(57,255,136,.12),rgba(0,128,111,.12));cursor:pointer;touch-action:manipulation;transition:border-color .2s,background .2s}
-.rev-share-location-toggle:has(input:checked){border-color:#39ff88;background:linear-gradient(135deg,rgba(57,255,136,.18),rgba(0,128,111,.16));box-shadow:0 0 0 3px rgba(57,255,136,.06)}
-.rev-share-location-toggle input{appearance:none;-webkit-appearance:none;flex:0 0 36px;width:36px;height:36px;margin:0;border:2px solid #7d9090;border-radius:9px;background:#0b1114;display:grid;place-content:center;cursor:pointer}
-.rev-share-location-toggle input:checked{background:#39ff88;border-color:#39ff88}
-.rev-share-location-toggle input:checked:before{content:"✓";font-size:27px;font-weight:900;line-height:1;color:#07120b}
-.rev-share-location-copy{display:flex;flex-direction:column;gap:7px;min-width:0}
-.rev-share-location-copy strong{font-size:15px;line-height:1.7;color:var(--text)}
-.rev-share-location-note{font-size:12px;line-height:1.9;color:var(--muted)}
-.rev-share-location-action{font-size:12px;font-weight:800;color:var(--green)}
-@media(max-width:480px){.rev-share-location-toggle{min-height:132px;padding:18px 15px;gap:13px}.rev-share-location-toggle input{flex-basis:38px;width:38px;height:38px}.rev-share-location-copy strong{font-size:14px}}
+:root{color-scheme:light;--bg:#f2f6f9;--panel:#ffffff;--line:#e4edf3;--text:#14293b;--muted:#7e93a6;--teal:#0887a7;--teal-dark:#066d88;--teal-soft:#e5f3f8;--teal-line:#cbe6f0;--amber:#b7791f;--amber-bg:#fdf6e3;--red:#cf4444;--red-bg:#fdf1f1;--shadow:0 4px 18px rgba(20,41,59,.06);--radius:18px}
+*{box-sizing:border-box}html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--text);font-family:Vazirmatn,Vazir,IRANSansX,Tahoma,sans-serif;line-height:1.7;font-size:15px}
+a{color:var(--teal);text-decoration:none}
+button,input,select,textarea{font:inherit}
+.wrap{max-width:860px;margin:auto;padding:14px 14px 30px}
+/* header */
+.head{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:14px 18px;margin-bottom:12px;background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.brand{display:flex;align-items:center;gap:10px}
+.logo{font-size:26px;font-weight:950;letter-spacing:2px;color:var(--teal)}
+.brandline{font-size:9px;letter-spacing:1.5px;color:var(--muted)}
+.head .sub{font-size:11px;color:var(--muted)}
+.head-title{font-size:15px;font-weight:900}
+.head .actions{display:flex;gap:8px;flex-wrap:wrap}
+/* slim external nav */
+.profile-nav{display:flex;gap:8px;overflow-x:auto;padding:4px 2px;margin:0 0 12px;scrollbar-width:none}
+.profile-nav::-webkit-scrollbar{display:none}
+.profile-nav a{flex:0 0 auto;padding:7px 13px;border-radius:999px;background:#fff;border:1px solid var(--line);color:var(--muted);font-size:12px;font-weight:700;white-space:nowrap}
+.profile-nav a:hover{color:var(--teal);border-color:var(--teal-line)}
+/* tab bar */
+.dp-tabs{position:sticky;top:10px;z-index:60;display:flex;gap:6px;padding:6px;margin:0 0 14px;background:rgba(255,255,255,.94);backdrop-filter:blur(10px);border:1px solid var(--line);border-radius:16px;box-shadow:var(--shadow)}
+.dp-tabs button{flex:1;border:0;border-radius:11px;background:transparent;color:var(--muted);font-weight:800;font-size:13px;padding:11px 6px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;min-height:46px}
+.dp-tabs button .ico{font-size:16px}
+.dp-tabs button.active{background:var(--teal);color:#fff;box-shadow:0 4px 12px rgba(8,135,167,.3)}
+/* flatten old dashboard layout — tabs control visibility */
+.dashboard,.sidebar,.workspace{display:contents}
+.tab-hidden{display:none!important}
+/* cards */
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:18px;margin:0 0 14px}
+.panel h2,.section-title{font-size:16px;font-weight:900;margin:0 0 12px;color:var(--text);display:flex;align-items:center;gap:8px}
+.muted{color:var(--muted);font-size:12px}
+.note{font-size:11px;color:var(--muted);line-height:1.8}
+.status{font-size:12px;color:var(--muted);margin-top:8px;min-height:20px}
+.sub{font-size:11px;color:var(--muted)}
+.warn{background:var(--amber-bg);border:1px solid #f0dfb8;color:#8a5f14;border-radius:10px;padding:9px 12px;font-size:12px}
+.pill{display:inline-block;font-size:10px;border:1px solid var(--teal-line);color:var(--teal-dark);background:var(--teal-soft);border-radius:99px;padding:2px 9px;white-space:nowrap;font-weight:800}
+/* identity */
+.identity{display:flex;gap:14px;align-items:center}
+.user-avatar{width:58px;height:58px;flex:0 0 58px;display:grid;place-items:center;border-radius:50%;background:linear-gradient(135deg,#0b93b8,#066d88);color:#fff;font-size:24px;font-weight:900}
+.identity-name{font-size:18px;font-weight:900}
+.vehicle-chip{display:inline-block;margin-top:4px;font-size:11px;color:var(--teal-dark);background:var(--teal-soft);border:1px solid var(--teal-line);border-radius:99px;padding:2px 10px;font-weight:700}
+/* buttons */
+.btn{display:inline-flex;justify-content:center;align-items:center;gap:7px;padding:11px 16px;border-radius:12px;border:1px solid var(--line);background:#fff;color:var(--text);font-size:13px;font-weight:800;cursor:pointer;min-height:46px}
+.btn.primary,.btn:not(.secondary):not(.danger){background:linear-gradient(135deg,#0b93b8,#066d88);border-color:var(--teal);color:#fff}
+.btn.secondary{background:#fff;color:var(--teal-dark);border-color:var(--teal-line)}
+.btn.danger{background:var(--red-bg);color:var(--red);border-color:#f0c9c9}
+.actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.gps-actions{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px}
+/* metrics */
+.grid{display:grid;gap:9px}
+.metric,.metric-card{background:#f7fafc;border:1px solid var(--line);border-radius:13px;padding:13px}
+.metric-label,.metric small{display:block;color:var(--muted);font-size:11px}
+.metric strong,.metric-card strong{display:block;font-size:22px;font-weight:900;line-height:1.6;font-variant-numeric:tabular-nums;color:var(--text)}
+.metric-unit,.unit{font-size:10px;color:var(--muted);font-weight:500}
+.two{grid-template-columns:repeat(2,minmax(0,1fr))}
+.field-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+/* map */
+.map-shell{background:#fff;border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px;margin:0 0 14px;overflow:hidden}
+.map-heading{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:10px}
+.map-heading h2{font-size:16px;margin:0;font-weight:900;display:flex;align-items:center;gap:8px}
+.live-dot{width:9px;height:9px;border-radius:50%;background:#1ea56c;display:inline-block;box-shadow:0 0 0 4px rgba(30,165,108,.15)}
+#trackMap{height:320px;border-radius:12px;border:1px solid var(--line);background:#e8eef2;z-index:1}
+.map-overlay{margin-top:10px}
+.map-overlay-title{font-size:12px;font-weight:800;margin-bottom:6px}
+.map-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:var(--muted)}
+.legend-key{display:flex;align-items:center;gap:5px}
+.legend-dot{width:10px;height:10px;border-radius:50%;display:inline-block}
+.map-toggles{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+/* live stats */
+.live-stats{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:10px}
+.live-stat{background:#f7fafc;border:1px solid var(--line);border-radius:11px;padding:10px}
+.live-stat small{display:block;color:var(--muted);font-size:10px}
+.live-stat b{font-size:17px;font-variant-numeric:tabular-nums}
+/* battery bars */
+.bar{height:9px;border-radius:99px;background:#edf1f5;overflow:hidden;margin-top:6px}
+.barrow{height:100%;border-radius:99px;background:linear-gradient(90deg,#0b93b8,#066d88)}
+.health-visual{display:flex;align-items:center;gap:14px}
+.health-ring{width:86px;height:86px;flex:0 0 86px}
+.health-info{font-size:12px;color:var(--muted)}
+.accent-amber{color:var(--amber)}.accent-cyan{color:var(--teal-dark)}
+/* trips */
+.trip{padding:12px 0;border-bottom:1px solid var(--line)}
+.trip:last-child{border-bottom:0}
+.trip-heading,.trip-title{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:800;font-size:14px}
+.trip-table-wrap{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:12px}
+th{text-align:right;padding:9px;border-bottom:1px solid var(--line);color:var(--muted);font-weight:700;white-space:nowrap}
+td{padding:9px;border-bottom:1px solid var(--line);vertical-align:top}
+/* forms */
+input[type=text],input[type=number],input[type=date],input[type=time],select,textarea{width:100%;padding:10px 12px;border:1px solid #d5e2ec;border-radius:10px;background:#fff;color:var(--text);min-height:44px}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--teal);outline-offset:1px;border-color:var(--teal)}
+label{font-size:12px;color:var(--muted)}
+.card{background:#f7fafc;border:1px solid var(--line);border-radius:13px;padding:13px}
+/* planned route banner */
+.planned-route-banner{margin:0 0 12px;padding:10px 12px;border-radius:10px;border:1px solid var(--teal-line);background:var(--teal-soft);font-size:12px;color:var(--teal-dark)}
+.planned-route-banner[hidden]{display:none}
+/* live share / history panels (outside dashboard) */
+#revLiveSharePanel,#revTripHistoryPanel{box-sizing:border-box}
+#revLiveSharePanel .panel,#revTripHistoryPanel .panel{margin:0}
+/* share location rows */
+.rev-share-location-action{display:flex;gap:8px;flex-wrap:wrap;margin-top:8px}
+.rev-share-location-note{font-size:11px;color:var(--muted)}
+.rev-share-location-toggle{display:flex;align-items:center;gap:8px;font-size:13px;font-weight:700}
+/* footer */
+.footer{margin:18px 0 0;padding:16px 4px calc(90px + env(safe-area-inset-bottom));color:var(--muted);font-size:11px;text-align:center}
+.footer-links{display:flex;gap:14px;justify-content:center;flex-wrap:wrap;margin-bottom:8px}
+@media(min-width:700px){.wrap{max-width:860px}.field-grid{grid-template-columns:repeat(4,minmax(0,1fr))}.live-stats{grid-template-columns:repeat(4,minmax(0,1fr))}#trackMap{height:380px}}
+@media(prefers-color-scheme:dark){:root{color-scheme:light}}
+
 </style>
 
-<link rel="stylesheet" href="./rev-theme.css?v=1">
 <style id="navigationGateStyle">#navigationGate{position:fixed;inset:0;z-index:999999;display:grid;place-items:center;padding:18px;background:linear-gradient(145deg,#080b0d,#102126);color:#f5f7f8;font:16px/1.9 Vazirmatn,Vazir,Tahoma,sans-serif}#navigationGate[hidden]{display:none!important}.gate-card{width:min(100%,600px);padding:26px;border:1px solid #2a343a;border-radius:18px;background:#121a1f;box-shadow:0 20px 70px #0008}.gate-card h1{font-size:26px;line-height:1.5}.gate-card p{color:#aab6bc}.gate-card a,.gate-card button{display:inline-block;margin:6px 5px 0 0;border-radius:10px;padding:10px 14px;text-decoration:none;font:inherit;font-weight:800;cursor:pointer}.gate-primary{background:#39ff88;color:#07100b;border:1px solid #39ff88}.gate-secondary{background:transparent;color:#39ff88;border:1px solid #395648}#navigationGateStatus{margin-top:12px;color:#ffdda0;white-space:pre-wrap;font-size:13px}</style>
-<link rel="stylesheet" href="./rev-mobile-theme.css?v=20261017-6">
+<link rel="stylesheet" href="./rev-mobile-theme.css?v=20261017-7">
 <script src="./rev-site-settings.js?v=20261017-3" defer></script>
 </head>
 <body>
@@ -77,9 +151,9 @@ a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap
 <header class="head">
   <div class="brand"><div class="logo">REV</div><div><div class="brandline">ELECTRIC MOBILITY PLATFORM</div><div class="sub">سفر هوشمند · تجربه رانندگی برقی</div></div></div>
   <div class="head-title">پروفایل راننده و ثبت سفر GPS</div>
-  <div class="actions"><a class="btn secondary" href="./">صفحه اصلی</a><a class="btn secondary" href="./trip.html">پلتفرم سفر</a><a class="btn secondary" href="./#about">درباره REV</a></div>
+  
 </header>
-<nav class="profile-nav" aria-label="منوی پروفایل"><a href="./">صفحه اصلی</a><a href="./trip.html">برنامه‌ریز سفر</a><a href="#plannedTripCard">برنامه سفر من</a><a href="#trackMapSection">نقشه و مسیر</a><a href="#gpsControls">شروع / پایان سفر</a><a href="#driverStats">آمار رانندگی</a><a href="#tripHistorySection">سفرهای اخیر</a><a href="#revLiveSharePanel">اشتراک‌گذاری زنده</a><a href="#revTripHistoryPanel">تاریخچه و تحلیل انرژی</a><a href="./businesses.html">ایستگاه‌ها و کسب‌وکارها</a><a href="./account.html">حساب کاربری</a></nav>
+<nav class="profile-nav" aria-label="پیوندهای اصلی"><a href="./">صفحه اصلی</a><a href="./trip.html">برنامه‌ریز سفر</a><a href="./nearby-map.html">نقشه و ایستگاه‌ها</a><a href="./businesses.html">کسب‌وکارها</a><a href="./account.html">حساب کاربری</a></nav>
 <div class="dashboard">
   <aside class="sidebar">
     <section class="panel">
@@ -88,7 +162,13 @@ a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap
       <div id="signInHint" hidden class="note">برای ذخیره خصوصی سفرها، حساب کاربری REV باید فعال باشد و ورود از طریق سرویس احراز هویت انجام شده باشد.</div>
       <p class="note">GPS فقط پس از فشردن دکمه شروع فعال می‌شود. برای ثبت پیوسته، صفحه را باز نگه دارید؛ قفل‌شدن گوشی ممکن است ردیابی را متوقف کند.</p>
     </section>
-    <section class="panel" id="revGroupCodePanel">
+    <div class="dp-tabs" id="dpTabs" role="tablist" aria-label="بخش‌های پروفایل راننده">
+<button type="button" role="tab" data-tab-btn="trip" aria-selected="true" class="active"><span class="ico">🧭</span>سفر</button>
+<button type="button" role="tab" data-tab-btn="car" aria-selected="false"><span class="ico">🔋</span>خودرو</button>
+<button type="button" role="tab" data-tab-btn="group" aria-selected="false"><span class="ico">👥</span>گروهی</button>
+<button type="button" role="tab" data-tab-btn="history" aria-selected="false"><span class="ico">🕘</span>تاریخچه</button>
+</div>
+<section data-tab="group" class="panel" id="revGroupCodePanel">
       <div class="section-title"><h2>کد اختصاصی سفر گروهی</h2><span class="pill">REV Group</span></div>
       <p class="note">این کد را فقط با همسفرهایی به اشتراک بگذارید که می‌خواهید برای سفر گروهی دعوت کنید. کد، رمز ورود به حساب شما نیست.</p>
       <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:12px">
@@ -98,7 +178,7 @@ a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap
       </div>
       <div id="revGroupCodeStatus" class="status" aria-live="polite">برای دریافت کد، وارد حساب کاربری شوید.</div>
     </section>
-    <section class="panel" id="revGroupTravelSettings">
+    <section data-tab="group" class="panel" id="revGroupTravelSettings">
       <div class="section-title"><h2>تنظیمات سفرهای گروهی</h2><span class="pill">حریم خصوصی</span></div>
       <label class="rev-share-location-toggle" for="revGroupShareLocation">
         <input id="revGroupShareLocation" type="checkbox" checked>
@@ -106,12 +186,12 @@ a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap
       </label>
       <div id="revGroupSettingsStatus" class="status" role="status" aria-live="polite">در حال دریافت تنظیمات حساب…</div>
     </section>
-    <section class="panel" id="plannedTripCard" hidden>
+    <section data-tab="trip" class="panel" id="plannedTripCard" hidden>
       <div class="section-title"><h2>برنامه سفر تأییدشده</h2><span class="pill">آماده شروع</span></div>
       <div id="plannedTripSummary" class="status">اطلاعات مسیر از برنامه‌ریز سفر دریافت می‌شود.</div>
       <p class="note">پس از بررسی مسیر، با زدن «شروع سفر و ثبت GPS» ثبت موقعیت آغاز می‌شود. تا آن زمان GPS فعال نیست.</p>
     </section>
-    <section class="panel" id="driverStats">
+    <section data-tab="car" class="panel" id="driverStats">
       <div class="section-title"><h2>آمار رانندگی</h2><span class="pill">بر اساس سفرهای ثبت‌شده</span></div>
       <div class="grid">
         <div class="metric-card"><div class="metric-label">تعداد سفرها</div><div id="tripCount" class="metric">—</div></div>
@@ -120,18 +200,18 @@ a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap
         <div class="metric-card"><div class="metric-label">میانگین مصرف</div><div id="avgConsumption" class="metric">—</div><div class="metric-unit">kWh / 100 km</div></div>
       </div>
     </section>
-    <section class="panel">
+    <section data-tab="car" class="panel">
       <div class="section-title"><h2>وضعیت باتری و مصرف</h2><span class="pill">تحلیل انرژی</span></div>
       <div class="health-visual"><div class="health-ring"><span id="healthValue">—</span></div><div class="health-info"><strong>سلامت باتری هنوز اندازه‌گیری نشده</strong><div class="sub">در این نسخه، داده مستقیم سلامت باتری از خودرو دریافت نمی‌شود.</div><div class="sub" style="margin-top:6px">میانگین مصرف ثبت‌شده: <b id="healthConsumption" style="color:var(--green)">—</b></div></div></div>
     </section>
-    <section class="panel" id="tripHistorySection">
+    <section data-tab="history" class="panel" id="tripHistorySection">
       <div class="trip-heading"><h2 style="font-size:16px;margin:0">سفرهای اخیر</h2><span class="pill">History</span></div>
       <p class="note">مسیر، زمان شروع، مسافت و انرژی از سفرهای ثبت‌شده حساب شما نمایش داده می‌شوند.</p>
       <div id="tripHistory"><div class="muted">برای دیدن سابقه، وارد حساب کاربری شوید.</div></div>
     </section>
   </aside>
   <main class="workspace">
-    <section class="map-shell" id="trackMapSection">
+    <section data-tab="trip" class="map-shell" id="trackMapSection">
       <div class="map-heading"><div><h2><span class="live-dot"></span>نقشه سفر و موقعیت راننده</h2><div class="sub">مسیر برنامه‌ریزی‌شده و سپس رد GPS واقعی</div></div><button id="startNavigationBtn" type="button">▶ شروع مسیریابی و ثبت GPS</button></div><div id="plannedRouteBanner" class="planned-route-banner" hidden></div>
       <div class="map-overlay">
         <div class="map-overlay-title">تنظیمات خودرو و سفر</div>
@@ -142,7 +222,7 @@ a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap
       <div id="trackMap" aria-label="نقشه مسیر GPS"></div>
       <div class="map-legend"><span class="legend-key"><i class="legend-dot" style="background:var(--green)"></i>مسیر GPS</span><span class="legend-key"><i class="legend-dot" style="background:var(--cyan)"></i>ایستگاه شارژ (در صورت اتصال داده)</span><span class="legend-key"><i class="legend-dot" style="background:var(--amber)"></i>تعمیرگاه (در صورت اتصال داده)</span></div>
     </section>
-    <section class="panel" id="gpsControls">
+    <section data-tab="trip" class="panel" id="gpsControls">
       <div class="section-title"><h2>ثبت سفر با GPS</h2><span class="pill">ثبت با رضایت شما</span></div>
       <div class="field-grid">
         <div><label for="batteryKwh">ظرفیت قابل‌استفاده باتری (kWh)</label><input id="batteryKwh" type="number" min="1" max="250" value="60"></div>
@@ -156,18 +236,190 @@ a{color:var(--green);text-decoration:none}button,input,select{font:inherit}.wrap
       <div class="live-stats"><div class="live-stat"><div class="sub">مدت سفر</div><b id="elapsed">۰ دقیقه</b></div><div class="live-stat"><div class="sub">مسافت GPS</div><b id="gpsDistance">۰٫۰ km</b></div><div class="live-stat"><div class="sub">سرعت فعلی</div><b id="liveSpeed">— km/h</b></div><div class="live-stat"><div class="sub">بیشترین سرعت</div><b id="liveMaxSpeed">— km/h</b></div><div class="live-stat"><div class="sub">سرعت میانگین</div><b id="liveAvgSpeed">— km/h</b></div><div class="live-stat"><div class="sub">شتاب/ترمز شدیدِ احتمالی</div><b id="liveDrivingEvents">۰ / ۰</b></div><div class="live-stat"><div class="sub">نقاط GPS</div><b id="pointCount">۰</b></div></div><p class="note">سرعت از GPS گوشی تخمین زده می‌شود و ممکن است خطا داشته باشد. شتاب و ترمز شدید فقط نشانه‌های احتمالی‌اند، نه ارزیابی قطعی راننده.</p>
       <p class="note">انرژی محاسبه‌شده از درصد شارژ، تخمینی است و به ظرفیت واقعی باتری، دما و کالیبراسیون خودرو بستگی دارد.</p>
     </section>
-    <section class="panel">
+    <section data-tab="car" class="panel">
       <div class="section-title"><h2>اتصال OBD / API خودرو</h2><span class="pill">آماده بررسی سازگاری</span></div>
       <p class="note">اتصال واقعی OBD به نوع خودرو و آداپتور بستگی دارد. این نسخه قابلیت مرورگر را بررسی می‌کند و ادعای اتصال به ECU یا خواندن واقعی باتری ندارد؛ برای آداپتورهای Bluetooth Classic معمولاً اپ بومی/پل محلی لازم است.</p>
       <button id="checkObd" class="secondary" type="button">بررسی قابلیت‌های این مرورگر</button><div id="obdStatus" class="status">اتصال هنوز انجام نشده است.</div>
     </section>
-    <section class="panel">
+    <section data-tab="car" class="panel">
       <div class="section-title"><h2>تحلیل مصرف سفرها</h2><span class="pill">kWh / 100 km</span></div>
       <p class="note">مصرف از انرژی ثبت‌شده تقسیم بر مسافت محاسبه می‌شود؛ سفرهای بدون داده انرژی در میانگین اندازه‌گیری‌شده لحاظ نمی‌شوند.</p>
       <div id="consumptionBars"></div>
     </section>
   </main>
 </div>
+<section data-tab="group" id="revLiveSharePanel" dir="rtl" style="width:100%;margin:0 0 14px;padding:20px;border:1px solid #e4edf3;border-radius:20px;background:#ffffff;color:#14293b;font-family:Vazirmatn,Vazir,Tahoma,sans-serif">
+  <div style="color:#0887a7;font-size:12px;font-weight:800">REV LIVE TRIP</div>
+  <h2 style="margin:3px 0 6px;font-size:23px">اشتراک‌گذاری زنده موقعیت سفر</h2>
+  <p style="margin:0;color:#7e93a6;font-size:14px">با رضایت خودت، موقعیت فعلی دستگاه برای یک لینک خصوصی ارسال می‌شود. لینک حداکثر ۸ ساعت اعتبار دارد و هر لحظه می‌توانی اشتراک را متوقف کنی. موقعیت فقط هنگام فعال بودن این قابلیت ارسال می‌شود.</p>
+  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
+    <label style="font-size:13px;color:#3c5266">مدت اعتبار <select id="revShareHours" style="margin-inline-start:6px;padding:8px;border-radius:9px;border:1px solid #d5e2ec;background:#f7fafc;color:#14293b;font:inherit"><option value="1">۱ ساعت</option><option value="2" selected>۲ ساعت</option><option value="4">۴ ساعت</option><option value="8">۸ ساعت</option></select></label>
+    <button id="revStartLiveShare" type="button" style="border:1px solid #0887a7;border-radius:10px;background:linear-gradient(135deg,#0b93b8,#066d88);color:#ffffff;font-weight:800;padding:10px 15px;cursor:pointer;font:inherit">شروع اشتراک زنده</button>
+    <button id="revStopLiveShare" type="button" disabled style="border:1px solid #f0c9c9;border-radius:10px;background:#fdf1f1;color:#cf4444;padding:10px 15px;cursor:pointer;font:inherit">توقف و لغو لینک</button>
+  </div>
+  <div id="revShareStatus" role="status" aria-live="polite" style="margin-top:12px;padding:10px 12px;border:1px solid #e4edf3;border-radius:10px;background:#f7fafc;color:#3c5266;font-size:13px">اشتراک زنده خاموش است.</div>
+  <div id="revShareLinkWrap" hidden style="margin-top:10px"><label for="revShareLink" style="display:block;color:#7e93a6;font-size:12px;margin-bottom:5px">لینک برای خانواده یا دوستان</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="revShareLink" readonly style="flex:1;min-width:220px;padding:10px;border-radius:9px;border:1px solid #d5e2ec;background:#f7fafc;color:#0887a7;font:inherit"><button id="revCopyShareLink" type="button" style="border:1px solid #cbe6f0;border-radius:10px;background:#e5f3f8;color:#0887a7;padding:9px 13px;cursor:pointer;font:inherit">کپی لینک</button></div></div>
+  <p style="font-size:12px;color:#7e93a6;margin:12px 0 0">برای کارکردن، GPS دستگاه و اینترنت باید روشن باشد. در این نسخه فقط آخرین مختصات ذخیره می‌شود؛ این قابلیت جایگزین خدمات اضطراری نیست.</p>
+</section>
+<script>
+(() => {
+  const API="https://rev-auth-api.mojtaba-alimi64.workers.dev";
+  const $=id=>document.getElementById(id);
+  const status=$("revShareStatus"),start=$("revStartLiveShare"),stop=$("revStopLiveShare"),wrap=$("revShareLinkWrap"),link=$("revShareLink");
+  let shareId=null,watchId=null,lastSentAt=0,sending=false;
+  const idKey="rev_live_share_id";
+  const setStatus=(message,error=false)=>{status.textContent=message;status.style.color=error?"#cf4444":"#3c5266";status.style.borderColor=error?"#f0c9c9":"#e4edf3";};
+  async function api(path,options={}){const res=await fetch(API+path,{...options,credentials:"include",headers:{"Accept":"application/json",...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})}});let data={};try{data=await res.json()}catch{}if(!res.ok)throw new Error(res.status===401?"برای اشتراک زنده ابتدا وارد حساب REV شو.":(data.error||"ارتباط با سرویس اشتراک برقرار نشد."));return data;}
+  function sendPosition(position){
+    const now=Date.now();if(sending||now-lastSentAt<12000)return;
+    sending=true;lastSentAt=now;
+    api("/api/driver/shares/"+encodeURIComponent(shareId)+"/location",{method:"POST",body:JSON.stringify({latitude:position.coords.latitude,longitude:position.coords.longitude,accuracy_m:position.coords.accuracy})})
+      .then(result=>{if(!result.updated)throw new Error("این لینک منقضی یا لغو شده است.");setStatus("اشتراک زنده فعال است · آخرین به‌روزرسانی: "+new Date().toLocaleTimeString("fa-IR"));})
+      .catch(e=>{setStatus(e.message,true);stopSharing();}).finally(()=>{sending=false;});
+  }
+  function stopTracking(updateUi=true){if(watchId!==null&&navigator.geolocation)navigator.geolocation.clearWatch(watchId);watchId=null;if(updateUi){start.disabled=false;stop.disabled=true;}}
+  async function startSharing(){
+    if(!navigator.geolocation){setStatus("مرورگر این دستگاه از مکان‌یابی پشتیبانی نمی‌کند.",true);return;}
+    if(!window.isSecureContext){setStatus("برای دسترسی امن به GPS، صفحه باید روی HTTPS باز شود.",true);return;}
+    start.disabled=true;setStatus("در حال ایجاد لینک امن…");
+    try{
+      const created=await api("/api/driver/shares",{method:"POST",body:JSON.stringify({hours:Number($("revShareHours").value)})});
+      shareId=created.id;localStorage.setItem(idKey,shareId);
+      link.value=new URL("share-trip.html?token="+encodeURIComponent(created.token),location.href).href;wrap.hidden=false;
+      stop.disabled=false;setStatus("لینک ساخته شد؛ اجازه مکان‌یابی را تأیید کن تا موقعیت به‌روزرسانی شود.");
+      watchId=navigator.geolocation.watchPosition(sendPosition,error=>{setStatus("مکان‌یابی انجام نشد: "+(error.message||"مجوز GPS را بررسی کن."),true);}, {enableHighAccuracy:true,maximumAge:10000,timeout:20000});
+    }catch(e){setStatus(e.message,true);start.disabled=false;}
+  }
+  async function stopSharing(){
+    stop.disabled=true;stopTracking();
+    try{if(shareId)await api("/api/driver/shares/"+encodeURIComponent(shareId)+"/revoke",{method:"POST",body:"{}"});setStatus("اشتراک متوقف و لینک لغو شد.");}
+    catch(e){setStatus(e.message,true);}
+    localStorage.removeItem(idKey);shareId=null;link.value="";wrap.hidden=true;start.disabled=false;
+  }
+  start.addEventListener("click",startSharing);stop.addEventListener("click",stopSharing);
+  $("revCopyShareLink").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(link.value);setStatus("لینک اشتراک کپی شد. آن را فقط برای افراد مورد اعتماد بفرست.");}catch{link.focus();link.select();setStatus("لینک انتخاب شد؛ آن را کپی کن.");}});
+  // A page reload must not silently restart GPS; an existing session can still be revoked.
+  const previousShare=localStorage.getItem(idKey);
+  if(previousShare){shareId=previousShare;start.disabled=true;stop.disabled=false;setStatus("یک اشتراک قبلی ممکن است هنوز فعال باشد. مکان‌یابی خودکار شروع نشده؛ برای لغو آن دکمه توقف را بزن.");}
+})();
+</script>
+
+<section data-tab="history" id="revTripHistoryPanel" dir="rtl" style="width:100%;margin:0 0 14px;padding:20px;border:1px solid #e4edf3;border-radius:20px;background:#ffffff;color:#14293b;font-family:Vazirmatn,Vazir,Tahoma,sans-serif">
+  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
+    <div><div style="color:#0887a7;font-size:12px;font-weight:800">REV DRIVER INSIGHTS</div><h2 style="margin:3px 0 6px;font-size:23px">تاریخچه سفر و تحلیل مصرف</h2><p style="margin:0;color:#7e93a6;font-size:14px">سفرهای انجام‌شده را ثبت کن تا میانگین مصرف واقعی حساب تو به‌مرور دقیق‌تر شود. اطلاعات در حساب کاربری ذخیره می‌شود.</p></div>
+    <button id="revTripsRefresh" type="button" style="border:1px solid #cbe6f0;border-radius:10px;background:#e5f3f8;color:#0887a7;padding:9px 13px;cursor:pointer;font:inherit">به‌روزرسانی</button>
+  </div>
+  <div id="revTripsStatus" role="status" aria-live="polite" style="margin:14px 0;padding:10px 12px;border:1px solid #e4edf3;border-radius:10px;background:#f7fafc;color:#3c5266;font-size:13px">برای بارگذاری تاریخچه، وضعیت ورود بررسی می‌شود…</div>
+  <div id="revTripInsightCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:12px 0">
+    <div style="padding:13px;border:1px solid #e4edf3;border-radius:12px"><small style="color:#7e93a6">تعداد سفرها</small><div id="revInsightCount" style="font-size:23px;font-weight:800">—</div></div>
+    <div style="padding:13px;border:1px solid #e4edf3;border-radius:12px"><small style="color:#7e93a6">میانگین مصرف</small><div id="revInsightAverage" style="font-size:23px;font-weight:800">—</div><small style="color:#7e93a6">kWh در ۱۰۰ کیلومتر</small></div>
+    <div style="padding:13px;border:1px solid #e4edf3;border-radius:12px"><small style="color:#7e93a6">مسافت ثبت‌شده</small><div id="revInsightDistance" style="font-size:23px;font-weight:800">—</div><small style="color:#7e93a6">کیلومتر</small></div>
+    <div style="padding:13px;border:1px solid #e4edf3;border-radius:12px"><small style="color:#7e93a6">میانه مصرف</small><div id="revInsightMedian" style="font-size:23px;font-weight:800">—</div><small style="color:#7e93a6">kWh در ۱۰۰ کیلومتر</small></div>
+  </div>
+  <p id="revInsightConfidence" style="font-size:13px;color:#7e93a6;margin:6px 0 18px">با ثبت چند سفر، تحلیل نمایش داده می‌شود.</p>
+  <form id="revTripRecordForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:15px;border:1px solid #e4edf3;border-radius:14px;background:#f7fafc">
+    <label style="display:grid;gap:5px;font-size:13px;color:#3c5266">نام خودرو<input name="vehicle_name" maxlength="100" placeholder="مثلاً خودروی برقی من" style="width:100%;padding:10px;border-radius:9px;border:1px solid #d5e2ec;background:#f7fafc;color:#14293b;font:inherit"></label>
+    <label style="display:grid;gap:5px;font-size:13px;color:#3c5266">نوع خودرو<select name="vehicle_type" style="width:100%;padding:10px;border-radius:9px;border:1px solid #d5e2ec;background:#f7fafc;color:#14293b;font:inherit"><option value="bev">تمام‌برقی (BEV)</option><option value="phev">پلاگین‌هیبرید (PHEV)</option><option value="hev">هیبرید (HEV)</option><option value="mhev">مایلد هیبرید (MHEV)</option></select></label>
+    <label style="display:grid;gap:5px;font-size:13px;color:#3c5266">مسافت سفر (کیلومتر)<input name="distance_km" type="number" min="0.1" max="5000" step="0.1" required placeholder="مثلاً ۱۸۰" style="width:100%;padding:10px;border-radius:9px;border:1px solid #d5e2ec;background:#f7fafc;color:#14293b;font:inherit"></label>
+    <label style="display:grid;gap:5px;font-size:13px;color:#3c5266">انرژی مصرف‌شده (kWh)<input name="energy_kwh" type="number" min="0" max="2000" step="0.1" required placeholder="مثلاً ۳۲" style="width:100%;padding:10px;border-radius:9px;border:1px solid #d5e2ec;background:#f7fafc;color:#14293b;font:inherit"></label>
+    <label style="display:grid;gap:5px;font-size:13px;color:#3c5266">شارژ باتری در شروع (%)<input name="start_soc" type="number" min="0" max="100" step="1" placeholder="اختیاری" style="width:100%;padding:10px;border-radius:9px;border:1px solid #d5e2ec;background:#f7fafc;color:#14293b;font:inherit"></label>
+    <label style="display:grid;gap:5px;font-size:13px;color:#3c5266">شارژ باتری در پایان (%)<input name="end_soc" type="number" min="0" max="100" step="1" placeholder="اختیاری" style="width:100%;padding:10px;border-radius:9px;border:1px solid #d5e2ec;background:#f7fafc;color:#14293b;font:inherit"></label>
+    <label style="display:grid;gap:5px;font-size:13px;color:#3c5266">شروع سفر<input name="started_at" type="datetime-local" required style="width:100%;padding:10px;border-radius:9px;border:1px solid #d5e2ec;background:#f7fafc;color:#14293b;font:inherit"></label>
+    <label style="display:grid;gap:5px;font-size:13px;color:#3c5266">پایان سفر<input name="ended_at" type="datetime-local" required style="width:100%;padding:10px;border-radius:9px;border:1px solid #d5e2ec;background:#f7fafc;color:#14293b;font:inherit"></label>
+    <div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button type="submit" style="border:1px solid #0887a7;border-radius:10px;background:linear-gradient(135deg,#0b93b8,#066d88);color:#ffffff;font-weight:800;padding:10px 18px;cursor:pointer;font:inherit">ثبت سفر در حساب من</button><span style="color:#7e93a6;font-size:12px">فقط اطلاعاتی که خودت وارد می‌کنی ذخیره می‌شود؛ موقعیت GPS ثبت نمی‌شود.</span></div>
+  </form>
+  <div style="margin-top:20px"><h3 style="font-size:18px;margin:0 0 10px">آخرین سفرها</h3><div id="revTripsList" style="display:grid;gap:9px"><div style="color:#7e93a6;font-size:13px">هنوز داده‌ای بارگذاری نشده است.</div></div></div>
+</section>
+<script>
+(() => {
+  const API = "https://rev-auth-api.mojtaba-alimi64.workers.dev";
+  const $ = id => document.getElementById(id);
+  const form = $("revTripRecordForm");
+  const status = $("revTripsStatus");
+  const setStatus = (message, error=false) => { status.textContent=message; status.style.borderColor=error?"#f0c9c9":"#e4edf3"; status.style.color=error?"#cf4444":"#3c5266"; };
+  const fa = value => Number(value).toLocaleString("fa-IR",{maximumFractionDigits:1});
+  const dateInputValue = date => { const d=new Date(date.getTime()-date.getTimezoneOffset()*60000); return d.toISOString().slice(0,16); };
+  const showMetric = (id,value,suffix="") => $(id).textContent=value===null||value===undefined?"—":fa(value)+suffix;
+  async function api(path, options={}) {
+    const res=await fetch(API+path,{...options,credentials:"include",headers:{"Accept":"application/json",...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})}});
+    let data={}; try{data=await res.json();}catch{}
+    if(!res.ok) throw new Error(res.status===401?"برای دیدن و ثبت تاریخچه، ابتدا وارد حساب REV شو.":(data.error||"ارتباط با سرویس سفر برقرار نشد ("+res.status+")."));
+    return data;
+  }
+  function renderTrips(trips) {
+    const root=$("revTripsList"); root.replaceChildren();
+    if(!trips.length){const p=document.createElement("p");p.textContent="هنوز سفری ثبت نشده است. بعد از اولین سفر، اطلاعات در این جدول نمایش داده می‌شود.";p.style.color="#9eafb5";root.append(p);return;}
+    const wrap=document.createElement("div");wrap.style.cssText="width:100%;overflow-x:auto;border:1px solid #e4edf3;border-radius:12px";
+    const table=document.createElement("table");table.style.cssText="width:100%;min-width:900px;border-collapse:collapse;text-align:right;font-size:12px;background:#f7fafc";
+    const headers=["تاریخ پایان","خودرو","مسافت (km)","انرژی (kWh)","مصرف (kWh/100km)","سرعت GPS","عملیات"];
+    const thead=document.createElement("thead"),hr=document.createElement("tr");
+    headers.forEach(label=>{const th=document.createElement("th");th.textContent=label;th.style.cssText="padding:12px 10px;background:#14211c;color:#a8f5cc;border-bottom:1px solid #29383e;white-space:nowrap";hr.append(th);});thead.append(hr);table.append(thead);
+    const tbody=document.createElement("tbody");
+    for(const trip of trips){
+      const tr=document.createElement("tr");tr.style.borderBottom="1px solid #253238";
+      const rate=Number(trip.distance_km)>0?Number(trip.energy_kwh)/Number(trip.distance_km)*100:null;
+      const ds=trip.driving_stats;
+      const values=[new Date(trip.ended_at).toLocaleString("fa-IR"),trip.vehicle_name||"خودروی ثبت‌نشده",fa(trip.distance_km),fa(trip.energy_kwh),rate===null?"—":fa(rate),ds?"بیشینه "+fa(ds.max_speed_kmh??0)+" · میانگین "+fa(ds.average_speed_kmh??0):"ثبت نشده"];
+      values.forEach((value,index)=>{const td=document.createElement("td");td.textContent=value;td.style.cssText="padding:11px 10px;color:"+(index===4?"#39ff88":"#d5e0e3")+";white-space:nowrap";tr.append(td);});
+      const actions=document.createElement("td");actions.style.cssText="padding:8px 10px;white-space:nowrap";
+      const detailButton=document.createElement("button");detailButton.type="button";detailButton.textContent="جزئیات";detailButton.style.cssText="border:1px solid #34474e;border-radius:7px;background:#111b20;color:#d8e4e8;padding:5px 8px;cursor:pointer;font:inherit;font-size:11px;margin:0 0 0 5px";
+      const remove=document.createElement("button");remove.type="button";remove.textContent="حذف";remove.style.cssText="border:1px solid #f0c9c9;border-radius:7px;background:#fdf1f1;color:#cf4444;padding:5px 8px;cursor:pointer;font:inherit;font-size:11px;margin:0";
+      const details=document.createElement("tr");details.hidden=true;const detailCell=document.createElement("td");detailCell.colSpan=7;detailCell.style.cssText="padding:10px 14px;background:#10171a;color:#bdcbd0;line-height:2";
+      const start=new Date(trip.started_at).toLocaleString("fa-IR");
+      detailCell.textContent="شروع: "+start+" | پایان: "+new Date(trip.ended_at).toLocaleString("fa-IR")+" | شارژ شروع: "+(trip.start_soc==null?"ثبت نشده":fa(trip.start_soc)+"٪")+" | شارژ پایان: "+(trip.end_soc==null?"ثبت نشده":fa(trip.end_soc)+"٪")+" | "+(ds?"شتاب‌گیری شدید احتمالی: "+fa(ds.hard_acceleration_events??0)+" | ترمز شدید احتمالی: "+fa(ds.hard_braking_events??0):"آمار تکمیلی GPS ثبت نشده")+" | داده‌های سرعت GPS تخمینی هستند.";
+      details.append(detailCell);
+      detailButton.addEventListener("click",()=>{details.hidden=!details.hidden;detailButton.textContent=details.hidden?"جزئیات":"بستن";});
+      remove.addEventListener("click",async()=>{if(!confirm("این سفر از تاریخچه حساب شما حذف شود؟"))return;remove.disabled=true;try{await api("/api/driver/trips/"+encodeURIComponent(trip.id),{method:"DELETE"});setStatus("سفر حذف شد.");await refresh();}catch(e){setStatus(e.message,true);remove.disabled=false;}});
+      actions.append(detailButton,remove);tr.append(actions);tbody.append(tr,details);
+    }
+    table.append(tbody);wrap.append(table);root.append(wrap);
+  }
+  async function refresh(){
+    setStatus("در حال دریافت تاریخچه خصوصی سفر…");
+    try{
+      const [history,insights]=await Promise.all([api("/api/driver/trips?limit=50"),api("/api/driver/insights")]);
+      renderTrips(history.trips||[]);
+      showMetric("revInsightCount",insights.sample_count);
+      showMetric("revInsightAverage",insights.average_kwh_per_100km);
+      showMetric("revInsightDistance",insights.total_distance_km);
+      showMetric("revInsightMedian",insights.median_kwh_per_100km);
+      $("revInsightConfidence").textContent=insights.confidence||"تحلیل بر اساس سفرهای ثبت‌شده";
+      setStatus("تاریخچه حساب بارگذاری شد. "+fa(insights.sample_count||0)+" سفر در تحلیل مصرف لحاظ شده است.");
+    }catch(e){renderTrips([]);setStatus(e.message,true);}
+  }
+  form.addEventListener("submit",async event=>{
+    event.preventDefault();
+    const fd=new FormData(form);
+    const started=new Date(fd.get("started_at")), ended=new Date(fd.get("ended_at"));
+    if(!Number.isFinite(started.getTime())||!Number.isFinite(ended.getTime())||ended<started){setStatus("زمان پایان باید بعد از زمان شروع باشد.",true);return;}
+    const optionalNumber=name=>String(fd.get(name)||"").trim()===""?null:Number(fd.get(name));
+    const body={vehicle_name:String(fd.get("vehicle_name")||"").trim()||"خودروی ثبت‌نشده",vehicle_type:fd.get("vehicle_type"),distance_km:Number(fd.get("distance_km")),energy_kwh:Number(fd.get("energy_kwh")),start_soc:optionalNumber("start_soc"),end_soc:optionalNumber("end_soc"),started_at:started.toISOString(),ended_at:ended.toISOString(),energy_source:"manual"};
+    const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent="در حال ثبت…";
+    try{const result=await api("/api/driver/trips",{method:"POST",body:JSON.stringify(body)});setStatus(result.message||"سفر ثبت شد.");form.reset();const now=new Date();$("revTripRecordForm").elements.namedItem("ended_at").value=dateInputValue(now);$("revTripRecordForm").elements.namedItem("started_at").value=dateInputValue(new Date(now.getTime()-3600000));await refresh();}
+    catch(e){setStatus(e.message,true);}
+    finally{submit.disabled=false;submit.textContent="ثبت سفر در حساب من";}
+  });
+  $("revTripsRefresh").addEventListener("click",refresh);
+  const now=new Date();form.elements.namedItem("ended_at").value=dateInputValue(now);form.elements.namedItem("started_at").value=dateInputValue(new Date(now.getTime()-3600000));
+  refresh();
+})();
+</script>
+
+<script>
+if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(error => console.warn("REV PWA registration failed:", error)));
+}
+</script>
+<script>
+(function(){
+ const api=typeof AUTH_API==="string"?AUTH_API:"https://rev-auth-api.mojtaba-alimi64.workers.dev";
+ const codeEl=document.getElementById("revGroupCode"),statusEl=document.getElementById("revGroupCodeStatus"),copyBtn=document.getElementById("revGroupCodeCopy"),refreshBtn=document.getElementById("revGroupCodeRefresh");
+ if(!codeEl||!statusEl)return;
+ async function requestCode(method="GET"){statusEl.textContent="در حال دریافت کد از حساب REV…";refreshBtn.disabled=true;try{const r=await fetch(api+"/api/driver/groups/code",{method,credentials:"include",cache:"no-store",headers:method==="POST"?{"Content-Type":"application/json"}:undefined,body:method==="POST"?"{}":undefined});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw Error(j.error||"برای نمایش کد باید وارد حساب REV شوید.");codeEl.textContent=j.code;statusEl.textContent="کد فعال شماست. برای حفظ حریم خصوصی، آن را فقط با همسفرهای موردنظر به اشتراک بگذارید.";}catch(e){codeEl.textContent="••••••";statusEl.textContent=e.message||"دریافت کد ناموفق بود.";}finally{refreshBtn.disabled=false;}}
+ copyBtn.addEventListener("click",async()=>{const value=codeEl.textContent.trim();if(!/^\d{5,6}$/.test(value)){statusEl.textContent="ابتدا وارد حساب شوید تا کد دریافت شود.";return;}try{await navigator.clipboard.writeText(value);statusEl.textContent="کد سفر گروهی کپی شد.";}catch(e){statusEl.textContent="کد را به‌صورت دستی انتخاب و کپی کنید.";}});refreshBtn.addEventListener("click",()=>{if(confirm("با تغییر کد، کد قبلی دیگر برای دعوت همسفرهای جدید قابل استفاده نخواهد بود. ادامه می‌دهید؟"))requestCode("POST");});requestCode();
+})();
+</script>
+<script src="./rev-announcements.js?v=1" defer></script>
 <footer class="footer"><div>© ۲۰۲۶ REV · پلتفرم خودروهای برقی</div><div class="footer-links"><a href="./">صفحه اصلی</a><a href="./trip.html">پلتفرم سفر</a><a href="./#account">حساب کاربری</a><a href="./#privacy">حریم خصوصی</a><a href="./#about">درباره ما</a></div></footer>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
@@ -236,176 +488,37 @@ window.addEventListener('load',()=>setTimeout(()=>{if(map){restoreTripAfterMapRe
  loadSettings();
 })();
 </script>
-<section id="revLiveSharePanel" dir="rtl" style="width:min(1180px,calc(100% - 28px));margin:26px auto;padding:20px;border:1px solid #29383e;border-radius:20px;background:linear-gradient(145deg,#101a1e,#0b1114);color:#f5f7f8;font-family:Vazirmatn,Vazir,Tahoma,sans-serif">
-  <div style="color:#39ff88;font-size:12px;font-weight:800">REV LIVE TRIP</div>
-  <h2 style="margin:3px 0 6px;font-size:23px">اشتراک‌گذاری زنده موقعیت سفر</h2>
-  <p style="margin:0;color:#a9b8bd;font-size:14px">با رضایت خودت، موقعیت فعلی دستگاه برای یک لینک خصوصی ارسال می‌شود. لینک حداکثر ۸ ساعت اعتبار دارد و هر لحظه می‌توانی اشتراک را متوقف کنی. موقعیت فقط هنگام فعال بودن این قابلیت ارسال می‌شود.</p>
-  <div style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:14px">
-    <label style="font-size:13px;color:#c8d3d6">مدت اعتبار <select id="revShareHours" style="margin-inline-start:6px;padding:8px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#fff;font:inherit"><option value="1">۱ ساعت</option><option value="2" selected>۲ ساعت</option><option value="4">۴ ساعت</option><option value="8">۸ ساعت</option></select></label>
-    <button id="revStartLiveShare" type="button" style="border:1px solid #39ff88;border-radius:10px;background:#39ff88;color:#07100b;font-weight:800;padding:10px 15px;cursor:pointer;font:inherit">شروع اشتراک زنده</button>
-    <button id="revStopLiveShare" type="button" disabled style="border:1px solid #704044;border-radius:10px;background:#211518;color:#ffb4b4;padding:10px 15px;cursor:pointer;font:inherit">توقف و لغو لینک</button>
-  </div>
-  <div id="revShareStatus" role="status" aria-live="polite" style="margin-top:12px;padding:10px 12px;border:1px solid #29383e;border-radius:10px;background:#0b1114;color:#c4d0d4;font-size:13px">اشتراک زنده خاموش است.</div>
-  <div id="revShareLinkWrap" hidden style="margin-top:10px"><label for="revShareLink" style="display:block;color:#a9b8bd;font-size:12px;margin-bottom:5px">لینک برای خانواده یا دوستان</label><div style="display:flex;gap:8px;flex-wrap:wrap"><input id="revShareLink" readonly style="flex:1;min-width:220px;padding:10px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#39ff88;font:inherit"><button id="revCopyShareLink" type="button" style="border:1px solid #35534a;border-radius:10px;background:#14251d;color:#39ff88;padding:9px 13px;cursor:pointer;font:inherit">کپی لینک</button></div></div>
-  <p style="font-size:12px;color:#9eafb5;margin:12px 0 0">برای کارکردن، GPS دستگاه و اینترنت باید روشن باشد. در این نسخه فقط آخرین مختصات ذخیره می‌شود؛ این قابلیت جایگزین خدمات اضطراری نیست.</p>
-</section>
-<script>
-(() => {
-  const API="https://rev-auth-api.mojtaba-alimi64.workers.dev";
-  const $=id=>document.getElementById(id);
-  const status=$("revShareStatus"),start=$("revStartLiveShare"),stop=$("revStopLiveShare"),wrap=$("revShareLinkWrap"),link=$("revShareLink");
-  let shareId=null,watchId=null,lastSentAt=0,sending=false;
-  const idKey="rev_live_share_id";
-  const setStatus=(message,error=false)=>{status.textContent=message;status.style.color=error?"#ffb4b4":"#c4d0d4";status.style.borderColor=error?"#744347":"#29383e";};
-  async function api(path,options={}){const res=await fetch(API+path,{...options,credentials:"include",headers:{"Accept":"application/json",...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})}});let data={};try{data=await res.json()}catch{}if(!res.ok)throw new Error(res.status===401?"برای اشتراک زنده ابتدا وارد حساب REV شو.":(data.error||"ارتباط با سرویس اشتراک برقرار نشد."));return data;}
-  function sendPosition(position){
-    const now=Date.now();if(sending||now-lastSentAt<12000)return;
-    sending=true;lastSentAt=now;
-    api("/api/driver/shares/"+encodeURIComponent(shareId)+"/location",{method:"POST",body:JSON.stringify({latitude:position.coords.latitude,longitude:position.coords.longitude,accuracy_m:position.coords.accuracy})})
-      .then(result=>{if(!result.updated)throw new Error("این لینک منقضی یا لغو شده است.");setStatus("اشتراک زنده فعال است · آخرین به‌روزرسانی: "+new Date().toLocaleTimeString("fa-IR"));})
-      .catch(e=>{setStatus(e.message,true);stopSharing();}).finally(()=>{sending=false;});
-  }
-  function stopTracking(updateUi=true){if(watchId!==null&&navigator.geolocation)navigator.geolocation.clearWatch(watchId);watchId=null;if(updateUi){start.disabled=false;stop.disabled=true;}}
-  async function startSharing(){
-    if(!navigator.geolocation){setStatus("مرورگر این دستگاه از مکان‌یابی پشتیبانی نمی‌کند.",true);return;}
-    if(!window.isSecureContext){setStatus("برای دسترسی امن به GPS، صفحه باید روی HTTPS باز شود.",true);return;}
-    start.disabled=true;setStatus("در حال ایجاد لینک امن…");
-    try{
-      const created=await api("/api/driver/shares",{method:"POST",body:JSON.stringify({hours:Number($("revShareHours").value)})});
-      shareId=created.id;localStorage.setItem(idKey,shareId);
-      link.value=new URL("share-trip.html?token="+encodeURIComponent(created.token),location.href).href;wrap.hidden=false;
-      stop.disabled=false;setStatus("لینک ساخته شد؛ اجازه مکان‌یابی را تأیید کن تا موقعیت به‌روزرسانی شود.");
-      watchId=navigator.geolocation.watchPosition(sendPosition,error=>{setStatus("مکان‌یابی انجام نشد: "+(error.message||"مجوز GPS را بررسی کن."),true);}, {enableHighAccuracy:true,maximumAge:10000,timeout:20000});
-    }catch(e){setStatus(e.message,true);start.disabled=false;}
-  }
-  async function stopSharing(){
-    stop.disabled=true;stopTracking();
-    try{if(shareId)await api("/api/driver/shares/"+encodeURIComponent(shareId)+"/revoke",{method:"POST",body:"{}"});setStatus("اشتراک متوقف و لینک لغو شد.");}
-    catch(e){setStatus(e.message,true);}
-    localStorage.removeItem(idKey);shareId=null;link.value="";wrap.hidden=true;start.disabled=false;
-  }
-  start.addEventListener("click",startSharing);stop.addEventListener("click",stopSharing);
-  $("revCopyShareLink").addEventListener("click",async()=>{try{await navigator.clipboard.writeText(link.value);setStatus("لینک اشتراک کپی شد. آن را فقط برای افراد مورد اعتماد بفرست.");}catch{link.focus();link.select();setStatus("لینک انتخاب شد؛ آن را کپی کن.");}});
-  // A page reload must not silently restart GPS; an existing session can still be revoked.
-  const previousShare=localStorage.getItem(idKey);
-  if(previousShare){shareId=previousShare;start.disabled=true;stop.disabled=false;setStatus("یک اشتراک قبلی ممکن است هنوز فعال باشد. مکان‌یابی خودکار شروع نشده؛ برای لغو آن دکمه توقف را بزن.");}
-})();
-</script>
-
-<section id="revTripHistoryPanel" dir="rtl" style="width:min(1180px,calc(100% - 28px));margin:26px auto;padding:20px;border:1px solid #29383e;border-radius:20px;background:linear-gradient(145deg,#101a1e,#0b1114);color:#f5f7f8;font-family:Vazirmatn,Vazir,Tahoma,sans-serif">
-  <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap">
-    <div><div style="color:#39ff88;font-size:12px;font-weight:800">REV DRIVER INSIGHTS</div><h2 style="margin:3px 0 6px;font-size:23px">تاریخچه سفر و تحلیل مصرف</h2><p style="margin:0;color:#a9b8bd;font-size:14px">سفرهای انجام‌شده را ثبت کن تا میانگین مصرف واقعی حساب تو به‌مرور دقیق‌تر شود. اطلاعات در حساب کاربری ذخیره می‌شود.</p></div>
-    <button id="revTripsRefresh" type="button" style="border:1px solid #35534a;border-radius:10px;background:#14251d;color:#39ff88;padding:9px 13px;cursor:pointer;font:inherit">به‌روزرسانی</button>
-  </div>
-  <div id="revTripsStatus" role="status" aria-live="polite" style="margin:14px 0;padding:10px 12px;border:1px solid #29383e;border-radius:10px;background:#0b1114;color:#c4d0d4;font-size:13px">برای بارگذاری تاریخچه، وضعیت ورود بررسی می‌شود…</div>
-  <div id="revTripInsightCards" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:10px;margin:12px 0">
-    <div style="padding:13px;border:1px solid #29383e;border-radius:12px"><small style="color:#9eafb5">تعداد سفرها</small><div id="revInsightCount" style="font-size:23px;font-weight:800">—</div></div>
-    <div style="padding:13px;border:1px solid #29383e;border-radius:12px"><small style="color:#9eafb5">میانگین مصرف</small><div id="revInsightAverage" style="font-size:23px;font-weight:800">—</div><small style="color:#9eafb5">kWh در ۱۰۰ کیلومتر</small></div>
-    <div style="padding:13px;border:1px solid #29383e;border-radius:12px"><small style="color:#9eafb5">مسافت ثبت‌شده</small><div id="revInsightDistance" style="font-size:23px;font-weight:800">—</div><small style="color:#9eafb5">کیلومتر</small></div>
-    <div style="padding:13px;border:1px solid #29383e;border-radius:12px"><small style="color:#9eafb5">میانه مصرف</small><div id="revInsightMedian" style="font-size:23px;font-weight:800">—</div><small style="color:#9eafb5">kWh در ۱۰۰ کیلومتر</small></div>
-  </div>
-  <p id="revInsightConfidence" style="font-size:13px;color:#b6c6cb;margin:6px 0 18px">با ثبت چند سفر، تحلیل نمایش داده می‌شود.</p>
-  <form id="revTripRecordForm" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;padding:15px;border:1px solid #29383e;border-radius:14px;background:#0c1316">
-    <label style="display:grid;gap:5px;font-size:13px;color:#c8d3d6">نام خودرو<input name="vehicle_name" maxlength="100" placeholder="مثلاً خودروی برقی من" style="width:100%;padding:10px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#fff;font:inherit"></label>
-    <label style="display:grid;gap:5px;font-size:13px;color:#c8d3d6">نوع خودرو<select name="vehicle_type" style="width:100%;padding:10px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#fff;font:inherit"><option value="bev">تمام‌برقی (BEV)</option><option value="phev">پلاگین‌هیبرید (PHEV)</option><option value="hev">هیبرید (HEV)</option><option value="mhev">مایلد هیبرید (MHEV)</option></select></label>
-    <label style="display:grid;gap:5px;font-size:13px;color:#c8d3d6">مسافت سفر (کیلومتر)<input name="distance_km" type="number" min="0.1" max="5000" step="0.1" required placeholder="مثلاً ۱۸۰" style="width:100%;padding:10px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#fff;font:inherit"></label>
-    <label style="display:grid;gap:5px;font-size:13px;color:#c8d3d6">انرژی مصرف‌شده (kWh)<input name="energy_kwh" type="number" min="0" max="2000" step="0.1" required placeholder="مثلاً ۳۲" style="width:100%;padding:10px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#fff;font:inherit"></label>
-    <label style="display:grid;gap:5px;font-size:13px;color:#c8d3d6">شارژ باتری در شروع (%)<input name="start_soc" type="number" min="0" max="100" step="1" placeholder="اختیاری" style="width:100%;padding:10px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#fff;font:inherit"></label>
-    <label style="display:grid;gap:5px;font-size:13px;color:#c8d3d6">شارژ باتری در پایان (%)<input name="end_soc" type="number" min="0" max="100" step="1" placeholder="اختیاری" style="width:100%;padding:10px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#fff;font:inherit"></label>
-    <label style="display:grid;gap:5px;font-size:13px;color:#c8d3d6">شروع سفر<input name="started_at" type="datetime-local" required style="width:100%;padding:10px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#fff;font:inherit"></label>
-    <label style="display:grid;gap:5px;font-size:13px;color:#c8d3d6">پایان سفر<input name="ended_at" type="datetime-local" required style="width:100%;padding:10px;border-radius:9px;border:1px solid #35464d;background:#111a1e;color:#fff;font:inherit"></label>
-    <div style="grid-column:1/-1;display:flex;align-items:center;gap:12px;flex-wrap:wrap"><button type="submit" style="border:1px solid #39ff88;border-radius:10px;background:#39ff88;color:#07100b;font-weight:800;padding:10px 18px;cursor:pointer;font:inherit">ثبت سفر در حساب من</button><span style="color:#9eafb5;font-size:12px">فقط اطلاعاتی که خودت وارد می‌کنی ذخیره می‌شود؛ موقعیت GPS ثبت نمی‌شود.</span></div>
-  </form>
-  <div style="margin-top:20px"><h3 style="font-size:18px;margin:0 0 10px">آخرین سفرها</h3><div id="revTripsList" style="display:grid;gap:9px"><div style="color:#9eafb5;font-size:13px">هنوز داده‌ای بارگذاری نشده است.</div></div></div>
-</section>
-<script>
-(() => {
-  const API = "https://rev-auth-api.mojtaba-alimi64.workers.dev";
-  const $ = id => document.getElementById(id);
-  const form = $("revTripRecordForm");
-  const status = $("revTripsStatus");
-  const setStatus = (message, error=false) => { status.textContent=message; status.style.borderColor=error?"#744347":"#29383e"; status.style.color=error?"#ffb4b4":"#c4d0d4"; };
-  const fa = value => Number(value).toLocaleString("fa-IR",{maximumFractionDigits:1});
-  const dateInputValue = date => { const d=new Date(date.getTime()-date.getTimezoneOffset()*60000); return d.toISOString().slice(0,16); };
-  const showMetric = (id,value,suffix="") => $(id).textContent=value===null||value===undefined?"—":fa(value)+suffix;
-  async function api(path, options={}) {
-    const res=await fetch(API+path,{...options,credentials:"include",headers:{"Accept":"application/json",...(options.body?{"Content-Type":"application/json"}:{}),...(options.headers||{})}});
-    let data={}; try{data=await res.json();}catch{}
-    if(!res.ok) throw new Error(res.status===401?"برای دیدن و ثبت تاریخچه، ابتدا وارد حساب REV شو.":(data.error||"ارتباط با سرویس سفر برقرار نشد ("+res.status+")."));
-    return data;
-  }
-  function renderTrips(trips) {
-    const root=$("revTripsList"); root.replaceChildren();
-    if(!trips.length){const p=document.createElement("p");p.textContent="هنوز سفری ثبت نشده است. بعد از اولین سفر، اطلاعات در این جدول نمایش داده می‌شود.";p.style.color="#9eafb5";root.append(p);return;}
-    const wrap=document.createElement("div");wrap.style.cssText="width:100%;overflow-x:auto;border:1px solid #29383e;border-radius:12px";
-    const table=document.createElement("table");table.style.cssText="width:100%;min-width:900px;border-collapse:collapse;text-align:right;font-size:12px;background:#0c1316";
-    const headers=["تاریخ پایان","خودرو","مسافت (km)","انرژی (kWh)","مصرف (kWh/100km)","سرعت GPS","عملیات"];
-    const thead=document.createElement("thead"),hr=document.createElement("tr");
-    headers.forEach(label=>{const th=document.createElement("th");th.textContent=label;th.style.cssText="padding:12px 10px;background:#14211c;color:#a8f5cc;border-bottom:1px solid #29383e;white-space:nowrap";hr.append(th);});thead.append(hr);table.append(thead);
-    const tbody=document.createElement("tbody");
-    for(const trip of trips){
-      const tr=document.createElement("tr");tr.style.borderBottom="1px solid #253238";
-      const rate=Number(trip.distance_km)>0?Number(trip.energy_kwh)/Number(trip.distance_km)*100:null;
-      const ds=trip.driving_stats;
-      const values=[new Date(trip.ended_at).toLocaleString("fa-IR"),trip.vehicle_name||"خودروی ثبت‌نشده",fa(trip.distance_km),fa(trip.energy_kwh),rate===null?"—":fa(rate),ds?"بیشینه "+fa(ds.max_speed_kmh??0)+" · میانگین "+fa(ds.average_speed_kmh??0):"ثبت نشده"];
-      values.forEach((value,index)=>{const td=document.createElement("td");td.textContent=value;td.style.cssText="padding:11px 10px;color:"+(index===4?"#39ff88":"#d5e0e3")+";white-space:nowrap";tr.append(td);});
-      const actions=document.createElement("td");actions.style.cssText="padding:8px 10px;white-space:nowrap";
-      const detailButton=document.createElement("button");detailButton.type="button";detailButton.textContent="جزئیات";detailButton.style.cssText="border:1px solid #34474e;border-radius:7px;background:#111b20;color:#d8e4e8;padding:5px 8px;cursor:pointer;font:inherit;font-size:11px;margin:0 0 0 5px";
-      const remove=document.createElement("button");remove.type="button";remove.textContent="حذف";remove.style.cssText="border:1px solid #704044;border-radius:7px;background:#211518;color:#ffb4b4;padding:5px 8px;cursor:pointer;font:inherit;font-size:11px;margin:0";
-      const details=document.createElement("tr");details.hidden=true;const detailCell=document.createElement("td");detailCell.colSpan=7;detailCell.style.cssText="padding:10px 14px;background:#10171a;color:#bdcbd0;line-height:2";
-      const start=new Date(trip.started_at).toLocaleString("fa-IR");
-      detailCell.textContent="شروع: "+start+" | پایان: "+new Date(trip.ended_at).toLocaleString("fa-IR")+" | شارژ شروع: "+(trip.start_soc==null?"ثبت نشده":fa(trip.start_soc)+"٪")+" | شارژ پایان: "+(trip.end_soc==null?"ثبت نشده":fa(trip.end_soc)+"٪")+" | "+(ds?"شتاب‌گیری شدید احتمالی: "+fa(ds.hard_acceleration_events??0)+" | ترمز شدید احتمالی: "+fa(ds.hard_braking_events??0):"آمار تکمیلی GPS ثبت نشده")+" | داده‌های سرعت GPS تخمینی هستند.";
-      details.append(detailCell);
-      detailButton.addEventListener("click",()=>{details.hidden=!details.hidden;detailButton.textContent=details.hidden?"جزئیات":"بستن";});
-      remove.addEventListener("click",async()=>{if(!confirm("این سفر از تاریخچه حساب شما حذف شود؟"))return;remove.disabled=true;try{await api("/api/driver/trips/"+encodeURIComponent(trip.id),{method:"DELETE"});setStatus("سفر حذف شد.");await refresh();}catch(e){setStatus(e.message,true);remove.disabled=false;}});
-      actions.append(detailButton,remove);tr.append(actions);tbody.append(tr,details);
-    }
-    table.append(tbody);wrap.append(table);root.append(wrap);
-  }
-  async function refresh(){
-    setStatus("در حال دریافت تاریخچه خصوصی سفر…");
-    try{
-      const [history,insights]=await Promise.all([api("/api/driver/trips?limit=50"),api("/api/driver/insights")]);
-      renderTrips(history.trips||[]);
-      showMetric("revInsightCount",insights.sample_count);
-      showMetric("revInsightAverage",insights.average_kwh_per_100km);
-      showMetric("revInsightDistance",insights.total_distance_km);
-      showMetric("revInsightMedian",insights.median_kwh_per_100km);
-      $("revInsightConfidence").textContent=insights.confidence||"تحلیل بر اساس سفرهای ثبت‌شده";
-      setStatus("تاریخچه حساب بارگذاری شد. "+fa(insights.sample_count||0)+" سفر در تحلیل مصرف لحاظ شده است.");
-    }catch(e){renderTrips([]);setStatus(e.message,true);}
-  }
-  form.addEventListener("submit",async event=>{
-    event.preventDefault();
-    const fd=new FormData(form);
-    const started=new Date(fd.get("started_at")), ended=new Date(fd.get("ended_at"));
-    if(!Number.isFinite(started.getTime())||!Number.isFinite(ended.getTime())||ended<started){setStatus("زمان پایان باید بعد از زمان شروع باشد.",true);return;}
-    const optionalNumber=name=>String(fd.get(name)||"").trim()===""?null:Number(fd.get(name));
-    const body={vehicle_name:String(fd.get("vehicle_name")||"").trim()||"خودروی ثبت‌نشده",vehicle_type:fd.get("vehicle_type"),distance_km:Number(fd.get("distance_km")),energy_kwh:Number(fd.get("energy_kwh")),start_soc:optionalNumber("start_soc"),end_soc:optionalNumber("end_soc"),started_at:started.toISOString(),ended_at:ended.toISOString(),energy_source:"manual"};
-    const submit=form.querySelector('button[type="submit"]');submit.disabled=true;submit.textContent="در حال ثبت…";
-    try{const result=await api("/api/driver/trips",{method:"POST",body:JSON.stringify(body)});setStatus(result.message||"سفر ثبت شد.");form.reset();const now=new Date();$("revTripRecordForm").elements.namedItem("ended_at").value=dateInputValue(now);$("revTripRecordForm").elements.namedItem("started_at").value=dateInputValue(new Date(now.getTime()-3600000));await refresh();}
-    catch(e){setStatus(e.message,true);}
-    finally{submit.disabled=false;submit.textContent="ثبت سفر در حساب من";}
-  });
-  $("revTripsRefresh").addEventListener("click",refresh);
-  const now=new Date();form.elements.namedItem("ended_at").value=dateInputValue(now);form.elements.namedItem("started_at").value=dateInputValue(new Date(now.getTime()-3600000));
-  refresh();
-})();
-</script>
-
-<script>
-if ("serviceWorker" in navigator && (location.protocol === "https:" || location.hostname === "localhost")) {
-  window.addEventListener("load", () => navigator.serviceWorker.register("./service-worker.js").catch(error => console.warn("REV PWA registration failed:", error)));
-}
-</script>
 <script>
 (function(){
- const api=typeof AUTH_API==="string"?AUTH_API:"https://rev-auth-api.mojtaba-alimi64.workers.dev";
- const codeEl=document.getElementById("revGroupCode"),statusEl=document.getElementById("revGroupCodeStatus"),copyBtn=document.getElementById("revGroupCodeCopy"),refreshBtn=document.getElementById("revGroupCodeRefresh");
- if(!codeEl||!statusEl)return;
- async function requestCode(method="GET"){statusEl.textContent="در حال دریافت کد از حساب REV…";refreshBtn.disabled=true;try{const r=await fetch(api+"/api/driver/groups/code",{method,credentials:"include",cache:"no-store",headers:method==="POST"?{"Content-Type":"application/json"}:undefined,body:method==="POST"?"{}":undefined});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw Error(j.error||"برای نمایش کد باید وارد حساب REV شوید.");codeEl.textContent=j.code;statusEl.textContent="کد فعال شماست. برای حفظ حریم خصوصی، آن را فقط با همسفرهای موردنظر به اشتراک بگذارید.";}catch(e){codeEl.textContent="••••••";statusEl.textContent=e.message||"دریافت کد ناموفق بود.";}finally{refreshBtn.disabled=false;}}
- copyBtn.addEventListener("click",async()=>{const value=codeEl.textContent.trim();if(!/^\d{5,6}$/.test(value)){statusEl.textContent="ابتدا وارد حساب شوید تا کد دریافت شود.";return;}try{await navigator.clipboard.writeText(value);statusEl.textContent="کد سفر گروهی کپی شد.";}catch(e){statusEl.textContent="کد را به‌صورت دستی انتخاب و کپی کنید.";}});refreshBtn.addEventListener("click",()=>{if(confirm("با تغییر کد، کد قبلی دیگر برای دعوت همسفرهای جدید قابل استفاده نخواهد بود. ادامه می‌دهید؟"))requestCode("POST");});requestCode();
+var SEC2TAB={revGroupCodePanel:'group',revGroupTravelSettings:'group',plannedTripCard:'trip',driverStats:'car',tripHistorySection:'history',trackMapSection:'trip',gpsControls:'trip',revLiveSharePanel:'group',revTripHistoryPanel:'history'};
+var bar=document.getElementById('dpTabs');
+if(!bar)return;
+function setTab(name,scroll){
+  if(!/^(trip|car|group|history)$/.test(name))name='trip';
+  var secs=document.querySelectorAll('[data-tab]');
+  for(var i=0;i<secs.length;i++){secs[i].classList.toggle('tab-hidden',secs[i].getAttribute('data-tab')!==name);}
+  var btns=bar.querySelectorAll('button');
+  for(var j=0;j<btns.length;j++){var on=btns[j].getAttribute('data-tab-btn')===name;btns[j].classList.toggle('active',on);btns[j].setAttribute('aria-selected',on?'true':'false');}
+  try{sessionStorage.setItem('rev_dp_tab',name);}catch(_){}
+  try{history.replaceState(null,'','#dp-'+name);}catch(_){}
+  if(name==='trip'){setTimeout(function(){try{if(typeof map!=='undefined'&&map&&map.invalidateSize)map.invalidateSize();}catch(_){}},150);}
+  if(scroll){try{bar.scrollIntoView({block:'start',behavior:'smooth'});}catch(_){}}
+}
+bar.addEventListener('click',function(e){
+  var b=e.target.closest('button[data-tab-btn]');if(!b)return;
+  setTab(b.getAttribute('data-tab-btn'),true);
+});
+document.addEventListener('click',function(e){
+  var a=e.target.closest('a[href^="#"]');if(!a)return;
+  var id=a.getAttribute('href').slice(1);
+  if(SEC2TAB[id]){e.preventDefault();setTab(SEC2TAB[id],false);setTimeout(function(){var el=document.getElementById(id);if(el)el.scrollIntoView({block:'start',behavior:'smooth'});},60);}
+});
+var initial='trip';
+try{initial=sessionStorage.getItem('rev_dp_tab')||'trip';}catch(_){}
+var h=(location.hash||'').replace('#','');
+if(h.indexOf('dp-')===0&&/^(trip|car|group|history)$/.test(h.slice(3)))initial=h.slice(3);
+else if(SEC2TAB[h])initial=SEC2TAB[h];
+setTab(initial,false);
 })();
 </script>
-<script src="./rev-announcements.js?v=1" defer></script>
 </body></html>
