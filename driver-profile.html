@@ -303,8 +303,30 @@ window.addEventListener('load',()=>setTimeout(()=>{if(map){restoreTripAfterMapRe
       const title=document.createElement("strong");title.textContent=trip.vehicle_name+" · "+fa(trip.distance_km)+" کیلومتر";
       const detail=document.createElement("div");detail.style.cssText="color:#9eafb5;font-size:12px;margin-top:4px";
       const rate=Number(trip.distance_km)>0?Number(trip.energy_kwh)/Number(trip.distance_km)*100:null;
-      detail.textContent=new Date(trip.ended_at).toLocaleString("fa-IR")+" · "+fa(trip.energy_kwh)+" kWh · "+(rate===null?"مصرف نامشخص":fa(rate)+" kWh/100km");if(trip.driving_stats){const ds=trip.driving_stats;detail.textContent+=" · بیشینه سرعت "+fa(ds.max_speed_kmh??0)+" km/h · میانگین "+fa(ds.average_speed_kmh??0)+" km/h · شتاب/ترمز شدید احتمالی "+fa(ds.hard_acceleration_events??0)+"/"+fa(ds.hard_braking_events??0);}
+      detail.textContent=new Date(trip.ended_at).toLocaleString("fa-IR")+" · "+fa(trip.energy_kwh)+" kWh · "+(rate===null?"مصرف نامشخص":fa(rate)+" kWh/100km");
+      info.style.cssText="flex:1;min-width:220px";
       info.append(title,detail);
+      const ds=trip.driving_stats;
+      const summary=document.createElement("div");summary.style.cssText="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-top:8px";
+      const speedBadge=document.createElement("span");speedBadge.style.cssText="display:inline-flex;align-items:center;border:1px solid #285b4a;border-radius:8px;padding:4px 8px;background:#10231c;color:#8fffc2;font-size:12px";
+      speedBadge.textContent=ds?"سرعت بیشینه "+fa(ds.max_speed_kmh??0)+" · میانگین "+fa(ds.average_speed_kmh??0)+" km/h":"آمار سرعت برای این سفر ثبت نشده";
+      summary.append(speedBadge);
+      const detailButton=document.createElement("button");detailButton.type="button";detailButton.textContent="جزئیات رانندگی ▾";detailButton.setAttribute("aria-expanded","false");detailButton.style.cssText="border:1px solid #34474e;border-radius:8px;background:#111b20;color:#d8e4e8;padding:5px 9px;cursor:pointer;font:inherit;font-size:12px";
+      const drivingDetails=document.createElement("div");drivingDetails.hidden=true;drivingDetails.style.cssText="margin-top:9px;padding:10px;border-radius:9px;background:#091013;border:1px solid #24343a;color:#b8c8ce;font-size:12px;line-height:1.9";
+      if(ds){
+        const rows=[
+          ["بیشترین سرعت",fa(ds.max_speed_kmh??0)+" km/h"],
+          ["سرعت میانگین",fa(ds.average_speed_kmh??0)+" km/h"],
+          ["شتاب‌گیری شدید احتمالی",fa(ds.hard_acceleration_events??0)+" مورد"],
+          ["ترمز شدید احتمالی",fa(ds.hard_braking_events??0)+" مورد"],
+          ["نمونه‌های سرعت GPS",fa(ds.gps_speed_sample_count??0)],
+          ["منبع اطلاعات","GPS گوشی · تخمینی"]
+        ];
+        for(const [label,value] of rows){const row=document.createElement("div");row.style.cssText="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap";const l=document.createElement("span");l.textContent=label;const v=document.createElement("strong");v.textContent=value;v.style.color="#e4f2f5";row.append(l,v);drivingDetails.append(row);}
+        const disclaimer=document.createElement("p");disclaimer.textContent="این شاخص‌ها تخمینی‌اند و به‌تنهایی برای قضاوت قطعی درباره راننده کافی نیستند.";disclaimer.style.cssText="margin:8px 0 0;color:#82979f";drivingDetails.append(disclaimer);
+      }else{drivingDetails.textContent="این سفر پیش از فعال‌شدن ثبت آمار رانندگی ذخیره شده یا داده سرعتی برای آن در دسترس نیست.";}
+      detailButton.addEventListener("click",()=>{const open=drivingDetails.hidden;drivingDetails.hidden=!open;detailButton.setAttribute("aria-expanded",String(open));detailButton.textContent=open?"بستن جزئیات ▴":"جزئیات رانندگی ▾";});
+      summary.append(detailButton);info.append(summary,drivingDetails);
       const remove=document.createElement("button");remove.type="button";remove.textContent="حذف";remove.style.cssText="border:1px solid #704044;border-radius:9px;background:#211518;color:#ffb4b4;padding:7px 11px;cursor:pointer;font:inherit";
       remove.addEventListener("click",async()=>{if(!confirm("این سفر از تاریخچه حساب شما حذف شود؟"))return;try{await api("/api/driver/trips/"+encodeURIComponent(trip.id),{method:"DELETE"});setStatus("سفر حذف شد.");await refresh();}catch(e){setStatus(e.message,true);}});
       card.append(info,remove);root.append(card);
