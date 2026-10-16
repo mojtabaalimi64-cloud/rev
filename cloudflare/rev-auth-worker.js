@@ -652,6 +652,7 @@ export default {
     return response(request,env,{success:true,id,status:"pending",message:"درخواست ثبت شد و پس از بررسی مدیریت REV نمایش داده می‌شود."},201);
    }
    if(path.startsWith("/api/portal/businesses/") && path.endsWith("/plan-request") && method==="POST") {
+    if(TEMPORARY_OPEN_ACCESS) return response(request,env,{success:false,error:"پلن‌های پولی REV در دوره توسعه موقتاً غیرفعال هستند؛ همه امکانات بدون نیاز به پلن در دسترس‌اند."},503);
     if(!sameOrigin(request,env)) return response(request,env,{success:false,error:"Origin not allowed"},403);
     const u=await currentUser(request,env);
     if(!u) return response(request,env,{success:false,error:"برای درخواست پلن ابتدا وارد حساب شوید."},401);
