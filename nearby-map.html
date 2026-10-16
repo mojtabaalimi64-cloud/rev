@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080b0d"><meta name="description" content="نقشه نزدیک‌ترین ایستگاه‌های شارژ، تعمیرگاه‌ها و فروشگاه‌های قطعات REV">
+<title>نقشه خدمات اطراف من | REV</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#080b0d;color:#f5f7f8;font:15px/1.8 Vazirmatn,Vazir,Tahoma,sans-serif}header{padding:14px 16px;background:#10191d;border-bottom:1px solid #2a343a;position:sticky;top:0;z-index:500}header a{color:#39ff88;text-decoration:none}main{width:min(1050px,calc(100% - 24px));margin:14px auto 50px}.title{font-size:23px;font-weight:900;margin:4px 0}.muted{font-size:13px;color:#aab6bc;margin:0 0 12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.actions button,.actions select{font:inherit;padding:9px 12px;border:1px solid #3b5058;border-radius:10px;background:#152126;color:#fff}.actions button.primary{background:#39ff88;color:#07100b;border-color:#39ff88;font-weight:800}#map{height:58vh;min-height:320px;border-radius:14px;border:1px solid #2a343a;background:#dce5e8;overflow:hidden}#status{font-size:13px;color:#b8c7cc;margin:9px 0}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:14px}.item{border:1px solid #2a343a;background:#11191d;border-radius:12px;padding:12px}.item strong{display:block}.item small{display:block;color:#aab6bc}.item a{color:#39ff88}.note{font-size:12px;color:#9eafb5;margin-top:14px}@media(max-width:600px){#map{height:53vh;min-height:300px}.title{font-size:20px}}
+</style>
+</head>
+<body>
+<header><a href="https://mojtabaalimi64-cloud.github.io/rev-mobile/">← بازگشت به اپ REV</a></header>
+<main>
+<h1 class="title">نقشه خدمات و ایستگاه‌های شارژ اطراف من</h1>
+<p class="muted">برای پیدا کردن مراکز نزدیک، موقعیت مکانی را با اجازه خودتان فعال کنید. نقشه مراکز REV ثبت‌شده با مختصات معتبر را نشان می‌دهد.</p>
+<div class="actions"><button class="primary" id="locate">⌖ پیدا کردن مراکز اطراف من</button><select id="filter" aria-label="نوع مرکز"><option value="all">همه خدمات</option><option value="charging">ایستگاه شارژ</option><option value="repair">تعمیرگاه</option><option value="store">فروشگاه قطعات</option></select><button id="refresh">به‌روزرسانی مراکز</button></div>
+<div id="status" role="status">در حال دریافت فهرست مراکز…</div>
+<div id="map" aria-label="نقشه خدمات REV"></div>
+<div class="cards" id="cards"></div>
+<p class="note">اگر مرکزی روی نقشه دیده نمی‌شود، ممکن است مختصات آن در اطلاعات ثبت‌شده موجود نباشد. اطلاعات تماس و وضعیت فعالیت را پیش از مراجعه بررسی کنید. موقعیت شما فقط پس از فشردن دکمه مکان‌یابی درخواست می‌شود.</p>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+ const API="https://rev-auth-api.mojtaba-alimi64.workers.dev";
+ const status=document.getElementById("status"),cards=document.getElementById("cards"),filter=document.getElementById("filter");
+ const map=L.map("map",{scrollWheelZoom:false}).setView([32.4,53.7],5);
+ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap"}).addTo(map);
+ const markers=L.featureGroup().addTo(map);let userLocation=null,userMarker=null,all=[];
+ const typeNames={charging:"ایستگاه شارژ",repair:"تعمیرگاه",store:"فروشگاه قطعات"};
+ function esc(value){return String(value==null?"":value).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;","\"":"&quot;"}[c];});}
+ function distance(a,b){const R=6371,rad=n=>n*Math.PI/180,d1=rad(b[0]-a[0]),d2=rad(b[1]-a[1]),q=Math.sin(d1/2)*Math.sin(d1/2)+Math.cos(rad(a[0]))*Math.cos(rad(b[0]))*Math.sin(d2/2)*Math.sin(d2/2);return 2*R*Math.asin(Math.sqrt(q));}
+ function render(){
+  markers.clearLayers();
+  const valid=all.filter(x=>x.latitude!==null&&x.latitude!==undefined&&x.latitude!==""&&x.longitude!==null&&x.longitude!==undefined&&x.longitude!==""&&Number.isFinite(Number(x.latitude))&&Number.isFinite(Number(x.longitude))&&Math.abs(Number(x.latitude))<=90&&Math.abs(Number(x.longitude))<=180);
+  const kind=filter.value;
+  const shown=valid.filter(x=>kind==="all"||x.business_type===kind).map(x=>Object.assign({},x,{_distance:userLocation?distance(userLocation,[Number(x.latitude),Number(x.longitude)]):null})).sort((a,b)=>(a._distance==null?Infinity:a._distance)-(b._distance==null?Infinity:b._distance));
+  shown.forEach(x=>{L.marker([Number(x.latitude),Number(x.longitude)]).bindPopup("<strong>"+esc(x.name)+"</strong><br>"+esc(typeNames[x.business_type]||"مرکز خدمات")+"<br>"+esc(x.city||"")+" · "+esc(x.address||"نشانی ثبت نشده")+(x.phone?"<br><a href=\"tel:"+esc(x.phone)+"\">تماس</a>":"")+"<br><a href=\"https://www.openstreetmap.org/?mlat="+Number(x.latitude)+"&mlon="+Number(x.longitude)+"#map=16/"+Number(x.latitude)+"/"+Number(x.longitude)+"\" target=\"_blank\" rel=\"noopener noreferrer\">مسیریابی</a>").addTo(markers);});
+  cards.innerHTML=shown.slice(0,20).map(x=>"<article class=\"item\"><strong>"+esc(x.name)+"</strong><small>"+esc(typeNames[x.business_type]||"مرکز خدمات")+" · "+esc(x.city||"")+"</small><small>"+esc(x.address||"نشانی ثبت نشده")+(x._distance!=null?" · "+x._distance.toFixed(1)+" کیلومتر":"")+"</small>"+(x.phone?"<a href=\"tel:"+esc(x.phone)+"\">تماس</a> · ":"")+"<a href=\"https://www.openstreetmap.org/?mlat="+Number(x.latitude)+"&mlon="+Number(x.longitude)+"#map=16/"+Number(x.latitude)+"/"+Number(x.longitude)+"\" target=\"_blank\" rel=\"noopener noreferrer\">مسیریابی</a></article>").join("")||(valid.length?"<div class=\"item\">برای این فیلتر مرکز دارای مختصات ثبت نشده است.</div>":"<div class=\"item\">هنوز مرکزی با مختصات جغرافیایی معتبر در فهرست REV ثبت نشده است.</div>");
+  if(!userLocation&&markers.getLayers().length){const bounds=markers.getBounds();if(bounds.isValid())map.fitBounds(bounds.pad(.15),{maxZoom:13});}
+  status.textContent=valid.length+" مرکز دارای مختصات از "+all.length+" مرکز ثبت‌شده بارگذاری شد."+(userLocation?" نزدیک‌ترین مراکز ابتدا نمایش داده می‌شوند.":" برای مرتب‌سازی بر اساس فاصله، مکان‌یابی را فعال کنید.");
+  setTimeout(()=>map.invalidateSize(),100);
+ }
+ async function load(){status.textContent="در حال دریافت فهرست مراکز…";try{const r=await fetch(API+"/api/businesses",{cache:"no-store"});const j=await r.json();if(!r.ok||!j.success)throw new Error("دریافت فهرست مراکز ناموفق بود.");all=j.businesses||[];render();}catch(e){status.textContent="فهرست مراکز از سرویس REV دریافت نشد. اتصال اینترنت را بررسی و دوباره تلاش کنید.";}}
+ function locate(){if(!navigator.geolocation){status.textContent="این مرورگر از مکان‌یابی پشتیبانی نمی‌کند.";return;}status.textContent="در حال دریافت موقعیت؛ اجازه دسترسی را تأیید کنید…";navigator.geolocation.getCurrentPosition(p=>{userLocation=[p.coords.latitude,p.coords.longitude];if(userMarker)map.removeLayer(userMarker);userMarker=L.circleMarker(userLocation,{radius:8,color:"#0866ff",fillColor:"#0866ff",fillOpacity:1}).bindPopup("موقعیت فعلی شما").addTo(map);map.setView(userLocation,13);render();userMarker.openPopup();},()=>{status.textContent="موقعیت دریافت نشد؛ مجوز مکان‌یابی و GPS را بررسی کنید. نقشه را می‌توانید دستی جابه‌جا کنید.";},{enableHighAccuracy:true,timeout:15000,maximumAge:60000});}
+ document.getElementById("locate").addEventListener("click",locate);
+ document.getElementById("refresh").addEventListener("click",load);
+ filter.addEventListener("change",render);
+ load();
+})();
+</script>
+</body>
+</html>
