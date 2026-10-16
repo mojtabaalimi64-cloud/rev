@@ -344,6 +344,54 @@ async function driverTripsApi(request, env, url, method, user) {
   return response(request,env,{success:false,error:"متد یا مسیر پشتیبانی نمی‌شود."},405);
 }
 
+async function ensureEngagementSchema(env){
+ await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_live_activity(session_id TEXT PRIMARY KEY,user_id TEXT,page_path TEXT NOT NULL,last_seen TEXT NOT NULL,created_at TEXT NOT NULL)`).run();
+ await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_live_activity_seen ON rev_live_activity(last_seen)").run();
+ await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_announcements(id TEXT PRIMARY KEY,title TEXT NOT NULL,body TEXT NOT NULL,link_url TEXT,link_label TEXT,kind TEXT NOT NULL DEFAULT 'info',enabled INTEGER NOT NULL DEFAULT 1,starts_at TEXT,ends_at TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)`).run();
+}
+async function engagementApi(request,env,url,method){
+ await ensureEngagementSchema(env);
+ const path=url.pathname,now=new Date().toISOString();
+ if(path==="/api/engagement/heartbeat"&&method==="POST"){
+  if(!sameOrigin(request,env))return response(request,env,{success:false,error:"Origin not allowed"},403);
+  const b=await request.json().catch(()=>null),sid=String(b?.sessionId||"").trim(),page=String(b?.page||"/").slice(0,240);
+  if(!/^[a-zA-Z0-9_-]{16,100}$/.test(sid))return response(request,env,{success:false,error:"شناسه نشست نامعتبر است."},400);
+  const user=await currentUser(request,env);
+  await env.DB.prepare("INSERT INTO rev_live_activity(session_id,user_id,page_path,last_seen,created_at) VALUES(?,?,?,?,?) ON CONFLICT(session_id) DO UPDATE SET user_id=excluded.user_id,page_path=excluded.page_path,last_seen=excluded.last_seen").bind(sid,user?.id||null,page,now,now).run();
+  return response(request,env,{success:true});
+ }
+ if(path==="/api/announcements"&&method==="GET"){
+  const rows=await env.DB.prepare("SELECT id,title,body,link_url,link_label,kind,starts_at,ends_at,created_at FROM rev_announcements WHERE enabled=1 AND (starts_at IS NULL OR starts_at<=?) AND (ends_at IS NULL OR ends_at>=?) ORDER BY created_at DESC LIMIT 10").bind(now,now).all();
+  return response(request,env,{success:true,announcements:rows.results||[]});
+ }
+ if(path==="/api/admin/engagement"&&method==="GET"){
+  if(!await admin(request,env))return response(request,env,{success:false,error:"Unauthorized"},401);
+  const active=await env.DB.prepare("SELECT COUNT(DISTINCT session_id) AS total,COUNT(DISTINCT user_id) AS signed_in FROM rev_live_activity WHERE last_seen>=?").bind(new Date(Date.now()-5*60*1000).toISOString()).first();
+  const pages=await env.DB.prepare("SELECT page_path,COUNT(DISTINCT session_id) AS visitors FROM rev_live_activity WHERE last_seen>=? GROUP BY page_path ORDER BY visitors DESC LIMIT 12").bind(new Date(Date.now()-15*60*1000).toISOString()).all();
+  const list=await env.DB.prepare("SELECT id,title,body,link_url,link_label,kind,enabled,starts_at,ends_at,created_at FROM rev_announcements ORDER BY created_at DESC LIMIT 50").all();
+  return response(request,env,{success:true,active_users:Number(active?.total||0),signed_in_users:Number(active?.signed_in||0),active_window_minutes:5,popular_pages:pages.results||[],announcements:list.results||[]});
+ }
+ if(path==="/api/admin/announcements"&&method==="POST"){
+  if(!await admin(request,env))return response(request,env,{success:false,error:"Unauthorized"},401);
+  const b=await request.json().catch(()=>null),title=String(b?.title||"").trim(),body=String(b?.body||"").trim(),link=String(b?.linkUrl||"").trim(),label=String(b?.linkLabel||"مشاهده").trim().slice(0,50),kind=["info","success","warning","offer"].includes(b?.kind)?b.kind:"info";
+  if(!title||title.length>120||!body||body.length>500)return response(request,env,{success:false,error:"عنوان و متن اعلان الزامی است؛ حداکثر ۱۲۰ و ۵۰۰ نویسه."},400);
+  if(link&&!/^https:\/\//i.test(link)&&!link.startsWith("/")&&!link.startsWith("./"))return response(request,env,{success:false,error:"لینک باید HTTPS یا مسیر داخلی سایت باشد."},400);
+  let starts=null,ends=null;try{if(b?.startsAt)starts=new Date(b.startsAt).toISOString();if(b?.endsAt)ends=new Date(b.endsAt).toISOString();}catch{return response(request,env,{success:false,error:"زمان‌بندی اعلان معتبر نیست."},400);}
+  if(starts&&ends&&Date.parse(ends)<Date.parse(starts))return response(request,env,{success:false,error:"پایان اعلان نمی‌تواند قبل از شروع باشد."},400);
+  const id=crypto.randomUUID();
+  await env.DB.prepare("INSERT INTO rev_announcements(id,title,body,link_url,link_label,kind,enabled,starts_at,ends_at,created_at,updated_at) VALUES(?,?,?,?,?,?,1,?,?,?,?)").bind(id,title,body,link||null,label||"مشاهده",kind,starts,ends,now,now).run();
+  return response(request,env,{success:true,id,message:"اعلان برای نمایش در سایت منتشر شد."},201);
+ }
+ const match=path.match(/^\/api\/admin\/announcements\/([0-9a-f-]{36})\/(toggle|delete)$/i);
+ if(match&&method==="POST"){
+  if(!await admin(request,env))return response(request,env,{success:false,error:"Unauthorized"},401);
+  const id=match[1];
+  if(match[2]==="toggle"){const b=await request.json().catch(()=>null);if(typeof b?.enabled!=="boolean")return response(request,env,{success:false,error:"وضعیت اعلان نامعتبر است."},400);const r=await env.DB.prepare("UPDATE rev_announcements SET enabled=?,updated_at=? WHERE id=?").bind(b.enabled?1:0,now,id).run();return response(request,env,{success:true,changed:Number(r.meta?.changes||0)});}
+  const r=await env.DB.prepare("DELETE FROM rev_announcements WHERE id=?").bind(id).run();return response(request,env,{success:true,deleted:Number(r.meta?.changes||0)});
+ }
+ return null;
+}
+
 export default {
  async fetch(request,env) {
   const url=new URL(request.url), path=url.pathname, method=request.method;
