@@ -1,24 +1,22 @@
 # REV Mobile Prototype
 
-This directory contains an isolated mobile-first prototype. It links to existing REV pages and does not replace the desktop website or admin panel.
+این پوشه نمونه اولیه رابط موبایل REV است. این نسخه به صفحات موجود لینک می‌دهد و جایگزین سایت دسکتاپ یا پنل مدیریت نیست.
 
-## Included
-- Responsive Persian RTL app shell and mobile bottom navigation.
-- Links to existing trip planning, checklist, services, driver profile, learning, news, and account pages.
-- A manifest and service worker scoped to this directory.
-- No API response or private data is cached for offline use.
-- No secret API keys or fabricated service/analytics data.
+## موارد پیاده‌سازی‌شده
+- رابط واکنش‌گرا و فارسی راست‌چین با ناوبری پایین صفحه
+- پیوند به برنامه‌ریز سفر، چک‌لیست، خدمات، پروفایل راننده، آموزش، اخبار و حساب
+- manifest و Service Worker محدود به پوشه موبایل
+- عدم کش پاسخ API و داده خصوصی
+- آزمون خودکار اولیه برای فایل‌های ضروری، JSON مانیفست و پیوندهای داخلی
 
-## Release status
-This prototype is still stored in the website repository. A separate app repository/hosting project and independent deployment workflow have **not** been configured yet, so full release isolation is not complete. These changes are on an experimental branch and have not been deployed to the live site.
+## وضعیت انتشار
+این نمونه هنوز در مخزن سایت قرار دارد. مخزن/میزبانی مستقل و workflow انتشار جداگانه اپ هنوز تنظیم نشده است؛ بنابراین استقلال کامل انتشار عملیاتی نشده. فایل‌ها در شاخه آزمایشی‌اند و روی سایت زنده منتشر نشده‌اند.
 
-## Manual checks after preview hosting
-1. Check widths around 360, 390, and 430 px and verify there is no horizontal overflow.
-2. Check that the bottom navigation does not cover page content.
-3. Open every link and verify it reaches the existing REV page.
-4. Test PWA installation only over HTTPS.
-5. Smoke-test the website, admin, and APIs separately.
-6. Configure separate app hosting and deployment before any public release.
+## بررسی پیش از انتشار
+1. اجرای workflow آزمون و رفع خطاها
+2. ساخت مخزن جداگانه اپ و انتقال فایل‌ها پس از تأیید
+3. اتصال مخزن اپ به پروژه میزبانی مستقل (برای مثال Cloudflare Pages جداگانه یا GitHub Pages مخزن جدا)
+4. آزمایش روی گوشی در HTTPS و بررسی لینک‌ها، PWA، GPS و دسترسی‌های API
+5. آزمون regression سایت و پنل ادمین؛ فقط پس از موفقیت انتشار اپ
 
-## Next step
-After reviewing the look and navigation, move this app into its own repository or hosting project and configure a separate preview/release workflow. No production website files have been changed.
+این نسخه، پوسته و ناوبری اولیه است؛ GPS، ثبت درخواست امداد، اعلان‌ها و سایر قابلیت‌های عملیاتی تا زمان پیاده‌سازی و آزمون سرویس مربوطه فعال محسوب نمی‌شوند.
