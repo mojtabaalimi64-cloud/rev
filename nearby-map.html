@@ -13,16 +13,38 @@
 .bottom-nav a svg{width:22px;height:22px;display:block;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
 .bottom-nav a.active{background:#fff;color:#0866ff;font-weight:850}
 .bottom-nav a:active{background:#dce9ff;color:#0866ff}@media(max-width:700px){main{width:calc(100% - 10px);margin:5px auto 16px}header{padding:8px 10px}.title{font-size:17px}.map-layout{display:block;position:relative}#map{height:72vh;min-height:400px;width:100%}#details-panel{position:absolute;z-index:600;right:6px;left:6px;bottom:6px;width:auto;max-width:none;height:auto;min-height:0;max-height:47vh;padding:16px;box-shadow:0 6px 28px #0009}.detail-name{font-size:17px;margin:10px 0 4px}.actions{gap:5px}.actions button,.actions select{font-size:11px;padding:5px 7px;min-height:32px}}
+
+/* نقشه تمام‌صفحه؛ جست‌وجو و مکان‌یابی شناور در پایین */
+html,body{width:100%;height:100%;min-height:100%;overflow:hidden;background:#e8edf0}
+body{padding:0;margin:0}
+header,main>.title,main>.muted,.actions,#status,.note{display:none!important}
+main{display:block!important;width:100%!important;height:100dvh!important;max-width:none!important;margin:0!important;padding:0!important}
+.map-layout{display:block!important;position:fixed!important;inset:0!important;width:100%!important;height:100dvh!important;margin:0!important}
+#map{position:absolute!important;inset:0!important;width:100%!important;height:100%!important;min-height:0!important;border:0!important;border-radius:0!important;z-index:1}
+#details-panel{position:absolute!important;z-index:700!important;right:12px!important;left:12px!important;bottom:calc(145px + env(safe-area-inset-bottom))!important;width:auto!important;max-width:none!important;height:auto!important;min-height:0!important;max-height:42dvh!important;border-radius:18px!important;box-shadow:0 8px 32px #0005!important}
+.bottom-nav{z-index:900!important}
+.bottom-nav-inner{grid-template-columns:repeat(4,minmax(0,1fr))!important}
+.bottom-nav a:last-child{display:none!important}
+.map-search-bar{position:fixed;z-index:850;left:14px;right:14px;bottom:calc(76px + env(safe-area-inset-bottom));display:flex;align-items:center;gap:10px;direction:rtl;pointer-events:none}
+.map-search-form{height:54px;min-width:0;flex:1;display:flex;align-items:center;gap:9px;padding:0 17px;background:#fff;border:1px solid #e4e9ef;border-radius:999px;box-shadow:0 5px 22px #0002;pointer-events:auto}
+.map-search-form svg{width:21px;height:21px;flex:0 0 21px;stroke:#687789;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#placeSearch{width:100%;min-width:0;height:100%;padding:0;border:0;outline:0;background:transparent;color:#172235;font:14px Tahoma,Vazirmatn,sans-serif;box-shadow:none}
+#placeSearch:focus{border:0;box-shadow:none;background:transparent}
+#placeSearch::placeholder{color:#8793a3}
+#searchSubmit{width:42px;height:42px;flex:0 0 42px;display:grid;place-items:center;padding:0;border:0;border-radius:50%;background:#0866ff;color:#fff;pointer-events:auto;box-shadow:0 4px 12px #0866ff33}
+#searchSubmit svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#locate{width:54px;height:54px;flex:0 0 54px;display:grid;place-items:center;padding:0;border:1px solid #e3e8ee;border-radius:50%;background:#fff;color:#0866ff;box-shadow:0 5px 22px #0002;pointer-events:auto}
+#locate svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+#locate:active,#searchSubmit:active{transform:scale(.96)}
+@media(min-width:701px){.map-search-bar{left:calc(50% - 260px);right:calc(50% - 260px);bottom:28px}.bottom-nav{display:none!important}.map-search-form{height:58px}#locate{width:58px;height:58px}}
+@media(max-width:400px){.map-search-bar{left:10px;right:10px;gap:8px}.map-search-form{padding:0 13px}#placeSearch{font-size:13px}}
 </style>
 </head>
 <body>
-<header><a href="https://mojtabaalimi64-cloud.github.io/rev-mobile/">← بازگشت به اپ REV</a></header>
+<header aria-hidden="true"></header>
 <main>
-<h1 class="title">نقشه خدمات و ایستگاه‌های شارژ اطراف من</h1>
-<p class="muted">ایستگاه‌های شارژ دیتابیس REV، مراکز تأییدشده و مراکز ثبت‌شده در فهرست قدیمی سایت در یک نقشه نمایش داده می‌شوند.</p>
-<div class="actions"><button class="primary" id="locate">⌖ پیدا کردن مراکز اطراف من</button><select id="filter" aria-label="نوع مرکز"><option value="all">همه خدمات</option><option value="charging">ایستگاه شارژ</option><option value="repair">تعمیرگاه</option><option value="store">فروشگاه قطعات</option></select><button id="refresh">به‌روزرسانی مراکز</button></div>
-<div id="status" role="status">در حال دریافت فهرست مراکز…</div>
-<div class="map-layout"><aside id="details-panel" aria-live="polite" hidden><button type="button" id="close-details" class="close-details" aria-label="بستن جزئیات">×</button><div id="details-content"></div></aside><div id="map" aria-label="نقشه خدمات REV"></div></div>
+<h1 class="title">نقشه خدمات REV</h1><div class="actions"><button id="refresh" type="button">به‌روزرسانی</button><select id="filter" aria-label="نوع مرکز"><option value="all">همه خدمات</option><option value="charging">ایستگاه شارژ</option><option value="repair">تعمیرگاه</option><option value="store">فروشگاه قطعات</option></select></div><div id="status" role="status" aria-live="polite">در حال دریافت فهرست مراکز…</div>
+<div class="map-layout"><aside id="details-panel" aria-live="polite" hidden><button type="button" id="close-details" class="close-details" aria-label="بستن جزئیات">×</button><div id="details-content"></div></aside><div id="map" aria-label="نقشه خدمات REV"></div><div class="map-search-bar"><form class="map-search-form" id="placeSearchForm" role="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg><input id="placeSearch" type="search" placeholder="جست‌وجوی مکان یا نشانی…" autocomplete="off" aria-label="جست‌وجوی مکان یا نشانی"><button id="searchSubmit" type="submit" aria-label="جست‌وجو"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></form><button id="locate" type="button" aria-label="مکان فعلی من" title="مکان فعلی من"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4m0 12v4M2 12h4m12 0h4"></path><circle cx="12" cy="12" r="8"></circle></svg></button></div></div>
 <p class="note">اگر مرکزی روی نقشه دیده نمی‌شود، ممکن است مختصات آن در اطلاعات ثبت‌شده موجود نباشد. اطلاعات تماس و وضعیت فعالیت را پیش از مراجعه بررسی کنید. موقعیت شما فقط پس از فشردن دکمه مکان‌یابی درخواست می‌شود.</p>
 </main>
 <nav class="bottom-nav" aria-label="پیمایش اصلی REV"><div class="bottom-nav-inner">
@@ -98,6 +120,17 @@
  }
  async function locate(){if(!navigator.geolocation){status.textContent="این مرورگر از مکان‌یابی پشتیبانی نمی‌کند.";return;}status.textContent="در حال دریافت موقعیت؛ اجازه دسترسی را تأیید کنید…";navigator.geolocation.getCurrentPosition(async p=>{userLocation=[p.coords.latitude,p.coords.longitude];if(userMarker)map.removeLayer(userMarker);let avatar="";try{const r=await fetch(BUSINESS_API+"/api/portal/me",{method:"GET",credentials:"include",cache:"no-store"});if(r.ok){const j=await r.json();const candidate=j?.user?.avatar_data;if(j.success&&typeof candidate==="string"&&/^data:image\/(jpeg|png|webp);base64,/.test(candidate)&&candidate.length<=350000)avatar=candidate;}}catch(e){}if(avatar){const icon=L.divIcon({className:"rev-user-location-icon",html:'<span class="rev-user-photo-marker"><img src="'+avatar+'" alt=""></span>',iconSize:[42,42],iconAnchor:[21,21],popupAnchor:[0,-22]});userMarker=L.marker(userLocation,{icon,zIndexOffset:1000}).bindPopup("موقعیت فعلی شما").addTo(map);}else{userMarker=L.circleMarker(userLocation,{radius:8,color:"#fff",weight:3,fillColor:"#0866ff",fillOpacity:1}).bindPopup("موقعیت فعلی شما").addTo(map);}map.setView(userLocation,13);render();userMarker.openPopup();},()=>{status.textContent="موقعیت دریافت نشد؛ مجوز مکان‌یابی و GPS را بررسی کنید. نقشه را می‌توانید دستی جابه‌جا کنید."},{enableHighAccuracy:true,timeout:15000,maximumAge:60000});}
  document.getElementById("locate").addEventListener("click",locate);
+ const searchForm=document.getElementById("placeSearchForm"),searchInput=document.getElementById("placeSearch");
+ searchForm.addEventListener("submit",async function(event){
+  event.preventDefault();const query=searchInput.value.trim();if(!query)return;
+  status.textContent="در حال جست‌وجوی مکان…";
+  try{
+   const response=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=fa&q="+encodeURIComponent(query),{headers:{"Accept":"application/json"}});
+   if(!response.ok)throw new Error("search");
+   const results=await response.json();if(!results.length){status.textContent="مکانی پیدا نشد؛ نام یا نشانی دقیق‌تری وارد کنید.";return;}
+   const point=[Number(results[0].lat),Number(results[0].lon)];map.setView(point,15,{animate:true});status.textContent="مکان پیدا شد: "+(results[0].display_name||query);
+  }catch(error){status.textContent="جست‌وجوی مکان انجام نشد؛ دوباره تلاش کنید.";}
+ });
  document.getElementById("refresh").addEventListener("click",load);
  filter.addEventListener("change",render);
  document.getElementById("close-details").addEventListener("click",()=>{detailsPanel.hidden=true;setTimeout(()=>map.invalidateSize(),80)});
