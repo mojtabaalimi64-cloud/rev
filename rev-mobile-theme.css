@@ -1,114 +1,146 @@
-/* REV App Visual Identity v3 — white surfaces, electric-blue actions, soft-blue icons */
+/* REV single-source visual identity v5 — white surfaces, electric blue actions */
 :root{
  color-scheme:light!important;
- --rev-blue:#0866ff;--rev-blue-dark:#0754d6;--rev-blue-soft:#edf4ff;
- --rev-ink:#17253b;--rev-muted:#65758b;--rev-line:#e2eaf4;--rev-white:#fff;
- --bg:#fff!important;--panel:#fff!important;--panel2:#f5f8fd!important;
- --surface:#fff!important;--line:#e2eaf4!important;--text:#17253b!important;
- --muted:#65758b!important;--accent:#0866ff!important;--blue:#0866ff!important;
- --teal:#0866ff!important;--green:#0866ff!important;--danger:#dc3545!important;
+ --rev-blue:#0866ff!important;--rev-blue-dark:#0754d6!important;--rev-blue-soft:#edf4ff!important;
+ --rev-ink:#17253b!important;--rev-muted:#65758b!important;--rev-line:#e2eaf4!important;--rev-white:#fff!important;
+ --bg:#fff!important;--panel:#fff!important;--panel2:#f5f8fd!important;--surface:#fff!important;
+ --line:#e2eaf4!important;--text:#17253b!important;--muted:#65758b!important;
+ --accent:#0866ff!important;--blue:#0866ff!important;--teal:#0866ff!important;--green:#0866ff!important;
+ --ink:#fff!important;--ink-2:#edf4ff!important;--paper:#fff!important;--card:#fff!important;
+ --teal-d:#0754d6!important;--gray:#65758b!important;--fs:17px!important;
+ --rev-bg:#fff!important;--rev-bg-deep:#fff!important;--rev-surface:#fff!important;
+ --rev-surface-2:#f5f8fd!important;--rev-surface-3:#edf4ff!important;--rev-text:#17253b!important;
+ --rev-green:#0866ff!important;--rev-green-dark:#0754d6!important;--rev-cyan:#0866ff!important;
+ --rev-radius:16px!important;--rev-shadow:0 4px 18px rgba(23,37,59,.06)!important;
 }
-html,body{background:#fff!important;color:#17253b!important;color-scheme:light!important}
+html,body{background:#fff!important;background-image:none!important;color:#17253b!important;color-scheme:light!important}
 body{font-family:Vazirmatn,Vazir,IRANSansX,"Segoe UI",Tahoma,sans-serif!important}
-header,.topbar,.app-header,.head,.bar,.phead,footer,.foot,
-header[style],.head[style]{background:#fff!important;color:#17253b!important;border-color:#e2eaf4!important;box-shadow:0 2px 12px rgba(23,37,59,.04)!important}
-.start-page,.start-hero,.hero,.start-page .start-hero,.pod{background:#fff!important;color:#17253b!important}
-.start-map{opacity:.12!important}
-h1,h2,h3,h4,h5,h6,p,li,label,strong,b,legend,span,div{ text-shadow:none }
-h1,h2,h3,h4,h5,h6,p,li,label,strong,b,legend{color:inherit}
-a{ -webkit-tap-highlight-color:transparent}
-a:not(.btn):not(.primary):not(.primary-btn):not(.submit-btn){color:#0866ff}
-button,.btn,.primary,.primary-btn,[type=submit],.submit-btn,.action-btn,
-button.primary,.actions button.primary,.detail-actions .detail-route-button{
- background:#0866ff!important;border-color:#0866ff!important;color:#fff!important;
- box-shadow:0 3px 10px rgba(8,102,255,.12)!important
+body *{text-shadow:none!important}
+a{color:#0866ff!important;text-underline-offset:3px}
+a:hover{color:#0754d6!important}
+header,.site-header,.topbar,.navbar,.app-header,.head,.header,.bar,.phead,footer,.foot,
+.nav,.parts-bar,.parts-bar .wrap,.bottom,.bottom-nav,.bottom-navigation,.tabbar,.mobile-nav,.nav-bar{
+ background:#fff!important;background-image:none!important;color:#17253b!important;border-color:#e2eaf4!important;
+ box-shadow:0 2px 14px rgba(23,37,59,.045)!important;
 }
-button.secondary,.btn.secondary,.secondary-btn,.ghost-btn,[data-variant=secondary],
-.back-link,.actions button.secondary,.detail-actions a,.detail-actions button{
- background:#fff!important;color:#0866ff!important;border:1px solid #dce6f4!important;box-shadow:none!important
+header a,.site-header a,.topbar a,.navbar a,.app-header a,.head a,.header a,.bar a,.phead a,
+footer a,.foot a,.nav a,.parts-bar a,.bottom a,.bottom-nav a,.bottom-navigation a,.tabbar a,.mobile-nav a,.nav-bar a{
+ color:#65758b!important;
 }
-input,select,textarea,option{
- background:#fff!important;color:#17253b!important;border:1px solid #dce6f4!important;
- color-scheme:light!important;box-shadow:none
-}
-input:focus,select:focus,textarea:focus{border-color:#0866ff!important;box-shadow:0 0 0 3px rgba(8,102,255,.12)!important}
-.card,.panel,.box,.section-card,.metric,.trip-card,.station-card,.result-card,.list,.item,
-.modal-content,.sheet,.drawer-content,.cform,.tblwrap,.news li,.pod,.weather-panel,
-.weather-card,.weather-summary,.directions,.plan-box,.feature-placeholder,.feature-card,
-#details-panel,.details-panel,.profile-card,.service-card,.trip-summary,.trip-details,
-#electricFields,#fuelFields,.status,.stat,.map-layers,.review-empty,.detail-tabs{
- background:#fff!important;color:#17253b!important;border-color:#e2eaf4!important;
- box-shadow:0 4px 18px rgba(23,37,59,.045)!important
-}
-.card p,.panel p,.sub,.muted,.subtitle,.description,.hint,small,.meta,.spec,.detail-meta,
-.review-entry small,.weather-credit,.weather-time,.weather-detail,.plan-meta,.stat span,
-#status,.note,.phead p,.hero p.lead{color:#65758b!important}
-.icon,.ico,.icon-box,.feature-icon,.direction-icon,.layer-dot-box{
- background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important
-}
-.bottom,.bottom-nav,.tabbar,.mobile-nav,.nav-bar,.bottom-nav[style]{
- background:#fff!important;border-top:1px solid #e2eaf4!important;
- box-shadow:0 -5px 20px rgba(23,37,59,.08)!important
-}
-.bottom-nav-inner{background:transparent!important}
-.bottom a,.bottom-nav a,.tabbar a,.mobile-nav a,.nav-bar a{
- color:#65758b!important;background:transparent!important
-}
-.bottom a.active,.bottom-nav a.active,.tabbar a.active,.mobile-nav a.active,.nav-bar a.active,
+.brand,.logo,.start-logo,.phead .back{color:#0866ff!important}
+.brand svg,.logo svg{fill:#0866ff!important}
+.nav a.on,.nav a.active,.nav a:hover,.parts-bar a.on,.chip.on,.chip:hover,
+.bottom a.active,.bottom-nav a.active,.bottom-navigation a.active,.tabbar a.active,.mobile-nav a.active,.nav-bar a.active,
 .bottom-nav a[aria-current=page],.bottom-nav a[aria-selected=true]{
- background:#edf4ff!important;color:#0866ff!important
+ background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important;
 }
-.badge,.pill,.chip,.tag,.map-tag,.detail-type,.feature-chips span{
- background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important
+main,.main,.app,.app-shell,.page,.page-content,.content,.wrap,.container,.page-wrap,.main-container,
+section,article,aside,.start-page,.start-hero,.start-links,.start-bottom,.hero,.phead,.pod{
+ color:#17253b!important;
 }
-.nav a,.parts-bar,.parts-bar .wrap{background:#fff!important;color:#65758b!important}
-.nav a.on,.nav a:hover,.chip.on,.chip:hover{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
-hr,.share,.share a,.share button{border-color:#e2eaf4!important}
-.tblwrap table th,.cmp thead th{background:#edf4ff!important;color:#17253b!important}
+.start-page,.start-hero,.start-links,.start-bottom,.hero,.pod,.phead{
+ background:#fff!important;background-image:none!important;color:#17253b!important;border-color:#e2eaf4!important;
+}
+.start-map{opacity:.08!important}
+.map-fade{background:linear-gradient(90deg,rgba(255,255,255,.97) 0%,rgba(255,255,255,.82) 40%,rgba(255,255,255,.18) 100%),linear-gradient(0deg,#fff 0%,transparent 45%)!important}
+.start-content h1,.start-content h2,.start-content h3,.start-stats strong,.start-logo,
+.start-section-head h2,.start-bottom h3,.start-card h3,.start-card-feature h3,
+h1,h2,h3,h4,h5,h6,.title,.detail-name{color:#17253b!important}
+.start-lead,.start-eyebrow,.start-stats span,.start-section-head p,.start-bottom p,.start-card p,
+p,li,label,legend,.muted,.sub,.subtitle,.description,.hint,small,.meta,.spec,.detail-meta,.trip-meta,
+.eyebrow,.unit,.loading,.status,.stat span{color:#65758b!important}
+.start-eyebrow,.start-kicker,.start-card-label,.start-card-link,.start-content h1 em,.start-logo span{color:#0866ff!important}
+.start-card,.start-card-feature,.start-bottom,.card,.panel,.box,.section-card,.metric,.stat,.fact,
+.trip-card,.trip,.station-card,.result-card,.list,.item,.modal-content,.sheet,.drawer-content,.cform,
+.tblwrap,.news li,.weather-panel,.weather-card,.weather-summary,.directions,.plan-box,.feature-placeholder,
+.feature-card,.profile-card,.service-card,.trip-summary,.trip-details,.form-card,.auth-card,.dashboard-card,
+.content-card,.admin-card,.settings-card,.result-card,.item-card,.business-card,.product-card,.article-card,
+.vehicle-card,.gate-card,.member-profile-inline,.sidebar,.side-brand,.notice,.status,.detail-tabs,.detail-tab,
+#details-panel,.details-panel,#electricFields,#fuelFields,.map-layers,.review-empty,.timeline-metric,.timeline-details,
+.compact-disclosure,.calendarDialog,.timeDialog{
+ background:#fff!important;background-image:none!important;color:#17253b!important;
+ border-color:#e2eaf4!important;border-radius:16px!important;box-shadow:0 4px 18px rgba(23,37,59,.055)!important;
+}
+.start-card-feature{border:1px solid #e2eaf4!important}
+.start-card-icon,.start-card-feature .start-card-icon,.icon,.ico,.icon-box,.service-icon,.feature-icon,
+.direction-icon,.layer-dot-box,.detail-tab[aria-selected=true],.tag,.pill,.badge,.status-badge,
+.chip,.map-tag,.detail-type,.feature-chips span,.stage .hs span,.map-layer-toggle{
+ background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important;
+}
+.start-card-icon,.icon,.ico,.icon-box,.service-icon,.feature-icon,.direction-icon,.layer-dot-box{
+ box-shadow:none!important;
+}
+button,.btn,.button,.primary,.primary-btn,.start-primary,.action-btn,.submit-btn,.start-actions .start-primary,
+[type=submit],input[type=button],input[type=submit],[role=button],.actions button.primary,.detail-route-button,
+.gate-primary,.pickerButton,.calendarHeader button,.calendarActions button,.timeDialogActions button{
+ background:#0866ff!important;background-image:none!important;color:#fff!important;border:1px solid #0866ff!important;
+ border-radius:12px!important;box-shadow:0 3px 10px rgba(8,102,255,.13)!important;
+}
+button.secondary,.btn.secondary,.button.secondary,.secondary,.secondary-btn,.ghost-btn,.back-link,.outline,
+button.ghost,.btn.ghost,button.outline,.btn.outline,[data-variant=secondary],.start-secondary,
+.detail-actions a,.detail-actions button,.gate-secondary{
+ background:#fff!important;color:#0866ff!important;border:1px solid #dce8ff!important;box-shadow:none!important;
+}
+button.danger,.btn.danger,.danger,[data-variant=danger],#logout{
+ background:#dc3545!important;color:#fff!important;border-color:#dc3545!important;
+}
+button:disabled,[type=submit]:disabled{opacity:.55!important;box-shadow:none!important}
+input,select,textarea,option,.search,.cform input,.cform select{
+ background:#fff!important;color:#17253b!important;border:1px solid #dce6f4!important;color-scheme:light!important;
+ border-radius:11px!important;box-shadow:none!important;
+}
+input::placeholder,textarea::placeholder{color:#8b99ab!important;opacity:1!important}
+input:focus,select:focus,textarea:focus{border-color:#0866ff!important;box-shadow:0 0 0 3px rgba(8,102,255,.12)!important}
+input[type=checkbox],input[type=radio],input[type=range]{accent-color:#0866ff!important}
+label{color:#65758b!important}
+hr,.divider,.share,.share a,.share button{border-color:#e2eaf4!important}
+.tblwrap table th,.cmp thead th,th{background:#edf4ff!important;color:#17253b!important}
+td,th{border-color:#e2eaf4!important}
+tbody tr:nth-child(even),tbody tr:hover{background:#f5f8fd!important}
 .cmp td.win{background:#e7f7ee!important;color:#176b45!important}
-.leaflet-container{background:#eef3f8!important;color:#17253b!important}
+#map,.map,.leaflet-container{color:#17253b!important}
+.leaflet-container{background:#eef3f8!important}
 .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff!important;color:#17253b!important}
-.leaflet-popup-content a,.leaflet-control a{color:#0866ff!important}
-.leaflet-bar a,.leaflet-bar a:hover{background:#fff!important;color:#0866ff!important;border-color:#e2eaf4!important}
-.leaflet-control-attribution{background:rgba(255,255,255,.9)!important;color:#65758b!important}
-.logo,.brand,.phead .back{color:#0866ff!important;text-shadow:none!important}
-.stage{background:#edf4ff!important}
-.stage .hs span{background:#fff!important;color:#17253b!important;border-color:#dce6f4!important}
-.stage .hs i{background:#0866ff!important}
-.plan-box h2,.plan-stop,.plan-alert,.plan-ok,.weather-card .weather-wind,
-.weather-panel h2,.map-tag,.map-layer-toggle,.direction-icon{color:#0866ff!important}
+.leaflet-popup-content a,.leaflet-control a,.leaflet-bar a,.leaflet-bar a:hover{color:#0866ff!important}
+.leaflet-bar a,.leaflet-bar a:hover{background:#fff!important;border-color:#e2eaf4!important}
+.leaflet-control-attribution{background:rgba(255,255,255,.92)!important;color:#65758b!important}
+.plan-box,.weather-summary,.timeline-details{background:#f5f8fd!important}
+.plan-box h2,.plan-stop,.plan-alert,.plan-ok,.weather-card .weather-wind,.weather-panel h2,.map-tag,
+.map-layer-toggle,.direction-icon,.detail-name{color:#0866ff!important}
 .plan-stop,.direction-item,.station,.rating-summary,.review-entry{border-color:#e2eaf4!important}
 .station:hover{background:#f5f8fd!important}
 .weather-content.weather-fade:not(.weather-expanded)::after{background:linear-gradient(transparent,#fff)!important}
 .weather-more{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
 .weather-summary.warn{background:#fff7e8!important;border-color:#f2d8a8!important;color:#865800!important}
-.weather-summary{background:#f5f8fd!important}
-.plan-box{background:#f5f8fd!important;border-color:#dce6f4!important}
-.plan-stop strong,.station strong,.feature-placeholder strong{color:#17253b!important}
 .detail-tab{background:#fff!important;color:#65758b!important;border-color:transparent!important}
 .detail-tab[aria-selected=true]{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
-.feature-chips span{color:#0866ff!important}
-.detail-name{color:#17253b!important}
-@media(prefers-color-scheme:dark){
- html,body{background:#fff!important;color:#17253b!important;color-scheme:light!important}
+.stage{background:#f5f8fd!important}
+.stage .hs span{background:#fff!important;color:#17253b!important;border-color:#dce6f4!important}
+.stage .hs i{background:#0866ff!important;box-shadow:0 0 0 0 rgba(8,102,255,.25)!important}
+.start-actions .start-primary{box-shadow:0 6px 22px rgba(8,102,255,.14)!important}
+.start-secondary{color:#0866ff!important;border-bottom-color:#dce8ff!important}
+.start-stats div{border-color:#dce8ff!important}
+#navigationGate{background:#fff!important;color:#17253b!important}
+#navigationGate .gate-card{background:#fff!important;color:#17253b!important;border-color:#e2eaf4!important}
+#navigationGate .gate-card p{color:#65758b!important}
+#navigationGate .gate-primary{background:#0866ff!important;color:#fff!important;border-color:#0866ff!important}
+#navigationGate .gate-secondary{background:#fff!important;color:#0866ff!important;border-color:#dce8ff!important}
+#navigationGateStatus{color:#65758b!important}
+#revPersistentNav,.rev-persistent-nav,#serviceNav{
+ background:#fff!important;color:#17253b!important;border-color:#e2eaf4!important;box-shadow:0 8px 24px rgba(23,37,59,.12)!important;
 }
-
-/* v4: enforce the shared white/blue design after every page's original styles */
-:root{color-scheme:light!important}
-html,body{background:#fff!important;color:#17253b!important;color-scheme:light!important}
-body,main,header,footer,nav,section,article,aside,.start-page,.start-hero,.start-links,.hero,.pod,.parts-bar,.start-bottom{background:#fff!important;color:#17253b!important}
-header,.bar,.nav,.parts-bar,.parts-bar .wrap,.start-links,.start-bottom,footer,.foot{background:#fff!important;color:#17253b!important;border-color:#e2eaf4!important}
-.start-hero,.start-page,.hero{background:#fff!important;color:#17253b!important}
-.start-content h1,.start-content h2,.start-content h3,.start-stats strong,.start-logo,.start-section-head h2,.start-bottom h3{color:#17253b!important}
-.start-lead,.start-eyebrow,.start-stats span,.start-section-head p,.start-bottom p,.start-card p{color:#65758b!important}
-.start-card,.start-card-feature,.start-bottom,.card,.panel,.box,.section-card,.metric,.trip-card,.station-card,.result-card,.list,.item,.modal-content,.sheet,.drawer-content,.profile-card,.service-card,.trip-summary,.trip-details,.feature-card,.feature-placeholder{background:#fff!important;color:#17253b!important;border:1px solid #e2eaf4!important;box-shadow:0 4px 18px rgba(23,37,59,.045)!important}
-.start-card h3,.start-card-feature h3,.start-card-label,.start-card-link{color:#0866ff!important}
-.start-card-icon,.start-card-feature .start-card-icon,.icon,.ico,.icon-box,.feature-icon,.direction-icon,.layer-dot-box{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
-.start-primary,.start-actions .start-primary,button,.btn,.button,.primary,.primary-btn,.action-btn,.submit-btn,[type=submit],input[type=button],input[type=submit]{background:#0866ff!important;color:#fff!important;border-color:#0866ff!important}
-.start-secondary,.secondary,.secondary-btn,.ghost-btn,.back-link{background:#fff!important;color:#0866ff!important;border:1px solid #dce6f4!important}
-.nav a,.parts-bar a,.start-secondary,.foot a{color:#0866ff!important}
-.nav a.on,.nav a:hover,.chip.on,.chip:hover,.bottom-nav a.active,.bottom a.active{background:#edf4ff!important;color:#0866ff!important}
-input,select,textarea,option{background:#fff!important;color:#17253b!important;border-color:#dce6f4!important;color-scheme:light!important}
-p,li,label,small,.muted,.sub,.subtitle,.description,.hint,.meta,.spec{color:inherit}
-.map-tag,.hs span,.map-layer-toggle{background:#fff!important;color:#17253b!important;border-color:#dce8f4!important}
-@media(prefers-color-scheme:dark){html,body,main,header,footer,section,.start-page,.start-hero,.hero{background:#fff!important;color:#17253b!important;color-scheme:light!important}}
+#revPersistentNav a,.rev-persistent-nav a,#serviceNav a{color:#0866ff!important;background:#fff!important;border-color:#e2eaf4!important}
+#revPersistentNav a.active,.rev-persistent-nav a.active,#serviceNav a.active{background:#edf4ff!important;color:#0866ff!important}
+#revReturnProfile{background:#fff!important;color:#0866ff!important;border:1px solid #0866ff!important;box-shadow:0 8px 24px rgba(23,37,59,.12)!important}
+@media(max-width:760px){
+ .wrap,.container,.page-wrap,.main-container{max-width:100%!important}
+ .start-hero{min-height:0!important}
+ .start-content{padding:34px 0!important}
+ .start-content h1{margin-top:24px!important;font-size:clamp(30px,8vw,44px)!important}
+ .start-card-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+ .start-card{min-height:190px!important;padding:16px!important}
+ .dashboard,.layout,.main-layout,.content-layout,.admin-layout{grid-template-columns:minmax(0,1fr)!important}
+ .bottom-nav,.bottom,.tabbar,.mobile-nav,.nav-bar{padding-bottom:calc(8px + env(safe-area-inset-bottom))!important}
+}
+@media(max-width:390px){.start-card-grid{grid-template-columns:1fr!important}}
+@media(prefers-color-scheme:dark){html,body,body main,body header,body footer,body section,body .start-page,body .start-hero,body .hero{background:#fff!important;color:#17253b!important;color-scheme:light!important}}
