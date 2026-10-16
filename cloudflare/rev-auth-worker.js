@@ -8,6 +8,8 @@
 const DEFAULT_ORIGIN = "https://mojtabaalimi64-cloud.github.io";
 const COOKIE_NAME = "__Host-rev_session";
 const SESSION_DAYS = 7;
+// حالت موقت توسعه: همه امکانات پلن‌ها باز است؛ پس از پایان آزمایش فقط این مقدار را false کنید.
+const TEMPORARY_OPEN_ACCESS = true;
 const VERIFY_MINUTES = 30;
 const PBKDF2_ITERATIONS = 310000;
 
@@ -126,10 +128,12 @@ async function createSession(request,env,userId) {
   return response(request,env,{success:true,user:{id:userId}},200,{"Set-Cookie":cookie(raw,SESSION_DAYS*86400)});
 }
 function isPlanActive(a, now=Date.now()) {
+  if (TEMPORARY_OPEN_ACCESS) return true;
   return !!a && a.plan_status==="active" && ["paid","waived"].includes(a.payment_status) && Number.isFinite(Date.parse(a.expires_at||"")) && Date.parse(a.expires_at)>now && (!a.starts_at || Date.parse(a.starts_at)<=now);
 }
 function effectiveFeatures(a, now=Date.now()) {
   const free={listing:true,contact:true,edit:true,product_catalog:false,logo:false,photos:false,hours:false,services:false,links:false,stats:false,highlight:false,priority:false,map_pin:false,report:false,campaign:false,banner:false,sponsored:false,social:false,custom:false};
+  if (TEMPORARY_OPEN_ACCESS) return Object.fromEntries(Object.keys(free).map(key=>[key,true]));
   if(!isPlanActive(a,now)) return free;
   try { const f=JSON.parse(a.features_json||"{}"); return {...free,...f}; } catch { return free; }
 }
@@ -579,7 +583,7 @@ export default {
     const type=url.searchParams.get("type")||"";
     if(type&&!["store","repair","charging"].includes(type)) return response(request,env,{success:false,error:"نوع کسب‌وکار معتبر نیست."},400);
     const nowIso=new Date().toISOString();
-    const rows=await env.DB.prepare("SELECT b.id,b.business_type,b.name,b.city,b.address,b.latitude,b.longitude,b.phone,b.website,b.description,b.services_json,b.brands_json,b.opening_hours,b.created_at,b.updated_at,a.plan_code,a.plan_status,a.payment_status,a.starts_at,a.expires_at,a.features_json FROM rev_business_profiles b JOIN rev_business_plan_assignments a ON a.business_id=b.id WHERE b.status='approved' AND a.plan_status='active' AND a.payment_status IN ('paid','waived') AND a.expires_at>? AND a.starts_at<=? AND json_extract(a.features_json,'$.listing')=1 AND (?='' OR b.business_type=?) ORDER BY b.name LIMIT 500").bind(nowIso,nowIso,type,type).all();
+    const rows=await env.DB.prepare("SELECT b.id,b.business_type,b.name,b.city,b.address,b.latitude,b.longitude,b.phone,b.website,b.description,b.services_json,b.brands_json,b.opening_hours,b.created_at,b.updated_at,a.plan_code,a.plan_status,a.payment_status,a.starts_at,a.expires_at,a.features_json FROM rev_business_profiles b LEFT JOIN rev_business_plan_assignments a ON a.business_id=b.id WHERE b.status='approved' AND (?='' OR b.business_type=?) ORDER BY b.name LIMIT 500").bind(type,type).all();
     const now=Date.now(), businesses=(rows.results||[]).filter(b=>effectiveFeatures(b,now).listing!==false).map(b=>{
      const f=effectiveFeatures(b,now), x={...b,plan_features:f};
      if(f.contact===false){x.phone=null;x.address=null;}
@@ -588,7 +592,7 @@ export default {
      if(f.links===false)x.website=null;
      return x;
     });
-    const prods=await env.DB.prepare("SELECT p.id,p.business_id,p.title,p.description,p.price_text,p.image_url,p.product_url,p.stock_status,p.updated_at FROM rev_business_products p JOIN rev_business_profiles b ON b.id=p.business_id JOIN rev_business_plan_assignments a ON a.business_id=b.id WHERE p.status='approved' AND b.status='approved' AND a.plan_status='active' AND a.payment_status IN ('paid','waived') AND a.expires_at>? AND a.starts_at<=? AND json_extract(a.features_json,'$.product_catalog')=1 ORDER BY p.updated_at DESC LIMIT 500").bind(new Date(now).toISOString(),new Date(now).toISOString()).all();
+    const prods=await env.DB.prepare("SELECT p.id,p.business_id,p.title,p.description,p.price_text,p.image_url,p.product_url,p.stock_status,p.updated_at FROM rev_business_products p JOIN rev_business_profiles b ON b.id=p.business_id WHERE p.status='approved' AND b.status='approved' ORDER BY p.updated_at DESC LIMIT 500").all();
     return response(request,env,{success:true,businesses,products:prods.results||[]});
    }
    if(path==="/api/portal/profile" && method==="POST") {
@@ -674,7 +678,7 @@ export default {
     if(!shop||shop.business_type!=="store") return response(request,env,{success:false,error:"فروشگاه انتخاب‌شده متعلق به شما نیست."},403);
     if(shop.status!=="approved") return response(request,env,{success:false,error:"ابتدا فروشگاه باید توسط مدیریت REV تأیید شود."},409);
     const assignment=await env.DB.prepare("SELECT plan_code,plan_status,payment_status,starts_at,expires_at,features_json FROM rev_business_plan_assignments WHERE business_id=? LIMIT 1").bind(businessId).first();
-    if(!assignment || !isPlanActive(assignment,Date.now()) || effectiveFeatures(assignment,Date.now()).product_catalog!==true)
+    if(!TEMPORARY_OPEN_ACCESS && (!assignment || !isPlanActive(assignment,Date.now()) || effectiveFeatures(assignment,Date.now()).product_catalog!==true))
       return response(request,env,{success:false,error:"ثبت محصول در پلن فعلی فعال نیست. برای فعال‌سازی پلن حرفه‌ای یا بالاتر را از مدیریت REV پیگیری کنید."},403);
     const price=String(b.priceText||"").trim().slice(0,100), image=String(b.imageUrl||"").trim().slice(0,500), productUrl=String(b.productUrl||"").trim().slice(0,500), desc=String(b.description||"").trim().slice(0,2000), stock=["in_stock","out_of_stock","preorder","unknown"].includes(b.stockStatus)?b.stockStatus:"unknown";
     if((image&&!/^https?:\/\//i.test(image))||(productUrl&&!/^https?:\/\//i.test(productUrl))) return response(request,env,{success:false,error:"لینک تصویر و محصول باید با http:// یا https:// شروع شود."},400);
