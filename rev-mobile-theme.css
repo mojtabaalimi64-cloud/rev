@@ -146,3 +146,14 @@ tbody tr:nth-child(even),tbody tr:hover{background:#f5f8fd!important}
 }
 @media(max-width:390px){.start-card-grid{grid-template-columns:1fr!important}}
 @media(prefers-color-scheme:dark){html,body,body main,body header,body footer,body section,body .start-page,body .start-hero,body .hero{background:#fff!important;color:#17253b!important;color-scheme:light!important}}
+
+/* Final component consistency: menus, popovers, modal dialogs and overlays */
+dialog,.dropdown-menu,.popover,.menu-panel,.dropdown,.menu-popover,[role="dialog"],[role="menu"]{
+ background:#fff!important;background-image:none!important;color:#17253b!important;
+ border:1px solid #e2eaf4!important;box-shadow:0 12px 36px rgba(23,37,59,.14)!important;
+}
+dialog::backdrop{background:rgba(23,37,59,.32)!important;backdrop-filter:blur(3px)}
+dialog h1,dialog h2,dialog h3,[role="dialog"] h1,[role="dialog"] h2,[role="dialog"] h3{color:#17253b!important}
+dialog p,dialog label,[role="dialog"] p,[role="dialog"] label{color:#65758b!important}
+.dropdown-menu a,.popover a,.menu-panel a,.dropdown a,[role="menu"] a{color:#0866ff!important}
+.dropdown-menu a:hover,.popover a:hover,.menu-panel a:hover,.dropdown a:hover,[role="menu"] a:hover{background:#edf4ff!important;color:#0866ff!important}
