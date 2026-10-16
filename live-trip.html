@@ -12,7 +12,7 @@
 <header><strong>REV</strong> · وضعیت زنده سفر</header>
 <main>
 <section class="card"><div id="status" class="status">در حال دریافت وضعیت سفر…</div><div class="grid">
-<div class="stat"><small>سرعت فعلی GPS</small><b id="speed">—</b></div>
+<div class="stat"><small>مقصد</small><b id="destination">—</b></div><div class="stat"><small>سرعت فعلی GPS</small><b id="speed">—</b></div>
 <div class="stat"><small>زمان تقریبی رسیدن</small><b id="eta">—</b></div>
 <div class="stat"><small>مسافت مستقیم تا مقصد</small><b id="remaining">—</b></div>
 <div class="stat"><small>آخرین به‌روزرسانی</small><b id="updated">—</b></div>
@@ -39,7 +39,7 @@ async function update(){
   $("status").textContent="اشتراک فعال است · آخرین اطلاعات دریافت شد";
   $("status").style.color="#39ff88";
   const t=j.telemetry||{},p=j.location;
-  $("speed").textContent=t.speed_kmh==null?"در دسترس نیست":Math.round(t.speed_kmh).toLocaleString("fa-IR")+" km/h";
+  $("destination").textContent=t.destination||"ثبت نشده";$("speed").textContent=t.speed_kmh==null?"در دسترس نیست":Math.round(t.speed_kmh).toLocaleString("fa-IR")+" km/h";
   $("eta").textContent=t.eta_minutes==null?"تخمین در دسترس نیست":Math.round(t.eta_minutes).toLocaleString("fa-IR")+" دقیقه";
   $("remaining").textContent=t.distance_remaining_km==null?"—":Number(t.distance_remaining_km).toLocaleString("fa-IR",{maximumFractionDigits:1})+" km";
   $("updated").textContent=p?faTime(p.updated_at):"در انتظار GPS";
