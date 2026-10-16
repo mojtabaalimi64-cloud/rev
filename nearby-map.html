@@ -6,14 +6,14 @@
 <title>نقشه خدمات اطراف من | REV</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-*{box-sizing:border-box}body{margin:0;background:#080b0d;color:#f5f7f8;font:15px/1.8 Vazirmatn,Vazir,Tahoma,sans-serif}header{padding:14px 16px;background:#10191d;border-bottom:1px solid #2a343a;position:sticky;top:0;z-index:500}header a{color:#39ff88;text-decoration:none}main{width:min(1050px,calc(100% - 24px));margin:14px auto 50px}.title{font-size:23px;font-weight:900;margin:4px 0}.muted{font-size:13px;color:#aab6bc;margin:0 0 12px}.actions{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}.actions button,.actions select{font:inherit;padding:9px 12px;border:1px solid #3b5058;border-radius:10px;background:#152126;color:#fff}.actions button.primary{background:#39ff88;color:#07100b;border-color:#39ff88;font-weight:800}#map{height:58vh;min-height:320px;border-radius:14px;border:1px solid #2a343a;background:#dce5e8;overflow:hidden}#status{font-size:13px;color:#b8c7cc;margin:9px 0}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px;margin-top:14px}.item{border:1px solid #2a343a;background:#11191d;border-radius:12px;padding:12px}.item strong{display:block}.item small{display:block;color:#aab6bc}.item a{color:#39ff88}.note{font-size:12px;color:#9eafb5;margin-top:14px}@media(max-width:600px){#map{height:53vh;min-height:300px}.title{font-size:20px}}
+*{box-sizing:border-box}body{margin:0;background:#080b0d;color:#f5f7f8;font:15px/1.8 Vazirmatn,Vazir,Tahoma,sans-serif}header{padding:14px 16px;background:#10191d;border-bottom:1px solid #2a343a;position:sticky;top:0;z-index:500}header a{color:#39ff88;text-decoration:none}main{width:min(1500px,calc(100% - 16px));margin:8px auto 28px}.title{font-size:20px;font-weight:900;margin:2px 0}.muted{font-size:12px;color:#aab6bc;margin:0 0 7px}.actions{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:7px 0}.actions button,.actions select{font:inherit;font-size:12px;line-height:1.4;padding:6px 9px;border:1px solid #3b5058;border-radius:8px;background:#152126;color:#fff;min-height:34px}.actions button.primary{background:#39ff88;color:#07100b;border-color:#39ff88;font-weight:800}#map{height:76vh;min-height:460px;border-radius:12px;border:1px solid #2a343a;background:#dce5e8;overflow:hidden}#status{font-size:12px;color:#b8c7cc;margin:5px 0}.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:7px;margin-top:8px}.item{border:1px solid #2a343a;background:#11191d;border-radius:10px;padding:9px;font-size:13px}.item strong{display:block}.item small{display:block;color:#aab6bc}.item a{color:#39ff88}.note{font-size:11px;color:#9eafb5;margin-top:8px}@media(max-width:600px){main{width:calc(100% - 10px);margin:5px auto 20px}header{padding:8px 10px}.title{font-size:17px}#map{height:68vh;min-height:400px}.actions{gap:5px}.actions button,.actions select{font-size:11px;padding:5px 7px;min-height:32px}.cards{grid-template-columns:1fr 1fr;gap:6px}.item{padding:8px;font-size:12px}}
 </style>
 </head>
 <body>
 <header><a href="https://mojtabaalimi64-cloud.github.io/rev-mobile/">← بازگشت به اپ REV</a></header>
 <main>
 <h1 class="title">نقشه خدمات و ایستگاه‌های شارژ اطراف من</h1>
-<p class="muted">برای پیدا کردن مراکز نزدیک، موقعیت مکانی را با اجازه خودتان فعال کنید. نقشه مراکز REV ثبت‌شده با مختصات معتبر را نشان می‌دهد.</p>
+<p class="muted">ایستگاه‌های شارژ دیتابیس REV، مراکز تأییدشده و مراکز ثبت‌شده در فهرست قدیمی سایت در یک نقشه نمایش داده می‌شوند.</p>
 <div class="actions"><button class="primary" id="locate">⌖ پیدا کردن مراکز اطراف من</button><select id="filter" aria-label="نوع مرکز"><option value="all">همه خدمات</option><option value="charging">ایستگاه شارژ</option><option value="repair">تعمیرگاه</option><option value="store">فروشگاه قطعات</option></select><button id="refresh">به‌روزرسانی مراکز</button></div>
 <div id="status" role="status">در حال دریافت فهرست مراکز…</div>
 <div id="map" aria-label="نقشه خدمات REV"></div>
@@ -23,7 +23,8 @@
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (function(){
- const API="https://rev-auth-api.mojtaba-alimi64.workers.dev";
+ const BUSINESS_API="https://rev-auth-api.mojtaba-alimi64.workers.dev";
+ const STATION_API="https://rev-api.mojtaba-alimi64.workers.dev";
  const status=document.getElementById("status"),cards=document.getElementById("cards"),filter=document.getElementById("filter");
  const map=L.map("map",{scrollWheelZoom:false}).setView([32.4,53.7],5);
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap"}).addTo(map);
@@ -42,7 +43,35 @@
   status.textContent=valid.length+" مرکز دارای مختصات از "+all.length+" مرکز ثبت‌شده بارگذاری شد."+(userLocation?" نزدیک‌ترین مراکز ابتدا نمایش داده می‌شوند.":" برای مرتب‌سازی بر اساس فاصله، مکان‌یابی را فعال کنید.");
   setTimeout(()=>map.invalidateSize(),100);
  }
- async function load(){status.textContent="در حال دریافت فهرست مراکز…";try{const r=await fetch(API+"/api/businesses",{cache:"no-store"});const j=await r.json();if(!r.ok||!j.success)throw new Error("دریافت فهرست مراکز ناموفق بود.");all=j.businesses||[];render();}catch(e){status.textContent="فهرست مراکز از سرویس REV دریافت نشد. اتصال اینترنت را بررسی و دوباره تلاش کنید.";}}
+ async function load(){
+  status.textContent="در حال دریافت جایگاه‌ها و مراکز REV…";
+  const requests=await Promise.allSettled([
+   fetch(BUSINESS_API+"/api/businesses",{cache:"no-store"}).then(async r=>{const j=await r.json();if(!r.ok||!j.success)throw Error("businesses");return j.businesses||[]}),
+   fetch(STATION_API+"/api/stations",{cache:"no-store"}).then(async r=>{const j=await r.json();if(!r.ok||j.success===false)throw Error("stations");return j.stations||[]}),
+   fetch("./content.json?v="+Date.now(),{cache:"no-store"}).then(async r=>{if(!r.ok)throw Error("content");return r.json()})
+  ]);
+  const businesses=requests[0].status==="fulfilled"?requests[0].value:[];
+  const stations=requests[1].status==="fulfilled"?requests[1].value:[];
+  const legacy=requests[2].status==="fulfilled"?requests[2].value:{};
+  const normalizeBusiness=(x,type)=>({id:x.id||x.publicCode||x.profileSlug||x.title||x.name,name:x.name||x.title||x.profileName||"مرکز REV",business_type:type,city:x.city||x.cityName||"",address:x.address||x.location||"",phone:x.phone||"",latitude:x.latitude??x.lat??"",longitude:x.longitude??x.lng??x.lon??"",source:"REV"});
+  const oldBusinesses=[
+   ...(legacy.serviceCenters||[]).map(x=>normalizeBusiness(x,"repair")),
+   ...(legacy.partsStores||[]).map(x=>normalizeBusiness(x,"store")),
+   ...(legacy.stations||[]).map(x=>normalizeBusiness(x,"charging"))
+  ];
+  const modernBusinesses=businesses.map(x=>({...x,source:"REV"}));
+  const modernStations=stations.map(x=>normalizeBusiness(x,"charging"));
+  const unique=new Map();
+  [...modernBusinesses,...modernStations,...oldBusinesses].forEach(x=>{
+   const key=String(x.id||"")+"|"+String(x.name||"")+"|"+String(x.latitude??"")+"|"+String(x.longitude??"");
+   if(!unique.has(key))unique.set(key,x);
+  });
+  all=[...unique.values()];
+  const okCount=requests.filter(x=>x.status==="fulfilled").length;
+  if(!okCount){status.textContent="دریافت داده‌های نقشه ناموفق بود؛ اتصال اینترنت را بررسی و دوباره تلاش کنید.";return;}
+  render();
+  if(!all.length)status.textContent="فهرست‌ها بارگذاری شدند اما هنوز داده‌ای ثبت نشده است.";
+ }
  function locate(){if(!navigator.geolocation){status.textContent="این مرورگر از مکان‌یابی پشتیبانی نمی‌کند.";return;}status.textContent="در حال دریافت موقعیت؛ اجازه دسترسی را تأیید کنید…";navigator.geolocation.getCurrentPosition(p=>{userLocation=[p.coords.latitude,p.coords.longitude];if(userMarker)map.removeLayer(userMarker);userMarker=L.circleMarker(userLocation,{radius:8,color:"#0866ff",fillColor:"#0866ff",fillOpacity:1}).bindPopup("موقعیت فعلی شما").addTo(map);map.setView(userLocation,13);render();userMarker.openPopup();},()=>{status.textContent="موقعیت دریافت نشد؛ مجوز مکان‌یابی و GPS را بررسی کنید. نقشه را می‌توانید دستی جابه‌جا کنید.";},{enableHighAccuracy:true,timeout:15000,maximumAge:60000});}
  document.getElementById("locate").addEventListener("click",locate);
  document.getElementById("refresh").addEventListener("click",load);
