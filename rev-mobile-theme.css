@@ -1,0 +1,30 @@
+/* REV mobile app — shared electric-blue & white identity */
+:root{
+ color-scheme:light!important;
+ --rev-blue:#0866ff;--rev-blue-dark:#064fc4;--rev-blue-soft:#edf4ff;
+ --rev-ink:#17253b;--rev-muted:#65758b;--rev-line:#e2eaf4;--rev-white:#fff;
+ --bg:#fff!important;--panel:#fff!important;--panel2:#f3f7ff!important;
+ --surface:#fff!important;--line:#e2eaf4!important;--text:#17253b!important;
+ --muted:#65758b!important;--accent:#0866ff!important;--blue:#0866ff!important;
+ --teal:#064fc4!important;--green:#0866ff!important;
+}
+html{background:#fff!important;color-scheme:light!important}
+body{background:#fff!important;color:#17253b!important;color-scheme:light!important}
+header,.topbar,.app-header{background:rgba(255,255,255,.97)!important;color:#17253b!important;border-color:#e2eaf4!important}
+h1,h2,h3,h4,label,strong,b,legend{color:inherit}
+a{ -webkit-tap-highlight-color:transparent}
+button,.btn,.primary,.primary-btn,[type=submit],.submit-btn,.action-btn{background:#0866ff!important;border-color:#0866ff!important;color:#fff!important}
+button.secondary,.btn.secondary,.secondary-btn,.ghost-btn,[data-variant=secondary]{background:#fff!important;color:#0866ff!important;border:1px solid #dce6f4!important}
+input,select,textarea{background:#fff!important;color:#17253b!important;border-color:#dce6f4!important;color-scheme:light!important}
+.card,.panel,.box,.section-card,.metric,.trip-card,.station-card,.result-card,.list,.item,.modal-content,.sheet,.drawer-content{background:#fff!important;color:#17253b!important;border-color:#e2eaf4!important;box-shadow:0 4px 18px rgba(23,37,59,.045)}
+small,.muted,.subtitle,.description,.hint{color:#65758b!important}
+.icon,.ico,.icon-box,.feature-icon{background:#edf4ff!important;color:#0866ff!important}
+.bottom,.bottom-nav,.tabbar,.mobile-nav,.nav-bar{background:#fff!important;border-top:1px solid #e2eaf4!important;box-shadow:0 -5px 20px rgba(23,37,59,.08)!important}
+.bottom a,.bottom-nav a,.tabbar a,.mobile-nav a,.nav-bar a{color:#65758b!important}
+.bottom a.active,.bottom-nav a.active,.tabbar a.active,.mobile-nav a.active,.nav-bar a.active{background:#edf4ff!important;color:#0866ff!important}
+.badge,.pill,.chip{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
+hr{border-color:#e2eaf4!important}
+.leaflet-container{background:#eef3f8!important;color:#17253b!important}
+.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff!important;color:#17253b!important}
+.leaflet-control a{color:#0866ff!important}
+@media(prefers-color-scheme:dark){html,body{background:#fff!important;color:#17253b!important;color-scheme:light!important}}
