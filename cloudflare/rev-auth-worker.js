@@ -188,6 +188,14 @@ async function ensureDriverShareSchema(env) {
     location_updated_at TEXT,
     FOREIGN KEY (user_id) REFERENCES rev_users(id) ON DELETE CASCADE
   )`).run();
+  for (const sql of [
+    "ALTER TABLE rev_live_trip_shares ADD COLUMN speed_kmh REAL",
+    "ALTER TABLE rev_live_trip_shares ADD COLUMN eta_minutes REAL",
+    "ALTER TABLE rev_live_trip_shares ADD COLUMN distance_remaining_km REAL",
+    "ALTER TABLE rev_live_trip_shares ADD COLUMN destination TEXT",
+    "ALTER TABLE rev_live_trip_shares ADD COLUMN trip_started_at TEXT",
+    "ALTER TABLE rev_live_trip_shares ADD COLUMN trip_ended_at TEXT"
+  ]) { try { await env.DB.prepare(sql).run(); } catch (e) { if (!/duplicate column/i.test(String(e?.message||e))) throw e; } }
   await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_live_trip_shares_user ON rev_live_trip_shares(user_id, created_at DESC)").run();
 }
 async function driverShareApi(request, env, url, method, user) {
@@ -195,9 +203,9 @@ async function driverShareApi(request, env, url, method, user) {
   if (url.pathname === "/api/driver/shares/view" && method === "GET") {
     const token=String(url.searchParams.get("token")||"");
     if (!/^[A-Za-z0-9_-]{40,60}$/.test(token)) return response(request,env,{success:false,error:"پیوند اشتراک معتبر نیست یا منقضی شده است."},404);
-    const row=await env.DB.prepare("SELECT latitude,longitude,accuracy_m,location_updated_at,expires_at FROM rev_live_trip_shares WHERE token_hash=? AND revoked_at IS NULL AND expires_at>? LIMIT 1").bind(await sha256(token),new Date().toISOString()).first();
+    const row=await env.DB.prepare("SELECT latitude,longitude,accuracy_m,location_updated_at,expires_at,speed_kmh,eta_minutes,distance_remaining_km,destination,trip_started_at,trip_ended_at FROM rev_live_trip_shares WHERE token_hash=? AND revoked_at IS NULL AND expires_at>? LIMIT 1").bind(await sha256(token),new Date().toISOString()).first();
     if(!row) return response(request,env,{success:false,error:"این اشتراک پایان یافته یا لغو شده است."},404);
-    return response(request,env,{success:true,location:row.latitude==null||row.longitude==null?null:{latitude:row.latitude,longitude:row.longitude,accuracy_m:row.accuracy_m,updated_at:row.location_updated_at},expires_at:row.expires_at});
+    return response(request,env,{success:true,location:row.latitude==null||row.longitude==null?null:{latitude:row.latitude,longitude:row.longitude,accuracy_m:row.accuracy_m,updated_at:row.location_updated_at},telemetry:{speed_kmh:row.speed_kmh,eta_minutes:row.eta_minutes,distance_remaining_km:row.distance_remaining_km,destination:row.destination,trip_started_at:row.trip_started_at,trip_ended_at:row.trip_ended_at},expires_at:row.expires_at});
   }
   if (!user) return response(request,env,{success:false,error:"برای اشتراک زنده باید وارد حساب REV شوید."},401);
   if (method !== "GET" && !sameOrigin(request, env)) return response(request,env,{success:false,error:"درخواست از مبدأ مجاز نیست."},403);
@@ -215,8 +223,10 @@ async function driverShareApi(request, env, url, method, user) {
   if(locationMatch && method==="POST"){
     let body;try{body=await request.json();}catch{return response(request,env,{success:false,error:"بدنه JSON معتبر نیست."},400);}
     const lat=Number(body.latitude),lon=Number(body.longitude),accuracy=body.accuracy_m==null?null:Number(body.accuracy_m);
-    if(!Number.isFinite(lat)||Math.abs(lat)>90||!Number.isFinite(lon)||Math.abs(lon)>180||(accuracy!==null&&(!Number.isFinite(accuracy)||accuracy<0||accuracy>100000)))return response(request,env,{success:false,error:"مختصات معتبر نیست."},400);
-    const result=await env.DB.prepare("UPDATE rev_live_trip_shares SET latitude=?,longitude=?,accuracy_m=?,location_updated_at=? WHERE id=? AND user_id=? AND revoked_at IS NULL AND expires_at>?").bind(lat,lon,accuracy,new Date().toISOString(),locationMatch[1],user.id,new Date().toISOString()).run();
+    const speed=body.speed_kmh==null?null:Number(body.speed_kmh),eta=body.eta_minutes==null?null:Number(body.eta_minutes),remaining=body.distance_remaining_km==null?null:Number(body.distance_remaining_km);
+    const destination=String(body.destination||"").trim().slice(0,160),tripStarted=String(body.trip_started_at||"").trim(),tripEnded=body.trip_ended_at?String(body.trip_ended_at).trim():null;
+    if(!Number.isFinite(lat)||Math.abs(lat)>90||!Number.isFinite(lon)||Math.abs(lon)>180||(accuracy!==null&&(!Number.isFinite(accuracy)||accuracy<0||accuracy>100000))||(speed!==null&&(!Number.isFinite(speed)||speed<0||speed>400))||(eta!==null&&(!Number.isFinite(eta)||eta<0||eta>10080))||(remaining!==null&&(!Number.isFinite(remaining)||remaining<0||remaining>100000))||(tripStarted&&!Number.isFinite(Date.parse(tripStarted)))||(tripEnded&&!Number.isFinite(Date.parse(tripEnded))))return response(request,env,{success:false,error:"مختصات یا اطلاعات سفر معتبر نیست."},400);
+    const result=await env.DB.prepare("UPDATE rev_live_trip_shares SET latitude=?,longitude=?,accuracy_m=?,location_updated_at=?,speed_kmh=?,eta_minutes=?,distance_remaining_km=?,destination=?,trip_started_at=COALESCE(NULLIF(? ,''),trip_started_at),trip_ended_at=? WHERE id=? AND user_id=? AND revoked_at IS NULL AND expires_at>?").bind(lat,lon,accuracy,new Date().toISOString(),speed,eta,remaining,destination||null,tripStarted,tripEnded,locationMatch[1],user.id,new Date().toISOString()).run();
     return response(request,env,{success:true,updated:Number(result.meta?.changes||0)>0},Number(result.meta?.changes||0)>0?200:404);
   }
   const revokeMatch=url.pathname.match(/^\/api\/driver\/shares\/([0-9a-f-]{36})\/revoke$/i);
