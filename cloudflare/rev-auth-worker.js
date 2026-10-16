@@ -237,6 +237,53 @@ async function driverShareApi(request, env, url, method, user) {
   return response(request,env,{success:false,error:"متد یا مسیر اشتراک پشتیبانی نمی‌شود."},405);
 }
 
+
+async function ensureDriverGroupSchema(env) {
+ await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_driver_group_codes(user_id TEXT PRIMARY KEY,code TEXT NOT NULL UNIQUE,updated_at TEXT NOT NULL,FOREIGN KEY(user_id) REFERENCES rev_users(id) ON DELETE CASCADE)`).run();
+ await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_driver_groups(id TEXT PRIMARY KEY,creator_user_id TEXT NOT NULL,name TEXT NOT NULL,status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','ended')),created_at TEXT NOT NULL,started_at TEXT NOT NULL,ended_at TEXT,FOREIGN KEY(creator_user_id) REFERENCES rev_users(id) ON DELETE CASCADE)`).run();
+ await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_driver_group_members(group_id TEXT NOT NULL,user_id TEXT NOT NULL,role TEXT NOT NULL DEFAULT 'member' CHECK(role IN ('creator','member')),status TEXT NOT NULL DEFAULT 'invited' CHECK(status IN ('invited','accepted','declined')),invited_at TEXT NOT NULL,joined_at TEXT,latitude REAL,longitude REAL,accuracy_m REAL,speed_kmh REAL,location_updated_at TEXT,PRIMARY KEY(group_id,user_id),FOREIGN KEY(group_id) REFERENCES rev_driver_groups(id) ON DELETE CASCADE,FOREIGN KEY(user_id) REFERENCES rev_users(id) ON DELETE CASCADE)`).run();
+ await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_driver_group_members_user ON rev_driver_group_members(user_id,status)").run();
+}
+function newGroupCode(){return String(crypto.getRandomValues(new Uint32Array(1))[0]%1000000).padStart(6,"0");}
+async function ensureUserGroupCode(env,userId){
+ let row=await env.DB.prepare("SELECT code,updated_at FROM rev_driver_group_codes WHERE user_id=? LIMIT 1").bind(userId).first();if(row)return row;
+ for(let i=0;i<8;i++){const code=newGroupCode(),now=new Date().toISOString();try{await env.DB.prepare("INSERT INTO rev_driver_group_codes(user_id,code,updated_at) VALUES(?,?,?)").bind(userId,code,now).run();return {code,updated_at:now};}catch(e){if(i===7)throw e;}}
+}
+async function driverGroupsApi(request,env,url,method,user){
+ if(!user)return response(request,env,{success:false,error:"برای استفاده از سفر گروهی باید وارد حساب REV شوید."},401);
+ if(method!=="GET"&&!sameOrigin(request,env))return response(request,env,{success:false,error:"درخواست از مبدأ مجاز نیست."},403);
+ await ensureDriverGroupSchema(env);
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_user_profiles(user_id TEXT PRIMARY KEY,avatar_data TEXT,updated_at TEXT NOT NULL,FOREIGN KEY(user_id) REFERENCES rev_users(id))").run();
+ if(url.pathname==="/api/driver/groups/code"&&method==="GET"){const c=await ensureUserGroupCode(env,user.id);return response(request,env,{success:true,code:c.code,updated_at:c.updated_at});}
+ if(url.pathname==="/api/driver/groups/code"&&method==="POST"){
+  if(await rateLimited(request,env,"driver-group-code",3,3600))return response(request,env,{success:false,error:"تعداد تغییر کد زیاد است؛ یک ساعت دیگر تلاش کنید."},429);
+  for(let i=0;i<8;i++){const code=newGroupCode(),now=new Date().toISOString();try{await env.DB.prepare("INSERT INTO rev_driver_group_codes(user_id,code,updated_at) VALUES(?,?,?) ON CONFLICT(user_id) DO UPDATE SET code=excluded.code,updated_at=excluded.updated_at").bind(user.id,code,now).run();return response(request,env,{success:true,code,updated_at:now});}catch(e){if(i===7)return response(request,env,{success:false,error:"ساخت کد جدید ممکن نشد؛ دوباره تلاش کنید."},503);}}
+ }
+ if(url.pathname==="/api/driver/groups"&&method==="GET"){
+  const invitations=await env.DB.prepare("SELECT g.id AS group_id,g.name,g.creator_user_id,g.created_at,u.display_name AS creator_name FROM rev_driver_group_members m JOIN rev_driver_groups g ON g.id=m.group_id JOIN rev_users u ON u.id=g.creator_user_id WHERE m.user_id=? AND m.status='invited' AND g.status='active' ORDER BY g.created_at DESC LIMIT 50").bind(user.id).all();
+  const rows=await env.DB.prepare("SELECT g.id,g.name,g.status,g.creator_user_id,g.created_at,g.started_at,m.role,m.status AS member_status FROM rev_driver_group_members m JOIN rev_driver_groups g ON g.id=m.group_id WHERE m.user_id=? AND m.status='accepted' AND g.status='active' ORDER BY g.started_at DESC LIMIT 30").bind(user.id).all();
+  const groups=[];for(const g of rows.results||[]){const ms=await env.DB.prepare("SELECT m.user_id,m.role,m.status,m.latitude,m.longitude,m.accuracy_m,m.speed_kmh,m.location_updated_at,u.display_name,p.avatar_data FROM rev_driver_group_members m JOIN rev_users u ON u.id=m.user_id LEFT JOIN rev_user_profiles p ON p.user_id=u.id WHERE m.group_id=? AND m.status='accepted' ORDER BY CASE m.role WHEN 'creator' THEN 0 ELSE 1 END,u.display_name").bind(g.id).all();groups.push({...g,members:ms.results||[]});}
+  return response(request,env,{success:true,code:(await ensureUserGroupCode(env,user.id)).code,groups,invitations:invitations.results||[]});
+ }
+ if(url.pathname==="/api/driver/groups"&&method==="POST"){
+  if(await rateLimited(request,env,"driver-group-create",5,3600))return response(request,env,{success:false,error:"تعداد ساخت سفر گروهی زیاد است؛ بعداً دوباره تلاش کنید."},429);
+  let body;try{body=await request.json();}catch{return response(request,env,{success:false,error:"بدنه درخواست معتبر نیست."},400);}
+  const codes=Array.isArray(body?.codes)?body.codes.map(x=>String(x||"").trim()).filter(x=>/^\d{5,6}$/.test(x)).slice(0,20):[],name=String(body?.name||"سفر گروهی REV").trim().slice(0,80)||"سفر گروهی REV";
+  if(!codes.length)return response(request,env,{success:false,error:"کد ۵ یا ۶ رقمی حداقل یک همسفر را وارد کنید."},400);
+  const self=await ensureUserGroupCode(env,user.id),targets=[];for(const code of [...new Set(codes)]){if(code===self.code)continue;const t=await env.DB.prepare("SELECT c.user_id,u.display_name,p.avatar_data FROM rev_driver_group_codes c JOIN rev_users u ON u.id=c.user_id LEFT JOIN rev_user_profiles p ON p.user_id=u.id WHERE c.code=? AND u.account_status='active' AND (u.email_verified_at IS NOT NULL OR u.phone_verified_at IS NOT NULL) LIMIT 1").bind(code).first();if(t&&!targets.some(x=>x.user_id===t.user_id))targets.push(t);}
+  if(!targets.length)return response(request,env,{success:false,error:"هیچ کد معتبر و فعالی پیدا نشد؛ کدها را با همسفرها بررسی کنید."},404);
+  const id=crypto.randomUUID(),now=new Date().toISOString();await env.DB.prepare("INSERT INTO rev_driver_groups(id,creator_user_id,name,status,created_at,started_at) VALUES(?,?,?,'active',?,?)").bind(id,user.id,name,now,now).run();await env.DB.prepare("INSERT INTO rev_driver_group_members(group_id,user_id,role,status,invited_at,joined_at) VALUES(?,?,'creator','accepted',?,?)").bind(id,user.id,now,now).run();for(const t of targets)await env.DB.prepare("INSERT INTO rev_driver_group_members(group_id,user_id,role,status,invited_at) VALUES(?,?,'member','invited',?)").bind(id,t.user_id,now).run();
+  return response(request,env,{success:true,group:{id,name,status:"active",members:[{user_id:user.id,display_name:user.display_name,role:"creator",status:"accepted"},...targets.map(t=>({user_id:t.user_id,display_name:t.display_name,avatar_data:t.avatar_data,role:"member",status:"invited"}))]},message:"سفر گروهی ساخته شد؛ همسفرها باید دعوت را در نقشه REV بپذیرند."},201);
+ }
+ const respond=url.pathname.match(/^\/api\/driver\/groups\/([0-9a-f-]{36})\/respond$/i);
+ if(respond&&method==="POST"){let b={};try{b=await request.json();}catch{}const accept=b?.accept===true,now=new Date().toISOString(),res=await env.DB.prepare("UPDATE rev_driver_group_members SET status=?,joined_at=? WHERE group_id=? AND user_id=? AND status='invited' AND EXISTS(SELECT 1 FROM rev_driver_groups g WHERE g.id=? AND g.status='active')").bind(accept?"accepted":"declined",accept?now:null,respond[1],user.id,respond[1]).run();if(!Number(res.meta?.changes||0))return response(request,env,{success:false,error:"دعوت پیدا نشد یا قبلاً پاسخ داده شده است."},404);return response(request,env,{success:true,status:accept?"accepted":"declined"});}
+ const loc=url.pathname.match(/^\/api\/driver\/groups\/([0-9a-f-]{36})\/location$/i);
+ if(loc&&method==="POST"){let b;try{b=await request.json();}catch{return response(request,env,{success:false,error:"مختصات معتبر نیست."},400);}const lat=Number(b.latitude),lon=Number(b.longitude),acc=b.accuracy_m==null?null:Number(b.accuracy_m),speed=b.speed_kmh==null?null:Number(b.speed_kmh);if(!Number.isFinite(lat)||Math.abs(lat)>90||!Number.isFinite(lon)||Math.abs(lon)>180||(acc!==null&&(!Number.isFinite(acc)||acc<0||acc>100000))||(speed!==null&&(!Number.isFinite(speed)||speed<0||speed>400)))return response(request,env,{success:false,error:"مختصات یا سرعت معتبر نیست."},400);const res=await env.DB.prepare("UPDATE rev_driver_group_members SET latitude=?,longitude=?,accuracy_m=?,speed_kmh=?,location_updated_at=? WHERE group_id=? AND user_id=? AND status='accepted' AND EXISTS(SELECT 1 FROM rev_driver_groups g WHERE g.id=? AND g.status='active')").bind(lat,lon,acc,speed,new Date().toISOString(),loc[1],user.id,loc[1]).run();if(!Number(res.meta?.changes||0))return response(request,env,{success:false,error:"عضویت فعال در این سفر گروهی پیدا نشد."},404);return response(request,env,{success:true});}
+ const end=url.pathname.match(/^\/api\/driver\/groups\/([0-9a-f-]{36})\/end$/i);
+ if(end&&method==="POST"){const res=await env.DB.prepare("UPDATE rev_driver_groups SET status='ended',ended_at=? WHERE id=? AND creator_user_id=? AND status='active'").bind(new Date().toISOString(),end[1],user.id).run();if(!Number(res.meta?.changes||0))return response(request,env,{success:false,error:"فقط سازنده می‌تواند سفر گروهی را پایان دهد یا سفر فعال پیدا نشد."},403);return response(request,env,{success:true});}
+ return response(request,env,{success:false,error:"مسیر سفر گروهی پیدا نشد."},404);
+}
+
 async function driverTripsApi(request, env, url, method, user) {
   if (!user) return response(request, env, {success:false,error:"برای استفاده از تاریخچه سفر وارد حساب کاربری شوید."}, 401);
   if (method !== "GET" && !sameOrigin(request, env)) return response(request, env, {success:false,error:"درخواست از مبدأ مجاز نیست."}, 403);
@@ -303,6 +350,7 @@ export default {
     }
    }
    if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL),smsConfigured:!!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD),smsPatternConfigured:!!(env.MELIPAYAMAK_OTP_BODY_ID||"557785")});
+   if(path==="/api/driver/groups" || path==="/api/driver/groups/code" || /^\/api\/driver\/groups\/[0-9a-f-]{36}\/(respond|location|end)$/i.test(path)) { const user=await currentUser(request,env); return await driverGroupsApi(request,env,url,method,user); }
    if(path==="/api/driver/shares" || path==="/api/driver/shares/view" || /^\/api\/driver\/shares\/[0-9a-f-]{36}\/(location|revoke)$/i.test(path)) {
     const user=path==="/api/driver/shares/view" ? null : await currentUser(request,env);
     return await driverShareApi(request,env,url,method,user);
