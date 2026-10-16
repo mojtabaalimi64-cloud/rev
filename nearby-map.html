@@ -141,8 +141,9 @@ main{display:block!important;width:100%!important;height:100dvh!important;max-wi
  renderSearchHistory();searchInput.addEventListener("focus",openSearchHistory);searchInput.addEventListener("click",openSearchHistory);
  document.getElementById("clearSearchHistory").addEventListener("click",function(){searchHistory=[];try{localStorage.removeItem(historyKey);}catch(e){}renderSearchHistory();});
  let dragStartY=null,dragStartX=null;
- searchBar.addEventListener("pointerdown",function(e){if(e.target.closest("input,button"))return;dragStartY=e.clientY;dragStartX=e.clientX;});
- searchBar.addEventListener("pointerup",function(e){if(dragStartY===null)return;const dy=e.clientY-dragStartY,dx=e.clientX-dragStartX;if(dy < -24&&Math.abs(dy)>Math.abs(dx))openSearchHistory();else if(dy>24&&Math.abs(dy)>Math.abs(dx))closeSearchHistory();dragStartY=null;dragStartX=null;});
+  searchBar.addEventListener("pointerdown",function(e){if(e.target.closest("button"))return;dragStartY=e.clientY;dragStartX=e.clientX;});
+  searchBar.addEventListener("pointerup",function(e){if(dragStartY===null)return;const dy=e.clientY-dragStartY,dx=e.clientX-dragStartX;if(dy < -24&&Math.abs(dy)>Math.abs(dx)){e.preventDefault();openSearchHistory();}else if(dy>24&&Math.abs(dy)>Math.abs(dx)){e.preventDefault();closeSearchHistory();}dragStartY=null;dragStartX=null;});
+  searchBar.addEventListener("pointercancel",function(){dragStartY=null;dragStartX=null;});
  document.addEventListener("pointerdown",function(e){if(!historyPanel.contains(e.target)&&!searchBar.contains(e.target))closeSearchHistory();});
 
  searchForm.addEventListener("submit",async function(event){
