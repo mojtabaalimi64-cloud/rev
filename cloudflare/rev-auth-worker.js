@@ -469,19 +469,30 @@ export default {
    }
    if(path==="/api/admin/users" && method==="GET") {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
-    const q=String(url.searchParams.get("q")||"").trim().slice(0,160);
-    const sortAllowed={created_at:"created_at",display_name:"display_name",email_normalized:"email_normalized",account_status:"account_status",last_login_at:"last_login_at"};
-    const sort=sortAllowed[url.searchParams.get("sort")]||"created_at";
+    const q=String(url.searchParams.get("q")||"").trim().slice(0,40);
+    const category=String(url.searchParams.get("category")||"all");
+    const categorySql={
+      all:"",
+      users:" AND NOT EXISTS (SELECT 1 FROM rev_business_profiles bp WHERE bp.owner_user_id=u.id)",
+      store:" AND EXISTS (SELECT 1 FROM rev_business_profiles bp WHERE bp.owner_user_id=u.id AND bp.business_type='store')",
+      repair:" AND EXISTS (SELECT 1 FROM rev_business_profiles bp WHERE bp.owner_user_id=u.id AND bp.business_type='repair')",
+      charging:" AND EXISTS (SELECT 1 FROM rev_business_profiles bp WHERE bp.owner_user_id=u.id AND bp.business_type='charging')",
+      tow:" AND EXISTS (SELECT 1 FROM rev_business_profiles bp WHERE bp.owner_user_id=u.id AND bp.business_type IN ('tow','tow_truck','towing'))"
+    };
+    const sortAllowed={created_at:"u.created_at",display_name:"u.display_name",email_normalized:"u.email_normalized",account_status:"u.account_status",last_login_at:"u.last_login_at"};
+    const sort=sortAllowed[url.searchParams.get("sort")]||"u.created_at";
     const order=url.searchParams.get("order")==="asc"?"ASC":"DESC";
     const page=Math.max(1,Math.min(100000,parseInt(url.searchParams.get("page")||"1",10)||1));
     const limit=Math.max(1,Math.min(50,parseInt(url.searchParams.get("limit")||"50",10)||50));
-    const offset=(page-1)*limit, like="%"+q.toLowerCase()+"%";
-    const where=q?"WHERE lower(COALESCE(display_name,'')) LIKE ? OR lower(COALESCE(email_normalized,'')) LIKE ? OR lower(COALESCE(phone_e164,'')) LIKE ? OR lower(id) LIKE ? OR upper(replace(id,'-','')) LIKE ?":"";
-    const binds=q?[like,like,like,like,"%"+q.replace(/^REV-US-/i,"").replace(/-/g,"").toUpperCase()+"%"]:[];
-    const totalRow=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_users "+where).bind(...binds).first();
-    const rows=await env.DB.prepare("SELECT id,display_name,email_normalized,phone_e164,email_verified_at,phone_verified_at,account_status,role,created_at,updated_at,last_login_at FROM rev_users "+where+" ORDER BY "+sort+" "+order+" LIMIT ? OFFSET ?").bind(...binds,limit,offset).all();
+    const offset=(page-1)*limit, digits=q.replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^0-9+]/g,"");
+    const filters=[],binds=[];
+    if(digits){filters.push("replace(replace(replace(replace(COALESCE(u.phone_e164,''),'+',''),' ',''),'-',''),'(', '') LIKE ?");binds.push("%"+digits.replace(/^\+?/,"")+"%");}
+    if(categorySql[category]===undefined)return response(request,env,{success:false,error:"دسته‌بندی کاربران نامعتبر است."},400);
+    const where="WHERE 1=1"+(categorySql[category]||"")+filters.map(x=>" AND "+x).join("");
+    const totalRow=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_users u "+where).bind(...binds).first();
+    const rows=await env.DB.prepare("SELECT u.id,u.display_name,u.email_normalized,u.phone_e164,u.email_verified_at,u.phone_verified_at,u.account_status,u.role,u.created_at,u.updated_at,u.last_login_at,CASE WHEN EXISTS (SELECT 1 FROM rev_business_profiles bp WHERE bp.owner_user_id=u.id AND bp.business_type='store') THEN 'store' WHEN EXISTS (SELECT 1 FROM rev_business_profiles bp WHERE bp.owner_user_id=u.id AND bp.business_type='repair') THEN 'repair' WHEN EXISTS (SELECT 1 FROM rev_business_profiles bp WHERE bp.owner_user_id=u.id AND bp.business_type='charging') THEN 'charging' WHEN EXISTS (SELECT 1 FROM rev_business_profiles bp WHERE bp.owner_user_id=u.id AND bp.business_type IN ('tow','tow_truck','towing')) THEN 'tow' ELSE 'users' END AS user_category FROM rev_users u "+where+" ORDER BY "+sort+" "+order+" LIMIT ? OFFSET ?").bind(...binds,limit,offset).all();
     const data=(rows.results||[]).map(u=>({...u,public_code:"REV-US-"+String(u.id||"").replace(/-/g,"").toUpperCase()}));
-    return response(request,env,{success:true,data,total:Number(totalRow?.total)||0,page,limit});
+    return response(request,env,{success:true,data,total:Number(totalRow?.total)||0,page,limit,category});
    }
    if(path==="/api/admin/registration-access" && method==="GET") {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
