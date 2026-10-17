@@ -788,7 +788,7 @@ function musicPanel(){
  <section class="box" style="max-width:900px"><h3>کتابخانه آهنگ‌ها</h3><div id="rev-music-list" class="hint">برای نمایش فهرست، ابتدا اتصال را انجام دهید.</div></section>`;
 }
 async function musicApi(path,options={}){
- const base=String(REV_MUSIC_API).replace(/\\/$/,'');
+ const base=String(REV_MUSIC_API).replace(/\/+$/,'');
  const headers={...(options.headers||{}),...(musicAdminToken?{Authorization:'Bearer '+musicAdminToken}:{})};
  const r=await fetch(base+path,{...options,headers});
  const j=await r.json().catch(()=>({}));
