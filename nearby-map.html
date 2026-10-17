@@ -532,8 +532,12 @@ var curStep=0, prog=0, following=true, offRoute=0, announced={};
 var trackPts=[], startTime=0, maxSpeed=0, speedSum=0, speedN=0;
 var lastPos=null, lastBearing=0;
 var voiceOn=(function(){try{return localStorage.getItem('rev_nav_voice')!=='off';}catch(e){return true;}})();
+var lastSpeakTs=0;
 function speak(t){
   if(!voiceOn||!t) return;
+  var now=Date.now();
+  if(now-lastSpeakTs<4000) return;
+  lastSpeakTs=now;
   try{var u=new SpeechSynthesisUtterance(t);u.lang='fa-IR';u.rate=1;
     speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
 
@@ -553,15 +557,17 @@ function nearestOnRoute(lat,lon){
     if(d<bd){bd=d;bi=i;}}
   return {idx:bi,dist:bd,prog:nav.cum[bi]};
 }
+function setText(id,txt){var el=$(id);if(el&&el.textContent!==txt)el.textContent=txt;}
 function setBanner(){
   var st=nav.steps[curStep]||nav.steps[nav.steps.length-1];
   var mi=maneuverInfo(st);
   var d=Math.max(0,nav.cum[nav.stepIdx[curStep]]-prog);
-  $('navIcon').innerHTML=mi.icon;
-  $('navDist').textContent=(curStep>=nav.steps.length-1&&d<60)?'رسیدید':distText(d);
-  $('navInstr').textContent=mi.text;
+  var iconEl=$('navIcon'), ic=mi.icon;
+  if(iconEl.__ic!==ic){iconEl.innerHTML=ic;iconEl.__ic=ic;}
+  setText('navDist',(curStep>=nav.steps.length-1&&d<60)?'رسیدید':distText(d));
+  setText('navInstr',mi.text);
   var nx=nav.steps[curStep+1];
-  $('navNext').textContent=nx?('بعد: '+maneuverInfo(nx).text):'—';
+  setText('navNext',nx?('بعد: '+maneuverInfo(nx).text):'—');
   if(d<320&&!announced[curStep+'_300']){announced[curStep+'_300']=1;speak(distText(d)+'، '+mi.text);}
   if(d<90&&!announced[curStep+'_80']){announced[curStep+'_80']=1;speak(mi.text);}
   var remain=Math.max(0,nav.total-prog);
@@ -589,6 +595,7 @@ function onPos(pos){
   if(spd!=null){speedSum+=spd;speedN++;if(spd*3.6>maxSpeed)maxSpeed=spd*3.6;
     $('ndSpeed').textContent=fa0(spd*3.6);}
   var nr=nearestOnRoute(lat,lon);
+  prog=Math.max(prog,nr.prog-25);
   // bearing
   var brg=lastBearing;
   if(pos.coords.heading!=null&&!isNaN(pos.coords.heading)) brg=pos.coords.heading;
@@ -599,7 +606,7 @@ function onPos(pos){
   posMarker.setLatLng([lat,lon]);
   if(following) window.revMap.panTo([lat,lon],{animate:true});
   // off-route?
-  if(nr.dist>60){offRoute++;}else{offRoute=0;prog=nr.prog;}
+  if(nr.dist>60){offRoute++;}else{offRoute=0;}
   if(offRoute>=3){offRoute=0;reroute(lat,lon);return;}
   // advance step
   while(curStep<nav.steps.length-1&&prog>=nav.cum[nav.stepIdx[curStep]]-15) curStep++;
@@ -675,9 +682,13 @@ function stop(silent){
   if(lineRemain){try{window.revMap.removeLayer(lineRemain);}catch(e){}lineRemain=null;}
   document.body.classList.remove('rev-navigating');
   $('navBanner').hidden=true; $('navDash').hidden=true;
+  var sf=$('navStartFloat'); if(sf) sf.hidden=true;
   try{speechSynthesis.cancel();}catch(e){}
-  nav=null;
-  if(!silent&&lastOfferData) offer(lastOfferData);
+  try{
+    var u=new URL(location.href);
+    if(u.searchParams.has('navstart')){u.searchParams.delete('navstart');history.replaceState(null,'',u.toString());}
+  }catch(e){}
+  nav=null; lastOfferData=null;
 }
 async function saveTrip(){
   var btn=$('navSaveTripBtn'); btn.disabled=true; btn.textContent='در حال ثبت…';
