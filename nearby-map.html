@@ -181,7 +181,7 @@ body.rev-navigating .bottom-nav{transform:translateY(110%)}
 <div class="nav-arrive-btns">
 <button class="primary" id="navSaveTripBtn">ثبت سفر در گزارش‌ها</button>
 <button id="navCloseArriveBtn">بستن</button>
-</div></div></div><div class="map-search-bar" id="mapSearchBar"><button type="button" id="historyToggle" class="history-toggle" aria-expanded="false" aria-controls="searchHistoryPanel" aria-label="نمایش جست‌وجوهای اخیر"><span></span></button><form class="map-search-form" id="placeSearchForm" role="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg><input id="placeSearch" type="search" placeholder="جست‌وجوی مکان یا نشانی…" autocomplete="off" aria-label="جست‌وجوی مکان یا نشانی"><button id="searchClear" type="button" aria-label="پاک کردن جست‌وجو" hidden>×</button><button id="filterBtn" type="button" class="filter-btn" aria-label="فیلتر نوع مرکز" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button><button id="searchSubmit" type="submit" aria-label="جست‌وجو"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></form><button id="locate" type="button" aria-label="مکان فعلی من" title="مکان فعلی من"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4m0 12v4M2 12h4m12 0h4"></path><circle cx="12" cy="12" r="8"></circle></svg></button><button id="routeToggle" type="button" aria-expanded="false" aria-controls="routePanel" title="مسیریابی" aria-label="مسیریابی">➤</button></div><div class="filter-menu" id="filterMenu" hidden role="group" aria-label="فیلتر نوع مرکز"><button type="button" data-f="all" class="active"><span>🗺</span>همه</button><button type="button" data-f="charging"><span>⚡</span>شارژ</button><button type="button" data-f="repair"><span>🔧</span>تعمیرگاه</button><button type="button" data-f="store"><span>🛍</span>فروشگاه</button></div>
+</div></div></div><div class="map-search-bar" id="mapSearchBar"><button type="button" id="historyToggle" class="history-toggle" aria-expanded="false" aria-controls="searchHistoryPanel" aria-label="نمایش جست‌وجوهای اخیر"><span></span></button><form class="map-search-form" id="placeSearchForm" role="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg><input id="placeSearch" type="search" placeholder="جست‌وجوی مکان یا نشانی…" autocomplete="off" aria-label="جست‌وجوی مکان یا نشانی"><button id="searchClear" type="button" aria-label="پاک کردن جست‌وجو" hidden>×</button><button id="filterBtn" type="button" class="filter-btn" aria-label="فیلتر نوع مرکز" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button></form><button id="locate" type="button" aria-label="مکان فعلی من" title="مکان فعلی من"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4m0 12v4M2 12h4m12 0h4"></path><circle cx="12" cy="12" r="8"></circle></svg></button><button id="routeToggle" type="button" aria-expanded="false" aria-controls="routePanel" title="مسیریابی" aria-label="مسیریابی">➤</button></div><div class="filter-menu" id="filterMenu" hidden role="group" aria-label="فیلتر نوع مرکز"><button type="button" data-f="all" class="active"><span>🗺</span>همه</button><button type="button" data-f="charging"><span>⚡</span>شارژ</button><button type="button" data-f="repair"><span>🔧</span>تعمیرگاه</button><button type="button" data-f="store"><span>🛍</span>فروشگاه</button></div>
 <section class="search-history-panel" id="searchHistoryPanel" aria-label="جست‌وجوهای اخیر" aria-hidden="true"><div class="search-history-head"><span>جست‌وجوهای اخیر</span><button type="button" id="clearSearchHistory">پاک کردن</button></div><div id="searchHistoryList"></div></section>
 <section id="tripLivePanel" hidden aria-label="وضعیت و اشتراک‌گذاری سفر"><div class="trip-live-head"><strong>🚙 وضعیت سفر شما</strong><button id="tripLiveClose" type="button" aria-label="بستن">×</button></div><div class="trip-live-grid"><div class="trip-live-stat"><small>مقصد</small><b id="tripShareDestination">—</b></div><div class="trip-live-stat"><small>سرعت فعلی GPS</small><b id="tripShareSpeed">در انتظار GPS</b></div><div class="trip-live-stat"><small>زمان تقریبی رسیدن</small><b id="tripShareEta">—</b></div><div class="trip-live-stat"><small>مسافت باقی‌مانده</small><b id="tripShareRemaining">—</b></div><div class="trip-live-stat"><small>وضعیت اشتراک</small><b id="tripShareState">خصوصی</b></div></div><div class="trip-live-actions"><button id="tripShareStart" class="trip-share-primary" type="button">ساخت لینک اشتراک</button><button id="groupTripOpen" type="button">سفر گروهی</button><button id="tripShareCopy" type="button" disabled>کپی لینک</button><button id="tripShareStop" class="trip-stop-share" type="button" disabled>قطع اشتراک‌گذاری</button><button id="tripEnd" class="trip-end" type="button">پایان کامل سفر</button></div><div id="tripShareLink" class="trip-live-link" hidden></div><div id="tripShareNote" class="trip-live-note">برای اشتراک‌گذاری، باید وارد حساب REV باشید و اجازه مکان‌یابی گوشی را بدهید. موقعیت فقط پس از تأیید شما ارسال می‌شود.</div></section>
 <section id="groupTripPanel" hidden aria-label="سفر گروهی REV" style="position:fixed;z-index:940;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom));max-width:500px;margin:auto;padding:16px;background:#fff;color:#15231b;border:1px solid #dfe7e2;border-radius:20px;box-shadow:0 14px 45px #0004;font-family:Vazirmatn,Vazir,Tahoma,sans-serif;max-height:72dvh;overflow:auto">
@@ -290,7 +290,7 @@ function startNavigationToPlace(place){const lat=Number(place.latitude),lon=Numb
  const routePanel=document.getElementById("routePanel"),routeToggle=document.getElementById("routeToggle"),routeStart=document.getElementById("routeStart"),routeEnd=document.getElementById("routeEnd"),routeSummary=document.getElementById("routeSummary"),routeNote=document.getElementById("routeNote");
  let routePickMode="",routeLine=null,routeStartMarker=null,routeEndMarker=null,routeCarMarker=null,routeAnimationFrame=0;
  function routePin(point,label,color,input){const marker=L.marker(point,{draggable:true,keyboard:true,icon:L.divIcon({className:"rev-route-pin",html:'<span style="display:block;width:20px;height:20px;border:3px solid #fff;border-radius:50%;background:'+color+';box-shadow:0 1px 7px #0008"></span>',iconSize:[26,26],iconAnchor:[13,13]})}).bindTooltip(label+" · برای جابه‌جایی بکشید").addTo(map);marker.on("dragend",()=>{const p=marker.getLatLng();input.value=p.lat.toFixed(6)+", "+p.lng.toFixed(6);if(routeLine){map.removeLayer(routeLine);routeLine=null;}routeSummary.textContent="";routeNote.textContent="موقعیت "+label+" تغییر کرد؛ برای محاسبه مسیر جدید «نمایش مسیر» را بزنید.";});return marker;}
- function clearRoute(){if(routeAnimationFrame){cancelAnimationFrame(routeAnimationFrame);routeAnimationFrame=0;}if(routeCarMarker){map.removeLayer(routeCarMarker);routeCarMarker=null;}if(routeLine){map.removeLayer(routeLine);routeLine=null;}if(routeStartMarker){map.removeLayer(routeStartMarker);routeStartMarker=null;}if(routeEndMarker){map.removeLayer(routeEndMarker);routeEndMarker=null;}routeSummary.textContent="";routePickMode="";document.getElementById("routePickStart").classList.remove("selected");document.getElementById("routePickEnd").classList.remove("selected");}
+ window.revClearRoute=clearRoute;function clearRoute(){if(routeAnimationFrame){cancelAnimationFrame(routeAnimationFrame);routeAnimationFrame=0;}if(routeCarMarker){map.removeLayer(routeCarMarker);routeCarMarker=null;}if(routeLine){map.removeLayer(routeLine);routeLine=null;}if(routeStartMarker){map.removeLayer(routeStartMarker);routeStartMarker=null;}if(routeEndMarker){map.removeLayer(routeEndMarker);routeEndMarker=null;}routeSummary.textContent="";routePickMode="";document.getElementById("routePickStart").classList.remove("selected");document.getElementById("routePickEnd").classList.remove("selected");}
 function placeRouteCarAtStart(coords){if(!coords||!coords.length)return;if(routeAnimationFrame){cancelAnimationFrame(routeAnimationFrame);routeAnimationFrame=0;}if(routeCarMarker)map.removeLayer(routeCarMarker);const icon=L.divIcon({className:"rev-ev-car-icon",html:'<span style="display:flex;align-items:center;justify-content:center;width:42px;height:42px;border:3px solid #fff;border-radius:50%;background:#0866ff;color:#fff;font-size:20px;box-shadow:0 3px 16px #0007;line-height:1">🚙</span>',iconSize:[42,42],iconAnchor:[21,21]});routeCarMarker=L.marker([coords[0][1],coords[0][0]],{icon,zIndexOffset:2000,keyboard:false}).addTo(map).bindTooltip("خودروی برقی شما · لمس برای وضعیت سفر");routeCarMarker.on("click",openTripLivePanel);map.setView([coords[0][1],coords[0][0]],18,{animate:true,duration:.8});}
 
  const AUTH_API="https://rev-auth-api.mojtaba-alimi64.workers.dev";
@@ -411,15 +411,15 @@ try{tpd=JSON.parse(sessionStorage.getItem('rev_trip_plan_view')||'null');}catch(
 if(tpd&&Array.isArray(tpd.route)&&tpd.route.length>1){
 var tpll=tpd.route.map(function(c){return [c[1],c[0]];});
 if(window.revTripPlanLayer){try{map.removeLayer(window.revTripPlanLayer);}catch(e){}}
-window.revTripPlanLayer=L.polyline(tpll,{color:'#0887a7',weight:6,opacity:.95}).addTo(map);
+window.revTripPlanMarkerGroup=L.layerGroup().addTo(map);window.revTripPlanLayer=L.polyline(tpll,{color:'#0887a7',weight:6,opacity:.95}).addTo(map);
 try{map.fitBounds(window.revTripPlanLayer.getBounds(),{padding:[45,45],maxZoom:13});}catch(e){}
 var oLL=tpll[0],dLL=tpll[tpll.length-1];
 try{
-L.marker(oLL,{keyboard:false}).addTo(map).bindPopup('<b>\u0645\u0628\u062f\u0623</b><br>'+esc(tpd.origin||''));
-L.marker(dLL,{keyboard:false}).addTo(map).bindPopup('<b>\u0645\u0642\u0635\u062f</b><br>'+esc(tpd.destination||''));
+L.marker(oLL,{keyboard:false}).addTo(window.revTripPlanMarkerGroup).bindPopup('<b>\u0645\u0628\u062f\u0623</b><br>'+esc(tpd.origin||''));
+L.marker(dLL,{keyboard:false}).addTo(window.revTripPlanMarkerGroup).bindPopup('<b>\u0645\u0642\u0635\u062f</b><br>'+esc(tpd.destination||''));
 (tpd.stations||[]).forEach(function(st){
 if(st&&isFinite(st.lat)&&isFinite(st.lon)){
-L.marker([Number(st.lat),Number(st.lon)],{icon:stationPinIcon({business_type:'charging'}),keyboard:false}).addTo(map).bindPopup('<b>\u26a1 '+esc(st.name||'\u0627\u06cc\u0633\u062a\u06af\u0627\u0647 \u0634\u0627\u0631\u0698')+'</b>');}
+L.marker([Number(st.lat),Number(st.lon)],{icon:stationPinIcon({business_type:'charging'}),keyboard:false}).addTo(window.revTripPlanMarkerGroup).bindPopup('<b>\u26a1 '+esc(st.name||'\u0627\u06cc\u0633\u062a\u06af\u0627\u0647 \u0634\u0627\u0631\u0698')+'</b>');}
 });
 }catch(e){}
 var tpsm=tpd.summary||{};
@@ -558,18 +558,33 @@ function nearestOnRoute(lat,lon){
   return {idx:bi,dist:bd,prog:nav.cum[bi]};
 }
 function setText(id,txt){var el=$(id);if(el&&el.textContent!==txt)el.textContent=txt;}
+var hasFix=false;
 function setBanner(){
+  var distEl=$('navDist'), instrEl=$('navInstr'), nextEl=$('navNext'), iconEl=$('navIcon');
+  if(!hasFix){
+    setText('navDist','—'); setText('navInstr','در حال دریافت موقعیت…'); setText('navNext','');
+    if(iconEl.__ic!=='wait'){iconEl.innerHTML='<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>';iconEl.__ic='wait';}
+    return;
+  }
   var st=nav.steps[curStep]||nav.steps[nav.steps.length-1];
   var mi=maneuverInfo(st);
   var d=Math.max(0,nav.cum[nav.stepIdx[curStep]]-prog);
-  var iconEl=$('navIcon'), ic=mi.icon;
+  var isLast=curStep>=nav.steps.length-1;
+  var ic, title, sub;
+  if(isLast&&d<60){
+    ic=mi.icon; title='رسیدید'; sub='به مقصد رسیدید';
+  } else if(d>1200){
+    ic='<svg viewBox="0 0 24 24">'+ICONS.straight+'</svg>';
+    title='در مسیر بمانید'; sub=distText(d)+' تا راهنمای بعدی';
+  } else {
+    ic=mi.icon; title=mi.text; sub=distText(d);
+  }
   if(iconEl.__ic!==ic){iconEl.innerHTML=ic;iconEl.__ic=ic;}
-  setText('navDist',(curStep>=nav.steps.length-1&&d<60)?'رسیدید':distText(d));
-  setText('navInstr',mi.text);
-  var nx=nav.steps[curStep+1];
-  setText('navNext',nx?('بعد: '+maneuverInfo(nx).text):'—');
-  if(d<320&&!announced[curStep+'_300']){announced[curStep+'_300']=1;speak(distText(d)+'، '+mi.text);}
-  if(d<90&&!announced[curStep+'_80']){announced[curStep+'_80']=1;speak(mi.text);}
+  setText('navDist',title); setText('navInstr',sub); setText('navNext','');
+  if(!isLast){
+    if(d<800&&!announced[curStep+'_800']){announced[curStep+'_800']=1;speak(distText(d)+'، '+mi.text);}
+    if(d<200&&!announced[curStep+'_200']){announced[curStep+'_200']=1;speak(mi.text);}
+  }
   var remain=Math.max(0,nav.total-prog);
   $('ndRemain').textContent=remain>=1000?fa(remain/1000)+' km':fa0(remain)+' م';
   var avgV=speedN>0?speedSum/speedN:11;
@@ -584,6 +599,7 @@ function updateLines(){
 }
 function onPos(pos){
   if(!nav) return;
+  hasFix=true;
   var lat=pos.coords.latitude,lon=pos.coords.longitude;
   var spd=(pos.coords.speed!=null&&pos.coords.speed>=0)?pos.coords.speed:null;
   if(lastPos){
@@ -648,14 +664,14 @@ function start(data){
     destLat:data.destLat,destLon:data.destLon,originName:data.originName||'',destName:data.destName||'مقصد'};
   var p=prepRoute(nav.coords,nav.steps);
   nav.cum=p.cum; nav.stepIdx=p.stepIdx; nav.total=p.total;
-  curStep=0;prog=0;announced={};offRoute=0;following=true;
+  curStep=0;prog=0;announced={};offRoute=0;following=true;hasFix=false;
   trackPts=[];startTime=Date.now();maxSpeed=0;speedSum=0;speedN=0;lastPos=null;
   // lines
   var ll=nav.coords.map(function(c){return [c[1],c[0]];});
   lineRemain=L.polyline(ll,{color:'#0887a7',weight:7,opacity:.95}).addTo(window.revMap);
   lineDone=L.polyline([],{color:'#9db0c0',weight:7,opacity:.6}).addTo(window.revMap);
   // arrow marker
-  posMarker=L.marker(ll[0],{icon:L.divIcon({className:'',html:'<div class="nav-arrow" id="navArrow"><svg viewBox="0 0 48 48"><path d="M24 4 L40 42 L24 33 L8 42 Z" fill="#0887a7" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/></svg></div>',iconSize:[44,44],iconAnchor:[22,22]}),zIndexOffset:1400}).addTo(window.revMap);
+  posMarker=L.marker(ll[0],{icon:L.divIcon({className:'',html:'<div id="navArrow" style="width:46px;height:46px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(20,41,59,.25);display:flex;align-items:center;justify-content:center;transition:transform .3s linear;"><svg viewBox="0 0 48 48" style="width:38px;height:38px;"><path d="M24 4 L40 42 L24 33 L8 42 Z" fill="#0887a7" stroke-linejoin="round"/></svg></div>',iconSize:[44,44],iconAnchor:[22,22]}),zIndexOffset:1400}).addTo(window.revMap);
   window.revMap.on('dragstart',function(){following=false;});
   speak('مسیریابی شروع شد.');
   setBanner();
@@ -687,6 +703,12 @@ function stop(silent){
   try{
     var u=new URL(location.href);
     if(u.searchParams.has('navstart')){u.searchParams.delete('navstart');history.replaceState(null,'',u.toString());}
+  }catch(e){}
+  try{
+    if(window.revClearRoute) window.revClearRoute();
+    if(window.revTripPlanLayer){try{window.revMap.removeLayer(window.revTripPlanLayer);}catch(e){}window.revTripPlanLayer=null;}
+    if(window.revTripPlanMarkerGroup){try{window.revMap.removeLayer(window.revTripPlanMarkerGroup);}catch(e){}window.revTripPlanMarkerGroup=null;}
+    window.revNavData=null;
   }catch(e){}
   nav=null; lastOfferData=null;
 }
