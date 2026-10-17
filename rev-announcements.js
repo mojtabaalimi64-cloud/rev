@@ -4,10 +4,11 @@ const API='https://rev-auth-api.mojtaba-alimi64.workers.dev';
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 function sessionId(){try{let v=localStorage.getItem('rev_live_session_id');if(v&&/^[a-zA-Z0-9_-]{16,100}$/.test(v))return v;v=(crypto.randomUUID?crypto.randomUUID().replace(/-/g,''):Math.random().toString(36).slice(2)+Date.now().toString(36));localStorage.setItem('rev_live_session_id',v);return v}catch(e){return Math.random().toString(36).slice(2)+Date.now().toString(36)}}
 const sid=sessionId();
+const viewId=(crypto.randomUUID?crypto.randomUUID().replace(/-/g,''):Math.random().toString(36).slice(2)+Date.now().toString(36));
 const canShowAnnouncements=location.pathname.endsWith("/nearby-map.html");
 let lastItems=[];let announcementItems=[];let groupNoticeItems=[];let seenGroupNoticeIds=[];try{seenGroupNoticeIds=JSON.parse(localStorage.getItem('rev_seen_group_banner_ids')||'[]')}catch(e){}
 function bannerHost(){return document.fullscreenElement||document.body}
-async function heartbeat(){if(document.visibilityState==='hidden')return;try{await fetch(API+'/api/engagement/heartbeat',{method:'POST',credentials:'include',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:sid,page:location.pathname+location.hash})})}catch(e){}}
+async function heartbeat(){if(document.visibilityState==='hidden')return;try{const trackView=!window.__revPageViewTracked;if(trackView)window.__revPageViewTracked=true;await fetch(API+'/api/engagement/heartbeat',{method:'POST',credentials:'include',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({sessionId:sid,...(trackView?{viewId}:{}),page:location.pathname+location.hash})})}catch(e){}}
 function showBanner(items){
  lastItems=Array.isArray(items)?items:[];
  let banner=document.getElementById('revAnnouncementBanner');
