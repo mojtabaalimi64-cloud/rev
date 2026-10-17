@@ -542,19 +542,6 @@ loadRevContent();
 
 </script>
 <script src="./rev-site-settings.js?v=20261017-3" defer></script>
-<script>
-(function(){
- try{
-  if(localStorage.getItem('rev_return_to_account')!=='1')return;
-  if(document.getElementById('revReturnProfile'))return;
-  const a=document.createElement('a');
-  a.id='revReturnProfile';a.href='./account.html';a.textContent='← بازگشت به پروفایل من';
-  a.setAttribute('aria-label','بازگشت به پروفایل من');
-  a.style.cssText='position:fixed;right:16px;bottom:16px;z-index:2147483000;display:inline-flex;align-items:center;gap:8px;padding:11px 16px;border:1px solid #0866ff;border-radius:999px;background:#ffffff;color:#0866ff;font:700 14px Vazirmatn,Tahoma,sans-serif;text-decoration:none;box-shadow:0 8px 24px rgba(23,37,59,.12);direction:rtl';
-  document.body.appendChild(a);
- }catch(e){}
-})();
-</script>
 <script src="./rev-announcements.js?v=1" defer></script>
 </body>
 </html>
