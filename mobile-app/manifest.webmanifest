@@ -1,0 +1,22 @@
+{
+  "id": "./index.html",
+  "name": "REV | دستیار سفر برقی",
+  "short_name": "REV سفر",
+  "description": "نمونه اولیه موبایل REV برای سفر با خودروی برقی",
+  "lang": "fa",
+  "dir": "rtl",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#080b0d",
+  "theme_color": "#080b0d",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "../rev-app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

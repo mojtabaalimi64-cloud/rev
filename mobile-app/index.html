@@ -1,0 +1,61 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#080b0d">
+<meta name="description" content="نمونه آزمایشی اپ موبایل REV برای سفر با خودروی برقی">
+<link rel="manifest" href="./manifest.webmanifest">
+<title>REV | دستیار سفر برقی</title>
+<style>
+:root{color-scheme:dark;--bg:#080b0d;--panel:#10171b;--panel2:#151f24;--line:#29383e;--muted:#9eafb5;--green:#39ff88;--teal:#00806f;--text:#f5f7f8}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 85% 0%,#12352a 0,transparent 34%),var(--bg);color:var(--text);font:15px/1.8 Vazirmatn,Vazir,Tahoma,sans-serif;min-height:100vh;padding-bottom:calc(86px + env(safe-area-inset-bottom))}
+a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}.wrap{width:min(760px,100% - 28px);margin:auto}
+header{position:sticky;top:0;z-index:5;background:#080b0deF;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.head{display:flex;justify-content:space-between;align-items:center;padding:12px 0;gap:12px}.logo{font-size:29px;font-weight:950;letter-spacing:3px;color:var(--green);line-height:1.2}.tagline{font-size:11px;color:var(--muted)}.profile{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:#152c21;border:1px solid #2d6147;font-size:20px}
+main{padding:20px 0 30px}.hero{position:relative;overflow:hidden;border:1px solid #28523d;border-radius:24px;padding:22px;background:linear-gradient(135deg,#172b20,#10191d 65%,#0c211b);box-shadow:0 15px 38px #0003}.eyebrow{color:var(--green);font-size:12px;font-weight:800}.hero h1{font-size:clamp(24px,6vw,34px);line-height:1.45;margin:5px 0 8px}.hero p{margin:0;color:#bdcbc5;font-size:13px;max-width:480px}.hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:17px}.btn{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:11px 10px;font-weight:800;font-size:13px;border:1px solid #395247;background:#13221a}.btn.primary{background:var(--green);color:#07100b;border-color:var(--green)}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:24px 2px 11px}.section-head h2{font-size:18px;margin:0}.section-head span{font-size:11px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.tile{display:flex;flex-direction:column;gap:8px;min-height:132px;padding:15px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,#131d21,#0e1417);transition:transform .15s,border-color .15s}.tile:active{transform:scale(.985);border-color:#39ff88}.tile .ico{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:#152c21;border:1px solid #2d6147;font-size:21px}.tile strong{font-size:14px}.tile small{font-size:11px;color:var(--muted);line-height:1.6}
+.notice{display:flex;gap:10px;align-items:flex-start;margin-top:17px;padding:13px;border:1px solid #4b432a;background:#201c12;border-radius:14px;color:#e7d8ae;font-size:12px}.notice b{display:block;color:#ffe2a0;margin-bottom:2px}
+.quick{border:1px solid var(--line);background:#10171b;border-radius:17px;padding:15px;margin-top:18px}.quick h2{font-size:16px;margin:0 0 8px}.quick p{font-size:12px;color:var(--muted);margin:0 0 12px}.quick a{display:inline-flex;padding:8px 11px;border:1px solid #395247;border-radius:10px;color:var(--green);font-size:12px;font-weight:800}
+.bottom-nav{position:fixed;z-index:10;bottom:0;left:0;right:0;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:#080b0df2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}.nav-inner{width:min(760px,100%);margin:auto;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.nav-inner a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 2px;border-radius:11px;color:var(--muted);font-size:10px}.nav-inner a span{font-size:19px;line-height:1.3}.nav-inner a.active{color:var(--green);background:#14251c}
+footer{text-align:center;color:#708087;font-size:10px;padding:22px 0 5px}
+@media(min-width:620px){.wrap{width:min(760px,100% - 40px)}.hero{padding:30px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.tile{min-height:150px}.hero-actions{max-width:430px}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto;transition:none!important}}
+</style>
+</head>
+<body>
+<header><div class="wrap head"><div><div class="logo">REV</div><div class="tagline">دستیار سفر با خودروی برقی</div></div><a class="profile" href="../account.html" aria-label="حساب کاربری">👤</a></div></header>
+<main class="wrap">
+<section class="hero">
+<div class="eyebrow">حرکت هوشمندتر، سفر مطمئن‌تر</div>
+<h1>سفر برقی‌ات را<br>با اطمینان برنامه‌ریزی کن.</h1>
+<p>مسیر را بررسی کن، ایستگاه‌های شارژ را پیدا کن و اطلاعات لازم برای سفر را یک‌جا داشته باش.</p>
+<div class="hero-actions"><a class="btn primary" href="../trip.html">⌖ برنامه‌ریزی سفر</a><a class="btn" href="../safety-checklist.html">✓ چک‌لیست سفر</a></div>
+</section>
+<div class="section-head"><h2>دسترسی سریع</h2><span>نسخه آزمایشی REV</span></div>
+<section class="grid" aria-label="امکانات اصلی">
+<a class="tile" href="../trip.html"><span class="ico">🗺️</span><strong>نقشه و شارژ</strong><small>مشاهده مسیر و بررسی جایگاه‌های شارژ</small></a>
+<a class="tile" href="../travel-plans.html"><span class="ico">🧭</span><strong>سفرهای من</strong><small>برنامه‌ها و ابزارهای مرتبط با سفر</small></a>
+<a class="tile" href="../businesses.html"><span class="ico">🔧</span><strong>خدمات و مراکز</strong><small>فروشگاه‌ها، تعمیرگاه‌ها و مراکز شارژ</small></a>
+<a class="tile" href="../driver-profile.html"><span class="ico">🚘</span><strong>پروفایل راننده</strong><small>اطلاعات و امکانات مرتبط با رانندگی</small></a>
+<a class="tile" href="../article-ev.html"><span class="ico">📘</span><strong>دانش خودرو برقی</strong><small>راهنماها و مطالب آموزشی REV</small></a>
+<a class="tile" href="../news.html"><span class="ico">⚡</span><strong>اخبار و فناوری</strong><small>آخرین مطالب حوزه خودروهای برقی</small></a>
+</section>
+<section class="notice" role="note"><span>ⓘ</span><div><b>درباره این نسخه</b>این یک نمونه اولیه برای بررسی تجربه موبایل است. امکانات زنده مثل ثبت و اعزام امداد، اعلان‌ها و همگام‌سازی پس‌زمینه تا زمان اتصال و آزمون سرویس مربوطه فعال محسوب نمی‌شوند.</div></section>
+<section class="quick"><h2>نیاز به حساب کاربری داری؟</h2><p>برای مدیریت پروفایل یا دسترسی به امکانات حساب، از پنل فعلی REV استفاده کن.</p><a href="../account.html">رفتن به حساب کاربری ←</a></section>
+<footer>REV · نمونه اولیه موبایل · امکانات فعلی سایت حفظ می‌شوند</footer>
+</main>
+<nav class="bottom-nav" aria-label="ناوبری اصلی"><div class="nav-inner">
+<a href="./index.html" class="active"><span>⌂</span>خانه</a>
+<a href="../trip.html"><span>⌖</span>نقشه</a>
+<a href="../travel-plans.html"><span>🧭</span>سفرها</a>
+<a href="../businesses.html"><span>🔧</span>خدمات</a>
+<a href="../account.html"><span>☻</span>حساب</a>
+</div></nav>
+<script>
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  window.addEventListener("load", () => navigator.serviceWorker.register("./sw.js").catch(() => {}));
+}
+</script>
+</body></html>

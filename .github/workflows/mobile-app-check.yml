@@ -1,0 +1,30 @@
+name: REV mobile prototype checks
+
+on:
+  push:
+    branches:
+      - rev-product-audit-roadmap
+    paths:
+      - "mobile-app/**"
+      - ".github/workflows/mobile-app-check.yml"
+  pull_request:
+    paths:
+      - "mobile-app/**"
+      - ".github/workflows/mobile-app-check.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  validate-mobile-prototype:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - name: Validate manifest JSON
+        run: node -e "JSON.parse(require('fs').readFileSync('mobile-app/manifest.webmanifest','utf8')); console.log('manifest JSON valid')"
+      - name: Check local links and core files
+        run: node mobile-app/scripts/smoke-test.mjs
