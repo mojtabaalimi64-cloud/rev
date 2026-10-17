@@ -377,10 +377,11 @@ async function engagementApi(request,env,url,method){
   if(!await admin(request,env))return response(request,env,{success:false,error:"Unauthorized"},401);
   const active=await env.DB.prepare("SELECT COUNT(DISTINCT session_id) AS total,COUNT(DISTINCT user_id) AS signed_in FROM rev_live_activity WHERE last_seen>=?").bind(new Date(Date.now()-5*60*1000).toISOString()).first();
   const pages=await env.DB.prepare("SELECT page_path,COUNT(DISTINCT session_id) AS visitors FROM rev_live_activity WHERE last_seen>=? GROUP BY page_path ORDER BY visitors DESC LIMIT 12").bind(new Date(Date.now()-15*60*1000).toISOString()).all();
+  const authenticatedUsers=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_users WHERE account_status='active' AND (email_verified_at IS NOT NULL OR phone_verified_at IS NOT NULL)").first();
   const totalViews=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_page_views").first();
   const todayViews=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_page_views WHERE created_at>=?").bind(new Date(new Date().toISOString().slice(0,10)+"T00:00:00.000Z").toISOString()).first();
   const list=await env.DB.prepare("SELECT id,title,body,link_url,link_label,kind,enabled,starts_at,ends_at,created_at FROM rev_announcements ORDER BY created_at DESC LIMIT 50").all();
-  return response(request,env,{success:true,active_users:Number(active?.total||0),signed_in_users:Number(active?.signed_in||0),total_page_views:Number(totalViews?.total||0),today_page_views:Number(todayViews?.total||0),active_window_minutes:5,popular_pages:pages.results||[],announcements:list.results||[]});
+  return response(request,env,{success:true,active_users:Number(active?.total||0),signed_in_users:Number(active?.signed_in||0),total_authenticated_users:Number(authenticatedUsers?.total||0),total_page_views:Number(totalViews?.total||0),today_page_views:Number(todayViews?.total||0),active_window_minutes:5,popular_pages:pages.results||[],announcements:list.results||[]});
  }
  if(path==="/api/admin/announcements"&&method==="POST"){
   if(!await admin(request,env))return response(request,env,{success:false,error:"Unauthorized"},401);
