@@ -136,6 +136,10 @@ main{display:block!important;width:100%!important;height:100dvh!important;max-wi
 @keyframes navpulse{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.4);opacity:0}}
 body.rev-navigating #mapSearchBar,body.rev-navigating .map-top-widgets{opacity:0;pointer-events:none}
 body.rev-navigating .bottom-nav{transform:translateY(110%)}
+body.rev-navigating #map{transform:rotate(var(--rev-rot,0deg)) scale(1.45);transform-origin:center}
+body.rev-navigating .leaflet-marker-icon{rotate:calc(var(--rev-rot,0deg)*-1)}
+body.rev-navigating .leaflet-control-container{rotate:calc(var(--rev-rot,0deg)*-1)}
+body.rev-navigating .leaflet-control-zoom{display:none}
 .bottom-nav{transition:transform .3s}
 
 [hidden]{display:none!important}
@@ -531,7 +535,7 @@ function distText(m){
   return fa0(Math.max(10,Math.round(m/10)*10))+' متر دیگر';}
 
 /* ---- state ---- */
-var nav=null, watchId=null, posMarker=null, lineDone=null, lineRemain=null;
+var nav=null, watchId=null, posMarker=null, lineRemain=null;
 var curStep=0, prog=0, following=true, offRoute=0, announced={};
 var trackPts=[], startTime=0, maxSpeed=0, speedSum=0, speedN=0;
 var lastPos=null, lastBearing=0;
@@ -604,9 +608,16 @@ function setBanner(){
 }
 function updateLines(){
   var n=nearestOnRoute(lastPos.lat,lastPos.lon).idx;
-  var done=nav.coords.slice(0,n+1).map(function(c){return [c[1],c[0]];});
   var rem=nav.coords.slice(n).map(function(c){return [c[1],c[0]];});
-  lineDone.setLatLngs(done); lineRemain.setLatLngs(rem);
+  lineRemain.setLatLngs(rem);
+}
+var smoothBrg=null;
+function destPoint(lat,lon,brgDeg,distM){
+  var R=6371000,d=distM/R,br=brgDeg*Math.PI/180;
+  var lat1=lat*Math.PI/180,lon1=lon*Math.PI/180;
+  var lat2=Math.asin(Math.sin(lat1)*Math.cos(d)+Math.cos(lat1)*Math.sin(d)*Math.cos(br));
+  var lon2=lon1+Math.atan2(Math.sin(br)*Math.sin(d)*Math.cos(lat1),Math.cos(d)-Math.sin(lat1)*Math.sin(lat2));
+  return [lat2*180/Math.PI,lon2*180/Math.PI];
 }
 function onPos(pos){
   if(!nav) return;
@@ -629,9 +640,15 @@ function onPos(pos){
   else if(trackPts.length>1){var p0=trackPts[trackPts.length-2];
     brg=(Math.atan2(lon-p0.lon,lat-p0.lat)*180/Math.PI+360)%360;}
   lastBearing=brg;
-  var ar=$('navArrow'); if(ar) ar.style.transform='rotate('+brg.toFixed(0)+'deg)';
   posMarker.setLatLng([lat,lon]);
-  if(following) window.revMap.panTo([lat,lon],{animate:true});
+  if(following){
+    var useBrg=(spd>2||smoothBrg===null)?brg:smoothBrg;
+    if(smoothBrg===null) smoothBrg=brg;
+    else{var dd=Math.abs(((brg-smoothBrg+540)%360)-180); if(dd>8) smoothBrg=brg;}
+    try{window.revMap.getContainer().style.setProperty('--rev-rot',(-smoothBrg).toFixed(1)+'deg');}catch(e){}
+    var ahead=destPoint(lat,lon,smoothBrg,220);
+    window.revMap.setView(ahead,16,{animate:false});
+  }
   // off-route?
   if(nr.dist>60){offRoute++;}else{offRoute=0;}
   if(offRoute>=3){offRoute=0;reroute(lat,lon);return;}
@@ -677,12 +694,12 @@ function start(data){
     destLat:data.destLat,destLon:data.destLon,originName:data.originName||'',destName:data.destName||'مقصد'};
   var p=prepRoute(nav.coords,nav.steps);
   nav.cum=p.cum; nav.stepIdx=p.stepIdx; nav.total=p.total;
-  curStep=0;prog=0;announced={};offRoute=0;following=true;hasFix=false;
+  curStep=0;prog=0;announced={};offRoute=0;following=true;hasFix=false;smoothBrg=null;
   trackPts=[];startTime=Date.now();maxSpeed=0;speedSum=0;speedN=0;lastPos=null;
   // lines
   var ll=nav.coords.map(function(c){return [c[1],c[0]];});
   lineRemain=L.polyline(ll,{color:'#0887a7',weight:7,opacity:.95}).addTo(window.revMap);
-  lineDone=L.polyline([],{color:'#9db0c0',weight:7,opacity:.6}).addTo(window.revMap);
+  
   // arrow marker
   posMarker=L.marker(ll[0],{icon:L.divIcon({className:'',html:'<div id="navArrow" style="width:46px;height:46px;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(20,41,59,.25);display:flex;align-items:center;justify-content:center;transition:transform .3s linear;"><svg viewBox="0 0 48 48" style="width:38px;height:38px;"><path d="M24 4 L40 42 L24 33 L8 42 Z" fill="#0887a7" stroke-linejoin="round"/></svg></div>',iconSize:[44,44],iconAnchor:[22,22]}),zIndexOffset:1400}).addTo(window.revMap);
   window.revMap.on('dragstart',function(){following=false;});
@@ -707,8 +724,10 @@ function stop(silent){
   if(watchId!=null){try{navigator.geolocation.clearWatch(watchId);}catch(e){}watchId=null;}
   try{window.revMap.off('dragstart');}catch(e){}
   if(posMarker){try{window.revMap.removeLayer(posMarker);}catch(e){}posMarker=null;}
-  if(lineDone){try{window.revMap.removeLayer(lineDone);}catch(e){}lineDone=null;}
+  
   if(lineRemain){try{window.revMap.removeLayer(lineRemain);}catch(e){}lineRemain=null;}
+  try{window.revMap.getContainer().style.setProperty('--rev-rot','0deg');}catch(e){}
+  smoothBrg=null;
   document.body.classList.remove('rev-navigating');
   $('navBanner').hidden=true; $('navDash').hidden=true;
   var sf=$('navStartFloat'); if(sf) sf.hidden=true;
