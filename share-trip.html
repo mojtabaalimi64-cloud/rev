@@ -3,48 +3,171 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<meta name="theme-color" content="#ffffff">
+<meta name="theme-color" content="#f5f8fa">
 <meta name="referrer" content="no-referrer">
 <title>موقعیت زنده سفر | REV</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <style>
-:root{color-scheme:dark;--bg:#080b0d;--panel:#10171b;--line:#29383e;--muted:#9eafb5;--green:#39ff88;--text:#f5f7f8}
-*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 85% 0%,#12352a 0,transparent 32%),var(--bg);color:var(--text);font:16px/1.85 Vazirmatn,Vazir,Tahoma,sans-serif}.wrap{width:min(760px,calc(100% - 28px));margin:7vh auto}.card{border:1px solid var(--line);border-radius:22px;padding:24px;background:linear-gradient(145deg,#101a1e,#0b1114);box-shadow:0 20px 70px #0005}.brand{font-size:30px;letter-spacing:3px;font-weight:950;color:var(--green)}h1{margin:4px 0;font-size:25px}p{color:#b8c7cb}.status{padding:13px;border:1px solid var(--line);border-radius:12px;background:#0b1114}.maplink{display:inline-block;margin-top:14px;padding:10px 14px;border:1px solid #35534a;border-radius:10px;color:var(--green);text-decoration:none;background:#14251d}.muted{font-size:12px;color:var(--muted)}[hidden]{display:none!important}
+:root{
+  color-scheme:light;
+  --teal:#0887a7; --teal-dark:#066d88; --teal-soft:#e5f3f8;
+  --ink:#14293b; --muted:#7e93a6; --line:#e4edf3;
+  --bg:#f5f8fa; --surface:#ffffff;
+  --green:#1ea56c; --green-soft:#e4f6ec;
+  --red:#df5454; --red-soft:#fdecec;
+  --radius:18px; --shadow:0 10px 26px rgba(8,135,167,.10);
+}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.9 Vazirmatn,Vazir,Tahoma,sans-serif;-webkit-font-smoothing:antialiased}
+.wrap{width:min(560px,calc(100% - 28px));margin:0 auto;padding:20px 0 36px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.logo{width:52px;height:52px;border-radius:16px;background:linear-gradient(135deg,#0db1d6,#066d88);display:inline-flex;align-items:center;justify-content:center;box-shadow:0 8px 20px rgba(8,135,167,.3);flex:none}
+.logo svg{width:26px;height:26px}
+.top h1{font-size:18px;margin:0;font-weight:900}
+.top .brand{font-size:11px;color:var(--teal);font-weight:900;letter-spacing:3px}
+.live-pill{margin-inline-start:auto;display:inline-flex;align-items:center;gap:7px;background:var(--green-soft);color:var(--green);font-size:12px;font-weight:800;padding:7px 13px;border-radius:999px;white-space:nowrap}
+.live-pill.err{background:var(--red-soft);color:var(--red)}
+.live-pill.wait{background:var(--teal-soft);color:var(--teal-dark)}
+.dot{width:9px;height:9px;border-radius:50%;background:currentColor;flex:none}
+.live-pill.live .dot{animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.75)}}
+.map-card{background:var(--surface);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow);overflow:hidden;margin-bottom:14px}
+#map{height:320px;width:100%;z-index:1}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(105px,1fr));gap:10px;margin-bottom:14px}
+.dest-banner{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,#0db1d6,#066d88);color:#fff;border-radius:var(--radius);padding:12px 16px;margin-bottom:14px;font-size:13px;font-weight:800;box-shadow:0 6px 16px rgba(8,135,167,.3)}
+.dest-banner .pin{font-size:18px}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow);padding:14px 10px;text-align:center}
+.stat .v{font-size:22px;font-weight:900;color:var(--ink);line-height:1.4}
+.stat .v small{font-size:12px;font-weight:700;color:var(--muted)}
+.stat .k{font-size:11.5px;color:var(--muted);margin-top:2px}
+.stat.speed .v{color:var(--teal)}
+.note{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;font-size:12px;color:var(--muted);line-height:2}
+.foot{text-align:center;margin-top:14px;font-size:12px;color:var(--muted)}
+.leaflet-container{font-family:inherit}
+[hidden]{display:none!important}
+@media(prefers-reduced-motion:reduce){.live-pill.live .dot{animation:none}}
 </style>
-
-<link rel="stylesheet" href="./rev-mobile-theme.css?v=20261017-6">
 </head>
 <body>
-<main class="wrap"><section class="card">
-<div class="brand">REV</div><h1>موقعیت زنده سفر</h1>
-<p>این صفحه فقط آخرین موقعیتی را نمایش می‌دهد که صاحب لینک با رضایت خود به اشتراک گذاشته است. اطلاعات هویتی یا تاریخچه سفر نمایش داده نمی‌شود.</p>
-<div id="status" class="status" role="status" aria-live="polite">در حال بررسی لینک اشتراک…</div>
-<div id="location" hidden><p id="updated"></p><p id="accuracy" class="muted"></p><a id="map" class="maplink" target="_blank" rel="noopener noreferrer">نمایش موقعیت روی نقشه</a></div>
-<p class="muted">موقعیت ممکن است با تأخیر به‌روزرسانی شود. برای موارد اضطراری به این صفحه اتکا نکنید.</p>
-</section></main>
+<main class="wrap">
+  <div class="top">
+    <span class="logo" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M13 2 4 14h6l-1 8 9-12h-6z" fill="#ffffff"/></svg></span>
+    <div><div class="brand">REV</div><h1>موقعیت زنده سفر</h1></div>
+    <span id="livePill" class="live-pill wait"><span class="dot" aria-hidden="true"></span><span id="livePillText">در حال اتصال…</span></span>
+  </div>
+
+  <div class="map-card"><div id="map" aria-label="نقشه موقعیت زنده"></div></div>
+
+  <div class="dest-banner" id="destBanner" hidden><span class="pin">📍</span><span>مقصد: <b id="destName">—</b></span><span style="margin-inline-start:auto" id="destDist">—</span></div>
+  <div class="stats">
+    <div class="stat speed"><div class="v"><span id="stSpeed">—</span> <small>km/h</small></div><div class="k">سرعت</div></div>
+    <div class="stat" id="distStat" hidden><div class="v" style="color:var(--teal)"><span id="stDist">—</span> <small>km</small></div><div class="k">فاصله تا مقصد</div></div>
+    <div class="stat"><div class="v" id="stUpdated" style="font-size:15px">—</div><div class="k">آخرین به‌روزرسانی</div></div>
+    <div class="stat"><div class="v"><span id="stAcc">—</span> <small>متر</small></div><div class="k">دقت GPS</div></div>
+  </div>
+
+  <div class="note">
+    این صفحه فقط آخرین موقعیتی را نشان می‌دهد که راننده با رضایت خود به اشتراک گذاشته است. اطلاعات هویتی یا تاریخچه سفر نمایش داده نمی‌شود. موقعیت ممکن است با تأخیر به‌روزرسانی شود؛ برای موارد اضطراری به این صفحه اتکا نکنید.
+  </div>
+  <div class="foot">REV · همراه سفر برقی تو ⚡</div>
+</main>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 <script>
 (() => {
   const API="https://rev-auth-api.mojtaba-alimi64.workers.dev";
-  const token=new URLSearchParams(location.search).get("token")||"";
+  const qs=new URLSearchParams(location.search);
+  const token=qs.get("token")||"";
+  const demo=qs.get("demo")==="1";
   const $=id=>document.getElementById(id);
-  const setStatus=(text,error=false)=>{$("status").textContent=text;$("status").style.color=error?"#ffb4b4":"#d3dedf";$("status").style.borderColor=error?"#744347":"#29383e";};
-  let stopped=false;
+  const pill=$("livePill"),pillText=$("livePillText");
+  function setPill(text,kind){pill.className="live-pill "+(kind||"wait");pillText.textContent=text;}
+  // نقشه
+  const map=L.map("map",{zoomControl:true}).setView([35.6892,51.3890],6);
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"© OpenStreetMap"}).addTo(map);
+  const carIcon=L.divIcon({className:"",html:'<div style="width:38px;height:38px;border-radius:50%;background:linear-gradient(135deg,#0db1d6,#066d88);display:flex;align-items:center;justify-content:center;box-shadow:0 4px 14px rgba(8,135,167,.5);border:3px solid #fff"><svg viewBox="0 0 24 24" width="20" height="20"><path d="M13 2 4 14h6l-1 8 9-12h-6z" fill="#fff"/></svg></div>',iconSize:[38,38],iconAnchor:[19,19]});
+  let marker=null,destMarker=null,routeLine=null,navMode=false,lastDest=null;
+  function faNum(n){return Number(n).toLocaleString("fa-IR");}
+  function faTime(ts){try{return new Date(ts).toLocaleTimeString("fa-IR",{hour:"2-digit",minute:"2-digit",second:"2-digit"});}catch(e){return "—";}}
+  function render(p){
+    const lat=Number(p.latitude),lon=Number(p.longitude);
+    if(!Number.isFinite(lat)||!Number.isFinite(lon))return false;
+    if(marker){marker.setLatLng([lat,lon]);}
+    else{marker=L.marker([lat,lon],{icon:carIcon}).addTo(map);}
+    map.setView([lat,lon],Math.max(map.getZoom(),14));
+    // سرعت: اگر API داد نمایش بده، وگرنه خط تیره
+    const sp=p.speed_kmh!=null?p.speed_kmh:(p.speed!=null?p.speed:(p.velocity!=null?p.velocity:null));
+    $("stSpeed").textContent=(sp==null||!Number.isFinite(Number(sp)))?"—":faNum(Math.round(Number(sp)));
+    $("stUpdated").textContent=p.updated_at?faTime(p.updated_at):"—";
+    $("stAcc").textContent=(p.accuracy_m==null||!Number.isFinite(Number(p.accuracy_m)))?"—":faNum(Math.round(Number(p.accuracy_m)));
+    setPill("زنده","live");
+    return true;
+  }
+  async function renderFull(p,nav){
+    if(!render(p))return;
+    await updateNav(Number(p.latitude),Number(p.longitude),nav);
+  }
+  async function drawRoute(lat,lon,dest){
+    try{
+      const url="https://router.project-osrm.org/route/v1/driving/"+lon+","+lat+";"+dest.lon+","+dest.lat+"?overview=full&geometries=geojson";
+      const r=await fetch(url);const j=await r.json();
+      const route=j.routes&&j.routes[0];if(!route)return null;
+      return {coords:route.geometry.coordinates.map(c=>[c[1],c[0]]),distM:route.distance};
+    }catch(e){return null;}
+  }
+  function fmtDist(m){
+    if(m==null||!Number.isFinite(m))return "—";
+    return m>=1000?(m/1000).toLocaleString("fa-IR",{maximumFractionDigits:1}):Math.round(m).toLocaleString("fa-IR")+" متر";
+  }
+  async function updateNav(lat,lon,nav){
+    const dest=nav&&nav.destination?{lat:Number(nav.destination.latitude),lon:Number(nav.destination.longitude),name:nav.destination.name||"مقصد"}:null;
+    if(!dest||!Number.isFinite(dest.lat)||!Number.isFinite(dest.lon)){
+      navMode=false;$("destBanner").hidden=true;$("distStat").hidden=true;
+      if(destMarker){map.removeLayer(destMarker);destMarker=null;}
+      if(routeLine){map.removeLayer(routeLine);routeLine=null;}
+      lastDest=null;return;
+    }
+    navMode=true;lastDest=dest;
+    $("destBanner").hidden=false;$("distStat").hidden=false;
+    $("destName").textContent=dest.name;
+    if(!destMarker){destMarker=L.marker([dest.lat,dest.lon]).addTo(map);}
+    else{destMarker.setLatLng([dest.lat,dest.lon]);}
+    // فاصله: اگر سرور داد همان، وگرنه از OSRM
+    let distM=(nav.distance_m!=null&&Number.isFinite(Number(nav.distance_m)))?Number(nav.distance_m):null;
+    let coords=(nav.route&&nav.route.length)?nav.route.map(c=>[Number(c[0]),Number(c[1])]):null;
+    if(!coords){
+      const r=await drawRoute(lat,lon,dest);
+      if(r){coords=r.coords;if(distM==null)distM=r.distM;}
+    }
+    if(coords){
+      if(routeLine){routeLine.setLatLngs(coords);}
+      else{routeLine=L.polyline(coords,{color:"#0887a7",weight:5,opacity:.85,lineJoin:"round"}).addTo(map);}
+    }
+    const dt=fmtDist(distM);
+    $("stDist").textContent=dt;$("destDist").textContent=dt;
+  }
+  let stopped=false,firstFix=false;
   async function refresh(){
     if(stopped)return;
-    if(!/^[A-Za-z0-9_-]{40,60}$/.test(token)){setStatus("لینک اشتراک معتبر نیست.",true);stopped=true;return;}
+    if(demo){
+      // دموی پیش‌نمایش: حرکت شبیه‌سازی‌شده در حالت مسیریابی
+      const t=Date.now()/1000;
+      const lat=35.6892+0.004*Math.sin(t/20),lon=51.3890+0.004*Math.cos(t/20);
+      render({latitude:lat,longitude:lon,updated_at:Date.now()-8000,speed_kmh:62+8*Math.sin(t/9),accuracy_m:9});
+      await updateNav(lat,lon,{destination:{latitude:35.72,longitude:51.42,name:"میدان آزادی"},distance_m:null,route:null});
+      firstFix=true;return;
+    }
+    if(!/^[A-Za-z0-9_-]{40,60}$/.test(token)){setPill("لینک معتبر نیست","err");stopped=true;return;}
     try{
       const res=await fetch(API+"/api/driver/shares/view?token="+encodeURIComponent(token),{headers:{"Accept":"application/json"},cache:"no-store",referrerPolicy:"no-referrer"});
       const data=await res.json();
-      if(!res.ok||!data.success){setStatus(data.error||"این لینک پایان یافته یا لغو شده است.",true);$("location").hidden=true;stopped=true;return;}
-      if(!data.location){setStatus("لینک فعال است؛ هنوز موقعیتی از دستگاه دریافت نشده است.");$("location").hidden=true;return;}
-      const p=data.location,lat=Number(p.latitude),lon=Number(p.longitude);
-      if(!Number.isFinite(lat)||!Number.isFinite(lon)){setStatus("مختصات معتبر دریافت نشد.",true);return;}
-      $("location").hidden=false;
-      $("updated").textContent="آخرین موقعیت دریافتی: "+new Date(p.updated_at).toLocaleString("fa-IR");
-      $("accuracy").textContent=p.accuracy_m==null?"دقت GPS گزارش نشده است.":"دقت گزارش‌شده دستگاه: حدود "+Math.round(p.accuracy_m).toLocaleString("fa-IR")+" متر.";
-      $("map").href="https://www.openstreetmap.org/?mlat="+encodeURIComponent(lat)+"&mlon="+encodeURIComponent(lon)+"#map=16/"+encodeURIComponent(lat)+"/"+encodeURIComponent(lon);
-      setStatus("اشتراک معتبر است؛ صفحه به‌صورت خودکار به‌روزرسانی می‌شود.");
-    }catch(e){setStatus("اتصال به سرویس موقعیت برقرار نشد؛ اتصال اینترنت را بررسی کنید.",true);}
+      if(!res.ok||!data.success){setPill(data.error||"لینک پایان یافته","err");stopped=true;return;}
+      if(!data.location){setPill("در انتظار موقعیت…","wait");return;}
+      const ok=await renderFull(data.location,data.navigation||data.nav||null);
+      if(ok){firstFix=true;}
+      else{setPill("مختصات معتبر نیست","err");}
+    }catch(e){setPill(firstFix?"تلاش مجدد…":"اتصال برقرار نشد","err");}
   }
+  setPill("در حال اتصال…","wait");
   refresh();
   const timer=setInterval(refresh,10000);
   window.addEventListener("pagehide",()=>{stopped=true;clearInterval(timer);});
