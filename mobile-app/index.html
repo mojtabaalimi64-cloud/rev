@@ -3,24 +3,25 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#080b0d">
+<meta name="theme-color" content="#ffffff">
 <meta name="description" content="نمونه آزمایشی اپ موبایل REV برای سفر با خودروی برقی">
 <link rel="manifest" href="./manifest.webmanifest">
 <title>REV | دستیار سفر برقی</title>
 <style>
-:root{color-scheme:dark;--bg:#080b0d;--panel:#10171b;--panel2:#151f24;--line:#29383e;--muted:#9eafb5;--green:#39ff88;--teal:#00806f;--text:#f5f7f8}
-*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:radial-gradient(ellipse at 85% 0%,#12352a 0,transparent 34%),var(--bg);color:var(--text);font:15px/1.8 Vazirmatn,Vazir,Tahoma,sans-serif;min-height:100vh;padding-bottom:calc(86px + env(safe-area-inset-bottom))}
-a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}.wrap{width:min(760px,100% - 28px);margin:auto}
-header{position:sticky;top:0;z-index:5;background:#080b0deF;backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
-.head{display:flex;justify-content:space-between;align-items:center;padding:12px 0;gap:12px}.logo{font-size:29px;font-weight:950;letter-spacing:3px;color:var(--green);line-height:1.2}.tagline{font-size:11px;color:var(--muted)}.profile{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:#152c21;border:1px solid #2d6147;font-size:20px}
-main{padding:20px 0 30px}.hero{position:relative;overflow:hidden;border:1px solid #28523d;border-radius:24px;padding:22px;background:linear-gradient(135deg,#172b20,#10191d 65%,#0c211b);box-shadow:0 15px 38px #0003}.eyebrow{color:var(--green);font-size:12px;font-weight:800}.hero h1{font-size:clamp(24px,6vw,34px);line-height:1.45;margin:5px 0 8px}.hero p{margin:0;color:#bdcbc5;font-size:13px;max-width:480px}.hero-actions{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:17px}.btn{display:flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:11px 10px;font-weight:800;font-size:13px;border:1px solid #395247;background:#13221a}.btn.primary{background:var(--green);color:#07100b;border-color:var(--green)}
-.section-head{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:24px 2px 11px}.section-head h2{font-size:18px;margin:0}.section-head span{font-size:11px;color:var(--muted)}
-.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.tile{display:flex;flex-direction:column;gap:8px;min-height:132px;padding:15px;border:1px solid var(--line);border-radius:17px;background:linear-gradient(145deg,#131d21,#0e1417);transition:transform .15s,border-color .15s}.tile:active{transform:scale(.985);border-color:#39ff88}.tile .ico{display:grid;place-items:center;width:40px;height:40px;border-radius:13px;background:#152c21;border:1px solid #2d6147;font-size:21px}.tile strong{font-size:14px}.tile small{font-size:11px;color:var(--muted);line-height:1.6}
-.notice{display:flex;gap:10px;align-items:flex-start;margin-top:17px;padding:13px;border:1px solid #4b432a;background:#201c12;border-radius:14px;color:#e7d8ae;font-size:12px}.notice b{display:block;color:#ffe2a0;margin-bottom:2px}
-.quick{border:1px solid var(--line);background:#10171b;border-radius:17px;padding:15px;margin-top:18px}.quick h2{font-size:16px;margin:0 0 8px}.quick p{font-size:12px;color:var(--muted);margin:0 0 12px}.quick a{display:inline-flex;padding:8px 11px;border:1px solid #395247;border-radius:10px;color:var(--green);font-size:12px;font-weight:800}
-.bottom-nav{position:fixed;z-index:10;bottom:0;left:0;right:0;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:#080b0df2;border-top:1px solid var(--line);backdrop-filter:blur(16px)}.nav-inner{width:min(760px,100%);margin:auto;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.nav-inner a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 2px;border-radius:11px;color:var(--muted);font-size:10px}.nav-inner a span{font-size:19px;line-height:1.3}.nav-inner a.active{color:var(--green);background:#14251c}
-footer{text-align:center;color:#708087;font-size:10px;padding:22px 0 5px}
-@media(min-width:620px){.wrap{width:min(760px,100% - 40px)}.hero{padding:30px}.grid{grid-template-columns:repeat(3,minmax(0,1fr))}.tile{min-height:150px}.hero-actions{max-width:430px}}
+:root{color-scheme:light;--bg:#f4f7fb;--panel:#ffffff;--panel2:#edf3ff;--line:#dce4ef;--muted:#64748b;--blue:#0866ff;--blue-dark:#064fc4;--text:#152033;--soft:#eaf1ff}
+*{box-sizing:border-box}html{scroll-behavior:smooth}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.8 Vazirmatn,Vazir,Tahoma,sans-serif;min-height:100vh;padding-bottom:calc(82px + env(safe-area-inset-bottom))}
+a{color:inherit;text-decoration:none}button{font:inherit;cursor:pointer}.wrap{width:min(1180px,100% - 36px);margin:auto}
+header{position:sticky;top:0;z-index:5;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.head{display:flex;justify-content:space-between;align-items:center;padding:12px 0;gap:12px}.logo{font-size:29px;font-weight:950;letter-spacing:3px;color:var(--blue);line-height:1.2}.tagline{font-size:11px;color:var(--muted)}.profile{display:grid;place-items:center;width:42px;height:42px;border-radius:14px;background:var(--soft);border:1px solid #cbdcff;font-size:20px}
+main{padding:24px 0 34px}.hero{position:relative;overflow:hidden;border:1px solid #cbdcff;border-radius:24px;padding:clamp(24px,4vw,42px);background:linear-gradient(120deg,#fff 0%,#edf4ff 62%,#e3edff 100%);box-shadow:0 12px 34px rgba(30,64,120,.08)}.eyebrow{color:var(--blue-dark);font-size:12px;font-weight:800}.hero h1{font-size:clamp(25px,4vw,42px);line-height:1.5;margin:5px 0 8px;color:#14213a}.hero p{margin:0;color:#53647e;font-size:14px;max-width:620px}.hero-actions{display:flex;flex-wrap:wrap;gap:10px;margin-top:20px}.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;border-radius:12px;padding:11px 16px;font-weight:800;font-size:13px;border:1px solid #cbd8ec;background:#fff;color:#16418c}.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue);box-shadow:0 5px 14px #0866ff26}
+.section-head{display:flex;align-items:end;justify-content:space-between;gap:10px;margin:28px 2px 12px}.section-head h2{font-size:19px;margin:0;color:#17243b}.section-head span{font-size:11px;color:var(--muted)}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.tile{display:flex;flex-direction:column;gap:8px;min-height:145px;padding:17px;border:1px solid var(--line);border-radius:17px;background:#fff;box-shadow:0 4px 16px rgba(26,48,85,.035);transition:transform .15s,border-color .15s}.tile:active{transform:scale(.985);border-color:var(--blue)}.tile .ico{display:grid;place-items:center;width:42px;height:42px;border-radius:13px;background:var(--soft);border:1px solid #d4e2ff;font-size:21px}.tile strong{font-size:14px;color:#1c2b45}.tile small{font-size:12px;color:var(--muted);line-height:1.7}
+.notice{display:flex;gap:10px;align-items:flex-start;margin-top:18px;padding:14px;border:1px solid #d9e5fb;background:#eef4ff;border-radius:14px;color:#465a79;font-size:12px}.notice b{display:block;color:#173d83;margin-bottom:2px}
+.quick{border:1px solid var(--line);background:#fff;border-radius:17px;padding:17px;margin-top:18px}.quick h2{font-size:16px;margin:0 0 8px;color:#17243b}.quick p{font-size:12px;color:var(--muted);margin:0 0 12px}.quick a{display:inline-flex;padding:8px 12px;border:1px solid #cbdcff;border-radius:10px;color:var(--blue-dark);font-size:12px;font-weight:800;background:#f7faff}
+.bottom-nav{position:fixed;z-index:10;bottom:0;left:0;right:0;padding:8px 8px calc(8px + env(safe-area-inset-bottom));background:rgba(255,255,255,.96);border-top:1px solid var(--line);backdrop-filter:blur(16px)}.nav-inner{width:min(760px,100%);margin:auto;display:grid;grid-template-columns:repeat(5,1fr);gap:4px}.nav-inner a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:5px 2px;border-radius:11px;color:#718096;font-size:10px}.nav-inner a span{font-size:19px;line-height:1.3}.nav-inner a.active{color:var(--blue);background:var(--soft);font-weight:800}
+footer{text-align:center;color:#718096;font-size:11px;padding:24px 0 6px}
+@media(min-width:700px){body{padding-bottom:30px}.wrap{width:min(1180px,100% - 56px)}.head{padding:16px 0}.hero{padding:42px;min-height:270px}.hero p{font-size:15px}.grid{grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}.tile{min-height:175px;padding:22px}.tile strong{font-size:16px}.tile small{font-size:13px}.bottom-nav{position:static;border-top:0;border-bottom:1px solid var(--line);padding:0 20px;background:#fff}.nav-inner{width:min(1180px,100%);grid-template-columns:repeat(5,max-content);justify-content:flex-start;gap:8px}.nav-inner a{flex-direction:row;gap:8px;padding:12px 18px;font-size:13px}.nav-inner a span{font-size:18px}footer{padding-bottom:24px}}
+@media(max-width:430px){.wrap{width:calc(100% - 24px)}.hero{padding:21px}.hero-actions .btn{flex:1}.grid{gap:9px}.tile{padding:13px;min-height:135px}}
 @media(prefers-reduced-motion:reduce){*{scroll-behavior:auto;transition:none!important}}
 </style>
 </head>
@@ -33,7 +34,7 @@ footer{text-align:center;color:#708087;font-size:10px;padding:22px 0 5px}
 <p>مسیر را بررسی کن، ایستگاه‌های شارژ را پیدا کن و اطلاعات لازم برای سفر را یک‌جا داشته باش.</p>
 <div class="hero-actions"><a class="btn primary" href="../trip.html">⌖ برنامه‌ریزی سفر</a><a class="btn" href="../safety-checklist.html">✓ چک‌لیست سفر</a></div>
 </section>
-<div class="section-head"><h2>دسترسی سریع</h2><span>نسخه آزمایشی REV</span></div>
+<div class="section-head"><h2>دسترسی سریع</h2><span>محیط اپلیکیشنی REV</span></div>
 <section class="grid" aria-label="امکانات اصلی">
 <a class="tile" href="../trip.html"><span class="ico">🗺️</span><strong>نقشه و شارژ</strong><small>مشاهده مسیر و بررسی جایگاه‌های شارژ</small></a>
 <a class="tile" href="../travel-plans.html"><span class="ico">🧭</span><strong>سفرهای من</strong><small>برنامه‌ها و ابزارهای مرتبط با سفر</small></a>
@@ -42,7 +43,7 @@ footer{text-align:center;color:#708087;font-size:10px;padding:22px 0 5px}
 <a class="tile" href="../article-ev.html"><span class="ico">📘</span><strong>دانش خودرو برقی</strong><small>راهنماها و مطالب آموزشی REV</small></a>
 <a class="tile" href="../news.html"><span class="ico">⚡</span><strong>اخبار و فناوری</strong><small>آخرین مطالب حوزه خودروهای برقی</small></a>
 </section>
-<section class="notice" role="note"><span>ⓘ</span><div><b>درباره این نسخه</b>این یک نمونه اولیه برای بررسی تجربه موبایل است. امکانات زنده مثل ثبت و اعزام امداد، اعلان‌ها و همگام‌سازی پس‌زمینه تا زمان اتصال و آزمون سرویس مربوطه فعال محسوب نمی‌شوند.</div></section>
+<section class="notice" role="note"><span>ⓘ</span><div><b>درباره این نسخه</b>این محیط برای دسترسی سریع به خدمات REV طراحی شده است. امکانات زنده مثل ثبت و اعزام امداد، اعلان‌ها و همگام‌سازی پس‌زمینه تا زمان اتصال و آزمون سرویس مربوطه فعال محسوب نمی‌شوند.</div></section>
 <section class="quick"><h2>نیاز به حساب کاربری داری؟</h2><p>برای مدیریت پروفایل یا دسترسی به امکانات حساب، از پنل فعلی REV استفاده کن.</p><a href="../account.html">رفتن به حساب کاربری ←</a></section>
 <footer>REV · نمونه اولیه موبایل · امکانات فعلی سایت حفظ می‌شوند</footer>
 </main>
