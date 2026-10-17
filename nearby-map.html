@@ -18,7 +18,7 @@
 <style>
 /* REV driving music — only shown while turn-by-turn navigation is active */
 #revMusicDock{position:fixed;z-index:980;right:12px;bottom:calc(94px + env(safe-area-inset-bottom));font-family:Vazirmatn,Vazir,Tahoma,sans-serif;direction:rtl}
-#revMusicToggle{display:none;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 15px;border:1px solid #c9ddff;border-radius:16px;background:#fff;color:#0866ff;box-shadow:0 8px 26px #14345a24;font:800 13px inherit;cursor:pointer}
+#revMusicToggle{display:none;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 15px;border:1px solid #c9ddff;border-radius:16px;background:#fff;color:#0866ff;box-shadow:0 8px 26px #14345a24;font:inherit;font-size:13px;font-weight:800;cursor:pointer}
 body.rev-navigating #revMusicToggle{display:flex}
 #revMusicPanel{display:none;position:fixed;z-index:1200;right:12px;bottom:calc(150px + env(safe-area-inset-bottom));width:min(350px,calc(100vw - 24px));max-height:min(58dvh,480px);overflow:auto;background:#fff;border:1px solid #dce4ef;border-radius:20px;box-shadow:0 16px 45px #14293b30;padding:14px;color:#152033}
 #revMusicPanel.open{display:block}
