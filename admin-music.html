@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="robots" content="noindex,nofollow">
+<title>مدیریت موزیک REV</title>
+<style>
+:root{font-family:Tahoma,Arial,sans-serif;color:#173d32;background:#f4faf6}*{box-sizing:border-box}body{margin:0}header{padding:18px;background:#fff;border-bottom:3px solid #39ff88;display:flex;justify-content:space-between;gap:12px;align-items:center}main{max-width:760px;margin:24px auto;padding:16px}.card{background:#fff;border:1px solid #d5e7dc;border-radius:16px;padding:20px;margin-bottom:16px}label{display:block;font-weight:bold;margin:12px 0 5px}input,button{font:inherit}input[type=text],input[type=password],input[type=file]{width:100%;padding:11px;border:1px solid #cbdad2;border-radius:9px;background:white}button{padding:10px 15px;border:0;border-radius:9px;background:#123d35;color:white;cursor:pointer}button:disabled{opacity:.55;cursor:wait}.green{background:#39ff88;color:#123d35;font-weight:bold}.danger{background:#fff0ee;color:#9d2117;border:1px solid #ffd2cc}.hint{color:#60736a;font-size:13px;line-height:1.8}#msg{min-height:26px;margin:10px 0}.track{display:flex;gap:12px;align-items:center;justify-content:space-between;border:1px solid #e1eae5;padding:12px;border-radius:10px;margin:8px 0}.track small{display:block;color:#64766d}@media(max-width:600px){header{padding:12px}main{margin:8px auto;padding:8px}.card{padding:14px}.track{align-items:flex-start;flex-direction:column}}
+</style></head>
+<body><header><strong>REV <span style="color:#00806f">مدیریت موزیک سفر</span></strong><a href="./admin.html">بازگشت به پنل اصلی</a></header>
+<main>
+<section class="card"><h2>اتصال امن</h2><p class="hint">آدرس Worker موزیک و رمز مدیریتی را وارد کنید. رمز فقط در این نشست مرورگر نگهداری می‌شود و داخل سایت ذخیره یا منتشر نمی‌شود.</p>
+<label for="worker">آدرس Worker موزیک</label><input id="worker" type="text" placeholder="https://rev-music-api....workers.dev" autocomplete="url">
+<label for="token">رمز مدیریتی Worker</label><input id="token" type="password" autocomplete="current-password">
+<button id="connect" class="green" style="margin-top:14px">اتصال و بارگذاری فهرست</button><p id="msg" role="status"></p></section>
+<section class="card"><h2>افزودن آهنگ</h2><p class="hint">حداکثر ۲۰ مگابایت برای هر فایل. پیشنهاد: MP3 با کیفیت 96 تا 128 kbps. فقط فایل‌هایی را بارگذاری کنید که اجازه قانونی پخش آن‌ها را دارید.</p>
+<form id="upload"><label for="title">عنوان آهنگ</label><input id="title" type="text" maxlength="120" required>
+<label for="artist">هنرمند (اختیاری)</label><input id="artist" type="text" maxlength="120">
+<label for="file">فایل صوتی</label><input id="file" type="file" accept="audio/mpeg,audio/mp4,audio/aac,audio/ogg,audio/wav,audio/webm,.mp3,.m4a,.aac,.ogg,.wav,.webm" required>
+<button class="green" id="uploadBtn" type="submit" style="margin-top:14px">بارگذاری در R2</button></form></section>
+<section class="card"><h2>فهرست آهنگ‌ها</h2><div id="tracks" class="hint">برای مشاهده فهرست، ابتدا اتصال را انجام دهید.</div></section>
+</main>
+<script>
+const $=id=>document.getElementById(id);let base='',token='';
+function message(s,error=false){$('msg').textContent=s;$('msg').style.color=error?'#b3261e':'#00806f'}
+function url(path){return base.replace(/\/$/,'')+path}
+async function api(path,options={}){const r=await fetch(url(path),{...options,headers:{...(options.headers||{}),...(token?{Authorization:'Bearer '+token}:{})}});const j=await r.json().catch(()=>({}));if(!r.ok||j.success===false)throw new Error(j.error||('HTTP '+r.status));return j}
+async function load(){const j=await api('/api/music/tracks',{headers:{}});$('tracks').innerHTML='';if(!j.tracks?.length){$('tracks').textContent='هنوز آهنگی بارگذاری نشده است.';return}for(const t of j.tracks){const row=document.createElement('div');row.className='track';const info=document.createElement('div');const title=document.createElement('strong');title.textContent=t.title||'بدون عنوان';const artist=document.createElement('small');artist.textContent=t.artist||'هنرمند نامشخص';info.append(title,artist);const actions=document.createElement('div');const play=document.createElement('button');play.textContent='پخش آزمایشی';play.onclick=()=>{const audio=new Audio(t.src);audio.play().catch(()=>message('پخش آزمایشی انجام نشد.',true))};const del=document.createElement('button');del.className='danger';del.textContent='حذف';del.onclick=async()=>{if(!confirm('این آهنگ حذف شود؟'))return;try{await api('/api/admin/music/'+encodeURIComponent(t.id),{method:'DELETE'});message('آهنگ حذف شد.');await load()}catch(e){message(e.message,true)}};actions.append(play,document.createTextNode(' '),del);row.append(info,actions);$('tracks').append(row)}}
+$('connect').onclick=async()=>{base=$('worker').value.trim().replace(/\/$/,'');token=$('token').value.trim();if(!/^https:\/\/[a-z0-9.-]+\.workers\.dev$/i.test(base)){message('آدرس معتبر workers.dev وارد کنید.',true);return}if(!token){message('رمز مدیریتی را وارد کنید.',true);return}try{message('در حال اتصال...');const h=await fetch(url('/api/health'));const j=await h.json();if(!h.ok||!j.success||!j.storage)throw new Error('Worker یا اتصال R2 آماده نیست.');await load();message('اتصال برقرار شد.')}catch(e){message(e.message||'اتصال ناموفق بود.',true)}};
+$('upload').onsubmit=async e=>{e.preventDefault();if(!base||!token){message('ابتدا اتصال را انجام دهید.',true);return}const file=$('file').files[0];if(!file){message('فایل را انتخاب کنید.',true);return}const form=new FormData();form.append('title',$('title').value.trim());form.append('artist',$('artist').value.trim());form.append('file',file);$('uploadBtn').disabled=true;try{message('در حال بارگذاری فایل...');await api('/api/admin/music',{method:'POST',body:form});$('upload').reset();message('آهنگ در R2 ذخیره شد.');await load()}catch(e){message(e.message||'بارگذاری ناموفق بود.',true)}finally{$('uploadBtn').disabled=false}};
+</script></body></html>
