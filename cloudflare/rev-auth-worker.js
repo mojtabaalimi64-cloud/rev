@@ -352,6 +352,8 @@ async function driverTripsApi(request, env, url, method, user) {
 async function ensureEngagementSchema(env){
  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_live_activity(session_id TEXT PRIMARY KEY,user_id TEXT,page_path TEXT NOT NULL,last_seen TEXT NOT NULL,created_at TEXT NOT NULL)`).run();
  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_live_activity_seen ON rev_live_activity(last_seen)").run();
+ await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_page_views(id TEXT PRIMARY KEY,page_path TEXT NOT NULL,created_at TEXT NOT NULL)`).run();
+ await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_page_views_created ON rev_page_views(created_at)").run();
  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_announcements(id TEXT PRIMARY KEY,title TEXT NOT NULL,body TEXT NOT NULL,link_url TEXT,link_label TEXT,kind TEXT NOT NULL DEFAULT 'info',enabled INTEGER NOT NULL DEFAULT 1,starts_at TEXT,ends_at TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)`).run();
 }
 async function engagementApi(request,env,url,method){
@@ -363,6 +365,8 @@ async function engagementApi(request,env,url,method){
   if(!/^[a-zA-Z0-9_-]{16,100}$/.test(sid))return response(request,env,{success:false,error:"شناسه نشست نامعتبر است."},400);
   const user=await currentUser(request,env);
   await env.DB.prepare("INSERT INTO rev_live_activity(session_id,user_id,page_path,last_seen,created_at) VALUES(?,?,?,?,?) ON CONFLICT(session_id) DO UPDATE SET user_id=excluded.user_id,page_path=excluded.page_path,last_seen=excluded.last_seen").bind(sid,user?.id||null,page,now,now).run();
+  const viewId=String(b?.viewId||"").trim();
+  if(/^[a-zA-Z0-9_-]{16,100}$/.test(viewId)) await env.DB.prepare("INSERT OR IGNORE INTO rev_page_views(id,page_path,created_at) VALUES(?,?,?)").bind(viewId,page.split("#")[0].slice(0,240),now).run();
   return response(request,env,{success:true});
  }
  if(path==="/api/announcements"&&method==="GET"){
@@ -373,8 +377,10 @@ async function engagementApi(request,env,url,method){
   if(!await admin(request,env))return response(request,env,{success:false,error:"Unauthorized"},401);
   const active=await env.DB.prepare("SELECT COUNT(DISTINCT session_id) AS total,COUNT(DISTINCT user_id) AS signed_in FROM rev_live_activity WHERE last_seen>=?").bind(new Date(Date.now()-5*60*1000).toISOString()).first();
   const pages=await env.DB.prepare("SELECT page_path,COUNT(DISTINCT session_id) AS visitors FROM rev_live_activity WHERE last_seen>=? GROUP BY page_path ORDER BY visitors DESC LIMIT 12").bind(new Date(Date.now()-15*60*1000).toISOString()).all();
+  const totalViews=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_page_views").first();
+  const todayViews=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_page_views WHERE created_at>=?").bind(new Date(new Date().toISOString().slice(0,10)+"T00:00:00.000Z").toISOString()).first();
   const list=await env.DB.prepare("SELECT id,title,body,link_url,link_label,kind,enabled,starts_at,ends_at,created_at FROM rev_announcements ORDER BY created_at DESC LIMIT 50").all();
-  return response(request,env,{success:true,active_users:Number(active?.total||0),signed_in_users:Number(active?.signed_in||0),active_window_minutes:5,popular_pages:pages.results||[],announcements:list.results||[]});
+  return response(request,env,{success:true,active_users:Number(active?.total||0),signed_in_users:Number(active?.signed_in||0),total_page_views:Number(totalViews?.total||0),today_page_views:Number(todayViews?.total||0),active_window_minutes:5,popular_pages:pages.results||[],announcements:list.results||[]});
  }
  if(path==="/api/admin/announcements"&&method==="POST"){
   if(!await admin(request,env))return response(request,env,{success:false,error:"Unauthorized"},401);
