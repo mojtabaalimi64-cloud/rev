@@ -83,6 +83,23 @@ async function enabled(env) {
   const r=await env.DB.prepare("SELECT enabled FROM rev_auth_settings WHERE id=1").first();
   return Number(r?.enabled||0)===1;
 }
+async function ensureRegistrationAccessSchema(env) {
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_registration_controls (id INTEGER PRIMARY KEY CHECK(id=1), registration_open INTEGER NOT NULL DEFAULT 1, max_users INTEGER NOT NULL DEFAULT 50, allowlist_enabled INTEGER NOT NULL DEFAULT 1, updated_at TEXT NOT NULL, updated_by TEXT)").run();
+  await env.DB.prepare("INSERT OR IGNORE INTO rev_registration_controls(id,registration_open,max_users,allowlist_enabled,updated_at,updated_by) VALUES(1,1,50,1,?,?)").bind(new Date().toISOString(),"system").run();
+  await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_registration_allowlist (phone_e164 TEXT PRIMARY KEY, created_at TEXT NOT NULL, created_by TEXT)").run();
+}
+async function registrationAccess(env, phone) {
+  await ensureRegistrationAccessSchema(env);
+  const settings=await env.DB.prepare("SELECT registration_open,max_users,allowlist_enabled FROM rev_registration_controls WHERE id=1").first();
+  if(Number(settings?.registration_open)!==1) return {allowed:false,error:"ثبت‌نام کاربران جدید موقتاً متوقف شده است. لطفاً بعداً دوباره تلاش کنید."};
+  const count=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_users WHERE role='member' AND account_status!='deleted'").first();
+  if(Number(count?.total||0)>=Number(settings?.max_users||50)) return {allowed:false,error:"ظرفیت فعلی ثبت‌نام REV تکمیل شده است. ثبت‌نام کاربران جدید موقتاً متوقف است."};
+  if(Number(settings?.allowlist_enabled)===1) {
+    const allowed=await env.DB.prepare("SELECT phone_e164 FROM rev_registration_allowlist WHERE phone_e164=?").bind(phone).first();
+    if(!allowed) return {allowed:false,error:"ثبت‌نام فعلاً فقط برای شماره‌های تأییدشده توسط مدیریت فعال است."};
+  }
+  return {allowed:true};
+}
 async function admin(request, env) {
   const h=request.headers.get("Authorization")||"";
   return !!env.ADMIN_TOKEN && h==="Bearer "+env.ADMIN_TOKEN;
@@ -466,6 +483,35 @@ export default {
     const data=(rows.results||[]).map(u=>({...u,public_code:"REV-US-"+String(u.id||"").replace(/-/g,"").toUpperCase()}));
     return response(request,env,{success:true,data,total:Number(totalRow?.total)||0,page,limit});
    }
+   if(path==="/api/admin/registration-access" && method==="GET") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    await ensureRegistrationAccessSchema(env);
+    const settings=await env.DB.prepare("SELECT registration_open,max_users,allowlist_enabled,updated_at FROM rev_registration_controls WHERE id=1").first();
+    const phones=await env.DB.prepare("SELECT phone_e164,created_at FROM rev_registration_allowlist ORDER BY created_at DESC").all();
+    const count=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_users WHERE role='member' AND account_status!='deleted'").first();
+    return response(request,env,{success:true,settings,phones:phones.results||[],registered_count:Number(count?.total||0)});
+   }
+   if(path==="/api/admin/registration-access" && method==="POST") {
+    if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
+    await ensureRegistrationAccessSchema(env);
+    const b=await request.json().catch(()=>null),action=String(b?.action||"settings"),now=new Date().toISOString();
+    if(action==="add_phone"||action==="remove_phone") {
+      const parsed=normalizeIranPhone(b?.phone);
+      if(!parsed) return response(request,env,{success:false,error:"شماره همراه ایران معتبر وارد کنید؛ نمونه: 09123456789"},400);
+      if(action==="add_phone") {
+        await env.DB.prepare("INSERT OR IGNORE INTO rev_registration_allowlist(phone_e164,created_at,created_by) VALUES(?,?,?)").bind(parsed.e164,now,"admin").run();
+        return response(request,env,{success:true,message:"شماره به فهرست مجاز ثبت‌نام اضافه شد.",phone:parsed.e164});
+      }
+      await env.DB.prepare("DELETE FROM rev_registration_allowlist WHERE phone_e164=?").bind(parsed.e164).run();
+      return response(request,env,{success:true,message:"شماره از فهرست مجاز ثبت‌نام حذف شد.",phone:parsed.e164});
+    }
+    const open=typeof b?.registrationOpen==="boolean"?b.registrationOpen:null;
+    const allowlist=typeof b?.allowlistEnabled==="boolean"?b.allowlistEnabled:null;
+    const cap=Number(b?.maxUsers);
+    if(open===null||allowlist===null||!Number.isInteger(cap)||cap<1||cap>100000) return response(request,env,{success:false,error:"وضعیت ثبت‌نام، فهرست مجاز و سقف کاربران را معتبر وارد کنید."},400);
+    await env.DB.prepare("UPDATE rev_registration_controls SET registration_open=?,max_users=?,allowlist_enabled=?,updated_at=?,updated_by=? WHERE id=1").bind(open?1:0,cap,allowlist?1:0,now,"admin").run();
+    return response(request,env,{success:true,message:"محدودیت ثبت‌نام ذخیره شد.",registration_open:open,max_users:cap,allowlist_enabled:allowlist});
+   }
    if(path==="/api/admin/auth-settings" && method==="GET") {
     if(!await admin(request,env)) return response(request,env,{success:false,error:"Unauthorized"},401);
     const r=await env.DB.prepare("SELECT enabled,updated_at,updated_by FROM rev_auth_settings WHERE id=1").first();
@@ -583,6 +629,8 @@ export default {
     let created=false;
     if(u && ["suspended","deleted"].includes(u.account_status)) return response(request,env,{success:false,error:"این حساب در حال حاضر قابل استفاده نیست."},403);
     if(!u) {
+      const access=await registrationAccess(env,phone);
+      if(!access.allowed) return response(request,env,{success:false,error:access.error},403);
       const id=crypto.randomUUID(), syntheticEmail=phone.replace("+","")+"@phone.rev.invalid";
       try {
         await env.DB.prepare("INSERT INTO rev_users(id,display_name,email_normalized,phone_e164,account_status,role,created_at,updated_at) VALUES(?,?,?,?, 'pending','member',?,?)")
