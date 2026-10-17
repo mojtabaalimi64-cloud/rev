@@ -15,6 +15,28 @@
 
 
 <link rel="stylesheet" href="./rev-mobile-theme.css?v=20261017-6">
+<style>
+/* REV driving music — only shown while turn-by-turn navigation is active */
+#revMusicDock{position:fixed;z-index:980;right:12px;bottom:calc(94px + env(safe-area-inset-bottom));font-family:Vazirmatn,Vazir,Tahoma,sans-serif;direction:rtl}
+#revMusicToggle{display:none;align-items:center;justify-content:center;gap:8px;min-height:48px;padding:0 15px;border:1px solid #c9ddff;border-radius:16px;background:#fff;color:#0866ff;box-shadow:0 8px 26px #14345a24;font:800 13px inherit;cursor:pointer}
+body.rev-navigating #revMusicToggle{display:flex}
+#revMusicPanel{display:none;position:fixed;z-index:1200;right:12px;bottom:calc(150px + env(safe-area-inset-bottom));width:min(350px,calc(100vw - 24px));max-height:min(58dvh,480px);overflow:auto;background:#fff;border:1px solid #dce4ef;border-radius:20px;box-shadow:0 16px 45px #14293b30;padding:14px;color:#152033}
+#revMusicPanel.open{display:block}
+.rev-music-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:10px}
+.rev-music-head strong{font-size:15px;color:#14213a}
+#revMusicClose{border:0;border-radius:10px;background:#edf3ff;color:#064fc4;width:34px;height:34px;font-size:20px;cursor:pointer}
+#revMusicStatus{font-size:12px;color:#64748b;margin:0 0 10px}
+#revMusicAudio{width:100%;height:42px;display:block;margin:8px 0 12px;accent-color:#0866ff}
+#revMusicList{display:grid;gap:7px}
+.rev-music-track{display:flex;align-items:center;gap:10px;width:100%;text-align:right;border:1px solid #dce4ef;border-radius:12px;padding:10px;background:#fff;color:#152033;cursor:pointer;font:inherit}
+.rev-music-track[aria-current="true"]{border-color:#0866ff;background:#edf4ff}
+.rev-music-track .rev-music-disc{display:grid;place-items:center;flex:0 0 34px;height:34px;border-radius:10px;background:#eaf1ff;color:#0866ff}
+.rev-music-track span:last-child{min-width:0;display:grid}
+.rev-music-track b{font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rev-music-track small{font-size:11px;color:#64748b}
+@media(max-width:400px){#revMusicDock{right:10px;bottom:calc(88px + env(safe-area-inset-bottom))}#revMusicPanel{right:10px;width:calc(100vw - 20px)}}
+@media(prefers-reduced-motion:reduce){#revMusicPanel{scroll-behavior:auto}}
+</style>
 </head>
 <body>
 <header aria-hidden="true"></header>
@@ -148,5 +170,29 @@ loadW(c.lat.toFixed(4),c.lng.toFixed(4));
 })();
 
 }();</script>
+
+<section id="revMusicDock" aria-label="موسیقی هنگام رانندگی"><button id="revMusicToggle" type="button" aria-expanded="false" aria-controls="revMusicPanel"><span aria-hidden="true">♫</span> موزیک سفر</button></section>
+<section id="revMusicPanel" role="region" aria-label="پخش موسیقی" aria-hidden="true">
+ <div class="rev-music-head"><strong>♫ موسیقی سفر REV</strong><button id="revMusicClose" type="button" aria-label="بستن پخش‌کننده">×</button></div>
+ <p id="revMusicStatus" role="status">در حال دریافت فهرست موسیقی…</p>
+ <audio id="revMusicAudio" controls preload="metadata" playsinline></audio>
+ <div id="revMusicList"></div>
+</section>
+<script>
+(function(){
+ var toggle=document.getElementById('revMusicToggle'),panel=document.getElementById('revMusicPanel'),close=document.getElementById('revMusicClose'),status=document.getElementById('revMusicStatus'),audio=document.getElementById('revMusicAudio'),list=document.getElementById('revMusicList');
+ if(!toggle||!panel||!audio||!list)return;
+ var tracks=[],active=-1;
+ function show(open){panel.classList.toggle('open',!!open);panel.setAttribute('aria-hidden',open?'false':'true');toggle.setAttribute('aria-expanded',open?'true':'false');if(open&&active<0&&tracks.length)render();}
+ toggle.addEventListener('click',function(){show(!panel.classList.contains('open'));});close.addEventListener('click',function(){show(false);toggle.focus();});
+ function safeTrack(t){if(!t||typeof t.src!=='string'||!t.src.trim())return null;try{var u=new URL(t.src,location.href);if(u.origin!==location.origin||!u.pathname.startsWith('/rev/'))return null;return {title:String(t.title||'بدون عنوان').slice(0,120),artist:String(t.artist||'REV').slice(0,100),src:u.href};}catch(e){return null;}}
+ function render(){list.innerHTML='';tracks.forEach(function(t,i){var b=document.createElement('button');b.type='button';b.className='rev-music-track';b.setAttribute('aria-current',i===active?'true':'false');var disc=document.createElement('span');disc.className='rev-music-disc';disc.textContent=i===active&&!audio.paused?'▶':'♫';disc.setAttribute('aria-hidden','true');var info=document.createElement('span'),title=document.createElement('b'),artist=document.createElement('small');title.textContent=t.title;artist.textContent=t.artist;info.appendChild(title);info.appendChild(artist);b.appendChild(disc);b.appendChild(info);b.addEventListener('click',function(){play(i);});list.appendChild(b);});}
+ function play(i){var t=tracks[i];if(!t)return;active=i;audio.src=t.src;audio.play().then(function(){status.textContent='در حال پخش: '+t.title;}).catch(function(){status.textContent='برای شروع پخش، دکمه پخش را لمس کنید؛ ممکن است مرورگر به تعامل کاربر نیاز داشته باشد.';});render();}
+ audio.addEventListener('play',render);audio.addEventListener('pause',render);audio.addEventListener('ended',function(){if(active+1<tracks.length)play(active+1);else status.textContent='پخش فهرست به پایان رسید.';});
+ fetch('./music-tracks.json',{cache:'no-store'}).then(function(r){if(!r.ok)throw new Error('catalog');return r.json();}).then(function(d){tracks=(Array.isArray(d.tracks)?d.tracks:[]).map(safeTrack).filter(Boolean);if(!tracks.length){status.textContent='هنوز فایل موسیقی مجاز در REV بارگذاری نشده است.';audio.hidden=true;return;}status.textContent='فایل‌های موسیقی مجاز REV';audio.hidden=false;render();}).catch(function(){status.textContent='فهرست موسیقی فعلاً در دسترس نیست.';audio.hidden=true;});
+ document.addEventListener('keydown',function(e){if(e.key==='Escape'&&panel.classList.contains('open'))show(false);});
+})();
+</script>
+
 </body>
 </html>
