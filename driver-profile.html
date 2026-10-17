@@ -411,7 +411,7 @@ if ("serviceWorker" in navigator && (location.protocol === "https:" || location.
  copyBtn.addEventListener("click",async()=>{const value=codeEl.textContent.trim();if(!/^\d{5,6}$/.test(value)){statusEl.textContent="ابتدا وارد حساب شوید تا کد دریافت شود.";return;}try{await navigator.clipboard.writeText(value);statusEl.textContent="کد سفر گروهی کپی شد.";}catch(e){statusEl.textContent="کد را به‌صورت دستی انتخاب و کپی کنید.";}});refreshBtn.addEventListener("click",()=>{if(confirm("با تغییر کد، کد قبلی دیگر برای دعوت همسفرهای جدید قابل استفاده نخواهد بود. ادامه می‌دهید؟"))requestCode("POST");});requestCode();
 })();
 </script>
-<script src="./rev-announcements.js?v=1" defer></script>
+<script src="./rev-announcements.js?v=2" defer></script>
 <footer class="footer"><div>© ۲۰۲۶ REV · پلتفرم خودروهای برقی</div><div class="footer-links"><a href="./">صفحه اصلی</a><a href="./trip.html">پلتفرم سفر</a><a href="./#account">حساب کاربری</a><a href="./#privacy">حریم خصوصی</a><a href="./#about">درباره ما</a></div></footer>
 </div>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
