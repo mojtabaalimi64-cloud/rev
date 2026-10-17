@@ -484,7 +484,7 @@ export default {
     const order=url.searchParams.get("order")==="asc"?"ASC":"DESC";
     const page=Math.max(1,Math.min(100000,parseInt(url.searchParams.get("page")||"1",10)||1));
     const limit=Math.max(1,Math.min(50,parseInt(url.searchParams.get("limit")||"50",10)||50));
-    const offset=(page-1)*limit, rawDigits=q.replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^0-9+]/g,""), digits=rawDigits.startsWith("09")?"98"+rawDigits.slice(1):rawDigits.replace(/^\\+?/,"");
+    const offset=(page-1)*limit, rawDigits=q.replace(/[۰-۹]/g,d=>"۰۱۲۳۴۵۶۷۸۹".indexOf(d)).replace(/[٠-٩]/g,d=>"٠١٢٣٤٥٦٧٨٩".indexOf(d)).replace(/[^0-9+]/g,""), digits=rawDigits.startsWith("09")?"98"+rawDigits.slice(1):rawDigits.replace(/^\+/,"");
     const filters=[],binds=[];
     if(digits){filters.push("replace(replace(replace(replace(COALESCE(u.phone_e164,''),'+',''),' ',''),'-',''),'(', '') LIKE ?");binds.push("%"+digits.replace(/^\+?/,"")+"%");}
     if(categorySql[category]===undefined)return response(request,env,{success:false,error:"دسته‌بندی کاربران نامعتبر است."},400);
