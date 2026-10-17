@@ -401,6 +401,7 @@ export default {
  async fetch(request,env) {
   const url=new URL(request.url), path=url.pathname, method=request.method;
   if(method==="OPTIONS") return new Response(null,{status:204,headers:corsHeaders(request,env)});
+  if(path==="/api/engagement/heartbeat" || path==="/api/announcements" || path==="/api/admin/engagement" || path==="/api/admin/announcements" || /^\/api\/admin\/announcements\/[0-9a-f-]{36}\/(toggle|delete)$/i.test(path)) return await engagementApi(request,env,url,method);
   try {
    if(path==="/api/health" && method==="GET") {
     try {
