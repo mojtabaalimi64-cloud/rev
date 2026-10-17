@@ -355,6 +355,8 @@ async function ensureEngagementSchema(env){
  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_page_views(id TEXT PRIMARY KEY,page_path TEXT NOT NULL,created_at TEXT NOT NULL)`).run();
  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_page_views_created ON rev_page_views(created_at)").run();
  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_announcements(id TEXT PRIMARY KEY,title TEXT NOT NULL,body TEXT NOT NULL,link_url TEXT,link_label TEXT,kind TEXT NOT NULL DEFAULT 'info',enabled INTEGER NOT NULL DEFAULT 1,starts_at TEXT,ends_at TEXT,created_at TEXT NOT NULL,updated_at TEXT NOT NULL)`).run();
+  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_announcement_clicks(announcement_id TEXT NOT NULL,session_id TEXT NOT NULL,clicked_at TEXT NOT NULL,PRIMARY KEY(announcement_id,session_id))`).run();
+  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_announcement_clicks_id ON rev_announcement_clicks(announcement_id)").run();
 }
 async function engagementApi(request,env,url,method){
  await ensureEngagementSchema(env);
@@ -369,6 +371,15 @@ async function engagementApi(request,env,url,method){
   if(/^[a-zA-Z0-9_-]{16,100}$/.test(viewId)) await env.DB.prepare("INSERT OR IGNORE INTO rev_page_views(id,page_path,created_at) VALUES(?,?,?)").bind(viewId,page.split("#")[0].slice(0,240),now).run();
   return response(request,env,{success:true});
  }
+  if(path==="/api/announcements/click"&&method==="POST"){
+   if(!sameOrigin(request,env))return response(request,env,{success:false,error:"Origin not allowed"},403);
+   const b=await request.json().catch(()=>null),id=String(b?.announcementId||"").trim(),sid=String(b?.sessionId||"").trim();
+   if(!/^[0-9a-f-]{36}$/i.test(id)||!/^[a-zA-Z0-9_-]{16,100}$/.test(sid))return response(request,env,{success:false,error:"شناسه اعلان یا نشست نامعتبر است."},400);
+   const item=await env.DB.prepare("SELECT id FROM rev_announcements WHERE id=? AND enabled=1 AND link_url IS NOT NULL AND length(link_url)>0").bind(id).first();
+   if(!item)return response(request,env,{success:false,error:"اعلان دارای لینک پیدا نشد."},404);
+   await env.DB.prepare("INSERT OR IGNORE INTO rev_announcement_clicks(announcement_id,session_id,clicked_at) VALUES(?,?,?)").bind(id,sid,now).run();
+   return response(request,env,{success:true});
+  }
  if(path==="/api/announcements"&&method==="GET"){
   const rows=await env.DB.prepare("SELECT id,title,body,link_url,link_label,kind,starts_at,ends_at,created_at FROM rev_announcements WHERE enabled=1 AND (starts_at IS NULL OR starts_at<=?) AND (ends_at IS NULL OR ends_at>=?) ORDER BY created_at DESC LIMIT 10").bind(now,now).all();
   return response(request,env,{success:true,announcements:rows.results||[]});
@@ -380,7 +391,7 @@ async function engagementApi(request,env,url,method){
   const authenticatedUsers=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_users WHERE account_status='active' AND (email_verified_at IS NOT NULL OR phone_verified_at IS NOT NULL)").first();
   const totalViews=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_page_views").first();
   const todayViews=await env.DB.prepare("SELECT COUNT(*) AS total FROM rev_page_views WHERE created_at>=?").bind(new Date(new Date().toISOString().slice(0,10)+"T00:00:00.000Z").toISOString()).first();
-  const list=await env.DB.prepare("SELECT id,title,body,link_url,link_label,kind,enabled,starts_at,ends_at,created_at FROM rev_announcements ORDER BY created_at DESC LIMIT 50").all();
+  const list=await env.DB.prepare("SELECT a.id,a.title,a.body,a.link_url,a.link_label,a.kind,a.enabled,a.starts_at,a.ends_at,a.created_at,(SELECT COUNT(*) FROM rev_announcement_clicks c WHERE c.announcement_id=a.id) AS link_clicks FROM rev_announcements a ORDER BY a.created_at DESC LIMIT 50").all();
   return response(request,env,{success:true,active_users:Number(active?.total||0),signed_in_users:Number(active?.signed_in||0),total_authenticated_users:Number(authenticatedUsers?.total||0),total_page_views:Number(totalViews?.total||0),today_page_views:Number(todayViews?.total||0),active_window_minutes:5,popular_pages:pages.results||[],announcements:list.results||[]});
  }
  if(path==="/api/admin/announcements"&&method==="POST"){
@@ -408,7 +419,7 @@ export default {
  async fetch(request,env) {
   const url=new URL(request.url), path=url.pathname, method=request.method;
   if(method==="OPTIONS") return new Response(null,{status:204,headers:corsHeaders(request,env)});
-  if(path==="/api/engagement/heartbeat" || path==="/api/announcements" || path==="/api/admin/engagement" || path==="/api/admin/announcements" || /^\/api\/admin\/announcements\/[0-9a-f-]{36}\/(toggle|delete)$/i.test(path)) return await engagementApi(request,env,url,method);
+  if(path==="/api/engagement/heartbeat" || path==="/api/announcements" || path==="/api/announcements/click" || path==="/api/admin/engagement" || path==="/api/admin/announcements" || /^\/api\/admin\/announcements\/[0-9a-f-]{36}\/(toggle|delete)$/i.test(path)) return await engagementApi(request,env,url,method);
   try {
    if(path==="/api/health" && method==="GET") {
     try {
