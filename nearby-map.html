@@ -290,7 +290,11 @@ function startNavigationToPlace(place){const lat=Number(place.latitude),lon=Numb
  const routePanel=document.getElementById("routePanel"),routeToggle=document.getElementById("routeToggle"),routeStart=document.getElementById("routeStart"),routeEnd=document.getElementById("routeEnd"),routeSummary=document.getElementById("routeSummary"),routeNote=document.getElementById("routeNote");
  let routePickMode="",routeLine=null,routeStartMarker=null,routeEndMarker=null,routeCarMarker=null,routeAnimationFrame=0;
  function routePin(point,label,color,input){const marker=L.marker(point,{draggable:true,keyboard:true,icon:L.divIcon({className:"rev-route-pin",html:'<span style="display:block;width:20px;height:20px;border:3px solid #fff;border-radius:50%;background:'+color+';box-shadow:0 1px 7px #0008"></span>',iconSize:[26,26],iconAnchor:[13,13]})}).bindTooltip(label+" · برای جابه‌جایی بکشید").addTo(map);marker.on("dragend",()=>{const p=marker.getLatLng();input.value=p.lat.toFixed(6)+", "+p.lng.toFixed(6);if(routeLine){map.removeLayer(routeLine);routeLine=null;}routeSummary.textContent="";routeNote.textContent="موقعیت "+label+" تغییر کرد؛ برای محاسبه مسیر جدید «نمایش مسیر» را بزنید.";});return marker;}
- window.revClearRoute=clearRoute;function clearRoute(){if(routeAnimationFrame){cancelAnimationFrame(routeAnimationFrame);routeAnimationFrame=0;}if(routeCarMarker){map.removeLayer(routeCarMarker);routeCarMarker=null;}if(routeLine){map.removeLayer(routeLine);routeLine=null;}if(routeStartMarker){map.removeLayer(routeStartMarker);routeStartMarker=null;}if(routeEndMarker){map.removeLayer(routeEndMarker);routeEndMarker=null;}routeSummary.textContent="";routePickMode="";document.getElementById("routePickStart").classList.remove("selected");document.getElementById("routePickEnd").classList.remove("selected");}
+ window.revSetUserMarkerVisible=function(v){try{
+  if(v){if(typeof userMarker!=='undefined'&&userMarker&&!map.hasLayer(userMarker))userMarker.addTo(map);}
+  else{if(typeof userMarker!=='undefined'&&userMarker&&map.hasLayer(userMarker))map.removeLayer(userMarker);}
+}catch(e){}};
+window.revClearRoute=clearRoute;function clearRoute(){if(routeAnimationFrame){cancelAnimationFrame(routeAnimationFrame);routeAnimationFrame=0;}if(routeCarMarker){map.removeLayer(routeCarMarker);routeCarMarker=null;}if(routeLine){map.removeLayer(routeLine);routeLine=null;}if(routeStartMarker){map.removeLayer(routeStartMarker);routeStartMarker=null;}if(routeEndMarker){map.removeLayer(routeEndMarker);routeEndMarker=null;}routeSummary.textContent="";routePickMode="";document.getElementById("routePickStart").classList.remove("selected");document.getElementById("routePickEnd").classList.remove("selected");}
 function placeRouteCarAtStart(coords){if(!coords||!coords.length)return;if(routeAnimationFrame){cancelAnimationFrame(routeAnimationFrame);routeAnimationFrame=0;}if(routeCarMarker)map.removeLayer(routeCarMarker);const icon=L.divIcon({className:"rev-ev-car-icon",html:'<span style="display:flex;align-items:center;justify-content:center;width:42px;height:42px;border:3px solid #fff;border-radius:50%;background:#0866ff;color:#fff;font-size:20px;box-shadow:0 3px 16px #0007;line-height:1">🚙</span>',iconSize:[42,42],iconAnchor:[21,21]});routeCarMarker=L.marker([coords[0][1],coords[0][0]],{icon,zIndexOffset:2000,keyboard:false}).addTo(map).bindTooltip("خودروی برقی شما · لمس برای وضعیت سفر");routeCarMarker.on("click",openTripLivePanel);map.setView([coords[0][1],coords[0][0]],18,{animate:true,duration:.8});}
 
  const AUTH_API="https://rev-auth-api.mojtaba-alimi64.workers.dev";
@@ -559,6 +563,13 @@ function nearestOnRoute(lat,lon){
 }
 function setText(id,txt){var el=$(id);if(el&&el.textContent!==txt)el.textContent=txt;}
 var hasFix=false;
+/* قانون نمایش اعلان‌های متنی مسیریاب:
+   ۱) قبل از اولین موقعیت GPS: «در حال دریافت موقعیت…»
+   ۲) فاصله بیش از ۱۲۰۰ متر تا راهنمای بعدی: «در مسیر بمانید» + فاصله (بدون جزئیات)
+   ۳) ۱۲۰۰ متر یا کمتر: دستور کامل مانور + فاصله
+   ۴) ۸۰۰ متری: اعلان صوتی اول (فاصله + دستور) — ۲۰۰ متری: اعلان صوتی دوم (فقط دستور)
+   ۵) کمتر از ۶۰ متر مانده به مقصد نهایی: «رسیدید»
+   در هر لحظه فقط یک راهنما نمایش داده می‌شود. */
 function setBanner(){
   var distEl=$('navDist'), instrEl=$('navInstr'), nextEl=$('navNext'), iconEl=$('navIcon');
   if(!hasFix){
@@ -657,6 +668,8 @@ function start(data){
   try{var rp=$('routePanel');if(rp)rp.hidden=true;}catch(e){}
   try{var dp=$('detailsPanel');if(dp)dp.hidden=true;}catch(e){}
   document.body.classList.add('rev-navigating');
+  try{if(window.revClearRoute)window.revClearRoute();}catch(e){}
+  try{if(window.revSetUserMarkerVisible)window.revSetUserMarkerVisible(false);}catch(e){}
   $('navBanner').hidden=false; $('navDash').hidden=false;
   var vb=$('navVoiceBtn'); vb.textContent=voiceOn?'🔊':'🔇'; vb.classList.toggle('on',voiceOn);
   // route prep
@@ -710,6 +723,7 @@ function stop(silent){
     if(window.revTripPlanMarkerGroup){try{window.revMap.removeLayer(window.revTripPlanMarkerGroup);}catch(e){}window.revTripPlanMarkerGroup=null;}
     window.revNavData=null;
   }catch(e){}
+  try{if(window.revSetUserMarkerVisible)window.revSetUserMarkerVisible(true);}catch(e){}
   nav=null; lastOfferData=null;
 }
 async function saveTrip(){
