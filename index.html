@@ -127,6 +127,10 @@ footer{background:var(--ink);color:#C3CBD0;padding:36px 0;font-size:15px}
 body.about-page > header,body.contact-page > header{display:none!important}
 body.about-page > footer,body.contact-page > footer{padding:28px 0;background:#080d10}
 body.about-page > footer .foot,body.contact-page > footer .foot{justify-content:center!important}
+/* لینک بازگشت در بالای صفحه ارتباط با ما، به‌شکل تب ساده */
+.contact-back-tab{background:#080d10;padding:10px max(20px,calc((100% - var(--max))/2));border-bottom:1px solid #263238}
+.contact-back-tab a{display:inline-block;color:#c3cbd0;font-size:14px;padding:2px 0;border:0;background:transparent;border-radius:0}
+.contact-back-tab a:hover{color:#0866ff}
 
 /* REV landing page — map-inspired welcome screen */
 .start-page{background:#080d10;color:#f5f7f8}
@@ -429,7 +433,7 @@ function route(){
   const isContactPage = r === 'contact';
   document.body.classList.toggle('about-page', isAboutPage);
   document.body.classList.toggle('contact-page', isContactPage);
-  document.querySelector('footer').innerHTML = (isAboutPage || isContactPage)
+  document.querySelector('footer').innerHTML = isAboutPage
     ? '<div class="wrap foot" style="justify-content:center"><a class="btn" href="#/">بازگشت به صفحه لندینگ</a></div>'
     : REV_ORIGINAL_FOOTER;
   setMeta('REV | خودروهای برقی، تکنولوژی و آینده حمل‌ونقل');
@@ -443,6 +447,7 @@ function route(){
   else if(r==='explore') html=exploreHome();
   else if(r==='about') html=about();
   else {html=home();key=''}
+  if (isContactPage) html = '<div class="contact-back-tab"><a href="#/">بازگشت به صفحه لندینگ</a></div>' + html;
   app.innerHTML=html;
   searchBind();
   carsBind();
