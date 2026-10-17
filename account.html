@@ -39,6 +39,9 @@ section[id^="tab-"]{margin:0}
 .card h2{font-size:16px;margin:0 0 10px;font-weight:900}
 .section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;margin:0 0 10px}
 .section-title h2{font-size:16px;margin:0;font-weight:900}
+.guide-steps{margin:6px 0 4px;padding-right:20px;font-size:13.5px;line-height:2;color:#33475c}
+.guide-steps li{margin-bottom:2px}
+#accountGroupTravelGuide h3{font-size:14px;margin:12px 0 6px;font-weight:800}
 .muted{color:var(--muted);font-size:12px}
 .small{font-size:11px;color:var(--muted)}
 .note{font-size:12px;color:var(--muted)}
@@ -286,6 +289,27 @@ main.wrap{width:min(100% - 28px,680px);padding:24px 0 44px}
     <label class="group-share-toggle"><input id="accountGroupShareLocation" type="checkbox" checked><span><strong>اشتراک موقعیت زنده با هم‌سفرهای پذیرفته‌شده</strong><small>با خاموش‌کردن این گزینه، موقعیت شما از دید اعضای سفر گروهی پنهان می‌شود. اشتراک موقعیت فقط هنگام سفر گروهی فعال و با اجازه GPS انجام می‌شود.</small></span></label>
     <div id="accountGroupSettingsStatus" class="status" aria-live="polite">در حال دریافت تنظیمات سفر گروهی…</div>
     <div class="actions"><a class="btn secondary" href="./nearby-map.html#groupTripPanel">رفتن به نقشه و مدیریت دعوت‌ها</a></div>
+  </div>
+  <div class="card profile-settings" id="accountGroupTravelGuide">
+    <div class="section-title"><h2>راهنمای سفر گروهی و اشتراک‌گذاری سفر</h2><span class="status">راهنما</span></div>
+    <p class="muted small">با سفر گروهی، هم‌سفرهایتان را روی یک نقشه زنده می‌بینید و همه با هم یک مسیر را می‌روید.</p>
+    <h3>۱. فعال‌سازی سفر گروهی</h3>
+    <ol class="guide-steps">
+      <li>کد اختصاصی سفر گروهی‌تان (بخش بالا) را با دکمه «کپی کد» کپی کنید و برای هم‌سفرهایتان بفرستید.</li>
+      <li>هم‌سفر شما در صفحه نقشه، از پنل «سفر گروهی» کد شما را وارد می‌کند و برایتان دعوت می‌فرستد.</li>
+      <li>دعوت در بخش «اعلان‌ها و دعوت‌ها» (پایین همین صفحه) می‌آید — آن را <strong>قبول</strong> کنید.</li>
+      <li>گزینه «اشتراک موقعیت زنده» را روشن نگه دارید تا موقعیت‌تان روی نقشه هم‌سفرها دیده شود.</li>
+    </ol>
+    <h3>۲. دعوت دیگران به سفر شما</h3>
+    <ol class="guide-steps">
+      <li>به <a href="./nearby-map.html#groupTripPanel">نقشه ← پنل سفر گروهی</a> بروید.</li>
+      <li>کد اختصاصی هم‌سفرتان را وارد کنید و دعوت بفرستید؛ با قبول او، سفر گروهی ساخته می‌شود.</li>
+    </ol>
+    <h3>۳. حریم خصوصی</h3>
+    <ul class="guide-steps">
+      <li>موقعیت شما <strong>فقط هنگام سفر گروهی فعال و با اجازه GPS گوشی</strong> به اشتراک گذاشته می‌شود.</li>
+      <li>هر وقت بخواهید می‌توانید اشتراک موقعیت را خاموش کنید، یا با «تغییر کد» کد قبلی را باطل کنید تا کسی با کد قدیمی دعوت‌تان نکند.</li>
+    </ul>
   </div>
   <div class="card profile-settings" id="accountNotifications">
     <div class="section-title"><h2>اعلان‌ها و دعوت‌ها</h2><span id="accountNotificationBadge" class="status">۰ اعلان جدید</span></div>
