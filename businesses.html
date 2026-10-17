@@ -1,121 +1,443 @@
 <!doctype html>
 <html lang="fa" dir="rtl">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <meta name="theme-color" content="#ffffff">
-<meta name="description" content="فهرست تعمیرگاه‌ها و فروشگاه‌های قطعات در REV">
-<title>فهرست مراکز خدمات و قطعات | REV</title>
+<meta name="color-scheme" content="light">
+<meta name="description" content="خدمات REV: درخواست یدک‌کش مجاز، قطعات ضروری و خدمات تخصصی خودروی برقی">
+<title>خدمات | REV</title>
+<link rel="stylesheet" href="https://mojtabaalimi64-cloud.github.io/rev-mobile/rev-visual-identity.css?v=20261017-3">
 <style>
-:root{--bg:#ffffff;--panel:#121A1F;--paper:#F5F7F8;--line:#2A343A;--muted:#AAB6BC;--accent:#0866ff;--teal:#064fc4}
-*{box-sizing:border-box}body{margin:0;background:linear-gradient(150deg,#ffffff,#101d22);color:#f5f7f8;font:16px/1.9 Vazirmatn,Vazir,Tahoma,sans-serif}
-a{color:var(--accent)}.wrap{width:min(1100px,calc(100% - 28px));margin:auto}
-header{padding:20px 0;border-bottom:1px solid #26343a}header .wrap{display:flex;justify-content:space-between;gap:12px;align-items:center;flex-wrap:wrap}.logo{font-size:28px;font-weight:900;letter-spacing:2px;color:var(--accent)}.nav{display:flex;gap:12px;flex-wrap:wrap}.nav a{border:1px solid #35464d;border-radius:10px;padding:6px 12px;text-decoration:none}
-main{padding:28px 0 60px}h1{font-size:clamp(25px,4vw,38px);line-height:1.5;margin:0 0 8px}h2{font-size:22px;margin:28px 0 14px}.muted{color:var(--muted);font-size:14px}.notice{border:1px solid #a57d35;background:#2a2112;padding:12px 16px;border-radius:12px;color:#ffdda0;margin:18px 0}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}.card,.profile{background:linear-gradient(145deg,#152126,#10171b);border:1px solid #2b3b42;border-radius:16px;padding:18px}.card h3,.profile h2{margin:0 0 5px}.tag{display:inline-block;background:#24352d;border:1px solid #3e7558;color:#aaffca;border-radius:99px;padding:1px 10px;font-size:12px;margin:3px 0}.btn{display:inline-block;background:var(--accent);color:#07100b;text-decoration:none;border-radius:9px;padding:7px 13px;font-weight:800;margin-top:10px}.profile{max-width:780px;margin:18px auto;padding:clamp(18px,4vw,32px)}.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px;margin:18px 0}.fact{border:1px solid #2b3b42;border-radius:10px;padding:10px}.fact small{display:block;color:var(--muted)}.empty{padding:20px;border:1px dashed #46565c;border-radius:12px}
-.profile-image{width:100%;height:180px;object-fit:cover;border-radius:10px;margin-bottom:10px;background:#172128}.profile-hero{display:block;width:100%;max-height:420px;object-fit:cover;border-radius:14px;margin:12px 0 20px;background:#172128}/* پوسته مشترک REV برای بخش خدمات و سفرها */
-:root{color-scheme:dark;--bg:#ffffff;--panel:#10171b;--panel2:#151f24;--line:#29383e;--muted:#9eafb5;--accent:#0866ff;--teal:#064fc4;--text:#f5f7f8}
-body{background:radial-gradient(ellipse at 85% 0%,#12352a 0,transparent 35%),var(--bg);color:var(--text)}
-header{border-color:var(--line)!important}
-header .nav a,.nav a{color:var(--muted)}
-header .nav a:hover,.nav a:hover{color:var(--accent)}
-.panel,.card,.business-card,.item,.service-card{background:linear-gradient(145deg,rgba(21,31,36,.98),rgba(13,20,23,.98));border-color:var(--line);border-radius:16px;color:var(--text)}
-button,.button{background:#11251b;color:var(--accent);border:1px solid #285341;border-radius:11px}
-input,select,textarea{background:#0c1215;color:var(--text);border:1px solid var(--line);border-radius:10px}
-a{color:var(--accent)}
-.bottom-nav{position:fixed;z-index:1000;inset:auto 0 0;background:rgba(8,11,13,.97);border-top:1px solid #26343a;box-shadow:0 -5px 22px rgba(57,255,136,.07);padding:8px 12px calc(8px + env(safe-area-inset-bottom));backdrop-filter:blur(16px)}
-.bottom-nav-inner{max-width:620px;margin:auto;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:5px}
-.bottom-nav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;color:#91a1a6;font-size:10px;padding:5px 2px;border-radius:11px;text-decoration:none;min-height:52px}
-.bottom-nav a.active{color:var(--accent);background:#11251b;font-weight:800}
-.bottom-nav svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round}
-body{padding-bottom:calc(88px + env(safe-area-inset-bottom))}
-body.businesses-landing-view>header,body.businesses-landing-view>#revPersistentNav,body.businesses-landing-view>.bottom-nav{display:none!important}body.businesses-landing-view{padding-bottom:24px!important}
+/* ---------- services page extras (same teal design language) ---------- */
+.hero-card .hero-actions{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:4px}
+.hero-card .hero-actions a{display:flex;flex-direction:column;align-items:center;gap:4px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);color:#fff;border-radius:14px;padding:10px 4px;font-size:11px;font-weight:800}
+.hero-card .hero-actions a span{font-size:20px}
+.emergency{background:linear-gradient(140deg,#b3372f,#d95f52);border-radius:22px;color:#fff;padding:20px 16px;box-shadow:0 10px 26px rgba(211,84,84,.25);position:relative;overflow:hidden}
+.emergency h2{margin:0 0 6px;font-size:17px;font-weight:900}
+.emergency p{margin:0 0 14px;font-size:12px;color:#ffe3e0;line-height:1.8}
+.btn-danger{display:flex;align-items:center;justify-content:center;gap:8px;min-height:52px;padding:12px 16px;border-radius:14px;border:0;background:#fff;color:#b3372f;font-size:15px;font-weight:900;width:100%}
+.btn-danger:active{transform:translateY(1px)}
+.btn-ghost{display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;padding:10px 14px;border-radius:13px;border:1.5px solid var(--line);background:#fff;color:var(--ink);font-size:13.5px;font-weight:800;width:100%}
+.note{display:flex;gap:8px;background:var(--amber-soft);border:1px solid #f3d9a8;color:#8a5c10;border-radius:14px;padding:10px 12px;font-size:11.5px;line-height:1.8;margin-top:12px}
+.note.teal{background:var(--teal-softer);border-color:#bfe3ef;color:var(--teal-deep)}
+/* form */
+.field{margin-bottom:12px}
+.field label{display:block;font-size:12px;font-weight:800;margin-bottom:5px;color:var(--ink)}
+.field input,.field select,.field textarea{width:100%;padding:12px 13px;border:1.5px solid var(--line);border-radius:13px;font:inherit;font-size:14px;background:#fff;color:var(--ink)}
+.field input:focus,.field select,.field textarea:focus{outline:none;border-color:var(--teal)}
+.field textarea{resize:vertical;min-height:74px}
+.field .hint{font-size:10.5px;color:var(--muted);margin-top:4px}
+.field .err{font-size:11px;color:var(--red);margin-top:4px;display:none}
+/* chips */
+.chips{display:flex;gap:8px;overflow-x:auto;padding:2px 2px 8px;margin-bottom:4px}
+.chip{flex:0 0 auto;border:1.5px solid var(--line);background:#fff;border-radius:99px;padding:7px 15px;font-size:12px;font-weight:800;color:var(--muted)}
+.chip.active{background:var(--teal);border-color:var(--teal);color:#fff}
+.searchbar{display:flex;align-items:center;gap:8px;background:#fff;border:1.5px solid var(--line);border-radius:14px;padding:0 13px;margin-bottom:10px}
+.searchbar input{flex:1;border:0;outline:none;padding:12px 0;font:inherit;font-size:14px;background:transparent}
+/* parts grid */
+.parts-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.part-card{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:13px 11px;display:flex;flex-direction:column;gap:6px;box-shadow:var(--shadow-sm)}
+.part-card .pico{width:42px;height:42px;border-radius:13px;background:var(--teal-soft);color:var(--teal);display:grid;place-items:center;font-size:20px}
+.part-card b{font-size:12.5px;font-weight:850;line-height:1.6}
+.part-card small{font-size:10.5px;color:var(--muted);line-height:1.7;flex:1}
+.part-card .pfoot{display:flex;align-items:center;justify-content:space-between;margin-top:6px}
+.price{font-size:11px;font-weight:800;color:var(--teal-dark);background:var(--teal-softer);border-radius:99px;padding:4px 10px}
+.add-btn{border:0;border-radius:10px;background:var(--teal);color:#fff;font-size:11px;font-weight:850;padding:8px 13px}
+.add-btn.added{background:var(--green)}
+/* sheet modal */
+.backdrop{position:fixed;inset:0;background:rgba(10,25,35,.45);z-index:40;opacity:0;pointer-events:none;transition:opacity .2s}
+.backdrop.show{opacity:1;pointer-events:auto}
+.sheet{position:fixed;z-index:41;left:0;right:0;bottom:0;max-width:560px;margin:auto;background:#fff;border-radius:22px 22px 0 0;padding:18px 18px calc(20px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .25s ease;max-height:88vh;overflow-y:auto}
+.sheet.show{transform:translateY(0)}
+.sheet .grab{width:44px;height:5px;border-radius:99px;background:var(--line);margin:0 auto 14px}
+.sheet h3{margin:0 0 4px;font-size:16px;font-weight:900}
+.sheet .ssub{font-size:12px;color:var(--muted);margin:0 0 16px}
+.sheet .x{position:absolute;top:14px;left:14px;width:34px;height:34px;border-radius:50%;border:1px solid var(--line);background:#fff;font-size:15px;color:var(--muted)}
+/* cart */
+.cart-fab{position:fixed;z-index:30;bottom:calc(96px + env(safe-area-inset-bottom));left:16px;width:58px;height:58px;border-radius:50%;border:0;background:linear-gradient(135deg,var(--teal),var(--teal-dark));color:#fff;font-size:24px;box-shadow:0 8px 20px rgba(8,135,167,.4);display:none}
+.cart-fab.show{display:block}
+.cart-fab .badge{position:absolute;top:-4px;right:-4px;min-width:22px;height:22px;border-radius:99px;background:var(--red);color:#fff;font-size:11px;font-weight:900;display:grid;place-items:center;padding:0 5px;border:2px solid #fff}
+.cart-row{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line)}
+.cart-row .cico{width:40px;height:40px;flex:0 0 40px;border-radius:12px;background:var(--teal-soft);display:grid;place-items:center;font-size:19px}
+.cart-row .ccopy{flex:1;min-width:0}
+.cart-row .ccopy b{display:block;font-size:12.5px}
+.cart-row .ccopy small{color:var(--muted);font-size:11px}
+.qty{display:flex;align-items:center;gap:8px}
+.qty button{width:30px;height:30px;border-radius:50%;border:1.5px solid var(--line);background:#fff;font-size:16px;line-height:1;color:var(--teal);font-weight:900}
+.qty b{min-width:20px;text-align:center;font-size:14px}
+/* request rows */
+.req{border:1px solid var(--line);border-radius:15px;padding:12px;margin-bottom:10px;background:#fff}
+.req .rtop{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:6px}
+.req .rcode{font-size:12px;font-weight:900;color:var(--teal-dark)}
+.req .rmeta{font-size:11px;color:var(--muted);line-height:1.9}
+.req .ractions{margin-top:8px;display:flex;gap:8px}
+.link-btn{border:0;background:none;color:var(--red);font-size:12px;font-weight:800;padding:6px 0}
+.svc-btn{border:1.5px solid var(--teal);background:#fff;color:var(--teal-dark);border-radius:11px;font-size:12px;font-weight:850;padding:8px 16px;white-space:nowrap}
+/* toast */
+.toast{position:fixed;z-index:60;bottom:calc(170px + env(safe-area-inset-bottom));left:50%;transform:translateX(-50%) translateY(20px);background:#14293b;color:#fff;font-size:13px;font-weight:700;border-radius:13px;padding:11px 18px;opacity:0;pointer-events:none;transition:all .25s;max-width:88vw;text-align:center}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.gps-ok{font-size:11px;color:var(--green);font-weight:800;margin-top:5px;display:none}
+.sec-anchor{scroll-margin-top:76px}
 </style>
-<link rel="stylesheet" href="./rev-theme.css?v=1">
-
-
-
-<link rel="stylesheet" href="./rev-mobile-theme.css?v=20261017-6">
 </head>
-<body class="businesses-landing-view">
-<aside id="revPersistentNav" aria-label="راهنمای دسترسی به امکانات REV" style="display:block!important;visibility:visible!important;opacity:1!important;position:fixed;z-index:2147483000;right:14px;top:92px;width:218px;max-height:calc(100vh - 112px);overflow:auto;padding:14px;border:1px solid #e2eaf4;border-radius:18px;background:#ffffff!important;box-shadow:0 8px 24px rgba(23,37,59,.12);direction:rtl;font:13px/1.7 Vazirmatn,Tahoma,sans-serif">
-<div style="color:#0866ff;font-weight:900;font-size:21px;padding:0 8px 10px;border-bottom:1px solid #e2eaf4;margin-bottom:8px">REV <span style="font-size:11px;color:#65758b;font-weight:500">راهنمای خدمات</span></div>
-<p style="font-size:11px;color:#9eafb5;margin:0 8px 8px">برای جابه‌جایی بین امکانات، یکی از گزینه‌ها را انتخاب کنید.</p>
-<div style="display:flex;flex-direction:column;gap:3px">
-<a href="./account.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">👤 صفحه کاربری من</a>
-<a href="./driver-profile.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">🚘 پروفایل راننده</a>
-<a href="./travel-plans.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">✦ پلن‌های مسیریابی</a>
-<a href="./safety-checklist.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">✓ چک‌لیست سفر</a>
-<a href="./businesses.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">⌖ فروشگاه‌ها و خدمات</a>
-<a href="./article-ev.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">▤ آموزش خودرو برقی</a>
-<a href="./news.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">📰 اخبار خودرو برقی</a>
-<a href="./index.html" style="display:flex;padding:9px 10px;border-radius:10px;color:#e2ece7;text-decoration:none">⌂ صفحه اصلی REV</a>
-</div></aside>
-<style id="revPersistentNavForceStyle">
-@media(max-width:900px){#revPersistentNav{position:fixed!important;top:92px!important;right:10px!important;width:min(218px,42vw)!important;max-height:calc(100vh - 112px)!important;margin:0!important}#revPersistentNav>div:last-child{display:flex!important;flex-direction:column!important;flex-wrap:nowrap!important}#revPersistentNav a{padding:7px 9px!important}body.rev-has-persistent-nav{padding-right:0!important}}
-@media(min-width:901px){body.rev-has-persistent-nav{padding-right:246px!important}}
-#revPersistentNav a:hover{background:#edf4ff!important;color:#0866ff!important;border-color:#dce8ff!important}
-</style>
-<script>
-(function(){try{
- document.body.classList.add('rev-has-persistent-nav');
- var nav=document.getElementById('revPersistentNav');
- if(nav){var here=location.pathname.split('/').pop()||'index.html';nav.querySelectorAll('a[href]').forEach(function(a){if(new URL(a.href,location.href).pathname.split('/').pop()===here){a.style.background='#edf4ff';a.style.border='1px solid #dce8ff';a.style.color='#0866ff';a.setAttribute('aria-current','page');}});}
-}catch(e){}})();
-</script>
-<header><div class="wrap"><div class="logo">REV</div><nav class="nav"><a href="./">صفحه اصلی</a><a href="./trip.html">برنامه‌ریز سفر</a><a href="./plans.html">پلن‌های همکاری</a><a href="./account.html">پنل کاربری و کسب‌وکار</a><a href="./admin.html">پنل مدیریت</a></nav></div></header>
-<main class="wrap"><div id="app"><p>در حال بارگذاری فهرست...</p></div></main>
-<script>
-const API='https://rev-auth-api.mojtaba-alimi64.workers.dev';
-const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-const params=new URLSearchParams(location.search), selected=params.get('id'), typeFilter=params.get('type')||'';
-const app=document.getElementById('app');
-const typeName=t=>({store:'فروشگاه قطعات',repair:'تعمیرگاه',charging:'جایگاه شارژ'})[t]||t;
-const statusName=s=>({approved:'تأییدشده توسط REV',pending:'در انتظار بررسی'})[s]||'';
-const apiUrl=API+'/api/businesses'+(typeFilter?'?type='+encodeURIComponent(typeFilter):'');
-function businessCard(x,products){return '<article class="card">'+(x.image_url?'<img class="profile-image" src="'+esc(x.image_url)+'" alt="'+esc(x.name)+'" loading="lazy">':'')+'<span class="tag">'+esc(typeName(x.business_type))+'</span><span class="tag">تأییدشده توسط REV</span><h3>'+esc(x.name)+'</h3><p class="muted">'+esc(x.city)+' · '+esc(x.address)+'</p><p>'+esc(x.description||'توضیحات تکمیلی ثبت نشده است.')+'</p>'+(x.phone?'<p>تلفن: <a href="tel:'+esc(x.phone)+'">'+esc(x.phone)+'</a></p>':'')+'<a class="btn" href="./businesses.html?id='+encodeURIComponent(x.id)+'">مشاهده پروفایل</a></article>'}
-function renderApi(data,legacyData={}){
- const all=data.businesses||[], products=data.products||[];
- if(selected){
-  const x=all.find(y=>String(y.id)===selected);
-  if(!x)return false;
-  const own=products.filter(p=>p.business_id===x.id);
-  app.innerHTML='<p><a href="./businesses.html">← بازگشت به فهرست مراکز</a></p><section class="profile"><span class="tag">'+esc(typeName(x.business_type))+'</span><span class="tag">تأییدشده توسط REV</span><h1>'+esc(x.name)+'</h1><div class="facts"><div class="fact"><small>شهر</small>'+esc(x.city)+'</div><div class="fact"><small>نشانی</small>'+esc(x.address)+'</div><div class="fact"><small>تلفن</small>'+(x.phone?'<a href="tel:'+esc(x.phone)+'">'+esc(x.phone)+'</a>':'درج نشده')+'</div><div class="fact"><small>وب‌سایت</small>'+(x.website?'<a target="_blank" rel="noopener noreferrer" href="'+esc(x.website)+'">باز کردن وب‌سایت</a>':'درج نشده')+'</div><div class="fact"><small>ساعات فعالیت</small>'+esc(x.opening_hours||'ثبت نشده')+'</div></div><h2>شرح خدمات</h2><p>'+esc(x.description||'اطلاعات ثبت نشده')+'</p><p>'+esc((JSON.parse(x.services_json||'[]')).join('، '))+'</p><h2>برندهای تحت پوشش</h2><p>'+esc((JSON.parse(x.brands_json||'[]')).join('، ')||'ثبت نشده')+'</p>'+(own.length?'<h2>محصولات تأییدشده</h2><div class="grid">'+own.map(p=>'<article class="card">'+(p.image_url?'<img class="profile-image" src="'+esc(p.image_url)+'" alt="'+esc(p.title)+'">':'')+'<h3>'+esc(p.title)+'</h3><p>'+esc(p.description||'')+'</p><p><strong>'+esc(p.price_text||'قیمت اعلام نشده')+'</strong></p>'+(p.product_url?'<a class="btn" target="_blank" rel="noopener noreferrer" href="'+esc(p.product_url)+'">جزئیات/سفارش</a>':'')+'</article>').join('')+'</div>':'')+(x.latitude!=null&&x.longitude!=null?'<a class="btn" target="_blank" rel="noopener noreferrer" href="https://www.openstreetmap.org/?mlat='+encodeURIComponent(x.latitude)+'&mlon='+encodeURIComponent(x.longitude)+'#map=16/'+encodeURIComponent(x.latitude)+'/'+encodeURIComponent(x.longitude)+'">مشاهده موقعیت روی نقشه</a>':'')+'</section>';
-  return true;
- }
- if(all.length){
-  const groups=[['charging','جایگاه‌های شارژ'],['repair','تعمیرگاه‌ها و مراکز خدمات'],['store','فروشگاه‌های قطعات']];
-  const legacy=[...(legacyData.serviceCenters||[]).map(x=>({...x,kind:'تعمیرگاه قدیمی',kindKey:'repair'})),...(legacyData.partsStores||[]).map(x=>({...x,kind:'فروشگاه قدیمی',kindKey:'store'}))];
-  const legacyHtml=legacy.length?'<h2>فهرست‌های موجود در مدیریت قبلی</h2><p class="muted">این ورودی‌ها از فهرست محتوای قبلی خوانده می‌شوند و وضعیت مجوز آن‌ها لزوماً توسط پنل جدید تأیید نشده است.</p><div class="grid">'+legacy.map(x=>'<article class="card">'+(x.image?'<img class="profile-image" src="'+esc(x.image)+'" alt="'+esc(x.title||x.name)+'">':'')+'<span class="tag">'+esc(x.kind)+'</span><h3>'+esc(x.title||x.name)+'</h3><p class="muted">'+esc(x.address||'نشانی ثبت نشده')+'</p><p>'+esc(x.description||x.notes||'')+'</p><a class="btn" href="./businesses.html?id='+encodeURIComponent(x.profileSlug||x.id||'')+'">مشاهده پروفایل</a></article>').join('')+'</div>':'';
-  app.innerHTML='<h1>کسب‌وکارهای REV</h1><p class="muted">پروفایل‌های جدید فقط پس از تأیید مدیریت در این فهرست نمایش داده می‌شوند.</p><div class="notice">تأیید REV به معنی تضمین کیفیت، مجوز قانونی یا در دسترس بودن لحظه‌ای خدمات نیست؛ پیش از مراجعه اطلاعات را بررسی کنید.</div>'+groups.filter(g=>!typeFilter||typeFilter===g[0]).map(g=>{const list=all.filter(x=>x.business_type===g[0]);return '<h2>'+g[1]+'</h2><div class="grid">'+(list.map(x=>businessCard(x,products)).join('')||'<div class="empty">مورد جدید تأییدشده‌ای در این دسته ثبت نشده است.</div>')+'</div>'}).join('')+legacyHtml;
-  return true;
- }
- return false;
-}
-function renderLegacy(d){
- const ratingMap=new Map();
- const all=[...(d.serviceCenters||[]).map(x=>({...x,kind:'تعمیرگاه مجاز',kindKey:'serviceCenters'})),...(d.partsStores||[]).map(x=>({...x,kind:'فروشگاه قطعات مجاز',kindKey:'partsStores'}))];
- const link=x=>'./businesses.html?id='+encodeURIComponent(x.profileSlug||x.id||'');
- const card=x=>'<article class="card">'+(x.image?'<img class="profile-image" src="'+esc(x.image)+'" alt="'+esc(x.title||x.name)+'" loading="lazy">':'')+'<span class="tag">'+esc(x.kind)+'</span> '+(x.testProfile?'<span class="tag">تست REV</span>':'')+'<h3>'+esc(x.title||x.name)+'</h3><p class="muted">'+esc(x.address||'نشانی ثبت نشده')+'</p><p>'+esc(x.description||x.notes||'اطلاعات تکمیلی ثبت نشده است.')+'</p><a class="btn" href="'+link(x)+'">مشاهده پروفایل</a></article>';
- if(selected){const x=all.find(x=>String(x.profileSlug||x.id)===selected);if(!x){app.innerHTML='<h1>پروفایل پیدا نشد</h1><a href="./businesses.html">بازگشت به فهرست</a>';return}app.innerHTML='<section class="profile"><h1>'+esc(x.profileName||x.title||x.name)+'</h1><span class="tag">'+esc(x.kind)+'</span><p>'+esc(x.address||'نشانی ثبت نشده')+'</p><p>'+esc(x.description||x.notes||'')+'</p><p>وضعیت بررسی: '+esc(x.status==='verified'?'تأییدشده':'نیازمند بررسی')+'</p></section>';return}
- const shops=all.filter(x=>x.kindKey==='partsStores'), repairs=all.filter(x=>x.kindKey==='serviceCenters');
- app.innerHTML='<h1>فهرست مراکز REV</h1><p class="muted">در حال حاضر فهرست‌های قدیمی مدیریت نیز نمایش داده می‌شوند.</p><h2>تعمیرگاه‌ها</h2><div class="grid">'+(repairs.map(card).join('')||'<div class="empty">تعمیرگاهی ثبت نشده است.</div>')+'</div><h2>فروشگاه‌های قطعات</h2><div class="grid">'+(shops.map(card).join('')||'<div class="empty">فروشگاهی ثبت نشده است.</div>')+'</div><p><a class="btn" href="./account.html">ثبت کسب‌وکار جدید</a></p>';
-}
-async function start(){
- let legacy={};
- try{const r=await fetch('./content.json?v='+Date.now(),{cache:'no-store'});if(r.ok)legacy=await r.json()}catch(e){}
- try{const r=await fetch(apiUrl,{cache:'no-store'});const j=await r.json();if(r.ok&&j.success&&renderApi(j,legacy))return;}catch(e){console.warn('REV business API unavailable',e)}
- try{if(Object.keys(legacy).length){renderLegacy(legacy);return}throw Error('فهرست در دسترس نیست')}
- catch(e){app.innerHTML='<div class="empty">فهرست بارگذاری نشد. '+esc(e.message)+'<p><a href="./account.html">ورود به پنل کاربری/کسب‌وکار</a></p></div>'}
-}
-start();
-</script><footer style="padding:28px 14px 36px;text-align:center;background:#080d10;border-top:1px solid #29383e"><a class="btn" href="./index.html" style="display:inline-block;color:#fff;padding:10px 20px">بازگشت به صفحه لندینگ</a></footer>
-<script src="./rev-site-settings.js?v=20261017-4" defer></script>
+<body class="has-bottom-nav">
+<div class="app-shell">
 
-<script src="./rev-announcements.js?v=2" defer></script>
-<nav class="bottom-nav" aria-label="پیمایش اصلی REV"><div class="bottom-nav-inner">
-<a href="https://mojtabaalimi64-cloud.github.io/rev-mobile/" aria-label="خانه"><svg viewBox="0 0 24 24"><path d="m3 10 9-7 9 7M5.5 9v11h13V9M9.5 20v-6h5v6"/></svg>خانه</a>
-<a href="./nearby-map.html" aria-label="نقشه"><svg viewBox="0 0 24 24"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>نقشه</a>
-<a href="./trips.html" aria-label="سفرها"><svg viewBox="0 0 24 24"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 15l4-4 3 3 4-5M14 9h4v4"/></svg>سفرها</a>
-<a class="active" href="./businesses.html" aria-current="page" aria-label="خدمات"><svg viewBox="0 0 24 24"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 12h18M10 12v2h4v-2"/></svg>خدمات</a>
+<header class="app-header"><div class="wrap top">
+  <div class="greet">
+    <div><div class="hello">خدمات REV</div><div class="sub">یدک‌کش مجاز، قطعات ضروری و خدمات تخصصی برقی</div></div>
+  </div>
+  <button class="icon-btn" id="cartTopBtn" aria-label="سبد سفارش" style="display:none">
+    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6h15l-1.7 8.5a1.5 1.5 0 0 1-1.5 1.2H8.7a1.5 1.5 0 0 1-1.5-1.2L5 3.8A1 1 0 0 0 4 3H2"/><circle cx="9.5" cy="20" r="1.6"/><circle cx="17" cy="20" r="1.6"/></svg>
+    <span class="dot" id="cartTopDot" aria-hidden="true" style="background:var(--teal)"></span>
+  </button>
+</div></header>
+
+<main class="wrap">
+
+  <section class="hero-card" aria-labelledby="heroTitle">
+    <div class="bolt" aria-hidden="true">🛎️</div>
+    <h1 id="heroTitle">خدمات REV، کنار جاده هم کنارتیم</h1>
+    <p>از یدک‌کش مجاز وسط جاده تا قطعه ضروری و خدمات تخصصی — همه‌اش اینجاست و همه‌اش کار می‌کند.</p>
+    <div class="hero-actions">
+      <a href="#tow"><span>🚨</span>یدک‌کش مجاز</a>
+      <a href="#parts"><span>🔧</span>قطعات ضروری</a>
+      <a href="#services"><span>✨</span>خدمات ما</a>
+    </div>
+  </section>
+
+  <!-- ============ 1) یدک‌کش مجاز ============ -->
+  <section class="section sec-anchor" id="tow" aria-labelledby="towTitle">
+    <div class="section-head"><h2 id="towTitle">یدک‌کش مجاز</h2><span class="pill red">امداد ۲۴ ساعته</span></div>
+    <div class="emergency">
+      <h2>🚨 وسط راه موندی؟</h2>
+      <p>اتمام شارژ، خرابی فنی یا تصادف — یدک‌کش مجاز مخصوص خودروی برقی بفرست سراغت.</p>
+      <button class="btn-danger" id="towCta">درخواست یدک‌کش مجاز</button>
+    </div>
+    <div class="note">⚠️ <span><b>مهم برای خودروی برقی:</b> برقی فقط باید با کفی (خودروبر) جابه‌جا شود؛ بکسل با چرخ روی زمین به موتور و باتری آسیب جدی می‌زند. یدک‌کش‌های REV همگی کفی هستند.</span></div>
+    <div class="section" style="margin-top:16px">
+      <div class="section-head"><h2>درخواست‌های من</h2><span class="status" id="towCount"></span></div>
+      <div id="towList"><div class="empty">هنوز درخواستی ثبت نکردی.</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 2) قطعات ضروری ============ -->
+  <section class="section sec-anchor" id="parts" aria-labelledby="partsTitle">
+    <div class="section-head"><h2 id="partsTitle">قطعات ضروری</h2><a href="#cart" id="openCartLink">سبد سفارش</a></div>
+    <div class="searchbar">
+      <span aria-hidden="true">🔍</span>
+      <input type="search" id="partSearch" placeholder="جست‌وجوی قطعه… (مثلاً کابل شارژ)" aria-label="جست‌وجوی قطعه">
+    </div>
+    <div class="chips" id="partChips">
+      <button class="chip active" data-cat="all">همه</button>
+      <button class="chip" data-cat="charge">⚡ شارژ</button>
+      <button class="chip" data-cat="care">🧰 نگهداری</button>
+      <button class="chip" data-cat="safety">🦺 ایمنی</button>
+    </div>
+    <div class="parts-grid" id="partsGrid"></div>
+    <div class="note teal" style="margin-top:14px">ℹ️ <span>قیمت‌ها استعلامی است: قطعه را به سبد اضافه کن و درخواست بده؛ همکاران REV برای قیمت نهایی و زمان تحویل با تو تماس می‌گیرند.</span></div>
+    <div class="section" style="margin-top:16px">
+      <div class="section-head"><h2>سفارش‌های من</h2></div>
+      <div id="orderList"><div class="empty">هنوز سفارشی ثبت نکردی.</div></div>
+    </div>
+  </section>
+
+  <!-- ============ 3) خدمات ما ============ -->
+  <section class="section sec-anchor" id="services" aria-labelledby="svcTitle">
+    <div class="section-head"><h2 id="svcTitle">خدماتی که ارائه می‌دهیم</h2></div>
+    <div class="list-card" id="svcList"></div>
+    <div class="section" style="margin-top:16px">
+      <div class="section-head"><h2>درخواست‌های خدمت من</h2></div>
+      <div id="svcReqList"><div class="empty">هنوز درخواستی ثبت نکردی.</div></div>
+    </div>
+  </section>
+
+  <section class="section">
+    <a class="card row-item" href="./businesses.html?view=directory" style="display:flex">
+      <span class="ico">🏪</span>
+      <span class="copy"><b>فهرست مراکز همکار</b><small>تعمیرگاه‌ها و فروشگاه‌های تأییدشده REV</small></span>
+      <span class="chev" aria-hidden="true">‹</span>
+    </a>
+  </section>
+
+  <footer class="app-foot">REV · همراه سفر برقی تو</footer>
+</main>
+
+<nav class="bottom-nav" aria-label="پیمایش اصلی"><div class="tabs">
+  <a href="https://mojtabaalimi64-cloud.github.io/rev-mobile/"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m3 10 9-7 9 7M5.5 9v11h13V9M9.5 20v-6h5v6"/></svg>خانه</a>
+  <a href="./nearby-map.html"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 10c0 5-8 11-8 11S4 15 4 10a8 8 0 1 1 16 0Z"/><circle cx="12" cy="10" r="2.5"/></svg>نقشه</a>
+  <a href="./trips.html"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M7 15l4-4 3 3 4-5M14 9h4v4"/></svg>سفرها</a>
+  <a class="active" href="./businesses.html" aria-current="page"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="7" width="18" height="13" rx="2"/><path d="M8 7V4h8v3M3 12h18M10 12v2h4v-2"/></svg>خدمات</a>
 </div></nav>
-</body></html>
+
+</div>
+
+<!-- ===== sheets & cart & toast ===== -->
+<div class="backdrop" id="backdrop"></div>
+
+<div class="sheet" id="towSheet" role="dialog" aria-modal="true" aria-labelledby="towSheetTitle">
+  <div class="grab"></div>
+  <button class="x" data-close aria-label="بستن">✕</button>
+  <h3 id="towSheetTitle">🚨 درخواست یدک‌کش مجاز</h3>
+  <p class="ssub">فرم را پر کن؛ درخواستت با کد رهگیری ذخیره می‌شود.</p>
+  <div class="field"><label for="towName">نام و نام خانوادگی</label><input id="towName" placeholder="مثلاً علی رضایی"><div class="err" id="e-towName">نام را وارد کن.</div></div>
+  <div class="field"><label for="towPhone">شماره موبایل</label><input id="towPhone" inputmode="numeric" placeholder="09123456789" dir="ltr" style="text-align:left"><div class="err" id="e-towPhone">شماره موبایل معتبر وارد کن (مثل 09123456789).</div></div>
+  <div class="field"><label for="towCar">مدل خودرو</label><input id="towCar" placeholder="مثلاً نبکا ET5"></div>
+  <div class="field"><label for="towProblem">نوع مشکل</label>
+    <select id="towProblem"><option>اتمام شارژ</option><option>خرابی فنی</option><option>تصادف</option><option>سایر</option></select>
+  </div>
+  <div class="field"><label for="towLoc">موقعیت فعلی</label>
+    <input id="towLoc" placeholder="مثلاً اتوبان تهران–کرج، کیلومتر ۲۰">
+    <div style="display:flex;gap:8px;margin-top:8px">
+      <button class="btn-ghost" id="gpsBtn" type="button" style="width:auto;flex:1">📍 ثبت موقعیت GPS</button>
+    </div>
+    <div class="gps-ok" id="gpsOk">✓ موقعیت GPS ثبت شد.</div>
+  </div>
+  <div class="field"><label for="towNote">توضیح اضافه (اختیاری)</label><textarea id="towNote" placeholder="هر نکته‌ای که راننده یدک‌کش باید بداند…"></textarea></div>
+  <button class="btn-danger" id="towSubmit">ثبت درخواست یدک‌کش</button>
+</div>
+
+<div class="sheet" id="svcSheet" role="dialog" aria-modal="true" aria-labelledby="svcSheetTitle">
+  <div class="grab"></div>
+  <button class="x" data-close aria-label="بستن">✕</button>
+  <h3 id="svcSheetTitle">درخواست خدمت</h3>
+  <p class="ssub" id="svcSheetSub"></p>
+  <div class="field"><label for="svcName">نام و نام خانوادگی</label><input id="svcName" placeholder="مثلاً علی رضایی"><div class="err" id="e-svcName">نام را وارد کن.</div></div>
+  <div class="field"><label for="svcPhone">شماره موبایل</label><input id="svcPhone" inputmode="numeric" placeholder="09123456789" dir="ltr" style="text-align:left"><div class="err" id="e-svcPhone">شماره موبایل معتبر وارد کن (مثل 09123456789).</div></div>
+  <div class="field"><label for="svcNote">توضیح (اختیاری)</label><textarea id="svcNote" placeholder="مدل خودرو، شهر، زمان مناسب تماس…"></textarea></div>
+  <button class="btn-primary" id="svcSubmit">ثبت درخواست</button>
+</div>
+
+<div class="sheet" id="cartSheet" role="dialog" aria-modal="true" aria-labelledby="cartSheetTitle">
+  <div class="grab"></div>
+  <button class="x" data-close aria-label="بستن">✕</button>
+  <h3 id="cartSheetTitle">🧺 سبد سفارش</h3>
+  <p class="ssub">قیمت‌ها استعلامی است؛ پس از ثبت، برای قیمت نهایی تماس می‌گیریم.</p>
+  <div id="cartItems"></div>
+  <div id="cartFoot" style="margin-top:14px"></div>
+</div>
+
+<div class="sheet" id="orderSheet" role="dialog" aria-modal="true" aria-labelledby="orderSheetTitle">
+  <div class="grab"></div>
+  <button class="x" data-close aria-label="بستن">✕</button>
+  <h3 id="orderSheetTitle">ثبت درخواست سفارش</h3>
+  <p class="ssub" id="orderSummary"></p>
+  <div class="field"><label for="ordName">نام و نام خانوادگی</label><input id="ordName" placeholder="مثلاً علی رضایی"><div class="err" id="e-ordName">نام را وارد کن.</div></div>
+  <div class="field"><label for="ordPhone">شماره موبایل</label><input id="ordPhone" inputmode="numeric" placeholder="09123456789" dir="ltr" style="text-align:left"><div class="err" id="e-ordPhone">شماره موبایل معتبر وارد کن (مثل 09123456789).</div></div>
+  <div class="field"><label for="ordCity">شهر</label><input id="ordCity" placeholder="مثلاً تهران"></div>
+  <div class="field"><label for="ordAddr">آدرس تحویل</label><textarea id="ordAddr" placeholder="نشانی دقیق تحویل قطعه…"></textarea></div>
+  <button class="btn-primary" id="ordSubmit">ثبت نهایی سفارش</button>
+</div>
+
+<button class="cart-fab" id="cartFab" aria-label="سبد سفارش">🧺<span class="badge" id="cartBadge">0</span></button>
+<div class="toast" id="toast"></div>
+<script>
+(function(){
+'use strict';
+/* ---------- helpers ---------- */
+var $=function(id){return document.getElementById(id)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+function load(k,fb){try{var v=localStorage.getItem(k);return v?JSON.parse(v):fb}catch(e){return fb}}
+function save(k,v){try{localStorage.setItem(k,JSON.stringify(v));return true}catch(e){return false}}
+function code(p){return p+'-'+Date.now().toString(36).toUpperCase().slice(-6)}
+function faDate(ts){try{return new Date(ts).toLocaleDateString('fa-IR')}catch(e){return ''}}
+function validPhone(p){return /^09\d{9}$/.test(String(p||'').trim())}
+function toast(msg){var t=$('toast');t.textContent=msg;t.classList.add('show');clearTimeout(t._h);t._h=setTimeout(function(){t.classList.remove('show')},2600)}
+function fieldOk(inputId,errId,ok){var e=$(errId);if(e)e.style.display=ok?'none':'block';return ok}
+
+/* ---------- sheets ---------- */
+var backdrop=$('backdrop');
+function openSheet(id){document.querySelectorAll('.sheet.show').forEach(function(s){s.classList.remove('show')});$(id).classList.add('show');backdrop.classList.add('show');document.body.style.overflow='hidden'}
+function closeSheets(){document.querySelectorAll('.sheet.show').forEach(function(s){s.classList.remove('show')});backdrop.classList.remove('show');document.body.style.overflow=''}
+backdrop.addEventListener('click',closeSheets);
+document.querySelectorAll('[data-close]').forEach(function(b){b.addEventListener('click',closeSheets)});
+
+/* ---------- directory view (legacy) ---------- */
+if(new URLSearchParams(location.search).get('view')==='directory'){renderDirectory();return}
+
+var API='https://rev-auth-api.mojtaba-alimi64.workers.dev';
+var typeName=function(t){return {store:'فروشگاه قطعات',repair:'تعمیرگاه',charging:'جایگاه شارژ'}[t]||t};
+function businessCard(x){return '<article class="card" style="padding:14px;margin-bottom:10px"><span class="pill teal">'+esc(typeName(x.business_type))+'</span> <span class="pill green">تأییدشده REV</span><h3 style="margin:8px 0 4px;font-size:15px">'+esc(x.name)+'</h3><p style="font-size:12px;color:var(--muted);margin:0 0 6px">'+esc(x.city)+' · '+esc(x.address)+'</p>'+(x.phone?'<p style="font-size:13px;margin:0">تلفن: <a href="tel:'+esc(x.phone)+'" style="color:var(--teal);font-weight:800">'+esc(x.phone)+'</a></p>':'')+'</article>'}
+function renderDirectory(){
+  document.querySelector('main').innerHTML='<section class="hero-card"><div class="bolt">🏪</div><h1>مراکز همکار REV</h1><p>تعمیرگاه‌ها و فروشگاه‌های تأییدشده.</p><div class="hero-actions"><a href="./businesses.html"><span>‹</span>بازگشت به خدمات</a></div></section><section class="section"><div id="dirApp"><div class="empty">در حال بارگذاری…</div></div></section>';
+  var app=$('dirApp');
+  fetch(API+'/api/businesses',{cache:'no-store'}).then(function(r){return r.json()}).then(function(j){
+    var all=(j&&j.success&&j.businesses)||[];
+    if(!all.length){app.innerHTML='<div class="empty">مورد تأییدشده‌ای ثبت نشده است.</div>';return}
+    app.innerHTML=all.map(businessCard).join('');
+  }).catch(function(){app.innerHTML='<div class="empty">فهرست بارگذاری نشد. بعداً تلاش کن.</div>'});
+}
+
+/* ================= 1) یدک‌کش مجاز ================= */
+var TOW_KEY='rev_tow_requests_v1';
+var gpsPos=null;
+$('towCta').addEventListener('click',function(){gpsPos=null;$('gpsOk').style.display='none';openSheet('towSheet')});
+$('gpsBtn').addEventListener('click',function(){
+  if(!navigator.geolocation){toast('مرورگرت از GPS پشتیبانی نمی‌کند.');return}
+  var b=$('gpsBtn');b.disabled=true;b.textContent='در حال دریافت موقعیت…';
+  navigator.geolocation.getCurrentPosition(function(pos){
+    gpsPos={lat:pos.coords.latitude,lng:pos.coords.longitude,acc:Math.round(pos.coords.accuracy)};
+    $('gpsOk').style.display='block';b.disabled=false;b.textContent='📍 ثبت موقعیت GPS';toast('موقعیت ثبت شد.');
+  },function(){b.disabled=false;b.textContent='📍 ثبت موقعیت GPS';toast('دسترسی به موقعیت داده نشد؛ آدرس را دستی بنویس.')},{timeout:12000});
+});
+$('towSubmit').addEventListener('click',function(){
+  var okName=fieldOk(0,'e-towName', $('towName').value.trim().length>=2);
+  var okPhone=fieldOk(0,'e-towPhone', validPhone($('towPhone').value));
+  if(!okName||!okPhone)return;
+  var list=load(TOW_KEY,[]);
+  var req={id:code('TW'),ts:Date.now(),status:'ثبت شد',name:$('towName').value.trim(),phone:$('towPhone').value.trim(),car:$('towCar').value.trim(),problem:$('towProblem').value,loc:$('towLoc').value.trim(),gps:gpsPos,note:$('towNote').value.trim()};
+  list.unshift(req);save(TOW_KEY,list);
+  ['towName','towPhone','towCar','towLoc','towNote'].forEach(function(i){$(i).value=''});
+  closeSheets();renderTow();toast('درخواست '+req.id+' ثبت شد. همکاران ما تماس می‌گیرند.');
+});
+function towStatusPill(s){return s==='لغو شد'?'<span class="pill red">لغو شد</span>':s==='انجام شد'?'<span class="pill green">انجام شد</span>':'<span class="pill teal">ثبت شد</span>'}
+function renderTow(){
+  var list=load(TOW_KEY,[]);
+  $('towCount').textContent=list.length?list.length+' درخواست':'';
+  if(!list.length){$('towList').innerHTML='<div class="empty">هنوز درخواستی ثبت نکردی.</div>';return}
+  $('towList').innerHTML=list.map(function(r){
+    return '<div class="req"><div class="rtop"><span class="rcode">'+esc(r.id)+'</span>'+towStatusPill(r.status)+'</div>'
+    +'<div class="rmeta">'+esc(r.problem)+' · '+esc(faDate(r.ts))+(r.car?' · '+esc(r.car):'')+'<br>'+esc(r.loc||'موقعیت ثبت نشده')+(r.gps?' (GPS ✓)':'')+'</div>'
+    +(r.status==='ثبت شد'?'<div class="ractions"><button class="link-btn" data-cancel-tow="'+esc(r.id)+'">لغو درخواست</button></div>':'')
+    +'</div>';
+  }).join('');
+  $('towList').querySelectorAll('[data-cancel-tow]').forEach(function(b){b.addEventListener('click',function(){
+    var l=load(TOW_KEY,[]);var r=l.find(function(x){return x.id===b.getAttribute('data-cancel-tow')});
+    if(r){r.status='لغو شد';save(TOW_KEY,l);renderTow();toast('درخواست لغو شد.')}
+  })});
+}
+renderTow();
+
+/* ================= 2) قطعات ضروری ================= */
+var PARTS=[
+ {id:'p1',cat:'charge',icon:'🔌',name:'کابل شارژ خانگی (Mode 2)',desc:'شارژ از برق شهری؛ همراه همیشگی صندوق عقب'},
+ {id:'p2',cat:'charge',icon:'⚡',name:'شارژر دیواری AC خانگی',desc:'شارژ سریع‌تر در پارکینگ؛ نصب توسط تکنسین'},
+ {id:'p3',cat:'charge',icon:'🔄',name:'آداپتور تبدیل کانکتور',desc:'سازگاری با ایستگاه‌های شارژ مختلف'},
+ {id:'p4',cat:'care',icon:'💨',name:'پمپ باد فندکی دیجیتال',desc:'باد دقیق لاستیک؛ اثر مستقیم روی برد واقعی'},
+ {id:'p5',cat:'safety',icon:'🛞',name:'کیت پنچری اضطراری',desc:'ترمیم موقت تایر؛ جایگزین زاپاس در سفر'},
+ {id:'p6',cat:'safety',icon:'🦺',name:'ست ایمنی جاده',desc:'مثلث خطر، جلیقه شبرنگ و چراغ هشدار'},
+ {id:'p7',cat:'care',icon:'🧽',name:'فیلتر کابین',desc:'هوای تمیز کابین؛ تعویض دوره‌ای'},
+ {id:'p8',cat:'care',icon:'🌧️',name:'برف‌پاک‌کن',desc:'دید شفاف در باران و برف'},
+ {id:'p9',cat:'safety',icon:'🔦',name:'چراغ قوه + پاوربانک',desc:'همراه ضروری سفرهای شبانه و جاده‌ای'}
+];
+var CART_KEY='rev_cart_v1', ORD_KEY='rev_orders_v1';
+var curCat='all', curQ='';
+function partById(id){return PARTS.find(function(p){return p.id===id})}
+function renderParts(){
+  var q=curQ.trim();
+  var list=PARTS.filter(function(p){return (curCat==='all'||p.cat===curCat)&&(!q||p.name.indexOf(q)>-1||p.desc.indexOf(q)>-1)});
+  var cart=load(CART_KEY,{});
+  $('partsGrid').innerHTML=list.length?list.map(function(p){
+    var inCart=!!cart[p.id];
+    return '<div class="part-card"><span class="pico">'+p.icon+'</span><b>'+esc(p.name)+'</b><small>'+esc(p.desc)+'</small>'
+    +'<div class="pfoot"><span class="price">استعلامی</span><button class="'+(inCart?'add-btn added':'add-btn')+'" data-add="'+p.id+'">'+(inCart?'✓ در سبد':'افزودن')+'</button></div></div>';
+  }).join(''):'<div class="empty" style="grid-column:1/-1">قطعه‌ای پیدا نشد.</div>';
+  $('partsGrid').querySelectorAll('[data-add]').forEach(function(b){b.addEventListener('click',function(){addToCart(b.getAttribute('data-add'))})});
+}
+$('partSearch').addEventListener('input',function(e){curQ=e.target.value;renderParts()});
+$('partChips').querySelectorAll('.chip').forEach(function(c){c.addEventListener('click',function(){
+  $('partChips').querySelectorAll('.chip').forEach(function(x){x.classList.remove('active')});
+  c.classList.add('active');curCat=c.getAttribute('data-cat');renderParts();
+})});
+function addToCart(id){var cart=load(CART_KEY,{});cart[id]=(cart[id]||0)+1;save(CART_KEY,cart);renderParts();renderCartBadge();toast('به سبد اضافه شد. 🧺')}
+function cartCount(){var c=load(CART_KEY,{});return Object.keys(c).reduce(function(n,k){return n+c[k]},0)}
+function renderCartBadge(){
+  var n=cartCount();
+  $('cartBadge').textContent=n;
+  $('cartFab').classList.toggle('show',n>0);
+  var t=$('cartTopBtn');if(t)t.style.display=n>0?'grid':'none';
+}
+function renderCart(){
+  var cart=load(CART_KEY,{});var ids=Object.keys(cart);
+  if(!ids.length){$('cartItems').innerHTML='<div class="empty">سبد خالی است.</div>';$('cartFoot').innerHTML='';return}
+  $('cartItems').innerHTML=ids.map(function(id){var p=partById(id);if(!p)return '';
+    return '<div class="cart-row"><span class="cico">'+p.icon+'</span><span class="ccopy"><b>'+esc(p.name)+'</b><small>قیمت: استعلامی</small></span>'
+    +'<span class="qty"><button data-dec="'+id+'">−</button><b>'+cart[id]+'</b><button data-inc="'+id+'">+</button></span></div>';
+  }).join('');
+  $('cartFoot').innerHTML='<button class="btn-primary" id="checkoutBtn">ثبت درخواست سفارش ('+cartCount()+' قلم)</button>';
+  var wrap=$('cartItems');
+  wrap.querySelectorAll('[data-inc]').forEach(function(b){b.addEventListener('click',function(){var c=load(CART_KEY,{});c[b.getAttribute('data-inc')]++;save(CART_KEY,c);renderCart();renderCartBadge();renderParts()})});
+  wrap.querySelectorAll('[data-dec]').forEach(function(b){b.addEventListener('click',function(){var c=load(CART_KEY,{});var id=b.getAttribute('data-dec');c[id]--;if(c[id]<=0)delete c[id];save(CART_KEY,c);renderCart();renderCartBadge();renderParts()})});
+  $('checkoutBtn').addEventListener('click',function(){
+    var c=load(CART_KEY,{});
+    $('orderSummary').textContent=cartCount()+' قلم قطعه در سبد — پس از ثبت، برای قیمت نهایی و زمان تحویل تماس می‌گیریم.';
+    openSheet('orderSheet');
+  });
+}
+$('cartFab').addEventListener('click',function(){renderCart();openSheet('cartSheet')});
+var ct=$('cartTopBtn');if(ct)ct.addEventListener('click',function(){renderCart();openSheet('cartSheet')});
+var ocl=$('openCartLink');if(ocl)ocl.addEventListener('click',function(e){e.preventDefault();renderCart();openSheet('cartSheet')});
+$('ordSubmit').addEventListener('click',function(){
+  var okN=fieldOk(0,'e-ordName',$('ordName').value.trim().length>=2);
+  var okP=fieldOk(0,'e-ordPhone',validPhone($('ordPhone').value));
+  if(!okN||!okP)return;
+  var cart=load(CART_KEY,{});var ids=Object.keys(cart);
+  if(!ids.length){toast('سبد خالی است.');return}
+  var orders=load(ORD_KEY,[]);
+  var o={id:code('ORD'),ts:Date.now(),status:'در انتظار تماس',name:$('ordName').value.trim(),phone:$('ordPhone').value.trim(),city:$('ordCity').value.trim(),addr:$('ordAddr').value.trim(),items:ids.map(function(id){return {id:id,name:partById(id).name,qty:cart[id]}})};
+  orders.unshift(o);save(ORD_KEY,orders);save(CART_KEY,{});
+  ['ordName','ordPhone','ordCity','ordAddr'].forEach(function(i){$(i).value=''});
+  closeSheets();renderParts();renderCartBadge();renderOrders();
+  toast('سفارش '+o.id+' ثبت شد. برای قیمت نهایی تماس می‌گیریم.');
+});
+function renderOrders(){
+  var list=load(ORD_KEY,[]);
+  if(!list.length){$('orderList').innerHTML='<div class="empty">هنوز سفارشی ثبت نکردی.</div>';return}
+  $('orderList').innerHTML=list.map(function(o){
+    return '<div class="req"><div class="rtop"><span class="rcode">'+esc(o.id)+'</span><span class="pill teal">'+esc(o.status)+'</span></div>'
+    +'<div class="rmeta">'+o.items.map(function(i){return esc(i.name)+' × '+i.qty}).join('، ')+'<br>'+esc(faDate(o.ts))+'</div></div>';
+  }).join('');
+}
+renderParts();renderCartBadge();renderOrders();
+
+/* ================= 3) خدمات ما ================= */
+var SERVICES=[
+ {icon:'💬',name:'مشاوره خرید خودروی برقی',desc:'انتخاب مدل مناسب بودجه و نیازت؛ تلفنی یا حضوری'},
+ {icon:'🔍',name:'کارشناسی پیش از خرید',desc:'بررسی فنی، سلامت باتری و بدنه قبل از معامله'},
+ {icon:'🏠',name:'نصب شارژر خانگی',desc:'بازدید محل، نصب اصولی و تست توسط تکنسین مجاز'},
+ {icon:'🛠️',name:'سرویس دوره‌ای تخصصی',desc:'سرویس مخصوص خودروی برقی با قطعات اصلی'},
+ {icon:'⚙️',name:'عیب‌یابی و تعمیرات',desc:'تعمیر تخصصی خودروی برقی توسط تعمیرکار مجاز'},
+ {icon:'🔋',name:'امداد شارژ سیار',desc:'شارژ اضطراری در محل؛ نجات وسط راه'}
+];
+var SVC_KEY='rev_svc_requests_v1', svcIdx=-1;
+function renderServices(){
+  $('svcList').innerHTML=SERVICES.map(function(s,i){
+    return '<div class="row-item"><span class="ico">'+s.icon+'</span><span class="copy"><b>'+esc(s.name)+'</b><small>'+esc(s.desc)+'</small></span><button class="svc-btn" data-svc="'+i+'">درخواست</button></div>';
+  }).join('');
+  $('svcList').querySelectorAll('[data-svc]').forEach(function(b){b.addEventListener('click',function(){
+    svcIdx=parseInt(b.getAttribute('data-svc'),10);
+    $('svcSheetTitle').textContent=SERVICES[svcIdx].icon+' '+SERVICES[svcIdx].name;
+    $('svcSheetSub').textContent=SERVICES[svcIdx].desc;
+    openSheet('svcSheet');
+  })});
+}
+$('svcSubmit').addEventListener('click',function(){
+  if(svcIdx<0)return;
+  var okN=fieldOk(0,'e-svcName',$('svcName').value.trim().length>=2);
+  var okP=fieldOk(0,'e-svcPhone',validPhone($('svcPhone').value));
+  if(!okN||!okP)return;
+  var list=load(SVC_KEY,[]);
+  list.unshift({id:code('SVC'),ts:Date.now(),status:'ثبت شد',svc:SERVICES[svcIdx].name,name:$('svcName').value.trim(),phone:$('svcPhone').value.trim(),note:$('svcNote').value.trim()});
+  save(SVC_KEY,list);
+  $('svcName').value='';$('svcPhone').value='';$('svcNote').value='';
+  closeSheets();renderSvcReqs();toast('درخواستت ثبت شد. به‌زودی تماس می‌گیریم.');
+});
+function renderSvcReqs(){
+  var list=load(SVC_KEY,[]);
+  if(!list.length){$('svcReqList').innerHTML='<div class="empty">هنوز درخواستی ثبت نکردی.</div>';return}
+  $('svcReqList').innerHTML=list.map(function(r){
+    return '<div class="req"><div class="rtop"><span class="rcode">'+esc(r.id)+'</span>'+(r.status==='لغو شد'?'<span class="pill red">لغو شد</span>':'<span class="pill teal">ثبت شد</span>')+'</div>'
+    +'<div class="rmeta">'+esc(r.svc)+' · '+esc(faDate(r.ts))+'</div>'
+    +(r.status!=='لغو شد'?'<div class="ractions"><button class="link-btn" data-cancel-svc="'+esc(r.id)+'">لغو درخواست</button></div>':'')+'</div>';
+  }).join('');
+  $('svcReqList').querySelectorAll('[data-cancel-svc]').forEach(function(b){b.addEventListener('click',function(){
+    var l=load(SVC_KEY,[]);var r=l.find(function(x){return x.id===b.getAttribute('data-cancel-svc')});
+    if(r){r.status='لغو شد';save(SVC_KEY,l);renderSvcReqs();toast('درخواست لغو شد.')}
+  })});
+}
+renderServices();renderSvcReqs();
+})();
+</script>
+</body>
+</html>
