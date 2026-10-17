@@ -15,6 +15,7 @@ function showBanner(items){
  if(!lastItems.length){if(banner)banner.remove();return}
  let seen={};try{seen=JSON.parse(sessionStorage.getItem('rev_dismissed_announcements')||'{}')||{}}catch(e){}
  const item=lastItems.find(x=>!seen[x.id]);
+ if(item&&/^[0-9a-f-]{36}$/i.test(String(item.id||''))){try{const k='rev_announcement_viewed:'+item.id;if(!sessionStorage.getItem(k)){sessionStorage.setItem(k,'1');fetch(API+'/api/announcements/view',{method:'POST',credentials:'include',keepalive:true,headers:{'Content-Type':'application/json'},body:JSON.stringify({announcementId:item.id,sessionId:sid})}).catch(()=>{})}}catch(e){}}
  if(!item){if(banner)banner.remove();return}
  const host=bannerHost();
  if(!banner){banner=document.createElement('aside');banner.id='revAnnouncementBanner';banner.setAttribute('role','region');banner.setAttribute('aria-label','اعلان‌های REV')}
