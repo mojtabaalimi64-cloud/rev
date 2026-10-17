@@ -95,6 +95,50 @@ main{display:block!important;width:100%!important;height:100dvh!important;max-wi
 .rev-group-marker-popup{min-width:190px;color:#14293b;font-family:Vazirmatn,Vazir,Tahoma,sans-serif;line-height:1.8}.rev-group-marker-popup strong{display:block;color:#0887a7;font-size:14px;margin-bottom:4px}.rev-group-marker-popup .rev-group-speed{font-weight:800;color:#14293b}.rev-group-marker-popup small{display:block;color:#7e93a6;font-size:11px;margin:3px 0 10px}.rev-group-end-from-map{display:block;width:100%;min-height:42px;padding:9px 11px;border:1px solid #f0c9c9;border-radius:10px;background:#fdf1f1;color:#cf4444;font:700 12px Vazirmatn,Vazir,Tahoma,sans-serif;cursor:pointer}.rev-group-end-from-map:active{transform:scale(.99)}.leaflet-popup-content-wrapper,.leaflet-popup-tip{background:#fff;color:#14293b;border:1px solid #e4edf3;box-shadow:0 8px 24px rgba(20,41,59,.12)}.leaflet-popup-content{margin:12px}.leaflet-popup-content a{color:#0887a7}
 @media(prefers-color-scheme:dark){:root{color-scheme:light}html,body{background:#eef3f6;color:#14293b}}
 
+
+/* REV navigator — Waze-like turn-by-turn */
+#navStartFloat{position:fixed;z-index:950;bottom:calc(86px + env(safe-area-inset-bottom));right:12px;left:12px;max-width:400px;margin:0 auto;background:linear-gradient(135deg,#0b93b8,#066d88);color:#fff;border:0;border-radius:16px;padding:15px;font-weight:900;font-size:16px;cursor:pointer;box-shadow:0 10px 30px rgba(8,135,167,.4);font-family:Vazirmatn,Vazir,Tahoma,sans-serif;min-height:56px}
+#navStartFloat[hidden]{display:none!important}
+#navBanner{position:fixed;z-index:950;top:calc(10px + env(safe-area-inset-top));right:12px;left:12px;max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4edf3;border-radius:18px;box-shadow:0 12px 40px rgba(20,41,59,.18);padding:12px 14px;display:flex;align-items:center;gap:12px;font-family:Vazirmatn,Vazir,Tahoma,sans-serif}
+#navBanner[hidden]{display:none!important}
+.nav-maneuver-icon{flex:0 0 52px;width:52px;height:52px;border-radius:14px;background:#e5f3f8;display:grid;place-items:center}
+.nav-maneuver-icon svg{width:30px;height:30px;stroke:#066d88;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.nav-maneuver-text{flex:1;min-width:0}
+.nav-maneuver-dist{font-size:20px;font-weight:950;color:#0887a7;line-height:1.3}
+.nav-maneuver-instr{font-size:14px;font-weight:800;color:#14293b;line-height:1.6}
+.nav-maneuver-next{font-size:11px;color:#7e93a6;margin-top:2px}
+#navDash{position:fixed;z-index:950;bottom:calc(10px + env(safe-area-inset-bottom));right:12px;left:12px;max-width:560px;margin:0 auto;background:#fff;border:1px solid #e4edf3;border-radius:18px;box-shadow:0 12px 40px rgba(20,41,59,.18);padding:10px 12px;font-family:Vazirmatn,Vazir,Tahoma,sans-serif}
+#navDash[hidden]{display:none!important}
+.nav-dash-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.nav-dash-stats{display:flex;gap:16px;align-items:center}
+.nav-stat{text-align:center}
+.nav-stat b{display:block;font-size:17px;font-weight:950;color:#14293b}
+.nav-stat span{font-size:10px;color:#7e93a6}
+.nav-dash-btns{display:flex;gap:6px}
+.nav-dash-btns button{border:1px solid #d5e2ec;background:#f7fafc;color:#3c5266;border-radius:10px;min-width:44px;min-height:44px;font-size:16px;cursor:pointer;display:grid;place-items:center;padding:0 10px;font-weight:800}
+.nav-dash-btns button.danger{color:#cf4444;border-color:#f0c9c9;background:#fff}
+.nav-dash-btns button.on{background:#e5f3f8;border-color:#0887a7;color:#066d88}
+#navStartBtn{display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#0b93b8,#066d88);color:#fff;border:0;border-radius:12px;padding:12px 20px;font-weight:900;font-size:14px;cursor:pointer;margin-top:8px;box-shadow:0 6px 18px rgba(8,135,167,.3);font-family:Vazirmatn,Vazir,Tahoma,sans-serif}
+#navArrive{position:fixed;z-index:960;inset:0;background:rgba(20,41,59,.5);display:grid;place-items:center;padding:20px}
+#navArrive[hidden]{display:none!important}
+.nav-arrive-card{background:#fff;border-radius:22px;padding:26px 22px;max-width:380px;width:100%;text-align:center;box-shadow:0 20px 60px rgba(0,0,0,.25);font-family:Vazirmatn,Vazir,Tahoma,sans-serif}
+.nav-arrive-card h2{margin:0 0 8px;font-size:20px}
+.nav-arrive-card p{color:#7e93a6;font-size:13px;margin:0 0 16px}
+.nav-arrive-stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:16px}
+.nav-arrive-stats div{background:#f2f6f9;border-radius:12px;padding:10px}
+.nav-arrive-stats b{display:block;font-size:17px;color:#0887a7}
+.nav-arrive-stats span{font-size:11px;color:#7e93a6}
+.nav-arrive-btns{display:grid;gap:8px}
+.nav-arrive-btns button{border-radius:12px;padding:13px;font-weight:900;font-size:14px;cursor:pointer;border:1px solid #d5e2ec;background:#fff;min-height:50px;font-family:inherit}
+.nav-arrive-btns button.primary{background:linear-gradient(135deg,#0b93b8,#066d88);color:#fff;border:0}
+.nav-pos-dot{width:22px;height:22px;border-radius:50%;background:#0887a7;border:4px solid #fff;box-shadow:0 0 0 3px rgba(8,135,167,.3),0 2px 8px rgba(0,0,0,.3)}
+.nav-pos-pulse{position:absolute;inset:-14px;border-radius:50%;background:rgba(8,135,167,.18);animation:navpulse 2s ease-out infinite;pointer-events:none}
+@keyframes navpulse{0%{transform:scale(.5);opacity:1}100%{transform:scale(1.4);opacity:0}}
+body.rev-navigating #mapSearchBar,body.rev-navigating .map-top-widgets{opacity:0;pointer-events:none}
+body.rev-navigating .bottom-nav{transform:translateY(110%)}
+.bottom-nav{transition:transform .3s}
+
+[hidden]{display:none!important}
 </style>
 
 
@@ -105,7 +149,39 @@ main{display:block!important;width:100%!important;height:100dvh!important;max-wi
 <header aria-hidden="true"></header>
 <main>
 <h1 class="title">نقشه خدمات REV</h1><div class="actions"><button id="refresh" type="button">به‌روزرسانی</button><select id="filter" aria-label="نوع مرکز"><option value="all">همه خدمات</option><option value="charging">ایستگاه شارژ</option><option value="repair">تعمیرگاه</option><option value="store">فروشگاه قطعات</option></select></div><div id="status" role="status" aria-live="polite">در حال دریافت فهرست مراکز…</div>
-<div class="map-layout"><aside id="details-panel" aria-live="polite" hidden><button type="button" id="close-details" class="close-details" aria-label="بستن جزئیات">×</button><div id="details-content"></div></aside><div id="map" aria-label="نقشه خدمات REV"></div><div class="map-search-bar" id="mapSearchBar"><button type="button" id="historyToggle" class="history-toggle" aria-expanded="false" aria-controls="searchHistoryPanel" aria-label="نمایش جست‌وجوهای اخیر"><span></span></button><form class="map-search-form" id="placeSearchForm" role="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg><input id="placeSearch" type="search" placeholder="جست‌وجوی مکان یا نشانی…" autocomplete="off" aria-label="جست‌وجوی مکان یا نشانی"><button id="searchClear" type="button" aria-label="پاک کردن جست‌وجو" hidden>×</button><button id="filterBtn" type="button" class="filter-btn" aria-label="فیلتر نوع مرکز" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button><button id="searchSubmit" type="submit" aria-label="جست‌وجو"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></form><button id="locate" type="button" aria-label="مکان فعلی من" title="مکان فعلی من"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4m0 12v4M2 12h4m12 0h4"></path><circle cx="12" cy="12" r="8"></circle></svg></button><button id="routeToggle" type="button" aria-expanded="false" aria-controls="routePanel" title="مسیریابی" aria-label="مسیریابی">➤</button></div><div class="filter-menu" id="filterMenu" hidden role="group" aria-label="فیلتر نوع مرکز"><button type="button" data-f="all" class="active"><span>🗺</span>همه</button><button type="button" data-f="charging"><span>⚡</span>شارژ</button><button type="button" data-f="repair"><span>🔧</span>تعمیرگاه</button><button type="button" data-f="store"><span>🛍</span>فروشگاه</button></div>
+<div class="map-layout"><aside id="details-panel" aria-live="polite" hidden><button type="button" id="close-details" class="close-details" aria-label="بستن جزئیات">×</button><div id="details-content"></div></aside><div id="map" aria-label="نقشه خدمات REV"></div>
+<button id="navStartFloat" hidden>🧭 شروع مسیریابی</button>
+<div id="navBanner" hidden role="status" aria-live="polite">
+<div class="nav-maneuver-icon" id="navIcon"></div>
+<div class="nav-maneuver-text">
+<div class="nav-maneuver-dist" id="navDist">—</div>
+<div class="nav-maneuver-instr" id="navInstr">—</div>
+<div class="nav-maneuver-next" id="navNext">—</div>
+</div></div>
+<div id="navDash" hidden>
+<div class="nav-dash-row">
+<div class="nav-dash-stats">
+<div class="nav-stat"><b id="ndRemain">—</b><span>مانده</span></div>
+<div class="nav-stat"><b id="ndEta">—</b><span>رسیدن</span></div>
+<div class="nav-stat"><b id="ndSpeed">—</b><span>سرعت</span></div>
+</div>
+<div class="nav-dash-btns">
+<button id="navVoiceBtn" title="راهنمای صوتی">🔊</button>
+<button id="navCenterBtn" title="مرکزیت نقشه">◎</button>
+<button id="navEndBtn" class="danger" title="پایان مسیریابی">✕</button>
+</div></div></div>
+<div id="navArrive" hidden>
+<div class="nav-arrive-card">
+<h2>🏁 به مقصد رسیدید</h2>
+<p id="navArriveRoute">—</p>
+<div class="nav-arrive-stats">
+<div><b id="naKm">—</b><span>مسافت طی‌شده</span></div>
+<div><b id="naMin">—</b><span>زمان سفر</span></div>
+</div>
+<div class="nav-arrive-btns">
+<button class="primary" id="navSaveTripBtn">ثبت سفر در گزارش‌ها</button>
+<button id="navCloseArriveBtn">بستن</button>
+</div></div></div><div class="map-search-bar" id="mapSearchBar"><button type="button" id="historyToggle" class="history-toggle" aria-expanded="false" aria-controls="searchHistoryPanel" aria-label="نمایش جست‌وجوهای اخیر"><span></span></button><form class="map-search-form" id="placeSearchForm" role="search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"></circle><path d="m16 16 4 4"></path></svg><input id="placeSearch" type="search" placeholder="جست‌وجوی مکان یا نشانی…" autocomplete="off" aria-label="جست‌وجوی مکان یا نشانی"><button id="searchClear" type="button" aria-label="پاک کردن جست‌وجو" hidden>×</button><button id="filterBtn" type="button" class="filter-btn" aria-label="فیلتر نوع مرکز" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 6h16M7 12h10M10 18h4"/></svg></button><button id="searchSubmit" type="submit" aria-label="جست‌وجو"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6"></path></svg></button></form><button id="locate" type="button" aria-label="مکان فعلی من" title="مکان فعلی من"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3"></circle><path d="M12 2v4m0 12v4M2 12h4m12 0h4"></path><circle cx="12" cy="12" r="8"></circle></svg></button><button id="routeToggle" type="button" aria-expanded="false" aria-controls="routePanel" title="مسیریابی" aria-label="مسیریابی">➤</button></div><div class="filter-menu" id="filterMenu" hidden role="group" aria-label="فیلتر نوع مرکز"><button type="button" data-f="all" class="active"><span>🗺</span>همه</button><button type="button" data-f="charging"><span>⚡</span>شارژ</button><button type="button" data-f="repair"><span>🔧</span>تعمیرگاه</button><button type="button" data-f="store"><span>🛍</span>فروشگاه</button></div>
 <section class="search-history-panel" id="searchHistoryPanel" aria-label="جست‌وجوهای اخیر" aria-hidden="true"><div class="search-history-head"><span>جست‌وجوهای اخیر</span><button type="button" id="clearSearchHistory">پاک کردن</button></div><div id="searchHistoryList"></div></section>
 <section id="tripLivePanel" hidden aria-label="وضعیت و اشتراک‌گذاری سفر"><div class="trip-live-head"><strong>🚙 وضعیت سفر شما</strong><button id="tripLiveClose" type="button" aria-label="بستن">×</button></div><div class="trip-live-grid"><div class="trip-live-stat"><small>مقصد</small><b id="tripShareDestination">—</b></div><div class="trip-live-stat"><small>سرعت فعلی GPS</small><b id="tripShareSpeed">در انتظار GPS</b></div><div class="trip-live-stat"><small>زمان تقریبی رسیدن</small><b id="tripShareEta">—</b></div><div class="trip-live-stat"><small>مسافت باقی‌مانده</small><b id="tripShareRemaining">—</b></div><div class="trip-live-stat"><small>وضعیت اشتراک</small><b id="tripShareState">خصوصی</b></div></div><div class="trip-live-actions"><button id="tripShareStart" class="trip-share-primary" type="button">ساخت لینک اشتراک</button><button id="groupTripOpen" type="button">سفر گروهی</button><button id="tripShareCopy" type="button" disabled>کپی لینک</button><button id="tripShareStop" class="trip-stop-share" type="button" disabled>قطع اشتراک‌گذاری</button><button id="tripEnd" class="trip-end" type="button">پایان کامل سفر</button></div><div id="tripShareLink" class="trip-live-link" hidden></div><div id="tripShareNote" class="trip-live-note">برای اشتراک‌گذاری، باید وارد حساب REV باشید و اجازه مکان‌یابی گوشی را بدهید. موقعیت فقط پس از تأیید شما ارسال می‌شود.</div></section>
 <section id="groupTripPanel" hidden aria-label="سفر گروهی REV" style="position:fixed;z-index:940;left:12px;right:12px;bottom:calc(86px + env(safe-area-inset-bottom));max-width:500px;margin:auto;padding:16px;background:#fff;color:#15231b;border:1px solid #dfe7e2;border-radius:20px;box-shadow:0 14px 45px #0004;font-family:Vazirmatn,Vazir,Tahoma,sans-serif;max-height:72dvh;overflow:auto">
@@ -148,7 +224,7 @@ main{display:block!important;width:100%!important;height:100dvh!important;max-wi
  const STATION_API="https://rev-api.mojtaba-alimi64.workers.dev";
  const status=document.getElementById("status"),detailsPanel=document.getElementById("details-panel"),detailsContent=document.getElementById("details-content"),filter=document.getElementById("filter");
  detailsContent.addEventListener("click",function(e){const routeButton=e.target.closest("[data-route-lat]");if(routeButton){startNavigationToPlace({latitude:routeButton.dataset.routeLat,longitude:routeButton.dataset.routeLon,name:routeButton.dataset.routeName});return;}const tab=e.target.closest("[data-detail-tab]");if(!tab)return;const features=tab.dataset.detailTab==="features";detailsContent.querySelectorAll("[data-detail-tab]").forEach(b=>b.setAttribute("aria-selected",String(b===tab)));const rp=detailsContent.querySelector("#reviewsPanel"),fp=detailsContent.querySelector("#featuresPanel");if(rp)rp.hidden=features;if(fp)fp.hidden=!features;});
- const map=L.map("map",{scrollWheelZoom:false}).setView([32.4,53.7],5);
+ const map=L.map("map",{scrollWheelZoom:false}).setView([32.4,53.7],5);try{window.revMap=map;}catch(e){}
  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png",{maxZoom:19,attribution:"&copy; OpenStreetMap"}).addTo(map);
  const markers=L.featureGroup().addTo(map);let userLocation=null,userMarker=null,all=[];
  const typeNames={charging:"ایستگاه شارژ",repair:"تعمیرگاه",store:"فروشگاه قطعات"};
@@ -243,7 +319,8 @@ function placeRouteCarAtStart(coords){if(!coords||!coords.length)return;if(route
  document.getElementById("routePickEnd").addEventListener("click",()=>chooseRoutePin("end"));
  map.on("click",e=>{if(!routePickMode)return;const p=e.latlng,coords=p.lat.toFixed(6)+", "+p.lng.toFixed(6);if(routePickMode==="start"){routeStart.value=coords;if(routeStartMarker)map.removeLayer(routeStartMarker);routeStartMarker=routePin([p.lat,p.lng],"مبدأ","#087a3d",routeStart);}else{routeEnd.value=coords;if(routeEndMarker)map.removeLayer(routeEndMarker);routeEndMarker=routePin([p.lat,p.lng],"مقصد","#0866ff",routeEnd);}routePickMode="";document.getElementById("routePickStart").classList.remove("selected");document.getElementById("routePickEnd").classList.remove("selected");routeNote.textContent="نقطه ثبت شد؛ برای محاسبه مسیر «نمایش مسیر» را بزنید.";});
  async function routeGeocode(value){const q=value.trim();if(!q)throw Error("مبدأ و مقصد را وارد کنید.");const m=q.match(/^(-?\d+(?:\.\d+)?)\s*,\s*(-?\d+(?:\.\d+)?)$/);if(m){const lat=Number(m[1]),lon=Number(m[2]);if(Math.abs(lat)<=90&&Math.abs(lon)<=180)return [lon,lat];}const response=await fetch("https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&accept-language=fa&q="+encodeURIComponent(q),{headers:{"Accept":"application/json"}});if(!response.ok)throw Error("جست‌وجوی نشانی انجام نشد؛ دوباره تلاش کنید.");const results=await response.json();if(!results.length)throw Error("مبدأ یا مقصد پیدا نشد: "+q);return [Number(results[0].lon),Number(results[0].lat)];}
- document.getElementById("routeBuild").addEventListener("click",async()=>{clearRoute();routeSummary.textContent="در حال پیدا کردن مبدأ و مقصد…";routeNote.textContent="در حال محاسبه مسیر جاده‌ای؛ لطفاً صبر کنید.";try{const start=await routeGeocode(routeStart.value),end=await routeGeocode(routeEnd.value);routeStartMarker=routePin([start[1],start[0]],"مبدأ","#087a3d",routeStart);routeEndMarker=routePin([end[1],end[0]],"مقصد","#0866ff",routeEnd);const url="https://router.project-osrm.org/route/v1/driving/"+start[0]+","+start[1]+";"+end[0]+","+end[1]+"?overview=full&geometries=geojson&steps=true";const response=await fetch(url);if(!response.ok)throw Error("سرویس مسیریابی فعلاً پاسخ نمی‌دهد.");const data=await response.json();if(data.code!=="Ok"||!data.routes||!data.routes.length)throw Error("برای این مبدأ و مقصد مسیر جاده‌ای پیدا نشد.");const r=data.routes[0];shareDistanceKm=r.distance/1000;shareRouteDurationMinutes=r.duration/60;shareDestination=routeEnd.value.trim()||"مقصد انتخاب‌شده";shareRouteStartedAt=Date.now();routeLine=L.geoJSON(r.geometry,{style:{color:"#0866ff",weight:6,opacity:.92,lineCap:"round",lineJoin:"round"}}).addTo(map);map.fitBounds(routeLine.getBounds(),{padding:[44,90],maxZoom:16,animate:true});routePanel.hidden=true;routeToggle.classList.remove("active");routeToggle.setAttribute("aria-expanded","false");detailsPanel.hidden=true;routeSummary.textContent="مسافت: "+(r.distance/1000).toLocaleString("fa-IR",{maximumFractionDigits:1})+" کیلومتر · زمان تخمینی: "+Math.round(r.duration/60).toLocaleString("fa-IR")+" دقیقه";routeNote.textContent="نمایش نمای نزدیک مسیر و حرکت نمایشی خودروی برقی…";placeRouteCarAtStart(r.geometry.coordinates);routeNote.textContent="مسیر آماده است؛ نشانگر خودرو ثابت می‌ماند تا حرکت واقعی GPS پس از شروع اشتراک‌گذاری دریافت شود. برای ارسال وضعیت، روی خودرو بزنید.";}catch(err){routeSummary.textContent="";routeNote.textContent=err&&err.message?err.message:"محاسبه مسیر انجام نشد.";}});
+ document.getElementById("routeBuild").addEventListener("click",async()=>{clearRoute();routeSummary.textContent="در حال پیدا کردن مبدأ و مقصد…";routeNote.textContent="در حال محاسبه مسیر جاده‌ای؛ لطفاً صبر کنید.";try{const start=await routeGeocode(routeStart.value),end=await routeGeocode(routeEnd.value);routeStartMarker=routePin([start[1],start[0]],"مبدأ","#087a3d",routeStart);routeEndMarker=routePin([end[1],end[0]],"مقصد","#0866ff",routeEnd);const url="https://router.project-osrm.org/route/v1/driving/"+start[0]+","+start[1]+";"+end[0]+","+end[1]+"?overview=full&geometries=geojson&steps=true";const response=await fetch(url);if(!response.ok)throw Error("سرویس مسیریابی فعلاً پاسخ نمی‌دهد.");const data=await response.json();if(data.code!=="Ok"||!data.routes||!data.routes.length)throw Error("برای این مبدأ و مقصد مسیر جاده‌ای پیدا نشد.");const r=data.routes[0];shareDistanceKm=r.distance/1000;shareRouteDurationMinutes=r.duration/60;shareDestination=routeEnd.value.trim()||"مقصد انتخاب‌شده";shareRouteStartedAt=Date.now();routeLine=L.geoJSON(r.geometry,{style:{color:"#0866ff",weight:6,opacity:.92,lineCap:"round",lineJoin:"round"}}).addTo(map);map.fitBounds(routeLine.getBounds(),{padding:[44,90],maxZoom:16,animate:true});routePanel.hidden=true;routeToggle.classList.remove("active");routeToggle.setAttribute("aria-expanded","false");detailsPanel.hidden=true;routeSummary.textContent="مسافت: "+(r.distance/1000).toLocaleString("fa-IR",{maximumFractionDigits:1})+" کیلومتر · زمان تخمینی: "+Math.round(r.duration/60).toLocaleString("fa-IR")+" دقیقه";try{window.revNavData={coords:r.geometry.coordinates,steps:(r.legs&&r.legs[0]&&r.legs[0].steps)||[],destLat:end[1],destLon:end[0],originName:routeStart.value.trim(),destName:routeEnd.value.trim()||"مقصد"};}catch(e){window.revNavData=null;}
+if(window.REVNav)window.REVNav.offer(window.revNavData);routeNote.textContent="نمایش نمای نزدیک مسیر و حرکت نمایشی خودروی برقی…";placeRouteCarAtStart(r.geometry.coordinates);routeNote.textContent="مسیر آماده است؛ نشانگر خودرو ثابت می‌ماند تا حرکت واقعی GPS پس از شروع اشتراک‌گذاری دریافت شود. برای ارسال وضعیت، روی خودرو بزنید.";}catch(err){routeSummary.textContent="";routeNote.textContent=err&&err.message?err.message:"محاسبه مسیر انجام نشد.";}});
  document.getElementById("routeClear").addEventListener("click",()=>{clearRoute();routeStart.value="";routeEnd.value="";routeNote.textContent="مبدأ و مقصد را دوباره وارد کنید یا با پین روی نقشه انتخاب کنید.";});
 
  const searchForm=document.getElementById("placeSearchForm"),searchInput=document.getElementById("placeSearch");
@@ -347,12 +424,42 @@ L.marker([Number(st.lat),Number(st.lon)],{icon:stationPinIcon({business_type:'ch
 }catch(e){}
 var tpsm=tpd.summary||{};
 try{
-detailsContent.innerHTML='<span class="detail-type">\u0628\u0631\u0646\u0627\u0645\u0647 \u0633\u0641\u0631</span><h2 class="detail-name">'+esc(tpd.origin||'\u0645\u0628\u062f\u0623')+' \u2190 '+esc(tpd.destination||'\u0645\u0642\u0635\u062f')+'</h2><div class="detail-meta">\u0645\u0633\u0627\u0641\u062a: '+esc(tpsm.km!=null?Number(tpsm.km).toFixed(0)+' \u06a9\u06cc\u0644\u0648\u0645\u062a\u0631':'\u2014')+'<br>\u062a\u0648\u0642\u0641 \u0634\u0627\u0631\u0698 \u067e\u06cc\u0634\u0646\u0647\u0627\u062f\u06cc: '+esc(tpsm.stops!=null?tpsm.stops:'\u2014')+'</div><div class="detail-actions"><a href="./trip.html">\u0628\u0627\u0632\u06af\u0634\u062a \u0628\u0647 \u0628\u0631\u0646\u0627\u0645\u0647\u200c\u0631\u06cc\u0632</a></div>';
+detailsContent.innerHTML='<span class="detail-type">\u0628\u0631\u0646\u0627\u0645\u0647 \u0633\u0641\u0631</span><h2 class="detail-name">'+esc(tpd.origin||'\u0645\u0628\u062f\u0623')+' \u2190 '+esc(tpd.destination||'\u0645\u0642\u0635\u062f')+'</h2><div class="detail-meta">\u0645\u0633\u0627\u0641\u062a: '+esc(tpsm.km!=null?Number(tpsm.km).toFixed(0)+' \u06a9\u06cc\u0644\u0648\u0645\u062a\u0631':'\u2014')+'<br>\u062a\u0648\u0642\u0641 \u0634\u0627\u0631\u0698 \u067e\u06cc\u0634\u0646\u0647\u0627\u062f\u06cc: '+esc(tpsm.stops!=null?tpsm.stops:'\u2014')+'</div><div class="detail-actions"><a href="./trip.html">\u0628\u0627\u0632\u06af\u0634\u062a \u0628\u0647 \u0628\u0631\u0646\u0627\u0645\u0647\u200c\u0631\u06cc\u0632</a><button type="button" id="tripPlanNavBtn" style="background:linear-gradient(135deg,#0b93b8,#066d88);color:#fff;border:0;border-radius:8px;padding:6px 12px;font-weight:800;cursor:pointer">🧭 شروع مسیریابی</button></div>';
 detailsPanel.hidden=false;
+try{var tpnb=document.getElementById("tripPlanNavBtn");if(tpnb&&window.REVNav){tpnb.onclick=function(){window.REVNav.startFromTripPlan(tpd);};}}catch(e){}
 setTimeout(function(){try{map.invalidateSize();}catch(e){}},120);
 }catch(e){}
 }}}
 catch(e){}
+
+
+/* REV navstart: از برنامه‌ریز سفر — مسیریابی مستقیم */
+try{
+  var navstartParams=new URLSearchParams(location.search);
+  if(navstartParams.has('navstart')){
+    var navstartTries=0;
+    var navstartIv=setInterval(function(){
+      navstartTries++;
+      if(window.REVNav||navstartTries>50){clearInterval(navstartIv);}
+      if(!window.REVNav)return;
+      var nsd=null; try{nsd=JSON.parse(sessionStorage.getItem('rev_nav_start')||'null');}catch(e){}
+      if(nsd&&nsd.origin&&nsd.destination){
+        (async function(){
+          try{
+            var so=await routeGeocode(nsd.origin), sd=await routeGeocode(nsd.destination);
+            var url='https://router.project-osrm.org/route/v1/driving/'+so[0]+','+so[1]+';'+sd[0]+','+sd[1]+'?overview=full&geometries=geojson&steps=true';
+            var rr=await (await fetch(url)).json();
+            if(rr.routes&&rr.routes.length){
+              var r0=rr.routes[0];
+              window.REVNav.start({coords:r0.geometry.coordinates,steps:r0.legs[0].steps,
+                destLat:sd[1],destLon:sd[0],originName:nsd.origin,destName:nsd.destination});
+            }
+          }catch(e){console.warn('REV navstart failed',e);}
+        })();
+      }
+    },300);
+  }
+}catch(e){}
 
 refreshGroups();
 
@@ -360,5 +467,266 @@ refreshGroups();
 })();
 </script>
 <script src="./rev-announcements.js?v=1" defer></script><script>(function(){var btn=document.getElementById("filterBtn"),menu=document.getElementById("filterMenu"),sel=document.getElementById("filter");if(btn&&menu&&sel){function sync(){var bs=menu.querySelectorAll("button");for(var k=0;k<bs.length;k++){var on=bs[k].getAttribute("data-f")===sel.value;bs[k].classList.toggle("active",on);}btn.classList.toggle("on",sel.value!=="all");}btn.addEventListener("click",function(e){e.stopPropagation();menu.hidden=!menu.hidden;btn.setAttribute("aria-expanded",String(!menu.hidden));});document.addEventListener("click",function(e){if(!menu.hidden&&!e.target.closest("#filterMenu")&&!e.target.closest("#filterBtn")){menu.hidden=true;btn.setAttribute("aria-expanded","false");}});menu.addEventListener("click",function(e){var b=e.target.closest("button[data-f]");if(!b)return;sel.value=b.getAttribute("data-f");sync();menu.hidden=true;btn.setAttribute("aria-expanded","false");sel.dispatchEvent(new Event("change"));} );sel.addEventListener("change",sync);sync();}var inp=document.getElementById("placeSearch"),clr=document.getElementById("searchClear");if(inp&&clr){var tog=function(){clr.hidden=!inp.value;};inp.addEventListener("input",tog);tog();clr.addEventListener("click",function(){inp.value="";tog();inp.focus();});}})();</script>
+<script>
+/* REV navigator — Waze-like turn-by-turn, integrated in map page */
+(function(){
+if(!window.L||!window.revMap)return;
+var $=function(id){return document.getElementById(id);};
+var AUTH_API='https://rev-auth-api.mojtaba-alimi64.workers.dev';
+var fa=function(n,d){return Number(n||0).toLocaleString('fa-IR',{maximumFractionDigits:d==null?1:d});};
+var fa0=function(n){return Math.round(Number(n||0)).toLocaleString('fa-IR');};
+var R=6371000, rad=function(x){return x*Math.PI/180;};
+function hav(a,b){var dLa=rad(b[1]-a[1]),dLo=rad(b[0]-a[0]);
+  var h=Math.sin(dLa/2)*Math.sin(dLa/2)+Math.cos(rad(a[1]))*Math.cos(rad(b[1]))*Math.sin(dLo/2)*Math.sin(dLo/2);
+  return 2*R*Math.asin(Math.sqrt(h));}
+
+/* ---- maneuver → Persian + icon ---- */
+var ICONS={
+  straight:'<path d="M12 19V5M5 12l7-7 7 7"/>',
+  left:'<path d="M19 12H5M12 19l-7-7 7-7"/>',
+  right:'<path d="M5 12h14M12 5l7 7-7 7"/>',
+  slight_left:'<path d="M17 19L7 5M7 5h7M7 5v7"/>',
+  slight_right:'<path d="M7 19l10-14M17 5h-7M17 5v7"/>',
+  sharp_left:'<path d="M20 15H8a4 4 0 0 1-4-4V5M12 12L5 5l7-7"/>',
+  sharp_right:'<path d="M4 15h12a4 4 0 0 0 4-4V5M12 12l7-7-7-7"/>',
+  uturn:'<path d="M17 19V8a4 4 0 0 0-8 0v11M7 15l-3 4 3 4"/>',
+  roundabout:'<path d="M12 3a9 9 0 1 0 9 9"/><path d="M21 3v6h-6"/>',
+  arrive:'<path d="M5 21V4"/><path d="M5 4h12l-2 4 2 4H5"/>',
+  depart:'<path d="M12 19V5M5 12l7-7 7 7"/>',
+  ramp:'<path d="M4 20h6l10-14"/><path d="M14 6h6v6"/>',
+  merge:'<path d="M4 20L12 4l8 16"/><path d="M12 12v8"/>',
+  fork:'<path d="M12 21V8M12 8L4 3M12 8l8-5"/>'};
+function turnWord(mod){
+  return {left:'به چپ بپیچید',right:'به راست بپیچید','slight left':'کمی به چپ متمایل شوید',
+    'slight right':'کمی به راست متمایل شوید','sharp left':'گردش تند به چپ کنید',
+    'sharp right':'گردش تند به راست کنید',uturn:'دور بزنید'}[mod]||'بپیچید';}
+function maneuverInfo(step){
+  var m=step.maneuver||{},t=m.type||'',mod=m.modifier||'';
+  var road=step.name?'«'+step.name+'»':'';
+  var ic=function(k){return '<svg viewBox="0 0 24 24">'+(ICONS[k]||ICONS.straight)+'</svg>';};
+  switch(t){
+    case 'depart': return {icon:ic('depart'),text:'حرکت کنید'+(road?' به سمت '+road:'')};
+    case 'arrive': return {icon:ic('arrive'),text:'به مقصد رسیدید'};
+    case 'turn': return {icon:ic(mod.replace(/ /g,'_')),text:turnWord(mod)+(road?' به '+road:'')};
+    case 'new name': return {icon:ic('straight'),text:'وارد '+(road||'مسیر جدید')+' شوید'};
+    case 'continue': return {icon:ic('straight'),text:'مستقیم ادامه دهید'+(road?' در '+road:'')};
+    case 'merge': return {icon:ic('merge'),text:'ادغام شوید'+(road?' در '+road:'')};
+    case 'on ramp': return {icon:ic('ramp'),text:'وارد رمپ شوید'+(road?' به سمت '+road:'')};
+    case 'off ramp': return {icon:ic('ramp'),text:'از خروجی خارج شوید'+(road?' به سمت '+road:'')};
+    case 'fork': return {icon:ic('fork'),text:'در دوشاخه '+({'slight left':'به چپ','slight right':'به راست',left:'به چپ',right:'به راست'}[mod]||'')+(road?' به سمت '+road:'')};
+    case 'end of road': return {icon:ic(mod.replace(/ /g,'_')),text:'در انتهای خیابان '+turnWord(mod)+(road?' به '+road:'')};
+    case 'roundabout': case 'rotary':
+      return {icon:ic('roundabout'),text:'وارد میدان شوید'+(m.exit?' و خروجی '+fa0(m.exit)+' را بگیرید':'')};
+    case 'exit roundabout': case 'exit rotary':
+      return {icon:ic('roundabout'),text:'از میدان خارج شوید'+(road?' به '+road:'')};
+    default: return {icon:ic('straight'),text:'ادامه دهید'+(road?' در '+road:'')};
+  }}
+function distText(m){
+  if(m>=1000) return fa(m/1000)+' کیلومتر دیگر';
+  if(m>=100) return fa0(Math.round(m/50)*50)+' متر دیگر';
+  return fa0(Math.max(10,Math.round(m/10)*10))+' متر دیگر';}
+
+/* ---- state ---- */
+var nav=null, watchId=null, posMarker=null, lineDone=null, lineRemain=null;
+var curStep=0, prog=0, following=true, offRoute=0, announced={};
+var trackPts=[], startTime=0, maxSpeed=0, speedSum=0, speedN=0;
+var lastPos=null, lastBearing=0;
+var voiceOn=(function(){try{return localStorage.getItem('rev_nav_voice')!=='off';}catch(e){return true;}})();
+function speak(t){
+  if(!voiceOn||!t) return;
+  try{var u=new SpeechSynthesisUtterance(t);u.lang='fa-IR';u.rate=1;
+    speechSynthesis.cancel();speechSynthesis.speak(u);}catch(e){}}
+
+function prepRoute(coords,steps){
+  var cum=[0];
+  for(var i=1;i<coords.length;i++) cum.push(cum[i-1]+hav(coords[i-1],coords[i]));
+  var sIdx=steps.map(function(st){
+    var ml=(st.maneuver||{}).location||coords[0],best=0,bd=1e18;
+    for(var k=0;k<coords.length;k++){var d=hav(ml,coords[k]);if(d<bd){bd=d;best=k;}}
+    return best;});
+  return {coords:coords,steps:steps,cum:cum,stepIdx:sIdx,total:cum[cum.length-1]};
+}
+function nearestOnRoute(lat,lon){
+  var best=0,bd=1e18,bi=0;
+  for(var i=0;i<nav.coords.length;i++){
+    var d=hav([nav.coords[i][0],nav.coords[i][1]],[lon,lat]);
+    if(d<bd){bd=d;bi=i;}}
+  return {idx:bi,dist:bd,prog:nav.cum[bi]};
+}
+function setBanner(){
+  var st=nav.steps[curStep]||nav.steps[nav.steps.length-1];
+  var mi=maneuverInfo(st);
+  var d=Math.max(0,nav.cum[nav.stepIdx[curStep]]-prog);
+  $('navIcon').innerHTML=mi.icon;
+  $('navDist').textContent=(curStep>=nav.steps.length-1&&d<60)?'رسیدید':distText(d);
+  $('navInstr').textContent=mi.text;
+  var nx=nav.steps[curStep+1];
+  $('navNext').textContent=nx?('بعد: '+maneuverInfo(nx).text):'—';
+  if(d<320&&!announced[curStep+'_300']){announced[curStep+'_300']=1;speak(distText(d)+'، '+mi.text);}
+  if(d<90&&!announced[curStep+'_80']){announced[curStep+'_80']=1;speak(mi.text);}
+  var remain=Math.max(0,nav.total-prog);
+  $('ndRemain').textContent=remain>=1000?fa(remain/1000)+' km':fa0(remain)+' م';
+  var avgV=speedN>0?speedSum/speedN:11;
+  var etaMin=remain/Math.max(avgV,6)/60;
+  $('ndEta').textContent=new Date(Date.now()+etaMin*60000).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'});
+}
+function updateLines(){
+  var n=nearestOnRoute(lastPos.lat,lastPos.lon).idx;
+  var done=nav.coords.slice(0,n+1).map(function(c){return [c[1],c[0]];});
+  var rem=nav.coords.slice(n).map(function(c){return [c[1],c[0]];});
+  lineDone.setLatLngs(done); lineRemain.setLatLngs(rem);
+}
+function onPos(pos){
+  if(!nav) return;
+  var lat=pos.coords.latitude,lon=pos.coords.longitude;
+  var spd=(pos.coords.speed!=null&&pos.coords.speed>=0)?pos.coords.speed:null;
+  if(lastPos){
+    var dt=(pos.timestamp-lastPos.ts)/1000;
+    if(!spd&&dt>0){var dd=hav([lastPos.lon,lastPos.lat],[lon,lat]);spd=dd/dt;}
+  }
+  lastPos={lat:lat,lon:lon,ts:pos.timestamp};
+  trackPts.push({lat:lat,lon:lon,ts:pos.timestamp,speed_kmh:spd!=null?spd*3.6:null});
+  if(spd!=null){speedSum+=spd;speedN++;if(spd*3.6>maxSpeed)maxSpeed=spd*3.6;
+    $('ndSpeed').textContent=fa0(spd*3.6);}
+  var nr=nearestOnRoute(lat,lon);
+  // bearing
+  var brg=lastBearing;
+  if(pos.coords.heading!=null&&!isNaN(pos.coords.heading)) brg=pos.coords.heading;
+  else if(trackPts.length>1){var p0=trackPts[trackPts.length-2];
+    brg=(Math.atan2(lon-p0.lon,lat-p0.lat)*180/Math.PI+360)%360;}
+  lastBearing=brg;
+  var ar=$('navArrow'); if(ar) ar.style.transform='rotate('+brg.toFixed(0)+'deg)';
+  posMarker.setLatLng([lat,lon]);
+  if(following) window.revMap.panTo([lat,lon],{animate:true});
+  // off-route?
+  if(nr.dist>60){offRoute++;}else{offRoute=0;prog=nr.prog;}
+  if(offRoute>=3){offRoute=0;reroute(lat,lon);return;}
+  // advance step
+  while(curStep<nav.steps.length-1&&prog>=nav.cum[nav.stepIdx[curStep]]-15) curStep++;
+  updateLines(); setBanner();
+  // arrival
+  var destD=hav([lon,lat],[nav.destLon,nav.destLat]);
+  if(destD<50) arrive();
+}
+function onPosErr(e){
+  var msg={1:'دسترسی به موقعیت داده نشد.',2:'موقعیت در دسترس نیست.',3:'زمان دریافت موقعیت تمام شد.'}[e.code]||'خطای GPS';
+  $('navInstr').textContent=msg;
+}
+async function reroute(lat,lon){
+  $('navInstr').textContent='در حال محاسبه مسیر جدید…';speak('مسیر جدید محاسبه شد');
+  try{
+    var url='https://router.project-osrm.org/route/v1/driving/'+lon+','+lat+';'+nav.destLon+','+nav.destLat+'?overview=full&geometries=geojson&steps=true';
+    var r=await (await fetch(url)).json();
+    var rt=r.routes[0];
+    nav.coords=rt.geometry.coordinates; nav.steps=rt.legs[0].steps;
+    var p=prepRoute(nav.coords,nav.steps);
+    nav.cum=p.cum; nav.stepIdx=p.stepIdx; nav.total=p.total;
+    curStep=0; prog=0; announced={}; offRoute=0;
+    var nr=nearestOnRoute(lat,lon); prog=nr.prog;
+    updateLines(); setBanner();
+  }catch(e){$('navInstr').textContent='محاسبه مسیر جدید ناموفق بود.';}
+}
+function start(data){
+  if(!data||!data.coords||data.coords.length<2){return;}
+  if(!('geolocation' in navigator)){$('navInstr').textContent='مرورگر از موقعیت مکانی پشتیبانی نمی‌کند.';return;}
+  // UI
+  $('navStartFloat').hidden=true;
+  try{var rp=$('routePanel');if(rp)rp.hidden=true;}catch(e){}
+  try{var dp=$('detailsPanel');if(dp)dp.hidden=true;}catch(e){}
+  document.body.classList.add('rev-navigating');
+  $('navBanner').hidden=false; $('navDash').hidden=false;
+  var vb=$('navVoiceBtn'); vb.textContent=voiceOn?'🔊':'🔇'; vb.classList.toggle('on',voiceOn);
+  // route prep
+  nav={coords:data.coords,steps:data.steps&&data.steps.length?data.steps:[{maneuver:{type:'depart',location:data.coords[0]},name:data.originName||'',distance:0,duration:0},{maneuver:{type:'arrive',location:data.coords[data.coords.length-1]},name:'',distance:0,duration:0}],
+    destLat:data.destLat,destLon:data.destLon,originName:data.originName||'',destName:data.destName||'مقصد'};
+  var p=prepRoute(nav.coords,nav.steps);
+  nav.cum=p.cum; nav.stepIdx=p.stepIdx; nav.total=p.total;
+  curStep=0;prog=0;announced={};offRoute=0;following=true;
+  trackPts=[];startTime=Date.now();maxSpeed=0;speedSum=0;speedN=0;lastPos=null;
+  // lines
+  var ll=nav.coords.map(function(c){return [c[1],c[0]];});
+  lineRemain=L.polyline(ll,{color:'#0887a7',weight:7,opacity:.95}).addTo(window.revMap);
+  lineDone=L.polyline([],{color:'#9db0c0',weight:7,opacity:.6}).addTo(window.revMap);
+  // arrow marker
+  posMarker=L.marker(ll[0],{icon:L.divIcon({className:'',html:'<div class="nav-arrow" id="navArrow"><svg viewBox="0 0 48 48"><path d="M24 4 L40 42 L24 33 L8 42 Z" fill="#0887a7" stroke="#ffffff" stroke-width="4" stroke-linejoin="round"/></svg></div>',iconSize:[44,44],iconAnchor:[22,22]}),zIndexOffset:1400}).addTo(window.revMap);
+  window.revMap.on('dragstart',function(){following=false;});
+  speak('مسیریابی شروع شد.');
+  setBanner();
+  watchId=navigator.geolocation.watchPosition(onPos,onPosErr,{enableHighAccuracy:true,maximumAge:2000,timeout:20000});
+  window.revMap.setView(ll[0],16,{animate:true});
+}
+function arrive(){
+  var nd=nav;
+  stop(true);
+  speak('به مقصد رسیدید. سفر بخیر!');
+  $('navArriveRoute').textContent=((nd&&nd.originName)?nd.originName+' ← ':'')+((nd&&nd.destName)||'مقصد');
+  var driven=trackPts.length>1?prog:nav.total;
+  $('naKm').textContent=fa(Math.max(prog,0)/1000)+' کیلومتر';
+  $('naMin').textContent=fa0((Date.now()-startTime)/60000)+' دقیقه';
+  $('navArrive').hidden=false;
+  $('navSaveTripBtn').disabled=false;
+  $('navSaveTripBtn').textContent='ثبت سفر در گزارش‌ها';
+}
+function stop(silent){
+  if(watchId!=null){try{navigator.geolocation.clearWatch(watchId);}catch(e){}watchId=null;}
+  try{window.revMap.off('dragstart');}catch(e){}
+  if(posMarker){try{window.revMap.removeLayer(posMarker);}catch(e){}posMarker=null;}
+  if(lineDone){try{window.revMap.removeLayer(lineDone);}catch(e){}lineDone=null;}
+  if(lineRemain){try{window.revMap.removeLayer(lineRemain);}catch(e){}lineRemain=null;}
+  document.body.classList.remove('rev-navigating');
+  $('navBanner').hidden=true; $('navDash').hidden=true;
+  try{speechSynthesis.cancel();}catch(e){}
+  nav=null;
+  if(!silent&&lastOfferData) offer(lastOfferData);
+}
+async function saveTrip(){
+  var btn=$('navSaveTripBtn'); btn.disabled=true; btn.textContent='در حال ثبت…';
+  var avg=speedN>0?(speedSum/speedN*3.6):0;
+  var body={vehicle_name:'مسیریاب REV',
+    started_at:new Date(startTime).toISOString(),ended_at:new Date().toISOString(),
+    distance_km:Math.round(Math.max(prog,0)/10)/100,
+    driving_stats:{max_speed_kmh:Math.round(maxSpeed*10)/10,average_speed_kmh:Math.round(avg*10)/10,
+      gps_speed_sample_count:speedN,hard_acceleration_events:0,hard_braking_events:0,
+      speed_source:'phone_gps',estimated:true}};
+  try{
+    var r=await fetch(AUTH_API+'/api/driver/trips',{method:'POST',credentials:'include',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+    var j=await r.json().catch(function(){return {};});
+    if(!r.ok||!j.success) throw new Error(j.error||'ثبت ناموفق بود');
+    btn.textContent='✓ در گزارش‌ها ثبت شد';
+  }catch(e){btn.disabled=false;btn.textContent='ثبت سفر در گزارش‌ها';
+    alert('ثبت سفر انجام نشد: '+(e.message||''));}
+}
+var lastOfferData=null;
+function offer(data){
+  var b=$('navStartFloat'); if(!b) return;
+  if(data&&data.coords&&data.coords.length>1){lastOfferData=data;b.hidden=false;b.onclick=function(){start(data);};}
+  else b.hidden=true;
+}
+async function startFromTripPlan(tpd){
+  if(!tpd||!tpd.route||tpd.route.length<2) return;
+  var o=tpd.route[0],d=tpd.route[tpd.route.length-1];
+  $('navStartFloat').hidden=true;
+  try{
+    var url='https://router.project-osrm.org/route/v1/driving/'+o[0]+','+o[1]+';'+d[0]+','+d[1]+'?overview=full&geometries=geojson&steps=true';
+    var r=await (await fetch(url)).json();
+    if(!r.routes||!r.routes.length) throw new Error('no route');
+    var rt=r.routes[0];
+    start({coords:rt.geometry.coordinates,steps:rt.legs[0].steps,
+      destLat:d[1],destLon:d[0],originName:tpd.origin||'',destName:tpd.destination||'مقصد'});
+  }catch(e){alert('محاسبه مسیر برای مسیریابی ناموفق بود.');}
+}
+$('navEndBtn').addEventListener('click',function(){stop();});
+$('navCenterBtn').addEventListener('click',function(){following=true;if(lastPos)window.revMap.panTo([lastPos.lat,lastPos.lon],{animate:true});});
+$('navVoiceBtn').addEventListener('click',function(){
+  voiceOn=!voiceOn;try{localStorage.setItem('rev_nav_voice',voiceOn?'on':'off');}catch(e){}
+  this.textContent=voiceOn?'🔊':'🔇';this.classList.toggle('on',voiceOn);
+  if(!voiceOn){try{speechSynthesis.cancel();}catch(e){}}});
+$('navCloseArriveBtn').addEventListener('click',function(){$('navArrive').hidden=true;});
+$('navSaveTripBtn').addEventListener('click',saveTrip);
+window.REVNav={start:start,offer:offer,startFromTripPlan:startFromTripPlan,stop:stop};
+})();
+
+</script>
 </body>
 </html>
