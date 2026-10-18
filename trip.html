@@ -1176,21 +1176,45 @@ $("continueTripBtn").addEventListener("click",continueToDriverProfile);
 /* REV trip planner — saved plans, map handoff, result summary */
 (function(){
 var KEY='rev_saved_trip_plans_v1';
+function normalizePlans(a){
+  if(!Array.isArray(a))return[];
+  return a.filter(function(p){return p&&typeof p==='object'}).map(function(p){
+    var route=p.params&&typeof p.params==='object'?p.params:p;
+    p.params=route;
+    if(!p.id)p.id='legacy-'+String(p.createdAt||Date.now())+'-'+Math.random().toString(36).slice(2,7);
+    if(!p.createdAt)p.createdAt=Number(p.created_at)||Date.now();
+    if(p.routeKm==null)p.routeKm=Number(route.routeKm||route.distanceKm||0);
+    if(!Array.isArray(p.stops))p.stops=Array.isArray(route.stops)?route.stops:[];
+    if(!Array.isArray(p.stations))p.stations=[];
+    return p;
+  });
+}
 function readPlans(){
   try{
-    var raw=localStorage.getItem(KEY);
-    var a=JSON.parse(raw||'[]');
-    if(!Array.isArray(a))return[];
-    return a.filter(function(p){return p&&typeof p==='object'}).map(function(p){
-      var route=p.params&&typeof p.params==='object'?p.params:p;
-      p.params=route;
-      if(!p.id)p.id='legacy-'+String(p.createdAt||Date.now())+'-'+Math.random().toString(36).slice(2,7);
-      if(!p.createdAt)p.createdAt=Number(p.created_at)||Date.now();
-      if(p.routeKm==null)p.routeKm=Number(route.routeKm||route.distanceKm||0);
-      if(!Array.isArray(p.stops))p.stops=Array.isArray(route.stops)?route.stops:[];
-      if(!Array.isArray(p.stations))p.stations=[];
-      return p;
-    });
+    var a=normalizePlans(JSON.parse(localStorage.getItem(KEY)||'[]'));
+    if(a.length)return a;
+    // Recover any list saved by an earlier REV planner version under a legacy key.
+    var legacyKeys=['rev_saved_trip_plans','rev_saved_plans','rev_trip_plans','rev_saved_trips','rev_planned_trips'];
+    for(var i=0;i<legacyKeys.length;i++){
+      try{
+        var legacy=normalizePlans(JSON.parse(localStorage.getItem(legacyKeys[i])||'null'));
+        if(legacy.length){localStorage.setItem(KEY,JSON.stringify(legacy.slice(0,20)));return legacy;}
+      }catch(_){}
+    }
+    // Older planner builds retained only the most recently handed-off route, not a list.
+    // Migrate that route when present, together with its saved vehicle settings.
+    try{
+      var oldRoute=JSON.parse(localStorage.getItem('rev_planned_route')||'null');
+      if(oldRoute&&Array.isArray(oldRoute.coordinates)&&oldRoute.coordinates.length>1){
+        var settings=JSON.parse(localStorage.getItem('rev_driver_trip_settings')||'{}')||{};
+        var recovered={id:'recovered-'+String(oldRoute.createdAt||Date.now()),createdAt:Number(oldRoute.createdAt)||Date.now(),
+          params:Object.assign({},settings,{origin:oldRoute.origin||settings.origin||'',destination:oldRoute.destination||settings.destination||'',routeKm:Number(oldRoute.distance||0)/1000}),
+          routeKm:Number(oldRoute.distance||0)/1000,durationS:Number(oldRoute.duration||0),coords:oldRoute.coordinates,stops:[],stations:[]};
+        localStorage.setItem(KEY,JSON.stringify([recovered]));
+        return [recovered];
+      }
+    }catch(_){}
+    return[];
   }catch(e){return[]}
 }
 function writePlans(a){
