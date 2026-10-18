@@ -15,21 +15,6 @@
 
 
 <link rel="stylesheet" href="./rev-mobile-theme.css?v=20261017-7">
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<style>
-.rev-preview-modal{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:9999;display:flex;align-items:center;justify-content:center;padding:12px}
-.rev-preview-box{background:#fff;border-radius:16px;width:100%;max-width:640px;max-height:92vh;overflow:hidden;display:flex;flex-direction:column}
-.rev-preview-head{padding:12px 16px;border-bottom:1px solid #eee;display:flex;justify-content:space-between;align-items:center}
-.rev-preview-head h3{margin:0;font-size:16px}
-.rev-preview-close{background:#f1f1f1;border:none;border-radius:50%;width:32px;height:32px;font-size:16px;cursor:pointer}
-#revPreviewMap{height:380px;width:100%}
-.rev-preview-controls{padding:12px 16px;display:flex;gap:8px;align-items:center;border-top:1px solid #eee}
-.rev-preview-controls button{background:#0d9488;color:#fff;border:none;border-radius:8px;padding:8px 16px;cursor:pointer;font-size:14px}
-.rev-preview-controls button.paused{background:#f59e0b}
-.rev-preview-info{padding:0 16px 12px;font-size:13px;color:#555}
-.rev-car-label{background:#fff;border:2px solid #0d9488;border-radius:8px;padding:4px 8px;font-size:12px;white-space:nowrap;box-shadow:0 2px 8px rgba(0,0,0,.2)}
-</style>
 </head>
 <body>
 <a id="revTripReturnAccount" href="https://mojtabaalimi64-cloud.github.io/rev-mobile/" style="position:fixed;left:16px;top:16px;z-index:10001;display:inline-flex;align-items:center;gap:8px;padding:10px 15px;border:1px solid #0866ff;border-radius:999px;background:#0b1511;color:#0866ff;font:700 14px Vazirmatn,Tahoma,sans-serif;text-decoration:none;box-shadow:0 8px 28px #0008;direction:rtl">← بازگشت به اپ REV</a>
@@ -246,6 +231,7 @@ function renderSavedPlans(){
     '<div class="sp-meta">'+(km?faNum(km):'—')+' km \u00b7 '+faNum(stopCount)+' \u062a\u0648\u0642\u0641 \u0634\u0627\u0631\u0698 \u00b7 '+esc(dstr)+'</div></div>'+
     '<div class="sp-btns"><button type="button" class="details" data-act="details" data-id="'+esc(p.id)+'">\u062c\u0632\u0626\u06cc\u0627\u062a</button><button type="button" class="go" data-act="start" data-id="'+esc(p.id)+'">\u0634\u0631\u0648\u0639 \u0633\u0641\u0631</button>'+
     '<button type="button" data-act="map" data-id="'+esc(p.id)+'">\u0646\u0642\u0634\u0647</button>'+
+    '<button type="button" data-preview="'+esc(p.id)+'" style="background:#e0f2f1;border:1px solid #0d9488;color:#0d9488;border-radius:8px;padding:6px 12px;cursor:pointer;">◉ پیش‌نمایش</button>'+
     '<button type="button" class="del" data-act="del" data-id="'+esc(p.id)+'">\u062d\u0630\u0641</button></div></div>';
   }).join('');
 }
@@ -381,252 +367,37 @@ window.revRenderSavedPlans=renderSavedPlans;
 (function(){function s(){var b=document.getElementById('savePlanBtn');if(!b)return;b.addEventListener('click',function(){try{var lr=(typeof lastRoute!=='undefined')?lastRoute:null;if(!lr||!lr.geometry||!lr.geometry.coordinates){var e1=document.getElementById('status');if(e1)e1.textContent='ابتدا مسیر را محاسبه کنید.';return}var o=document.getElementById('origin'),d=document.getElementById('destination');var p={id:'p'+Date.now(),createdAt:Date.now(),params:{origin:o?o.value:'',destination:d?d.value:'',routeKm:String(lr.distance/1000)},coords:lr.geometry.coordinates.slice(0,500)};var k='rev_saved_trip_plans_v1',a=[];try{a=JSON.parse(localStorage.getItem(k)||'[]')}catch(e){}if(!Array.isArray(a))a=[];a.unshift(p);localStorage.setItem(k,JSON.stringify(a.slice(0,20)));var e2=document.getElementById('status');if(e2)e2.textContent='برنامه سفر ذخیره شد.';if(typeof renderSavedPlans==='function')renderSavedPlans();}catch(err){var e3=document.getElementById('status');if(e3)e3.textContent='خطا: '+(err.message||'نامشخص')}})});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',s);else s();})();
 </script>
 
-
 <script>
 (function(){
   var KEY='rev_saved_trip_plans_v1';
-  var previewState=null;
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-  function faNum(n){try{return Number(n).toLocaleString('fa-IR');}catch(e){return n;}}
-  function readPlans(){try{var p=JSON.parse(localStorage.getItem(KEY)||'[]');return Array.isArray(p)?p:[];}catch(e){return[];}}
-  function weatherIcon(code){
-    if(code===0||code===1) return '☀️';
-    if(code===2) return '⛅';
-    if(code===3) return '☁️';
-    if(code===45||code===48) return '🌫️';
-    if(code>=51&&code<=82) return '🌧️';
-    if(code>=71&&code<=77) return '❄️';
-    if(code===95) return '⛈';
-    return '⛅';
-  }
-  function carSvg(){
-    return '<svg width="44" height="36" viewBox="0 0 44 36">'
-    +'<rect x="10" y="2" width="24" height="8" rx="2" fill="#8B5E34" stroke="#5d3f22" stroke-width="1.5"/>'
-    +'<rect x="14" y="0" width="16" height="4" rx="1" fill="#A0714A"/>'
-    +'<path d="M6 30 L8 18 Q9 14 13 14 L17 14 L20 8 Q21 6 24 6 L28 6 Q31 6 32 8 L35 14 L39 14 Q43 14 43 18 L43 30 Z" fill="#0d9488" stroke="#0a6b62" stroke-width="1.5"/>'
-    +'<rect x="20" y="10" width="12" height="6" rx="1" fill="#bfe8e4"/>'
-    +'<circle cx="14" cy="30" r="5" fill="#333"/><circle cx="14" cy="30" r="2" fill="#999"/>'
-    +'<circle cx="36" cy="30" r="5" fill="#333"/><circle cx="36" cy="30" r="2" fill="#999"/>'
-    +'<circle cx="38" cy="4" r="6" fill="#ff6b35" stroke="#fff" stroke-width="1.5"/>'
-    +'<text x="38" y="8" font-size="8" text-anchor="middle" fill="#fff">▶</text></svg>';
-  }
-  function closePreview(){
-    var m=document.getElementById('revPreviewModal');
-    if(m) m.remove();
-    previewState=null;
-  }
-  window.revClosePreview=closePreview;
-  window.revOpenPreview=function(planId){
+  function faNum(n){try{return Number(n).toLocaleString('fa-IR');}catch(e){return String(n);}}
+  function readPlans(){
     try{
-      var plans=readPlans(), plan=null;
-      for(var i=0;i<plans.length;i++) if(plans[i].id===planId){plan=plans[i];break;}
-      if(!plan){alert('برنامه یافت نشد.');return;}
-      if(!plan.coords||!plan.coords.length){alert('این برنامه مختصات ندارد.');return;}
-      closePreview();
-      var route=plan.params||{};
-      var coords=plan.coords;
-      var km=parseFloat(plan.routeKm||0)||0;
-      var dstr=''; try{dstr=new Date(Number(plan.createdAt)||Date.now()).toLocaleDateString('fa-IR');}catch(e){}
-      var stations=plan.stations||[];
-      var stops=plan.stops||[];
-      // اطلاعات سفر
-      var infoHtml='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">'
-        +'<div>📍 مبدأ: <b>'+esc(route.origin||'-')+'</b></div>'
-        +'<div>🏁 مقصد: <b>'+esc(route.destination||'-')+'</b></div>'
-        +'<div>📏 مسافت: <b>'+(km?faNum(Math.round(km*10)/10)+' km':'-')+'</b></div>'
-        +'<div>📅 تاریخ: <b>'+esc(dstr)+'</b></div></div>';
-      // لیست توقف‌ها
-      var stopsHtml='';
-      if(stops&&stops.length){
-        stopsHtml=stops.map(function(sp,idx){
-          var nm=sp.name||('توقف '+(idx+1));
-          var pw=sp.power?(' - '+sp.power+'kW'):'';
-          return '<div style="padding:6px;background:#fff;border:1px solid #eee;border-radius:6px;margin:4px 0;">'
-            +'<b>⚡ '+(idx+1)+'. '+esc(nm)+'</b>'+pw
-            +'<div style="color:#0d9488;font-size:12px;">✓ شارژ تا ۸۰٪ • استراحت ۱۵ دقیقه</div></div>';
-        }).join('');
-      } else {
-        stopsHtml='<div style="color:#999;">توقفی ثبت نشده</div>';
-      }
-      // ساخت مودال
-      var modal=document.createElement('div');
-      modal.id='revPreviewModal';
-      modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.6);z-index:9999;display:flex;align-items:center;justify-content:center;padding:16px;';
-      modal.innerHTML='<div style="background:#fff;border-radius:16px;max-width:640px;width:100%;max-height:90vh;overflow-y:auto;">'
-        +'<div style="display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid #eee;">'
-        +'<h3 style="margin:0;">پیش‌نمایش سفر</h3>'
-        +'<button id="revPreviewClose" style="background:none;border:none;font-size:20px;cursor:pointer;">✕</button></div>'
-        +'<div style="padding:12px 16px;background:#f8fafc;">'+infoHtml+'</div>'
-        +'<div style="padding:10px 16px;background:#fffdf5;border-top:1px solid #eee;">'
-        +'<div style="font-weight:bold;margin-bottom:6px;">📋 برنامه توقف‌ها</div>'
-        +'<div style="max-height:120px;overflow-y:auto;">'+stopsHtml+'</div></div>'
-        +'<div style="position:relative;background:#e8f4f8;">'
-        +'<svg id="revSvg" viewBox="0 0 600 340" style="width:100%;height:340px;display:block;"></svg>'
-        +'<div id="revTip" style="position:absolute;background:#fff;border:2px solid #0d9488;border-radius:50%;width:50px;height:50px;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:11px;pointer-events:none;transform:translate(-50%,-120%);box-shadow:0 2px 8px rgba(0,0,0,.2);"><span id="revTipW" style="font-size:20px;">⛅</span><span id="revTipC" style="font-weight:bold;color:#22c55e;">🔋--٪</span></div>'
-        +'</div>'
-        +'<div style="display:flex;gap:8px;align-items:center;justify-content:center;padding:12px;border-top:1px solid #eee;">'
-        +'<button id="revPlay" style="padding:8px 16px;border-radius:8px;border:1px solid #0d9488;background:#0d9488;color:#fff;cursor:pointer;">⏸ توقف</button>'
-        +'<button id="revRestart" style="padding:8px 16px;border-radius:8px;border:1px solid #ccc;background:#fff;cursor:pointer;">↺ از ابتدا</button>'
-        +'<label style="font-size:12px;">سرعت: <input type="range" id="revSpeed" min="1" max="10" value="3" style="width:80px;"></label></div>'
-        +'<div id="revInfo" style="text-align:center;padding:8px;font-size:13px;color:#666;">آماده...</div>'
-        +'<div style="padding:8px 16px;background:#f8fafc;border-top:1px solid #eee;">'
-        +'<div style="font-size:12px;color:#666;margin-bottom:4px;">نمودار ارتفاع</div>'
-        +'<svg id="revElev" viewBox="0 0 600 70" style="width:100%;height:70px;display:block;background:#fff;border:1px solid #eee;border-radius:8px;"><path id="revElevPath" fill="rgba(13,148,136,.15)" stroke="#0d9488" stroke-width="2"/><line id="revElevLine" y1="0" y2="70" stroke="#ff6b35" stroke-width="2"/></svg>'
-        +'<div id="revElevTxt" style="font-size:12px;text-align:center;color:#666;margin-top:4px;">...</div></div>'
-        +'</div>';
-      document.body.appendChild(modal);
-      document.getElementById('revPreviewClose').onclick=closePreview;
-      modal.onclick=function(e){if(e.target===modal)closePreview();};
-      // رسم نقشه SVG
-      var svg=document.getElementById('revSvg');
-      var W=600,H=340,pad=50;
-      var minLon=1e9,maxLon=-1e9,minLat=1e9,maxLat=-1e9;
-      coords.forEach(function(c){if(c[0]<minLon)minLon=c[0];if(c[0]>maxLon)maxLon=c[0];if(c[1]<minLat)minLat=c[1];if(c[1]>maxLat)maxLat=c[1];});
-      function proj(lonlat){
-        var x=pad+(lonlat[0]-minLon)/((maxLon-minLon)||1)*(W-2*pad);
-        var y=H-pad-(lonlat[1]-minLat)/((maxLat-minLat)||1)*(H-2*pad);
-        return [x,y];
-      }
-      var step=Math.max(1,Math.floor(coords.length/300));
-      var d='M';
-      for(var pi=0;pi<coords.length;pi+=step){var p=proj(coords[pi]);d+=(pi?'L':'')+p[0].toFixed(1)+','+p[1].toFixed(1)+' ';}
-      var pe=proj(coords[coords.length-1]);d+='L'+pe[0].toFixed(1)+','+pe[1].toFixed(1);
-      var ns='http://www.w3.org/2000/svg';
-      var path=document.createElementNS(ns,'path');
-      path.setAttribute('d',d);path.setAttribute('fill','none');
-      path.setAttribute('stroke','#0d9488');path.setAttribute('stroke-width','5');
-      path.setAttribute('stroke-linecap','round');
-      svg.appendChild(path);
-      // ایستگاه‌ها
-      stations.forEach(function(st){
-        if(!isFinite(st.lat)||!isFinite(st.lon))return;
-        var xy=proj([st.lon,st.lat]);
-        var c=document.createElementNS(ns,'circle');
-        c.setAttribute('cx',xy[0]);c.setAttribute('cy',xy[1]);c.setAttribute('r','10');
-        c.setAttribute('fill','#ff9800');c.setAttribute('stroke','#fff');c.setAttribute('stroke-width','2');
-        svg.appendChild(c);
-        var t=document.createElementNS(ns,'text');
-        t.setAttribute('x',xy[0]);t.setAttribute('y',xy[1]+5);
-        t.setAttribute('text-anchor','middle');t.setAttribute('font-size','12');
-        t.textContent='⚡';svg.appendChild(t);
-      });
-      // مبدأ/مقصد
-      var o0=proj(coords[0]),o1=proj(coords[coords.length-1]);
-      [[o0,'#22c55e'],[o1,'#ef4444']].forEach(function(pp){
-        var c=document.createElementNS(ns,'circle');
-        c.setAttribute('cx',pp[0][0]);c.setAttribute('cy',pp[0][1]);c.setAttribute('r','9');
-        c.setAttribute('fill',pp[1]);c.setAttribute('stroke','#fff');c.setAttribute('stroke-width','2');
-        svg.appendChild(c);
-      });
-      // خودرو (div HTML روی نقشه)
-      var carDiv=document.createElement('div');
-      carDiv.innerHTML=carSvg();
-      carDiv.style.cssText='position:absolute;width:44px;height:36px;pointer-events:none;transform:translate(-50%,-50%);z-index:10;';
-      svg.parentElement.appendChild(carDiv);
-      var tip=document.getElementById('revTip');
-      // وضعیت
-      previewState={coords:coords,proj:proj,carDiv:carDiv,tip:tip,svg:svg,idx:0,playing:true,speed:3,
-        battery:parseFloat((route.battery)||60),soc:parseFloat((route.soc)||90),
-        cons:parseFloat((route.consumption)||18),totalKm:km,
-        infoEl:document.getElementById('revInfo'),tipW:document.getElementById('revTipW'),tipC:document.getElementById('revTipC')};
-      document.getElementById('revPlay').onclick=function(){
-        previewState.playing=!previewState.playing;
-        this.textContent=previewState.playing?'⏸ توقف':'▶ ادامه';
-      };
-      document.getElementById('revRestart').onclick=function(){previewState.idx=0;};
-      document.getElementById('revSpeed').oninput=function(){previewState.speed=parseInt(this.value,10);};
-      // آب‌وهوا
-      var wIdx=[];
-      var nW=Math.min(5,Math.max(3,Math.round(km/100)));
-      for(var wi=0;wi<nW;wi++)wIdx.push({i:Math.round(wi*(coords.length-1)/(nW-1)),code:null,temp:null});
-      wIdx.forEach(function(wp){
-        var cc=coords[wp.i];
-        fetch('https://api.open-meteo.com/v1/forecast?latitude='+cc[1]+'&longitude='+cc[0]+'&current=temperature_2m,weather_code&timezone=auto')
-        .then(function(r){return r.json();}).then(function(dd){
-          if(dd&&dd.current){wp.code=dd.current.weather_code;wp.temp=Math.round(dd.current.temperature_2m);}
-        }).catch(function(){});
-      });
-      previewState.wPts=wIdx;
-      // ارتفاع
-      var eN=Math.min(25,Math.max(10,Math.round(coords.length/30)));
-      var eLa=[],eLo=[];
-      for(var ei=0;ei<eN;ei++){var ec=coords[Math.round(ei*(coords.length-1)/(eN-1))];eLa.push(ec[1]);eLo.push(ec[0]);}
-      fetch('https://api.open-meteo.com/v1/elevation?latitude='+eLa.join(',')+'&longitude='+eLo.join(','))
-      .then(function(r){return r.json();}).then(function(dd){
-        if(dd&&dd.elevation){
-          var mn=1e9,mx=-1e9;
-          dd.elevation.forEach(function(v){if(v<mn)mn=v;if(v>mx)mx=v;});
-          var pd='M0,70 ';
-          dd.elevation.forEach(function(v,i){
-            var x=(i/(dd.elevation.length-1))*600;
-            var y=65-((v-mn)/((mx-mn)||1))*55;
-            pd+='L'+x.toFixed(1)+','+y.toFixed(1)+' ';
-          });
-          pd+='L600,70 Z';
-          document.getElementById('revElevPath').setAttribute('d',pd);
-          document.getElementById('revElevTxt').textContent='ارتفاع: '+Math.round(mn)+' تا '+Math.round(mx)+' متر';
-          previewState.elev=dd.elevation;previewState.elevR={min:mn,max:mx};
-        }
-      }).catch(function(){});
-      requestAnimationFrame(tick);
-    }catch(e){alert('خطا: '+(e.message||e));}
-  };
-  function tick(){
-    try{
-      if(!previewState)return;
-      var st=previewState;
-      if(st.playing){
-        st.idx+=st.speed*0.5;
-        if(st.idx>=st.coords.length-1){st.idx=st.coords.length-1;st.playing=false;
-          var pb=document.getElementById('revPlay');if(pb)pb.textContent='▶ ادامه';}
-      }
-      var ci=Math.round(st.idx);
-      var xy=st.proj(st.coords[ci]);
-      var sr=st.svg.parentElement.getBoundingClientRect();
-      var sx=sr.width/600, sy=340/340;
-      if(st.carDiv){st.carDiv.style.left=(xy[0]*sx)+'px';st.carDiv.style.top=(xy[1]*sy)+'px';}
-      st.tip.style.left=(xy[0]*sx)+'px';
-      st.tip.style.top=(xy[1]*sy)+'px';
-      // شارژ
-      var dk=(st.idx/(st.coords.length-1))*st.totalKm;
-      var pct=Math.max(0,Math.round(st.soc-(dk*st.cons/100)/st.battery*100));
-      st.tipC.textContent='🔋'+pct+'٪';
-      st.tipC.style.color=pct>50?'#22c55e':(pct>20?'#f59e0b':'#ef4444');
-      // آب‌وهوا
-      var near=null,bd=1e9;
-      (st.wPts||[]).forEach(function(w){var dd=Math.abs(w.i-st.idx);if(dd<bd){bd=dd;near=w;}});
-      var pr=Math.round(100*st.idx/(st.coords.length-1));
-      if(near&&near.code!=null){
-        st.tipW.textContent=weatherIcon(near.code);
-        st.infoEl.textContent='پیشرفت '+pr+'٪ — '+near.temp+'° — شارژ '+pct+'٪';
-      }else{
-        st.infoEl.textContent='پیشرفت '+pr+'٪ — شارژ '+pct+'٪';
-      }
-      // ارتفاع فعلی
-      if(st.elev&&st.elev.length){
-        var ei2=Math.round((st.idx/(st.coords.length-1))*(st.elev.length-1));
-        ei2=Math.max(0,Math.min(st.elev.length-1,ei2));
-        var ce=Math.round(st.elev[ei2]);
-        var el=document.getElementById('revElevLine');
-        if(el){var ex=(st.idx/(st.coords.length-1))*600;el.setAttribute('x1',ex);el.setAttribute('x2',ex);}
-        var et=document.getElementById('revElevTxt');
-        if(et&&st.elevR)et.textContent='ارتفاع فعلی: '+ce+' متر (از '+Math.round(st.elevR.min)+' تا '+Math.round(st.elevR.max)+')';
-      }
-      requestAnimationFrame(tick);
-    }catch(e){console.error(e);try{requestAnimationFrame(tick);}catch(e2){}}
+      var a=JSON.parse(localStorage.getItem(KEY)||'[]');
+      if(!Array.isArray(a))return[];
+      return a.filter(function(p){return p&&typeof p==='object';});
+    }catch(e){return[];}
   }
-  // اتصال دکمه‌های پیش‌نمایش
-  function attachPreview(){
-    document.querySelectorAll('[data-preview]').forEach(function(btn){
-      if(btn.dataset.prevBound)return;btn.dataset.prevBound='1';
-      btn.addEventListener('click',function(){window.revOpenPreview(btn.getAttribute('data-preview'));});
-    });
+  function renderList(){
+    var list=document.getElementById('savedPlansList');
+    if(!list)return;
+    var plans=readPlans();
+    if(!plans.length){
+      list.innerHTML='<div class="saved-empty">هنوز برنامه\u200cای ذخیره نشده. بعد از محاسبه، دکمه «ذخیره» را بزن.</div>';
+      return;
+    }
+    list.innerHTML=plans.map(function(p){
+      var route=p.params||{};
+      var dstr='';try{dstr=new Date(Number(p.createdAt)||Date.now()).toLocaleDateString('fa-IR');}catch(e){}
+      var origin=route.origin||'مبدأ نامشخص',destination=route.destination||'مقصد نامشخص';
+      var km=parseFloat(p.routeKm||route.routeKm||0)||0;
+      return '<div class="saved-plan"><div class="sp-main"><div class="sp-name">'+esc(origin)+' \u2190 '+esc(destination)+'</div>'+
+        '<div class="sp-meta">'+(km?faNum(Math.round(km*10)/10):'\u2014')+' km \u00b7 '+esc(dstr)+'</div></div>'+
+        '<div class="sp-btns"><button type="button" class="go" data-rev-start="'+esc(p.id)+'">\u0634\u0631\u0648\u0639 \u0633\u0641\u0631</button>'+
+        '<button type="button" class="del" data-rev-del="'+esc(p.id)+'">\u062d\u0630\u0641</button></div></div>';
+    }).join('');
   }
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attachPreview);
-  else attachPreview();
-  setInterval(attachPreview,2000);
-})();
-
   function attachSave(){
     var btn=document.getElementById('savePlanBtn');
     if(btn&&!btn.__revSaveWired){
@@ -643,9 +414,7 @@ window.revRenderSavedPlans=renderSavedPlans;
           var oEl=document.getElementById('origin'),dEl=document.getElementById('destination');
           var coords=lr.geometry.coordinates;
           if(coords.length>500){var sc=[],st=(coords.length-1)/499;for(var k=0;k<500;k++)sc.push(coords[Math.round(k*st)]);coords=sc;}
-          // آب‌وهوا اگر موجود است
-          var wrec=(window.revBestWeatherRecommendation&&window.revBestWeatherRecommendation.createdAt>Date.now()-30*60*1000)?window.revBestWeatherRecommendation:null;
-          var plan={id:'p'+Date.now(),createdAt:Date.now(),params:{origin:oEl?(oEl.value||''): '',destination:dEl?(dEl.value||''): '',routeKm:String(lr.distance/1000)},coords:coords,routeKm:String(lr.distance/1000),weatherRecommendation:wrec};
+          var plan={id:'p'+Date.now(),createdAt:Date.now(),params:{origin:oEl?(oEl.value||''): '',destination:dEl?(dEl.value||''): '',routeKm:String(lr.distance/1000)},coords:coords};
           var arr=readPlans();
           arr.unshift(plan);
           localStorage.setItem(KEY,JSON.stringify(arr.slice(0,20)));
@@ -654,36 +423,120 @@ window.revRenderSavedPlans=renderSavedPlans;
         }catch(err){say('خطا در ذخیره: '+(err&&err.message?err.message:'نامشخص'));}
       });
     }
+    // دکمه‌های حذف و شروع در لیست
     var list=document.getElementById('savedPlansList');
     if(list&&!list.__revWired){
       list.__revWired=true;
       list.addEventListener('click',function(ev){
         var t=ev.target;
-        var getId=function(attr){return t.getAttribute&&t.getAttribute(attr);};
-        var delId=getId('data-rev-del'),startId=getId('data-rev-start'),prevId=getId('data-rev-preview');
-        // ممکن است روی span داخلی کلیک شده باشد
-        if(!delId&&!startId&&!prevId&&t.parentElement){
-          delId=t.parentElement.getAttribute('data-rev-del');
-          startId=t.parentElement.getAttribute('data-rev-start');
-          prevId=t.parentElement.getAttribute('data-rev-preview');
-        }
+        var delId=t.getAttribute&&t.getAttribute('data-rev-del');
+        var startId=t.getAttribute&&t.getAttribute('data-rev-start');
         if(delId){
           var arr=readPlans().filter(function(p){return p.id!==delId;});
           try{localStorage.setItem(KEY,JSON.stringify(arr));}catch(e){}
           renderList();
         }else if(startId){
-          startTrip(startId);
-        }else if(prevId){
-          openPreview(prevId);
+          var plans=readPlans();
+          for(var i=0;i<plans.length;i++)if(plans[i].id===startId){
+            try{localStorage.setItem('rev_planned_route',JSON.stringify(plans[i]));}catch(e){}
+            var se=document.getElementById('status');
+            if(se)se.textContent='برنامه برای شروع سفر آماده شد.';
+            break;
+          }
         }
       });
     }
   }
-  function init(){attachSave();renderList();}
+  function init(){
+    attachSave();
+    renderList();
+  }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init);
   else init();
-  window.revClosePreview=closePreview;
 })();
 </script>
+
+<script>
+(function(){
+  // پیش‌نمایش ساده و ایزوله - تداخلی با کد اصلی ندارد
+  var KEY='rev_saved_trip_plans_v1';
+  function getPlan(id){
+    try{
+      var plans=JSON.parse(localStorage.getItem(KEY)||'[]');
+      for(var i=0;i<plans.length;i++) if(plans[i].id===id) return plans[i];
+    }catch(e){}
+    return null;
+  }
+  window.revOpenPreview=function(planId){
+    var plan=getPlan(planId);
+    if(!plan||!plan.coords||!plan.coords.length){alert('برنامه یافت نشد');return;}
+    var old=document.getElementById('revPvModal'); if(old) old.remove();
+    var route=plan.params||{};
+    var km=parseFloat(plan.routeKm||0)||0;
+    var modal=document.createElement('div');
+    modal.id='revPvModal';
+    modal.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;';
+    var dstr=''; try{dstr=new Date(plan.createdAt).toLocaleDateString('fa-IR');}catch(e){}
+    modal.innerHTML='<div style="background:#fff;border-radius:14px;max-width:600px;width:100%;max-height:92vh;overflow:auto;">'
+      +'<div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee;"><b>پیش‌نمایش سفر</b><button onclick="document.getElementById(\'revPvModal\').remove()" style="border:none;background:none;font-size:18px;cursor:pointer;">✕</button></div>'
+      +'<div style="padding:10px 16px;font-size:13px;background:#f8fafc;">📍 '+escapeHtml(route.origin||'-')+' ← 🏁 '+escapeHtml(route.destination||'-')+'<br>📏 '+(km?Math.round(km*10)/10+' km':'-')+' • 📅 '+dstr+'</div>'
+      +'<div style="position:relative;"><svg id="revPvSvg" viewBox="0 0 600 320" style="width:100%;display:block;background:#eef6f8;"></svg><div id="revPvCar" style="position:absolute;font-size:28px;transform:translate(-50%,-50%);">🚗</div></div>'
+      +'<div style="text-align:center;padding:10px;"><button id="revPvPlay" style="padding:8px 20px;margin:4px;border:1px solid #0d9488;background:#0d9488;color:#fff;border-radius:8px;cursor:pointer;">⏸ توقف</button> <button id="revPvRe" style="padding:8px 20px;margin:4px;border:1px solid #ccc;background:#fff;border-radius:8px;cursor:pointer;">↺ از ابتدا</button></div>'
+      +'<div id="revPvInfo" style="text-align:center;padding:8px;color:#666;font-size:13px;">آماده...</div>'
+      +'</div>';
+    document.body.appendChild(modal);
+    modal.onclick=function(e){if(e.target===modal)modal.remove();};
+    function escapeHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+    // رسم مسیر
+    var svg=document.getElementById('revPvSvg');
+    var coords=plan.coords, W=600, H=320, pad=40;
+    var mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
+    coords.forEach(function(c){if(c[0]<mnx)mnx=c[0];if(c[0]>mxx)mxx=c[0];if(c[1]<mny)mny=c[1];if(c[1]>mxy)mxy=c[1];});
+    function px(c){return [pad+(c[0]-mnx)/((mxx-mnx)||1)*(W-2*pad), H-pad-(c[1]-mny)/((mxy-mny)||1)*(H-2*pad)];}
+    var ns='http://www.w3.org/2000/svg';
+    var path=document.createElementNS(ns,'path');
+    var dstr2='M';
+    var stp=Math.max(1,Math.floor(coords.length/200));
+    for(var i=0;i<coords.length;i+=stp){var p=px(coords[i]);dstr2+=(i?'L':'')+p[0].toFixed(1)+','+p[1].toFixed(1)+' ';}
+    path.setAttribute('d',dstr2);path.setAttribute('fill','none');path.setAttribute('stroke','#0d9488');path.setAttribute('stroke-width','5');path.setAttribute('stroke-linecap','round');
+    svg.appendChild(path);
+    // ایستگاه‌ها
+    (plan.stations||[]).forEach(function(s2){
+      if(!isFinite(s2.lat)||!isFinite(s2.lon))return;
+      var xy=px([s2.lon,s2.lat]);
+      var cc=document.createElementNS(ns,'circle');
+      cc.setAttribute('cx',xy[0]);cc.setAttribute('cy',xy[1]);cc.setAttribute('r',9);
+      cc.setAttribute('fill','#ff9800');cc.setAttribute('stroke','#fff');cc.setAttribute('stroke-width','2');
+      svg.appendChild(cc);
+    });
+    // انیمیشن
+    var car=document.getElementById('revPvCar');
+    var info=document.getElementById('revPvInfo');
+    var idx=0, playing=true, speed=3;
+    document.getElementById('revPvPlay').onclick=function(){playing=!playing;this.textContent=playing?'⏸ توقف':'▶ ادامه';};
+    document.getElementById('revPvRe').onclick=function(){idx=0;};
+    function frame(){
+      if(!document.getElementById('revPvModal'))return;
+      if(playing){idx+=speed*0.6;if(idx>=coords.length-1){idx=coords.length-1;playing=false;document.getElementById('revPvPlay').textContent='▶ ادامه';}}
+      var ci=Math.round(idx), xy=px(coords[ci]);
+      var r=svg.parentElement.getBoundingClientRect(), sx=r.width/600;
+      car.style.left=(xy[0]*sx)+'px';car.style.top=xy[1]+'px';
+      var pr=Math.round(100*idx/(coords.length-1));
+      info.textContent='پیشرفت '+pr+'٪';
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
+  };
+  // اتصال دکمه‌ها
+  function bind(){
+    document.querySelectorAll('[data-preview]').forEach(function(b){
+      if(b._pvb)return;b._pvb=1;
+      b.addEventListener('click',function(e){e.stopPropagation();window.revOpenPreview(b.getAttribute('data-preview'));});
+    });
+  }
+  setInterval(bind,1500); bind();
+})();
+</script>
+
 </body>
 </html>
