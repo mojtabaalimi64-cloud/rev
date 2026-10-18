@@ -484,7 +484,8 @@ window.revRenderSavedPlans=renderSavedPlans;
       +'<div>📏 مسافت: <b>'+(km?Math.round(km*10)/10+' km':'-')+'</b></div>'
       +'<div>📅 تاریخ: <b>'+dstr+'</b></div>'
       +'<div>⚡ ایستگاه: <b>'+stations.length+'</b></div>'
-      +'<div>🛑 توقف: <b>'+stops.length+'</b></div></div>';
+      +'<div>🛑 توقف: <b>'+stops.length+'</b></div>'
+      +'<div id="rvBestTime" style="grid-column:1/-1;background:#e8f5e9;border:1px solid #4caf50;border-radius:8px;padding:8px;text-align:center;">🕐 در حال محاسبه بهترین ساعت حرکت...</div></div>';
     // لیست توقف‌ها
     var stopsHtml='';
     if(stops.length){
@@ -507,7 +508,7 @@ window.revRenderSavedPlans=renderSavedPlans;
       +'<div style="padding:8px 16px;background:#fffdf5;border-top:1px solid #eee;max-height:130px;overflow-y:auto;"><div style="font-weight:bold;font-size:13px;margin-bottom:4px;">📋 برنامه توقف‌ها</div>'+stopsHtml+'</div>'
       +'<div style="position:relative;background:#e8f4f8;">'
       +'<svg id="rvPvS" viewBox="0 0 600 320" style="width:100%;height:320px;display:block;"></svg>'
-      +'<div id="rvPvCar" style="position:absolute;width:44px;height:36px;transform:translate(-50%,-50%);z-index:5;cursor:grab;">'+carSvg()+'</div>'
+      +'<div id="rvPvCar" style="position:absolute;width:44px;height:36px;transform:translate(-50%,-50%);pointer-events:none;z-index:5;">'+carSvg()+'</div>'
       +'<div id="rvPvTip" style="position:absolute;background:rgba(255,255,255,.95);border:2px solid #0d9488;border-radius:12px;padding:4px 8px;font-size:12px;pointer-events:none;transform:translate(-50%,-140%);text-align:center;box-shadow:0 2px 8px rgba(0,0,0,.2);"><div id="rvPvW" style="font-size:20px;">⛅</div><div id="rvPvB" style="font-weight:bold;color:#22c55e;">🔋--٪</div></div>'
       +'</div>'
       +'<div style="display:flex;gap:8px;align-items:center;justify-content:center;padding:10px;border-top:1px solid #eee;">'
@@ -597,6 +598,41 @@ window.revRenderSavedPlans=renderSavedPlans;
     var state={idx:0,play:true,speed:3,
       bat:parseFloat(rt.battery||60), soc:parseFloat(rt.soc||90), cons:parseFloat(rt.consumption||18),
       elev:null, elevR:null, wpts:[]};
+    // محاسبه بهترین ساعت حرکت بر اساس آب‌وهوا و باد
+    (function(){
+      var mid=coords[Math.floor(coords.length/2)];
+      var lat=mid[1], lon=mid[0];
+      fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&hourly=temperature_2m,precipitation,wind_speed_10m,wind_direction_10m&forecast_days=2&timezone=auto')
+      .then(function(r){return r.json();}).then(function(dd){
+        if(!dd||!dd.hourly||!dd.hourly.time) return;
+        var times=dd.hourly.time, temps=dd.hourly.temperature_2m, prec=dd.hourly.precipitation, wind=dd.hourly.wind_speed_10m;
+        var best={score:-1e9,time:null,temp:0,wind:0};
+        var now=new Date();
+        for(var hi=0;hi<times.length;hi++){
+          var t=new Date(times[hi]);
+          if(t<now) continue;
+          var hr=t.getHours();
+          if(hr<5||hr>22) continue; // فقط ساعات روز
+          var tp=temps[hi], ws=wind[hi], pr=prec[hi]||0;
+          // امتیاز: دمای ۱۸-۲۵ عالی، باد کم عالی، بارش صفر عالی
+          var score=100;
+          score-=Math.abs(tp-21)*3; // دمای ایده‌آل ۲۱
+          score-=ws*2; // باد کمتر بهتر
+          score-=pr*20; // بارش بد
+          if(score>best.score) best={score:score,time:t,temp:Math.round(tp),wind:Math.round(ws)};
+        }
+        var el=document.getElementById('rvBestTime');
+        if(el&&best.time){
+          var tstr=best.time.toLocaleDateString('fa-IR')+' ساعت '+best.time.getHours()+':'+(best.time.getMinutes()<10?'0':'')+best.time.getMinutes();
+          el.innerHTML='🕐 <b>بهترین ساعت حرکت:</b> '+tstr+'<br><span style="font-size:12px;color:#555;">🌡️ '+best.temp+'° • 💨 باد '+best.wind+' km/h</span>';
+        } else if(el){
+          el.textContent='🕐 بهترین ساعت: داده کافی نیست';
+        }
+      }).catch(function(){
+        var el2=document.getElementById('rvBestTime');
+        if(el2) el2.textContent='🕐 بهترین ساعت: خطا در دریافت';
+      });
+    })();
     document.getElementById('rvPvP').onclick=function(){state.play=!state.play;this.textContent=state.play?'⏸ توقف':'▶ ادامه';};
     document.getElementById('rvPvR').onclick=function(){state.idx=0;};
     document.getElementById('rvPvS2').oninput=function(){state.speed=parseInt(this.value,10);};
@@ -655,16 +691,6 @@ window.revRenderSavedPlans=renderSavedPlans;
       var bEl=document.getElementById('rvPvB');
       bEl.textContent='🔋'+pct+'٪';
       bEl.style.color=pct>50?'#22c55e':(pct>20?'#f59e0b':'#ef4444');
-      if(pct<=0&&!state.batteryDead){
-        state.batteryDead=true;state.play=false;
-        document.getElementById('rvPvP').textContent='▶ ادامه';
-        var warn=document.createElement('div');warn.id='rvPvWarn';
-        warn.style.cssText='position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#fee2e2;border:2px solid #ef4444;color:#991b1b;padding:10px 20px;border-radius:12px;font-weight:bold;font-size:14px;z-index:20;';
-        warn.textContent='⚠️ باتری تمام شد! خودرو متوقف شد';
-        svg.parentElement.appendChild(warn);
-        info.textContent='⚠️ باتری تمام شد در '+pr+'٪ مسیر!';
-        info.style.color='#dc2626';info.style.fontWeight='bold';
-      }
       // آب‌وهوا
       var near=null,bd=1e9;
       state.wpts.forEach(function(w){var dd2=Math.abs(w.i-state.idx);if(dd2<bd){bd=dd2;near=w;}});
