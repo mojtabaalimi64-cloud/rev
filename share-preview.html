@@ -3,155 +3,173 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta property="og:title" content="سفر من با رانش EV ⚡">
-<meta property="og:description" content="مسیر سفرم رو قبل از حرکت ببین!">
 <title>سفر با رانش EV</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a0a0a;font-family:Tahoma,sans-serif;display:flex;justify-content:center}
-#s{width:100%;max-width:430px;min-height:100vh;background:linear-gradient(160deg,#1a2a3a 0%,#0d1b2a 50%,#1b3a4b 100%);color:#fff;position:relative;overflow:hidden}
-/* افکت پس‌زمینه */
-#s::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:radial-gradient(circle at 30% 20%,rgba(77,208,225,.15),transparent 50%);animation:glow 6s ease-in-out infinite}
-@keyframes glow{0%,100%{transform:translate(0,0)}50%{transform:translate(5%,5%)}}
-.hdr{position:relative;display:flex;align-items:center;justify-content:space-between;padding:14px 18px;z-index:2}
-.logo{font-size:22px;font-weight:900;background:linear-gradient(90deg,#4dd0e1,#00e676);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.prof{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,.1);padding:6px 12px 6px 6px;border-radius:30px;backdrop-filter:blur(10px)}
-.prof img{width:36px;height:36px;border-radius:50%;border:2px solid #4dd0e1;object-fit:cover}
-.prof span{font-size:13px;font-weight:bold}
-.route{position:relative;text-align:center;padding:8px 16px;z-index:2}
-.route .r{font-size:24px;font-weight:900;margin-bottom:2px}
-.route .r .arr{color:#4dd0e1}
-.route .m{font-size:13px;color:#90a4ae}
-#mapw{position:relative;margin:8px 14px;border-radius:20px;overflow:hidden;background:#dceef2;box-shadow:0 8px 32px rgba(0,0,0,.4);z-index:2}
-#smap{width:100%;height:300px;display:block}
-#scar{position:absolute;width:56px;height:44px;transform:translate(-50%,-60%);z-index:5;filter:drop-shadow(0 4px 8px rgba(0,0,0,.4))}
-#stip{position:absolute;background:#fff;color:#333;border-radius:14px;padding:6px 12px;font-size:14px;font-weight:bold;transform:translate(-50%,-150%);box-shadow:0 4px 16px rgba(0,0,0,.3);z-index:6;white-space:nowrap}
-#stip .w{font-size:18px}
-.cards{position:relative;display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:0 14px;z-index:2}
-.card{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.15);border-radius:14px;padding:10px;text-align:center;backdrop-filter:blur(10px)}
-.card .v{font-size:20px;font-weight:900;color:#4dd0e1}
-.card .l{font-size:11px;color:#90a4ae;margin-top:2px}
-#elevw{position:relative;margin:10px 14px 0;background:rgba(255,255,255,.95);border-radius:14px;padding:10px;z-index:2}
-#elevw .t{font-size:12px;color:#666;font-weight:bold;margin-bottom:4px}
-#elev{width:100%;height:55px;display:block}
-.ftr{position:relative;text-align:center;padding:16px;z-index:2}
-.ftr .t1{font-size:18px;font-weight:900;margin-bottom:4px}
-.ftr .t1 span{color:#4dd0e1}
-.ftr .t2{font-size:13px;color:#90a4ae;margin-bottom:12px}
-.btn{display:inline-block;background:linear-gradient(90deg,#00bfa5,#4dd0e1);color:#000;font-weight:900;border:none;border-radius:30px;padding:14px 40px;font-size:16px;cursor:pointer;margin:4px}
-.btn2{background:transparent;color:#fff;border:2px solid rgba(255,255,255,.3)}
-#ld{position:absolute;inset:0;background:#0d1b2a;z-index:50;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px}
-.spin{width:50px;height:50px;border:4px solid rgba(77,208,225,.2);border-top-color:#4dd0e1;border-radius:50%;animation:sp 1s linear infinite}
+body{background:#000;font-family:Tahoma,sans-serif;display:flex;justify-content:center;overflow:hidden}
+#s{width:100%;max-width:430px;height:100vh;max-height:900px;background:#0b1622;color:#fff;position:relative;overflow:hidden;display:flex;flex-direction:column}
+/* هدر */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;z-index:10;background:linear-gradient(180deg,rgba(0,0,0,.6),transparent)}
+.logo{font-size:20px;font-weight:900;color:#fff}
+.logo b{color:#00e676}
+.prof{display:flex;align-items:center;gap:8px}
+.prof img{width:38px;height:38px;border-radius:50%;border:2px solid #00e676;object-fit:cover;background:#333}
+.prof span{font-size:13px;font-weight:bold;text-shadow:0 2px 4px rgba(0,0,0,.5)}
+/* نقشه - تمام صفحه */
+#mapw{position:absolute;inset:0;z-index:1}
+#smap{width:100%;height:100%}
+/* گرادیان بالا و پایین برای خوانایی */
+#s::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:2;
+background:linear-gradient(180deg,rgba(0,0,0,.5) 0%,transparent 25%,transparent 60%,rgba(0,0,0,.7) 100%)}
+/* اطلاعات مسیر - شناور */
+#route{position:absolute;top:64px;left:16px;right:16px;z-index:5;text-align:center}
+#route .r{font-size:22px;font-weight:900;text-shadow:0 2px 8px rgba(0,0,0,.7)}
+#route .m{font-size:13px;color:#cfd8dc;text-shadow:0 1px 4px rgba(0,0,0,.7);margin-top:2px}
+/* آمار شناور - استایل Relive */
+#stats{position:absolute;bottom:130px;left:12px;right:12px;z-index:5;display:flex;gap:8px;justify-content:center}
+.stat{background:rgba(0,0,0,.55);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.15);border-radius:16px;padding:10px 16px;text-align:center;min-width:80px}
+.stat .v{font-size:22px;font-weight:900;color:#fff}
+.stat .v small{font-size:12px;color:#90a4ae;font-weight:normal}
+.stat .l{font-size:11px;color:#90a4ae;margin-top:2px}
+/* ارتفاع - پایین */
+#elevw{position:absolute;bottom:0;left:0;right:0;z-index:5;background:linear-gradient(0deg,rgba(0,0,0,.75),transparent);padding:8px 16px 12px}
+#elev{width:100%;height:56px;display:block}
+/* دکمه‌ها */
+#btns{position:absolute;bottom:170px;right:12px;z-index:6;display:flex;flex-direction:column;gap:8px}
+#btns button{width:44px;height:44px;border-radius:50%;border:none;background:rgba(0,0,0,.55);backdrop-filter:blur(10px);color:#fff;font-size:20px;cursor:pointer;border:1px solid rgba(255,255,255,.2)}
+#ld{position:absolute;inset:0;background:#0b1622;z-index:50;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}
+.spin{width:46px;height:46px;border:4px solid rgba(0,230,118,.2);border-top-color:#00e676;border-radius:50%;animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 <div id="s">
-  <div id="ld"><div class="spin"></div><div>در حال بارگذاری سفر...</div></div>
-  <div class="hdr">
-    <div class="logo">⚡ رانش EV</div>
-    <div class="prof"><span id="pn">—</span><img id="pi" style="display:none"></div>
+  <div id="ld"><div class="spin"></div><div>...</div></div>
+  <div id="mapw"><svg id="smap" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice"></svg></div>
+  <div class="hdr"><div class="logo">⚡ رانش <b>EV</b></div><div class="prof"><span id="pn">—</span><img id="pi" style="display:none"></div></div>
+  <div id="route"><div class="r"><span id="ro">—</span> ← <span id="rd">—</span></div><div class="m" id="rm">—</div></div>
+  <div id="stats">
+    <div class="stat"><div class="v" id="st1">—</div><div class="l">مسافت</div></div>
+    <div class="stat"><div class="v" id="st2">—</div><div class="l">شارژ</div></div>
+    <div class="stat"><div class="v" id="st3">—</div><div class="l">ارتفاع</div></div>
   </div>
-  <div class="route"><div class="r"><span id="ro">—</span> <span class="arr">←</span> <span id="rd">—</span></div><div class="m" id="rm">—</div></div>
-  <div id="mapw"><svg id="smap" viewBox="0 0 600 320"></svg><div id="scar"></div><div id="stip"><span class="w" id="sw">⛅</span> <span id="sb">🔋—</span></div></div>
-  <div class="cards">
-    <div class="card"><div class="v" id="c1">—</div><div class="l">مسافت</div></div>
-    <div class="card"><div class="v" id="c2">—</div><div class="l">شارژ باقی</div></div>
-    <div class="card"><div class="v" id="c3">—</div><div class="l">ارتفاع</div></div>
+  <div id="btns">
+    <button id="bshare" title="اشتراک">📤</button>
+    <button id="bplay" title="توقف/پخش">⏸</button>
   </div>
-  <div id="elevw"><div class="t">📈 پروفایل ارتفاع مسیر</div><svg id="elev" viewBox="0 0 600 55"></svg></div>
-  <div class="ftr">
-    <div class="t1">سفرت رو <span>قبل از حرکت</span> ببین 👀</div>
-    <div class="t2">برنامه‌ریزی هوشمند سفر با خودروی برقی</div>
-    <button class="btn" onclick="location.href='https://mojtabaalimi64-cloud.github.io/rev/trip.html'">🚗 منم می‌خوام</button><br>
-    <button class="btn btn2" id="shbtn">📤 اشتراک‌گذاری</button>
-  </div>
+  <div id="elevw"><svg id="elev" viewBox="0 0 600 56"></svg></div>
 </div>
 <script>
 (function(){
-  // خواندن داده از URL hash (برای اشتراک‌گذاری) یا localStorage (نمایش شخصی)
   var plan=null;
   try{
     var h=location.hash.slice(1);
-    if(h){
-      var d=JSON.parse(decodeURIComponent(escape(atob(h))));
-      plan={params:{origin:d.o,destination:d.d,battery:d.b,soc:d.s,consumption:d.c},routeKm:d.k,coords:d.c.map(function(p){return [p[0]/1e5,p[1]/1e5];}),stations:(d.st||[]).map(function(s){return{name:'',lat:s[1]/1e5,lon:s[0]/1e5};})};
-      if(d.n) document.getElementById('pn').textContent=d.n;
-    }
+    if(h){var d=JSON.parse(decodeURIComponent(escape(atob(h))));
+      plan={params:{origin:d.o,destination:d.d,battery:d.b,soc:d.s,consumption:d.c},routeKm:d.k,
+      coords:d.c.map(function(p){return [p[0]/1e5,p[1]/1e5];}),
+      stations:(d.st||[]).map(function(s){return{lat:s[1]/1e5,lon:s[0]/1e5};})};
+      if(d.n)document.getElementById('pn').textContent=d.n;}
   }catch(e){}
   if(!plan){
-    var qs=new URLSearchParams(location.search), pid=qs.get('plan');
-    try{
-      var ps=JSON.parse(localStorage.getItem('rev_saved_trip_plans_v1')||'[]');
-      for(var i=0;i<ps.length;i++) if(!pid||ps[i].id===pid){plan=ps[i];break;}
-    }catch(e){}
+    var qs=new URLSearchParams(location.search),pid=qs.get('plan');
+    try{var ps=JSON.parse(localStorage.getItem('rev_saved_trip_plans_v1')||'[]');
+      for(var i=0;i<ps.length;i++)if(!pid||ps[i].id===pid){plan=ps[i];break;}}catch(e){}
   }
-  if(!plan||!plan.coords||!plan.coords.length){
-    document.getElementById('ld').innerHTML='<div>سفری یافت نشد</div>';
-    return;
-  }
+  if(!plan||!plan.coords||!plan.coords.length){document.getElementById('ld').innerHTML='سفری یافت نشد';return;}
   document.getElementById('ld').style.display='none';
-  var rt=plan.params||{}, km=parseFloat(plan.routeKm||0)||0, coords=plan.coords;
+  var rt=plan.params||{},km=parseFloat(plan.routeKm||0)||0,coords=plan.coords;
   document.getElementById('ro').textContent=rt.origin||'-';
   document.getElementById('rd').textContent=rt.destination||'-';
   document.getElementById('rm').textContent=Math.round(km*10)/10+' کیلومتر';
-  document.getElementById('c1').textContent=Math.round(km*10)/10+'km';
-  // پروفایل
-  try{
-    var up=JSON.parse(localStorage.getItem('rev_user_profile')||'null');
-    if(up&&up.name) document.getElementById('pn').textContent=up.name;
-    var qi=new URLSearchParams(location.search);
-    if(qi.get('name')) document.getElementById('pn').textContent=qi.get('name');
-  }catch(e){}
-  // نقشه
-  var svg=document.getElementById('smap'),W=600,H=320,pad=45;
+  try{var up=JSON.parse(localStorage.getItem('rev_user_profile')||'null');if(up&&up.name)document.getElementById('pn').textContent=up.name;}catch(e){}
+  var qs2=new URLSearchParams(location.search);if(qs2.get('name'))document.getElementById('pn').textContent=qs2.get('name');
+  // نقشه با دوربین متحرک (سبک Relive)
+  var svg=document.getElementById('smap'),W=600,H=800;
   var a=1e9,b=-1e9,c=1e9,d=-1e9;
   coords.forEach(function(p){if(p[0]<a)a=p[0];if(p[0]>b)b=p[0];if(p[1]<c)c=p[1];if(p[1]>d)d=p[1];});
-  function px(p){return [pad+(p[0]-a)/((b-a)||1)*(W-2*pad),H-pad-(p[1]-c)/((d-c)||1)*(H-2*pad)];}
-  var ns='http://www.w3.org/2000/svg',path=document.createElementNS(ns,'path'),ds='M',stp=Math.max(1,Math.floor(coords.length/200));
-  for(var k=0;k<coords.length;k+=stp){var pp=px(coords[k]);ds+=(k?'L':'')+pp[0].toFixed(1)+','+pp[1].toFixed(1)+' ';}
-  path.setAttribute('d',ds);path.setAttribute('fill','none');path.setAttribute('stroke','#00bfa5');path.setAttribute('stroke-width','7');path.setAttribute('stroke-linecap','round');
-  svg.appendChild(path);
+  var pad=60;
+  function base(p){return [pad+(p[0]-a)/((b-a)||1)*(W-2*pad),H-pad-(p[1]-c)/((d-c)||1)*(H-2*pad)];}
+  var ns='http://www.w3.org/2000/svg';
+  var g=document.createElementNS(ns,'g');g.setAttribute('id','cam');svg.appendChild(g);
+  // پس‌زمینه
+  var bg=document.createElementNS(ns,'rect');
+  bg.setAttribute('width',W);bg.setAttribute('height',H);bg.setAttribute('fill','#1a2e1a');
+  g.appendChild(bg);
+  // مسیر کامل (کم‌رنگ)
+  var full=document.createElementNS(ns,'path'),ds='M',stp=Math.max(1,Math.floor(coords.length/200));
+  for(var k=0;k<coords.length;k+=stp){var pp=base(coords[k]);ds+=(k?'L':'')+pp[0].toFixed(1)+','+pp[1].toFixed(1)+' ';}
+  full.setAttribute('d',ds);full.setAttribute('fill','none');full.setAttribute('stroke','rgba(255,255,255,.25)');
+  full.setAttribute('stroke-width','8');full.setAttribute('stroke-linecap','round');g.appendChild(full);
+  // مسیر طی‌شده (پررنگ - مثل Relive)
+  var done=document.createElementNS(ns,'path');
+  done.setAttribute('fill','none');done.setAttribute('stroke','#00e676');
+  done.setAttribute('stroke-width','8');done.setAttribute('stroke-linecap','round');g.appendChild(done);
+  // ایستگاه‌ها
   (plan.stations||[]).slice(0,20).forEach(function(s){
     if(!isFinite(s.lat)||!isFinite(s.lon))return;
-    var xy=px([s.lon,s.lat]),cc=document.createElementNS(ns,'circle');
-    cc.setAttribute('cx',xy[0]);cc.setAttribute('cy',xy[1]);cc.setAttribute('r',10);
-    cc.setAttribute('fill','#ff9800');cc.setAttribute('stroke','#fff');cc.setAttribute('stroke-width',2);
-    svg.appendChild(cc);
+    var xy=base([s.lon,s.lat]),cc=document.createElementNS(ns,'circle');
+    cc.setAttribute('cx',xy[0]);cc.setAttribute('cy',xy[1]);cc.setAttribute('r',12);
+    cc.setAttribute('fill','#ff9800');cc.setAttribute('stroke','#fff');cc.setAttribute('stroke-width',3);
+    g.appendChild(cc);
   });
-  var car=document.getElementById('scar');
-  car.innerHTML='<svg width="56" height="44" viewBox="0 0 44 36"><rect x="10" y="2" width="24" height="8" rx="2" fill="#8B5E34"/><path d="M6 30 L8 18 Q9 14 13 14 L17 14 L20 8 Q21 6 24 6 L28 6 Q31 6 32 8 L35 14 L39 14 Q43 14 43 18 L43 30 Z" fill="#00e676" stroke="#009624" stroke-width="1.5"/><circle cx="14" cy="30" r="5" fill="#222"/><circle cx="36" cy="30" r="5" fill="#222"/></svg>';
-  var tip=document.getElementById('stip');
-  var st={i:0,bat:parseFloat(rt.battery||60),soc:parseFloat(rt.soc||90),con:parseFloat(rt.consumption||18),el:null};
+  // خودرو با چمدان (همان SVG سفارشی)
+  var carG=document.createElementNS(ns,'g');
+  carG.innerHTML='<svg x="-28" y="-24" width="56" height="48" viewBox="0 0 44 36">'
+    +'<rect x="10" y="2" width="24" height="8" rx="2" fill="#8B5E34" stroke="#5d3f22" stroke-width="1.5"/>'
+    +'<rect x="14" y="0" width="16" height="4" rx="1" fill="#A0714A"/>'
+    +'<path d="M6 30 L8 18 Q9 14 13 14 L17 14 L20 8 Q21 6 24 6 L28 6 Q31 6 32 8 L35 14 L39 14 Q43 14 43 18 L43 30 Z" fill="#00e676" stroke="#007a3d" stroke-width="1.5"/>'
+    +'<rect x="20" y="10" width="12" height="6" rx="1" fill="#c8f5d8"/>'
+    +'<circle cx="14" cy="30" r="5" fill="#222"/><circle cx="36" cy="30" r="5" fill="#222"/></svg>';
+  // سایه زیر خودرو
+  var sh=document.createElementNS(ns,'ellipse');
+  sh.setAttribute('rx',26);sh.setAttribute('ry',8);sh.setAttribute('fill','rgba(0,0,0,.35)');
+  g.appendChild(sh);g.appendChild(carG);
+  var st={i:0,play:true,bat:parseFloat(rt.battery||60),soc:parseFloat(rt.soc||90),con:parseFloat(rt.consumption||18),el:null,camX:0,camY:0};
   // ارتفاع
   var en=15,ela=[],elo=[];
   for(var ei=0;ei<en;ei++){var ec=coords[Math.round(ei*(coords.length-1)/(en-1))];ela.push(ec[1]);elo.push(ec[0]);}
   fetch('https://api.open-meteo.com/v1/elevation?latitude='+ela.join(',')+'&longitude='+elo.join(',')).then(function(r){return r.json();}).then(function(dd){
     if(dd&&dd.elevation){
-      var esvg=document.getElementById('elev'),pd='M0,55 ',mn=1e9,mx=-1e9;
+      var esvg=document.getElementById('elev'),pd='M0,56 ',mn=1e9,mx=-1e9;
       dd.elevation.forEach(function(v){if(v<mn)mn=v;if(v>mx)mx=v;});
-      dd.elevation.forEach(function(v,ii){var x=ii/(dd.elevation.length-1)*600,y=50-((v-mn)/((mx-mn)||1))*42;pd+='L'+x.toFixed(1)+','+y.toFixed(1)+' ';});
-      pd+='L600,55Z';
+      dd.elevation.forEach(function(v,ii){var x=ii/(dd.elevation.length-1)*600,y=50-((v-mn)/((mx-mn)||1))*40;pd+='L'+x.toFixed(1)+','+y.toFixed(1)+' ';});
+      pd+='L600,56Z';
       var p2=document.createElementNS(ns,'path');
-      p2.setAttribute('d',pd);p2.setAttribute('fill','rgba(0,191,165,.25)');p2.setAttribute('stroke','#00bfa5');p2.setAttribute('stroke-width',2);
-      esvg.appendChild(p2);st.el=dd.elevation;
+      p2.setAttribute('d',pd);p2.setAttribute('fill','rgba(0,230,118,.3)');p2.setAttribute('stroke','#00e676');p2.setAttribute('stroke-width',2.5);
+      esvg.appendChild(p2);
+      // نشانگر موقعیت روی نمودار
+      var mk=document.createElementNS(ns,'circle');
+      mk.setAttribute('id','emk');mk.setAttribute('r',6);mk.setAttribute('fill','#fff');
+      mk.setAttribute('stroke','#00e676');mk.setAttribute('stroke-width',3);
+      esvg.appendChild(mk);st.el=dd.elevation;st.elR={mn:mn,mx:mx};
     }
   }).catch(function(){});
   function fa(n){try{return Number(n).toLocaleString('fa-IR');}catch(e){return n;}}
+  document.getElementById('bplay').onclick=function(){st.play=!st.play;this.textContent=st.play?'⏸':'▶';};
   (function fr(){
-    st.i+=2.2;if(st.i>=coords.length-1)st.i=0;
-    var ci=Math.round(st.i),xy=px(coords[ci]),w=document.getElementById('mapw'),r=w.getBoundingClientRect();
-    car.style.left=(xy[0]*(r.width/600))+'px';car.style.top=(xy[1]*(r.height/320))+'px';
-    tip.style.left=(xy[0]*(r.width/600))+'px';tip.style.top=(xy[1]*(r.height/320))+'px';
+    if(st.play){st.i+=1.6;if(st.i>=coords.length-1)st.i=0;}
+    var ci=Math.round(st.i),xy=base(coords[ci]);
+    // دوربین نرم (سبک Relive) - خودرو همیشه وسط
+    var tx=W/2-xy[0],ty=H/2-xy[1];
+    st.camX+=(tx-st.camX)*0.08;st.camY+=(ty-st.camY)*0.08;
+    g.setAttribute('transform','translate('+st.camX.toFixed(1)+','+st.camY.toFixed(1)+')');
+    carG.setAttribute('transform','translate('+xy[0]+','+xy[1]+')');
+    sh.setAttribute('cx',xy[0]);sh.setAttribute('cy',xy[1]+16);
+    // مسیر طی‌شده
+    var dd2='M',e2=Math.min(ci,coords.length-1);
+    for(var q=0;q<=e2;q+=stp){var qq=base(coords[q]);dd2+=(q?'L':'')+qq[0].toFixed(1)+','+qq[1].toFixed(1)+' ';}
+    done.setAttribute('d',dd2);
     var dk=(st.i/(coords.length-1))*km,pct=Math.max(0,Math.round(st.soc-(dk*st.con/100)/st.bat*100));
-    var sb=document.getElementById('sb');
-    sb.textContent='🔋'+pct+'٪';sb.style.color=pct>50?'#22c55e':'#f59e0b';
-    document.getElementById('c2').textContent=fa(pct)+'٪';
-    if(st.el){var ei2=Math.round((st.i/(coords.length-1))*(st.el.length-1));document.getElementById('c3').textContent=fa(Math.round(st.el[ei2]))+'m';}
+    document.getElementById('st1').innerHTML=fa(Math.round(dk*10)/10)+'<small>km</small>';
+    document.getElementById('st2').innerHTML=fa(pct)+'<small>٪</small>';
+    if(st.el){var eii=Math.round((st.i/(coords.length-1))*(st.el.length-1));
+      document.getElementById('st3').innerHTML=fa(Math.round(st.el[eii]))+'<small>m</small>';
+      var mk2=document.getElementById('emk');
+      if(mk2){var ex=(st.i/(coords.length-1))*600,ey=50-((st.el[eii]-st.elR.mn)/((st.elR.mx-st.elR.mn)||1))*40;mk2.setAttribute('cx',ex);mk2.setAttribute('cy',ey);}
+    }
     requestAnimationFrame(fr);
   })();
-  document.getElementById('shbtn').onclick=function(){
-    // ساخت لینک اشتراکی با داده فشرده
+  document.getElementById('bshare').onclick=function(){
     var dc={o:rt.origin,d:rt.destination,k:Math.round(km*10)/10,b:st.bat,s:st.soc,c:st.con,
       c:coords.filter(function(_,ix){return ix%Math.max(1,Math.floor(coords.length/120))===0;}).map(function(p){return [Math.round(p[0]*1e5),Math.round(p[1]*1e5)];}),
       st:(plan.stations||[]).slice(0,15).map(function(s){return [Math.round(s.lon*1e5),Math.round(s.lat*1e5)];}),
