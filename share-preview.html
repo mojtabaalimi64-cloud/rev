@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>پیش‌نمایش سفر | رانش EV</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#000;font-family:'Vazirmatn',Tahoma,sans-serif;display:flex;justify-content:center;min-height:100vh}
+#stage{width:100%;max-width:450px;aspect-ratio:9/16;max-height:100vh;background:linear-gradient(180deg,#0f2027,#203a43,#2c5364);position:relative;overflow:hidden;display:flex;flex-direction:column;color:#fff}
+/* هدر برند */
+#brand{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:rgba(0,0,0,.3)}
+#brand .logo{font-weight:bold;font-size:18px;color:#4dd0e1}
+#brand .logo span{color:#fff}
+/* پروفایل کاربر */
+#profile{display:flex;align-items:center;gap:8px}
+#profile img{width:40px;height:40px;border-radius:50%;border:2px solid #4dd0e1;object-fit:cover;background:#333}
+#profile .pname{font-size:13px;font-weight:bold}
+/* اطلاعات سفر */
+#tripinfo{padding:10px 16px;text-align:center;background:rgba(0,0,0,.25)}
+#tripinfo .route{font-size:20px;font-weight:bold;margin-bottom:4px}
+#tripinfo .meta{font-size:13px;color:#b0bec5}
+/* نقشه */
+#mapwrap{position:relative;flex:1;min-height:0;background:#e8f4f8;margin:0 12px;border-radius:16px;overflow:hidden}
+#smap{width:100%;height:100%;display:block}
+#scar{position:absolute;width:52px;height:42px;transform:translate(-50%,-50%);z-index:5;pointer-events:none}
+#stip{position:absolute;background:rgba(255,255,255,.95);border:2px solid #0d9488;border-radius:12px;padding:4px 10px;font-size:13px;transform:translate(-50%,-135%);text-align:center;box-shadow:0 2px 10px rgba(0,0,0,.3);pointer-events:none;color:#333;white-space:nowrap}
+/* آمار */
+#stats{display:flex;justify-content:space-around;padding:10px;background:rgba(0,0,0,.3);margin:10px 12px 0;border-radius:12px}
+#stats .stat{text-align:center}
+#stats .stat .v{font-size:18px;font-weight:bold;color:#4dd0e1}
+#stats .stat .l{font-size:11px;color:#b0bec5}
+/* نمودار ارتفاع */
+#elevwrap{margin:10px 12px 0;background:rgba(255,255,255,.95);border-radius:12px;padding:8px}
+#elevwrap .t{font-size:12px;color:#666;margin-bottom:4px}
+#elev{width:100%;height:60px;display:block}
+#elevtxt{font-size:12px;color:#555;text-align:center;margin-top:2px}
+/* فوتر */
+#footer{padding:12px 16px;text-align:center;background:rgba(0,0,0,.4)}
+#footer .cta{font-size:16px;font-weight:bold;color:#4dd0e1;margin-bottom:8px}
+#sharebtn{background:#0d9488;color:#fff;border:none;border-radius:24px;padding:12px 32px;font-size:16px;font-weight:bold;cursor:pointer;margin:4px}
+#dlbtn{background:transparent;color:#fff;border:2px solid #4dd0e1;border-radius:24px;padding:10px 28px;font-size:14px;cursor:pointer;margin:4px}
+/* انتخاب سفر */
+#picker{position:absolute;inset:0;background:rgba(0,0,0,.9);z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;color:#fff}
+#picker h2{margin-bottom:16px}
+#picker .plist{width:100%;max-height:60vh;overflow-y:auto}
+#picker .pcard{background:#1e3a4a;border-radius:12px;padding:12px;margin:8px 0;cursor:pointer;border:2px solid transparent}
+#picker .pcard:active{border-color:#4dd0e1}
+</style>
+</head>
+<body>
+<div id="stage">
+  <div id="brand">
+    <div class="logo">⚡ رانش <span>EV</span></div>
+    <div id="profile">
+      <span class="pname" id="pname">کاربر</span>
+      <img id="pimg" src="" alt="" onerror="this.style.display='none'">
+    </div>
+  </div>
+  <div id="tripinfo">
+    <div class="route" id="rroute">— ← —</div>
+    <div class="meta" id="rmeta">—</div>
+  </div>
+  <div id="mapwrap">
+    <svg id="smap" viewBox="0 0 600 400" preserveAspectRatio="xMidYMid meet"></svg>
+    <div id="scar"></div>
+    <div id="stip"><span id="sw">⛅</span> <span id="sb" style="font-weight:bold;color:#22c55e">🔋--٪</span></div>
+  </div>
+  <div id="stats">
+    <div class="stat"><div class="v" id="sprog">۰٪</div><div class="l">پیشرفت</div></div>
+    <div class="stat"><div class="v" id="sspeed">—</div><div class="l">سرعت</div></div>
+    <div class="stat"><div class="v" id="scharge">—</div><div class="l">شارژ</div></div>
+    <div class="stat"><div class="v" id="selev">—</div><div class="l">ارتفاع</div></div>
+  </div>
+  <div id="elevwrap">
+    <div class="t">📈 نمودار ارتفاع مسیر</div>
+    <svg id="elev" viewBox="0 0 600 60"></svg>
+    <div id="elevtxt">...</div>
+  </div>
+  <div id="footer">
+    <div class="cta">🚗 سفرت رو قبل از حرکت ببین!</div>
+    <button id="sharebtn">📤 اشتراک‌گذاری</button>
+    <button id="dlbtn">💾 ذخیره</button>
+  </div>
+  <div id="picker" style="display:none">
+    <h2>🗺️ سفر رو انتخاب کن</h2>
+    <div class="plist" id="plist"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  var KEY='rev_saved_trip_plans_v1';
+  var plans=[];
+  try{ plans=JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){}
+  
+  // پروفایل کاربر
+  try{
+    var up=JSON.parse(localStorage.getItem('rev_user_profile')||localStorage.getItem('rev_profile')||'null');
+    if(up){
+      if(up.name) document.getElementById('pname').textContent=up.name;
+      if(up.avatar||up.photo||up.image) document.getElementById('pimg').src=up.avatar||up.photo||up.image;
+    }
+  }catch(e){}
+  // اگر از اپ با پارامتر آمد
+  var qs=new URLSearchParams(location.search);
+  var uname=qs.get('name'), uimg=qs.get('img');
+  if(uname) document.getElementById('pname').textContent=uname;
+  if(uimg) document.getElementById('pimg').src=uimg;
+  
+  var planId=qs.get('plan');
+  var plan=null;
+  if(planId){
+    for(var i=0;i<plans.length;i++) if(plans[i].id===planId){plan=plans[i];break;}
+  }
+  if(!plan && plans.length===1) plan=plans[0];
+  if(!plan){
+    // نمایش انتخاب‌گر
+    var pk=document.getElementById('picker'), pl=document.getElementById('plist');
+    pk.style.display='flex';
+    if(!plans.length){
+      pl.innerHTML='<div style="text-align:center;color:#999">سفری ذخیره نشده.<br>اول از صفحه برنامه‌ریزی سفر یه مسیر ذخیره کن.</div>';
+    } else {
+      pl.innerHTML=plans.map(function(p){
+        var rt=p.params||{};
+        return '<div class="pcard" data-id="'+p.id+'"><b>'+(rt.origin||'-')+' ← '+(rt.destination||'-')+'</b><br><span style="color:#999;font-size:13px">'+Math.round((p.routeKm||0)*10)/10+' km</span></div>';
+      }).join('');
+      pl.querySelectorAll('.pcard').forEach(function(c){
+        c.onclick=function(){ location.search='?plan='+c.getAttribute('data-id'); };
+      });
+    }
+    return;
+  }
+  
+  // نمایش اطلاعات
+  var rt=plan.params||{}, km=parseFloat(plan.routeKm||0)||0;
+  var coords=plan.coords||[];
+  document.getElementById('rroute').textContent=(rt.origin||'-')+' ← '+(rt.destination||'-');
+  try{
+    var dstr=new Date(plan.createdAt).toLocaleDateString('fa-IR');
+    document.getElementById('rmeta').textContent=Math.round(km*10)/10+' km • '+dstr;
+  }catch(e){}
+  
+  // رسم نقشه
+  var svg=document.getElementById('smap'), W=600, H=400, pad=50;
+  var mnx=1e9,mxx=-1e9,mny=1e9,mxy=-1e9;
+  coords.forEach(function(c){if(c[0]<mnx)mnx=c[0];if(c[0]>mxx)mxx=c[0];if(c[1]<mny)mny=c[1];if(c[1]>mxy)mxy=c[1];});
+  function px(c){return [pad+(c[0]-mnx)/((mxx-mnx)||1)*(W-2*pad), H-pad-(c[1]-mny)/((mxy-mny)||1)*(H-2*pad)];}
+  var ns='http://www.w3.org/2000/svg';
+  var path=document.createElementNS(ns,'path'), ds='M', st=Math.max(1,Math.floor(coords.length/250));
+  for(var pi=0;pi<coords.length;pi+=st){var pp=px(coords[pi]);ds+=(pi?'L':'')+pp[0].toFixed(1)+','+pp[1].toFixed(1)+' ';}
+  path.setAttribute('d',ds);path.setAttribute('fill','none');path.setAttribute('stroke','#0d9488');
+  path.setAttribute('stroke-width','6');path.setAttribute('stroke-linecap','round');
+  svg.appendChild(path);
+  // ایستگاه‌ها
+  (plan.stations||[]).forEach(function(s){
+    if(!isFinite(s.lat)||!isFinite(s.lon))return;
+    var xy=px([s.lon,s.lat]);
+    var cc=document.createElementNS(ns,'circle');
+    cc.setAttribute('cx',xy[0]);cc.setAttribute('cy',xy[1]);cc.setAttribute('r','11');
+    cc.setAttribute('fill','#ff9800');cc.setAttribute('stroke','#fff');cc.setAttribute('stroke-width','2.5');
+    svg.appendChild(cc);
+    var tt=document.createElementNS(ns,'text');
+    tt.setAttribute('x',xy[0]);tt.setAttribute('y',xy[1]+5);
+    tt.setAttribute('text-anchor','middle');tt.setAttribute('font-size','13');
+    tt.textContent='⚡';svg.appendChild(tt);
+  });
+  // مبدأ/مقصد
+  var o0=px(coords[0]), o1=px(coords[coords.length-1]);
+  [[o0,'#22c55e','🟢'],[o1,'#ef4444','🔴']].forEach(function(q){
+    var cc=document.createElementNS(ns,'circle');
+    cc.setAttribute('cx',q[0][0]);cc.setAttribute('cy',q[0][1]);cc.setAttribute('r','12');
+    cc.setAttribute('fill',q[1]);cc.setAttribute('stroke','#fff');cc.setAttribute('stroke-width','3');
+    svg.appendChild(cc);
+  });
+  
+  // خودرو
+  var car=document.getElementById('scar');
+  car.innerHTML='<svg width="52" height="42" viewBox="0 0 44 36"><rect x="10" y="2" width="24" height="8" rx="2" fill="#8B5E34"/><path d="M6 30 L8 18 Q9 14 13 14 L17 14 L20 8 Q21 6 24 6 L28 6 Q31 6 32 8 L35 14 L39 14 Q43 14 43 18 L43 30 Z" fill="#0d9488" stroke="#0a6b62" stroke-width="1.5"/><rect x="20" y="10" width="12" height="6" rx="1" fill="#bfe8e4"/><circle cx="14" cy="30" r="5" fill="#333"/><circle cx="36" cy="30" r="5" fill="#333"/></svg>';
+  var tip=document.getElementById('stip');
+  
+  var state={idx:0,bat:parseFloat(rt.battery||60),soc:parseFloat(rt.soc||90),cons:parseFloat(rt.consumption||18),elev:null};
+  
+  // آب‌وهوا
+  var wpts=[], nw=Math.min(4,Math.max(2,Math.round(km/120)));
+  for(var wi=0;wi<nw;wi++){
+    (function(wp){
+      var cc2=coords[wp.i];
+      fetch('https://api.open-meteo.com/v1/forecast?latitude='+cc2[1]+'&longitude='+cc2[0]+'&current=temperature_2m,weather_code&timezone=auto')
+      .then(function(r){return r.json();}).then(function(dd){
+        if(dd&&dd.current){wp.code=dd.current.weather_code;wp.temp=Math.round(dd.current.temperature_2m);}
+      }).catch(function(){});
+    })({i:Math.round(wi*(coords.length-1)/(nw-1)),code:null,temp:null});
+    wpts.push({i:Math.round(wi*(coords.length-1)/(nw-1)),code:null,temp:null});
+  }
+  function wIcon(c){
+    if(c===0||c===1)return '☀️';if(c===2)return '⛅';if(c===3)return '☁️';
+    if(c>=51&&c<=82)return '🌧️';return '⛅';
+  }
+  
+  // ارتفاع
+  var en=Math.min(20,Math.max(8,Math.round(coords.length/40)));
+  var ela=[],elo=[];
+  for(var ei=0;ei<en;ei++){var ec=coords[Math.round(ei*(coords.length-1)/(en-1))];ela.push(ec[1]);elo.push(ec[0]);}
+  fetch('https://api.open-meteo.com/v1/elevation?latitude='+ela.join(',')+'&longitude='+elo.join(','))
+  .then(function(r){return r.json();}).then(function(dd){
+    if(dd&&dd.elevation){
+      var mn=1e9,mx=-1e9;
+      dd.elevation.forEach(function(v){if(v<mn)mn=v;if(v>mx)mx=v;});
+      var esvg=document.getElementById('elev'), pd='M0,60 ';
+      dd.elevation.forEach(function(v,ii){
+        var x=(ii/(dd.elevation.length-1))*600, y=55-((v-mn)/((mx-mn)||1))*45;
+        pd+='L'+x.toFixed(1)+','+y.toFixed(1)+' ';
+      });
+      pd+='L600,60 Z';
+      var pth=document.createElementNS(ns,'path');
+      pth.setAttribute('d',pd);pth.setAttribute('fill','rgba(13,148,136,.2)');
+      pth.setAttribute('stroke','#0d9488');pth.setAttribute('stroke-width','2');
+      esvg.appendChild(pth);
+      document.getElementById('elevtxt').textContent='ارتفاع: '+Math.round(mn)+' تا '+Math.round(mx)+' متر';
+      state.elev=dd.elevation;
+    }
+  }).catch(function(){});
+  
+  // انیمیشن خودکار
+  function fa(n){try{return Number(n).toLocaleString('fa-IR');}catch(e){return n;}}
+  (function frame(){
+    state.idx+=2.5;
+    if(state.idx>=coords.length-1) state.idx=0; // لوپ
+    var ci=Math.round(state.idx), xy=px(coords[ci]);
+    var wrap=document.getElementById('mapwrap'), r=wrap.getBoundingClientRect();
+    var sx=r.width/600, sy=r.height/400;
+    car.style.left=(xy[0]*sx)+'px';car.style.top=(xy[1]*sy)+'px';
+    tip.style.left=(xy[0]*sx)+'px';tip.style.top=(xy[1]*sy)+'px';
+    var dk=(state.idx/(coords.length-1))*km;
+    var pct=Math.max(0,Math.round(state.soc-(dk*state.cons/100)/state.bat*100));
+    var sb=document.getElementById('sb');
+    sb.textContent='🔋'+pct+'٪';
+    sb.style.color=pct>50?'#22c55e':(pct>20?'#f59e0b':'#ef4444');
+    var near=null,bd=1e9;
+    wpts.forEach(function(w){var d=Math.abs(w.i-state.idx);if(d<bd){bd=d;near=w;}});
+    if(near&&near.code!=null) document.getElementById('sw').textContent=wIcon(near.code);
+    var pr=Math.round(100*state.idx/(coords.length-1));
+    document.getElementById('sprog').textContent=fa(pr)+'٪';
+    document.getElementById('scharge').textContent=fa(pct)+'٪';
+    if(state.elev){
+      var eii=Math.round((state.idx/(coords.length-1))*(state.elev.length-1));
+      document.getElementById('selev').textContent=fa(Math.round(state.elev[eii]))+'m';
+    }
+    document.getElementById('sspeed').textContent='—';
+    requestAnimationFrame(frame);
+  })();
+  
+  // اشتراک‌گذاری
+  document.getElementById('sharebtn').onclick=function(){
+    if(navigator.share){
+      navigator.share({title:'سفر من با رانش EV',text:'سفر '+(rt.origin||'')+' به '+(rt.destination||''),url:location.href}).catch(function(){});
+    }else{
+      alert('لینک کپی شد! می‌تونی توی شبکه‌های اجتماعی به اشتراک بذاری.');
+      try{navigator.clipboard.writeText(location.href);}catch(e){}
+    }
+  };
+  document.getElementById('dlbtn').onclick=function(){
+    alert('برای ذخیره ویدیو، از ضبط صفحه گوشی استفاده کن 📱');
+  };
+})();
+</script>
+</body>
+</html>
