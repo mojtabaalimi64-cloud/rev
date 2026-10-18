@@ -446,10 +446,14 @@ window.revRenderSavedPlans=renderSavedPlans;
     document.body.appendChild(modal);
     document.getElementById('revPreviewClose').onclick=closePreview;
     modal.onclick=function(e){if(e.target===modal)closePreview();};
-    // ساخت نقشه
+    // ساخت نقشه (با تأخیر تا مودال رندر شود)
     var coords=plan.coords;
     var latlngs=coords.map(function(c){return [c[1],c[0]];});
+    var mapDiv=document.getElementById('revPreviewMap');
+    if(mapDiv){mapDiv.style.height='380px';mapDiv.style.width='100%';mapDiv.style.minHeight='380px';}
     var map=L.map('revPreviewMap').setView(latlngs[0],10);
+    setTimeout(function(){try{map.invalidateSize();}catch(e){}},300);
+    setTimeout(function(){try{map.invalidateSize();}catch(e){}},1000);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
     L.polyline(latlngs,{color:'#0d9488',weight:4}).addTo(map);
     map.fitBounds(L.polyline(latlngs).getBounds(),{padding:[20,20]});
