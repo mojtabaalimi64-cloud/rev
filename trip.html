@@ -825,5 +825,60 @@ function carSvg(){return '<svg width="44" height="36" viewBox="0 0 44 36"><rect 
 </script>
 
 <script src="./rev-app-mode.js?v=20261018-1"></script>
+
+<style>
+/* When the trip form was completed on the REV Trips screen, show the calculated plan without asking again. */
+body.rev-result-only .layout>aside>h1,
+body.rev-result-only .layout>aside>.sub,
+body.rev-result-only .layout>aside>label,
+body.rev-result-only .layout>aside>input,
+body.rev-result-only .layout>aside>select,
+body.rev-result-only .layout>aside>.grid2,
+body.rev-result-only .layout>aside>.datePickerWrap,
+body.rev-result-only #electricFields,
+body.rev-result-only #fuelFields,
+body.rev-result-only #planBtn,
+body.rev-result-only #shareTripBtn,
+body.rev-result-only #continueTripBtn,
+body.rev-result-only #continueTripHint,
+body.rev-result-only #calendarDialog,
+body.rev-result-only .layout>aside>.warning {display:none!important}
+</style>
+<script>
+(function(){
+  try{
+    var q=new URLSearchParams(location.search);
+    if(q.get('resultOnly')!=='1')return;
+    var origin=q.get('origin')||'', destination=q.get('destination')||'';
+    var date=q.get('date')||'', time=q.get('time')||'';
+    if(!origin||!destination||!date||!time)return;
+    document.body.classList.add('rev-result-only');
+    var o=document.getElementById('origin'), d=document.getElementById('destination');
+    var j=document.getElementById('departureJalali'), c=document.getElementById('departureClock');
+    if(o)o.value=origin;
+    if(d)d.value=destination;
+    var parts=new Intl.DateTimeFormat('en-US-u-ca-persian-nu-latn',{year:'numeric',month:'2-digit',day:'2-digit'}).formatToParts(new Date(date+'T12:00:00'));
+    function part(k){var p=parts.find(function(x){return x.type===k});return p?p.value:'';}
+    if(j)j.value=part('year')+'/'+String(part('month')).padStart(2,'0')+'/'+String(part('day')).padStart(2,'0');
+    if(c){c.value=time;c.dispatchEvent(new Event('change',{bubbles:true}));}
+    var status=document.getElementById('status'), started=false;
+    function watch(){
+      if(started)return;
+      if(status&&/مسیر:/.test(status.textContent)){
+        started=true;
+        document.body.classList.add('rev-result-only');
+      }
+    }
+    if(status&&window.MutationObserver)new MutationObserver(watch).observe(status,{childList:true,subtree:true,characterData:true});
+    window.addEventListener('load',function(){
+      setTimeout(function(){
+        var btn=document.getElementById('planBtn');
+        if(btn){btn.click();}
+      },450);
+    });
+  }catch(e){console.error('REV trip result mode',e);}
+})();
+</script>
+
 </body>
 </html>
