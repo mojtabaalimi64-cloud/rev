@@ -64,7 +64,7 @@ background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,transparent 22%,transparent
   try{var h=location.hash.slice(1);
     if(h){var d=JSON.parse(decodeURIComponent(escape(atob(h))));
       plan={params:{origin:d.o,destination:d.d,battery:d.b,soc:d.s,consumption:d.c},routeKm:d.k,
-      coords:d.c.map(function(p){return [p[0]/1e5,p[1]/1e5];}});if(d.n)document.getElementById('pn').textContent=d.n;}
+      coords:d.c.map(function(p){return [p[0]/1e5,p[1]/1e5];})};if(d.n)document.getElementById('pn').textContent=d.n;}
   }catch(e){}
   if(!plan){var qs=new URLSearchParams(location.search),pid=qs.get('plan');
     try{var ps=JSON.parse(localStorage.getItem('rev_saved_trip_plans_v1')||'[]');
