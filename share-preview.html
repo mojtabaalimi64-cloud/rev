@@ -10,49 +10,47 @@
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#000;font-family:Tahoma,sans-serif;display:flex;justify-content:center;overflow:hidden}
 #s{width:100%;max-width:430px;height:100vh;max-height:900px;position:relative;overflow:hidden;background:#111;color:#fff}
-#map{position:absolute;inset:-18%;z-index:1}
+#map{position:absolute;inset:-45%;z-index:1}
 #s::after{content:'';position:absolute;inset:0;pointer-events:none;z-index:3;
 background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,transparent 20%,transparent 60%,rgba(0,0,0,.8) 100%)}
 .hdr{position:absolute;top:0;left:0;right:0;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;z-index:10}
 .logo{font-size:20px;font-weight:900;text-shadow:0 2px 8px rgba(0,0,0,.8)}
 .logo b{color:#00e676}
-.prof{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.5);padding:6px 12px 6px 6px;border-radius:30px;backdrop-filter:blur(8px)}
+.prof{display:flex;align-items:center;gap:8px;background:rgba(0,0,0,.5);padding:6px 12px 6px 6px;border-radius:30px}
 .prof img{width:36px;height:36px;border-radius:50%;border:2px solid #00e676;object-fit:cover}
 .prof span{font-size:13px;font-weight:bold}
 #route{position:absolute;top:62px;left:0;right:0;z-index:10;text-align:center}
 #route .r{font-size:22px;font-weight:900;text-shadow:0 2px 10px rgba(0,0,0,.9)}
 #route .m{font-size:13px;color:#e0e0e0;text-shadow:0 1px 4px rgba(0,0,0,.9)}
-#compass{position:absolute;top:122px;left:14px;z-index:10;width:54px;height:54px;background:rgba(0,0,0,.55);border-radius:50%;backdrop-filter:blur(8px);display:flex;align-items:center;justify-content:center;font-size:28px;border:1px solid rgba(255,255,255,.25);transition:transform .2s}
-#stats{position:absolute;bottom:112px;left:10px;right:10px;z-index:10;display:flex;gap:8px;justify-content:center}
+#stats{position:absolute;bottom:118px;left:10px;right:10px;z-index:10;display:flex;gap:8px;justify-content:center}
 .stat{background:rgba(0,0,0,.6);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,.18);border-radius:16px;padding:9px 14px;text-align:center;min-width:78px}
 .stat .v{font-size:20px;font-weight:900}
 .stat .v small{font-size:11px;color:#aaa}
 .stat .l{font-size:11px;color:#aaa}
-#elevw{position:absolute;bottom:0;left:0;right:0;z-index:10;background:linear-gradient(0deg,rgba(0,0,0,.85),transparent);padding:6px 14px 10px}
-#elev{width:100%;height:54px;display:block}
+#elevw{position:absolute;bottom:0;left:0;right:0;z-index:10;background:linear-gradient(0deg,rgba(0,0,0,.85),transparent);padding:6px 14px 10px;text-align:center}
+#elev{width:100%;height:50px;display:block}
+#einfo{font-size:12px;color:#ccc;margin-top:2px}
 #btns{position:absolute;bottom:168px;right:10px;z-index:11;display:flex;flex-direction:column;gap:8px}
 #btns button{width:44px;height:44px;border-radius:50%;border:1px solid rgba(255,255,255,.25);background:rgba(0,0,0,.6);color:#fff;font-size:20px;cursor:pointer}
 #ld{position:absolute;inset:0;background:#111;z-index:50;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .spin{width:46px;height:46px;border:4px solid rgba(0,230,118,.2);border-top-color:#00e676;border-radius:50%;animation:sp 1s linear infinite}
 @keyframes sp{to{transform:rotate(360deg)}}
 .leaflet-control-attribution{font-size:8px!important;background:rgba(0,0,0,.5)!important;color:#bbb!important}
-.leaflet-control-attribution a{color:#bbb!important}
 </style>
 </head>
 <body>
 <div id="s">
-  <div id="ld"><div class="spin"></div><div>در حال بارگذاری نقشه ماهواره‌ای...</div></div>
+  <div id="ld"><div class="spin"></div><div>در حال بارگذاری...</div></div>
   <div id="map"></div>
   <div class="hdr"><div class="logo">⚡ رانش <b>EV</b></div><div class="prof"><span id="pn">—</span><img id="pi" style="display:none"></div></div>
   <div id="route"><div class="r"><span id="ro">—</span> ← <span id="rd">—</span></div><div class="m" id="rm">—</div></div>
-  <div id="compass">🧭</div>
   <div id="stats">
     <div class="stat"><div class="v" id="st1">—</div><div class="l">مسافت</div></div>
     <div class="stat"><div class="v" id="st2">—</div><div class="l">شارژ</div></div>
     <div class="stat"><div class="v" id="st3">—</div><div class="l">ارتفاع</div></div>
   </div>
   <div id="btns"><button id="bshare">📤</button><button id="bplay">⏸</button></div>
-  <div id="elevw"><svg id="elev" viewBox="0 0 600 54"></svg></div>
+  <div id="elevw"><svg id="elev" viewBox="0 0 600 50"></svg><div id="einfo">—</div></div>
 </div>
 <script>
 (function(){
@@ -77,78 +75,65 @@ background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,transparent 20%,transparent
   document.getElementById('ro').textContent=rt.origin||'-';
   document.getElementById('rd').textContent=rt.destination||'-';
   document.getElementById('rm').textContent=Math.round(km*10)/10+' کیلومتر';
+  document.getElementById('einfo').textContent='طول مسیر: '+Math.round(km*10)/10+' کیلومتر';
   try{var up=JSON.parse(localStorage.getItem('rev_user_profile')||'null');if(up&&up.name)document.getElementById('pn').textContent=up.name;}catch(e){}
-  // نقشه ماهواره‌ای واقعی (Esri World Imagery)
-  var map=L.map('map',{zoomControl:false}).setView([coords[0][1],coords[0][0]],15);
+  // نقشه ماهواره‌ای با کیفیت بالا
+  var map=L.map('map',{zoomControl:false,zoomSnap:.5}).setView([coords[0][1],coords[0][0]],16);
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'}).addTo(map);
   var latlngs=coords.map(function(c){return [c[1],c[0]];});
   var doneLine=L.polyline([],{color:'#00e676',weight:8,opacity:.95}).addTo(map);
-  L.polyline(latlngs,{color:'#fff',weight:4,opacity:.5,dashArray:'2,10'}).addTo(map);
-  // خودرو - نمای سه‌بعدی که با جهت می‌چرخد
-  function carHtml(angle){
-    return '<div style="width:64px;height:64px;transform:rotate('+angle+'deg);filter:drop-shadow(0 6px 12px rgba(0,0,0,.6))">'
-    +'<svg width="64" height="64" viewBox="0 0 64 64">'
-    +'<ellipse cx="32" cy="56" rx="20" ry="5" fill="rgba(0,0,0,.4)"/>'
-    // نمای سه‌ربع (نیمه از بالا، نیمه از بغل) - مثل Relive
-    +'<path d="M18 50 L20 28 Q21 22 26 20 L28 12 Q29 8 33 8 L35 8 Q39 8 40 12 L42 20 Q47 22 48 28 L50 50 Z" fill="#00c853" stroke="#007a33" stroke-width="2"/>'
-    // چمدان روی سقف
-    +'<rect x="24" y="2" width="16" height="7" rx="2" fill="#8B5E34" stroke="#5d3f22" stroke-width="1.5"/>'
-    +'<rect x="27" y="0" width="10" height="3" rx="1" fill="#A0714A"/>'
-    // شیشه
-    +'<path d="M28 14 L30 20 L38 20 L40 14 Z" fill="#b3e5fc" opacity=".9"/>'
-    // چراغ‌ها
-    +'<circle cx="22" cy="46" r="3" fill="#ffeb3b"/><circle cx="46" cy="46" r="3" fill="#ffeb3b"/>'
-    +'<circle cx="22" cy="46" r="1.5" fill="#fff"/><circle cx="46" cy="46" r="1.5" fill="#fff"/>'
-    // چرخ‌ها (دید از بغل)
-    +'<ellipse cx="24" cy="50" rx="6" ry="4" fill="#222"/><ellipse cx="44" cy="50" rx="6" ry="4" fill="#222"/>'
-    +'</svg></div>';
-  }
-  var carIcon=L.divIcon({html:carHtml(0),className:'',iconSize:[64,64],iconAnchor:[32,32]});
-  var carM=L.marker(latlngs[0],{icon:carIcon,zIndexOffset:1000,interactive:false}).addTo(map);
-  var st={i:0,play:true,bat:parseFloat(rt.battery||60),soc:parseFloat(rt.soc||90),con:parseFloat(rt.consumption||18),el:null,hd:0,carAng:0};
+  L.polyline(latlngs,{color:'#fff',weight:4,opacity:.45,dashArray:'2,10'}).addTo(map);
+  // علامت شارژ به جای ماشین
+  var boltHtml='<div style="width:52px;height:52px;background:rgba(0,0,0,.55);border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #00e676;box-shadow:0 4px 16px rgba(0,0,0,.5)"><span style="font-size:28px">⚡</span></div>';
+  var boltIcon=L.divIcon({html:boltHtml,className:'',iconSize:[52,52],iconAnchor:[26,26]});
+  var carM=L.marker(latlngs[0],{icon:boltIcon,zIndexOffset:1000,interactive:false}).addTo(map);
+  var st={i:0,play:true,bat:parseFloat(rt.battery||60),soc:parseFloat(rt.soc||90),con:parseFloat(rt.consumption||18),el:null,hd:0,finished:false};
   var ns='http://www.w3.org/2000/svg',en=15,ela=[],elo=[];
   for(var ei=0;ei<en;ei++){var ec=coords[Math.round(ei*(coords.length-1)/(en-1))];ela.push(ec[1]);elo.push(ec[0]);}
   fetch('https://api.open-meteo.com/v1/elevation?latitude='+ela.join(',')+'&longitude='+elo.join(',')).then(function(r){return r.json();}).then(function(dd){
-    if(dd&&dd.elevation){var esvg=document.getElementById('elev'),pd='M0,52 ',mn=1e9,mx=-1e9;
+    if(dd&&dd.elevation){var esvg=document.getElementById('elev'),pd='M0,50 ',mn=1e9,mx=-1e9;
       dd.elevation.forEach(function(v){if(v<mn)mn=v;if(v>mx)mx=v;});
-      dd.elevation.forEach(function(v,ii){var x=ii/(dd.elevation.length-1)*600,y=47-((v-mn)/((mx-mn)||1))*38;pd+='L'+x.toFixed(1)+','+y.toFixed(1)+' ';});
-      pd+='L600,52Z';var p2=document.createElementNS(ns,'path');
+      dd.elevation.forEach(function(v,ii){var x=ii/(dd.elevation.length-1)*600,y=45-((v-mn)/((mx-mn)||1))*36;pd+='L'+x.toFixed(1)+','+y.toFixed(1)+' ';});
+      pd+='L600,50Z';var p2=document.createElementNS(ns,'path');
       p2.setAttribute('d',pd);p2.setAttribute('fill','rgba(0,230,118,.35)');p2.setAttribute('stroke','#00e676');p2.setAttribute('stroke-width',2.5);
       esvg.appendChild(p2);
       var mk=document.createElementNS(ns,'circle');mk.setAttribute('id','emk');mk.setAttribute('r',6);
       mk.setAttribute('fill','#fff');mk.setAttribute('stroke','#00e676');mk.setAttribute('stroke-width',3);esvg.appendChild(mk);
-      st.el=dd.elevation;st.elR={mn:mn,mx:mx};}
+      st.el=dd.elevation;st.elR={mn:mn,mx:mx};
+      document.getElementById('einfo').textContent='طول مسیر: '+Math.round(km*10)/10+' کیلومتر • ارتفاع: '+Math.round(mn)+' تا '+Math.round(mx)+' متر';}
   }).catch(function(){});
   function fa(n){try{return Number(n).toLocaleString('fa-IR');}catch(e){return n;}}
   document.getElementById('bplay').onclick=function(){st.play=!st.play;this.textContent=st.play?'⏸':'▶';};
-  var mapEl=document.getElementById('map'),comp=document.getElementById('compass');
+  var mapEl=document.getElementById('map');
   (function fr(){
-    if(st.play){st.i+=1.5;if(st.i>=coords.length-1)st.i=0;}
+    if(st.play&&!st.finished){st.i+=1.2;
+      if(st.i>=coords.length-1){st.i=coords.length-1;st.finished=true;
+        // پایان: نمایش کل مسیر از بالا
+        setTimeout(function(){mapEl.style.transform='rotate(0deg)';map.fitBounds(L.latLngBounds(latlngs).pad(.15));},800);
+      }}
     var ci=Math.round(st.i),pos=latlngs[ci];
-    carM.setLatLng(pos);
-    map.panTo(pos,{animate:false});
-    doneLine.setLatLngs(latlngs.slice(0,ci+1));
-    if(ci<coords.length-3){
-      var p1=coords[ci],p2=coords[ci+3];
-      var ang=Math.atan2(p2[0]-p1[0],p2[1]-p1[1])*180/Math.PI;
-      // نرم کردن چرخش
-      var diff=((ang-st.hd+540)%360)-180;
-      st.hd+=diff*0.08;
-      // چرخش نقشه (دوربین) - خودرو همیشه رو به بالا
-      mapEl.style.transform='rotate('+(-st.hd)+'deg)';
-      comp.style.transform='rotate('+(st.hd)+'deg)';
-      // چرخش خودرو برای نمایش جهت - نمای سه‌بعدی
-      var targetCarAng=0; // خودرو همیشه رو به بالا (چون نقشه می‌چرخد)
-      carM.setIcon(L.divIcon({html:carHtml(targetCarAng),className:'',iconSize:[64,64],iconAnchor:[32,32]}));
+    if(!st.finished){
+      carM.setLatLng(pos);
+      map.panTo(pos,{animate:false});
+      // چرخش خیلی نرم و کم (فقط ۳۰٪ شدت قبل)
+      if(ci<coords.length-3){
+        var p1=coords[ci],p2=coords[ci+3];
+        var ang=Math.atan2(p2[0]-p1[0],p2[1]-p1[1])*180/Math.PI;
+        var diff=((ang-st.hd+540)%360)-180;
+        st.hd+=diff*0.025; // خیلی نرم‌تر
+        mapEl.style.transform='rotate('+(-st.hd*.5)+'deg)'; // نصف چرخش
+      }
     }
+    doneLine.setLatLngs(latlngs.slice(0,ci+1));
     var dk=(st.i/(coords.length-1))*km,pct=Math.max(0,Math.round(st.soc-(dk*st.con/100)/st.bat*100));
     document.getElementById('st1').innerHTML=fa(Math.round(dk*10)/10)+'<small>km</small>';
     var s2=document.getElementById('st2');s2.innerHTML=fa(pct)+'<small>٪</small>';s2.style.color=pct>20?'#fff':'#ff5252';
     if(st.el){var eii=Math.round((st.i/(coords.length-1))*(st.el.length-1));
       document.getElementById('st3').innerHTML=fa(Math.round(st.el[eii]))+'<small>m</small>';
       var mk2=document.getElementById('emk');
-      if(mk2){mk2.setAttribute('cx',(st.i/(coords.length-1))*600);mk2.setAttribute('cy',47-((st.el[eii]-st.elR.mn)/((st.elR.mx-st.elR.mn)||1))*38);}}
-    requestAnimationFrame(fr);
+      if(mk2){mk2.setAttribute('cx',(st.i/(coords.length-1))*600);mk2.setAttribute('cy',45-((st.el[eii]-st.elR.mn)/((st.elR.mx-st.elR.mn)||1))*36);}}
+    if(!st.finished) requestAnimationFrame(fr);
+    else setTimeout(function(){st.i=0;st.finished=false;map.setView(pos,16);requestAnimationFrame(fr);},4000);
   })();
   document.getElementById('bshare').onclick=function(){
     var dc={o:rt.origin,d:rt.destination,k:Math.round(km*10)/10,b:st.bat,s:st.soc,c:st.con,
