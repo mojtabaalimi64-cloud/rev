@@ -828,6 +828,8 @@ function carSvg(){return '<svg width="44" height="36" viewBox="0 0 44 36"><rect 
 
 <style>
 /* When the trip form was completed on the REV Trips screen, show the calculated plan without asking again. */
+body.rev-result-only header .sub,
+body.rev-result-only #savedPlansCard,
 body.rev-result-only .layout>aside>h1,
 body.rev-result-only .layout>aside>.sub,
 body.rev-result-only .layout>aside>label,
@@ -837,12 +839,22 @@ body.rev-result-only .layout>aside>.grid2,
 body.rev-result-only .layout>aside>.datePickerWrap,
 body.rev-result-only #electricFields,
 body.rev-result-only #fuelFields,
+body.rev-result-only #vehicleHelp,
+body.rev-result-only #vehicleType,
+body.rev-result-only #radius,
+body.rev-result-only #hvacMode,
+body.rev-result-only #targetSoc,
 body.rev-result-only #planBtn,
 body.rev-result-only #shareTripBtn,
 body.rev-result-only #continueTripBtn,
 body.rev-result-only #continueTripHint,
 body.rev-result-only #calendarDialog,
 body.rev-result-only .layout>aside>.warning {display:none!important}
+body.rev-result-only .layout>aside.panel{padding:0;border:0;background:transparent;box-shadow:none}
+body.rev-result-only .layout{margin-top:8px}
+body.rev-result-only #status{display:none!important}
+body.rev-result-only .layout>aside .stats{margin-top:0}
+body.rev-result-only .plan-summary{margin-top:0}
 </style>
 <script>
 (function(){
