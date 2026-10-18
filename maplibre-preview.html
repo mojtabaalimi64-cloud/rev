@@ -4,8 +4,8 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
 <title>پیش‌نمایش مسیریاب سه‌بعدی (MapLibre)</title>
-<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
-<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<script src="./maplibre-loader.js"></script>
+<link href="./maplibre-gl.css" rel="stylesheet">
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 html,body{height:100%;overflow:hidden;font-family:Tahoma}
@@ -38,6 +38,8 @@ html,body{height:100%;overflow:hidden;font-family:Tahoma}
 <div id="note">پیش‌نمایش MapLibre — نمای سه‌بعدی شبیه ویز<br>ماشین پایین صفحه، نقشه با جهت می‌چرخد</div>
 
 <script>
+window.addEventListener('maplibre-ready', function(){
+
 // مسیر نمونه: میدان ونک تا تجریش تهران
 var route = [
   [51.4090,35.7580],[51.4105,35.7620],[51.4120,35.7670],[51.4140,35.7720],
@@ -93,6 +95,8 @@ map.on('load', function(){
 });
 document.getElementById('b3d').onclick=function(){map.easeTo({pitch:65,duration:600});};
 document.getElementById('b2d').onclick=function(){map.easeTo({pitch:0,bearing:0,duration:600});};
+
+});
 </script>
 </body>
 </html>
