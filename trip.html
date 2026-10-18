@@ -555,11 +555,50 @@ window.revRenderSavedPlans=renderSavedPlans;
     });
     var car=document.getElementById('rvPvCar'), tip=document.getElementById('rvPvTip');
     var info=document.getElementById('rvPvI');
+    // قابلیت جابجایی خودرو با درگ
+    car.style.cursor='grab';
+    car.style.touchAction='none';
+    var dragging=false;
+    function carPos(e){
+      var r=svg.parentElement.getBoundingClientRect();
+      var cx=(e.touches&&e.touches[0]?e.touches[0].clientX:e.clientX)-r.left;
+      var cy=(e.touches&&e.touches[0]?e.touches[0].clientY:e.clientY)-r.top;
+      return [cx/(r.width/600), cy];
+    }
+    function closestIdx(sx,sy){
+      var best=0,bd=1e18;
+      var step=Math.max(1,Math.floor(coords.length/100));
+      for(var k=0;k<coords.length;k+=step){
+        var p=px(coords[k]);
+        var d=(p[0]-sx)*(p[0]-sx)+(p[1]-sy)*(p[1]-sy);
+        if(d<bd){bd=d;best=k;}
+      }
+      return best;
+    }
+    car.addEventListener('mousedown',function(e){dragging=true;state.play=false;document.getElementById('rvPvP').textContent='▶ ادامه';car.style.cursor='grabbing';e.preventDefault();});
+    car.addEventListener('touchstart',function(e){dragging=true;state.play=false;document.getElementById('rvPvP').textContent='▶ ادامه';e.preventDefault();},{passive:false});
+    document.addEventListener('mousemove',function(e){
+      if(!dragging)return;
+      var p=carPos(e);
+      state.idx=closestIdx(p[0],p[1]);
+      state.batteryDead=false;
+      var w=document.getElementById('rvPvWarn');if(w)w.remove();
+    });
+    document.addEventListener('touchmove',function(e){
+      if(!dragging)return;
+      var p=carPos(e);
+      state.idx=closestIdx(p[0],p[1]);
+      state.batteryDead=false;
+      var w2=document.getElementById('rvPvWarn');if(w2)w2.remove();
+      e.preventDefault();
+    },{passive:false});
+    document.addEventListener('mouseup',function(){dragging=false;car.style.cursor='grab';});
+    document.addEventListener('touchend',function(){dragging=false;});
     var state={idx:0,play:true,speed:3,
       bat:parseFloat(rt.battery||60), soc:parseFloat(rt.soc||90), cons:parseFloat(rt.consumption||18),
       elev:null, elevR:null, wpts:[]};
     document.getElementById('rvPvP').onclick=function(){state.play=!state.play;this.textContent=state.play?'⏸ توقف':'▶ ادامه';};
-    document.getElementById('rvPvR').onclick=function(){state.idx=0;state.batteryDead=false;var w=document.getElementById('rvPvWarn');if(w)w.remove();var inf=document.getElementById('rvPvI');if(inf){inf.style.color='';inf.style.fontWeight='';}};
+    document.getElementById('rvPvR').onclick=function(){state.idx=0;};
     document.getElementById('rvPvS2').oninput=function(){state.speed=parseInt(this.value,10);};
     // آب‌وهوا
     var nw=Math.min(5,Math.max(3,Math.round(km/100)));
@@ -616,21 +655,6 @@ window.revRenderSavedPlans=renderSavedPlans;
       var bEl=document.getElementById('rvPvB');
       bEl.textContent='🔋'+pct+'٪';
       bEl.style.color=pct>50?'#22c55e':(pct>20?'#f59e0b':'#ef4444');
-      // توقف هنگام اتمام باتری
-      if(pct<=0&&!state.batteryDead){
-        state.batteryDead=true;
-        state.play=false;
-        document.getElementById('rvPvP').textContent='▶ ادامه';
-        // هشدار اتمام باتری
-        var warn=document.createElement('div');
-        warn.id='rvPvWarn';
-        warn.style.cssText='position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#fee2e2;border:2px solid #ef4444;color:#991b1b;padding:10px 20px;border-radius:12px;font-weight:bold;font-size:14px;z-index:20;box-shadow:0 4px 12px rgba(0,0,0,.3);';
-        warn.textContent='⚠️ باتری تمام شد! خودرو متوقف شد';
-        svg.parentElement.appendChild(warn);
-        info.textContent='⚠️ باتری تمام شد در '+pr+'٪ مسیر — نیاز به شارژ!';
-        info.style.color='#dc2626';
-        info.style.fontWeight='bold';
-      }
       // آب‌وهوا
       var near=null,bd=1e9;
       state.wpts.forEach(function(w){var dd2=Math.abs(w.i-state.idx);if(dd2<bd){bd=dd2;near=w;}});
