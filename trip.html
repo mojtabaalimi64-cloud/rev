@@ -223,7 +223,7 @@ function renderSavedPlans(){
   if(!plans.length){list.innerHTML='<div class="saved-empty">\u0647\u0646\u0648\u0632 \u0628\u0631\u0646\u0627\u0645\u0647\u200c\u0627\u06cc \u0630\u062e\u06cc\u0631\u0647 \u0646\u0634\u062f\u0647. \u0628\u0639\u062f \u0627\u0632 \u0645\u062d\u0627\u0633\u0628\u0647\u060c \u062f\u06a9\u0645\u0647 \u00ab\u0630\u062e\u06cc\u0631\u0647\u00bb \u0631\u0627 \u0628\u0632\u0646.</div>';return;}
   list.innerHTML=plans.map(function(p){
     var route=p.params||p;
-    var dstr='';try{dstr=new Date(Number(p.createdAt)||Date.now()).toLocaleDateString('fa-IR')}catch(e){}
+    var dstr='';try{dstr=new Date(Number(p.createdAt)||Date.now()).toLocaleDateString('fa-IR-u-ca-persian')}catch(e){}
     var origin=route.origin||p.origin||'مبدأ نامشخص',destination=route.destination||p.destination||'مقصد نامشخص';
     var km=Number(p.routeKm||route.routeKm||route.distanceKm||0);
     var stopCount=Array.isArray(p.stops)?p.stops.length:(Array.isArray(route.stops)?route.stops.length:0);
@@ -371,7 +371,7 @@ window.revRenderSavedPlans=renderSavedPlans;
 (function(){
   var KEY='rev_saved_trip_plans_v1';
   function esc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
-  function faNum(n){try{return Number(n).toLocaleString('fa-IR');}catch(e){return String(n);}}
+  function faNum(n){try{return Number(n).toLocaleString('fa-IR-u-ca-persian');}catch(e){return String(n);}}
   function readPlans(){
     try{
       var a=JSON.parse(localStorage.getItem(KEY)||'[]');
@@ -389,7 +389,7 @@ window.revRenderSavedPlans=renderSavedPlans;
     }
     list.innerHTML=plans.map(function(p){
       var route=p.params||{};
-      var dstr='';try{dstr=new Date(Number(p.createdAt)||Date.now()).toLocaleDateString('fa-IR');}catch(e){}
+      var dstr='';try{dstr=new Date(Number(p.createdAt)||Date.now()).toLocaleDateString('fa-IR-u-ca-persian');}catch(e){}
       var origin=route.origin||'مبدأ نامشخص',destination=route.destination||'مقصد نامشخص';
       var km=parseFloat(p.routeKm||route.routeKm||0)||0;
       return '<div class="saved-plan"><div class="sp-main"><div class="sp-name">'+esc(origin)+' \u2190 '+esc(destination)+'</div>'+
@@ -499,7 +499,7 @@ window.revRenderSavedPlans=renderSavedPlans;
     var old=document.getElementById('rvPvM'); if(old)old.remove();
     var rt=plan.params||{}, km=parseFloat(plan.routeKm||0)||0;
     var stations=plan.stations||[], stops=plan.stops||[];
-    var dstr=''; try{dstr=new Date(plan.createdAt).toLocaleDateString('fa-IR');}catch(e){}
+    var dstr=''; try{dstr=new Date(plan.createdAt).toLocaleDateString('fa-IR-u-ca-persian');}catch(e){}
     // اطلاعات سفر
     var infoHtml='<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;font-size:13px;">'
       +'<div>📍 مبدأ: <b>'+escHtml(rt.origin||'-')+'</b></div>'
@@ -646,7 +646,7 @@ window.revRenderSavedPlans=renderSavedPlans;
         }
         var el=document.getElementById('rvBestTime');
         if(el&&best.time){
-          var tstr=best.time.toLocaleDateString('fa-IR')+' ساعت '+best.time.getHours()+':'+(best.time.getMinutes()<10?'0':'')+best.time.getMinutes();
+          var tstr=best.time.toLocaleDateString('fa-IR-u-ca-persian')+' ساعت '+best.time.getHours()+':'+(best.time.getMinutes()<10?'0':'')+best.time.getMinutes();
           el.innerHTML='🕐 <b>بهترین ساعت حرکت:</b> '+tstr+'<br><span style="font-size:12px;color:#555;">🌡️ '+best.temp+'° • 💨 باد '+best.wind+' km/h</span>';
         } else if(el){
           el.textContent='🕐 بهترین ساعت: داده کافی نیست';
