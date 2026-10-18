@@ -156,7 +156,7 @@ if(!window.REVNav){
           if(!active||!marker)return;
           const k=duration?Math.min(1,(ts-now)/duration):1, eased=k*k*(3-2*k),lat=from[0]+(next[0]-from[0])*eased,lng=from[1]+(next[1]-from[1])*eased;
           marker.setLatLng([lat,lng]);
-          if(ts-lastCenter>120){i.panTo([lat,lng],{animate:false});lastCenter=ts}
+          if(ts-lastCenter>500){i.panTo([lat,lng],{animate:true,duration:.3});lastCenter=ts}
           if(k<1)raf=requestAnimationFrame(animate);else raf=0;
         };
         raf=requestAnimationFrame(animate);
