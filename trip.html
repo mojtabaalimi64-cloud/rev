@@ -518,13 +518,14 @@ window.revRenderSavedPlans=renderSavedPlans;
         c.setAttribute('fill',pp[1]);c.setAttribute('stroke','#fff');c.setAttribute('stroke-width','2');
         svg.appendChild(c);
       });
-      // خودرو
-      var carG=document.createElementNS(ns,'g');
-      carG.innerHTML=carSvg();
-      svg.appendChild(carG);
+      // خودرو (div HTML روی نقشه)
+      var carDiv=document.createElement('div');
+      carDiv.innerHTML=carSvg();
+      carDiv.style.cssText='position:absolute;width:44px;height:36px;pointer-events:none;transform:translate(-50%,-50%);z-index:10;';
+      svg.parentElement.appendChild(carDiv);
       var tip=document.getElementById('revTip');
       // وضعیت
-      previewState={coords:coords,proj:proj,carG:carG,tip:tip,svg:svg,idx:0,playing:true,speed:3,
+      previewState={coords:coords,proj:proj,carDiv:carDiv,tip:tip,svg:svg,idx:0,playing:true,speed:3,
         battery:parseFloat((route.battery)||60),soc:parseFloat((route.soc)||90),
         cons:parseFloat((route.consumption)||18),totalKm:km,
         infoEl:document.getElementById('revInfo'),tipW:document.getElementById('revTipW'),tipC:document.getElementById('revTipC')};
@@ -581,11 +582,11 @@ window.revRenderSavedPlans=renderSavedPlans;
       }
       var ci=Math.round(st.idx);
       var xy=st.proj(st.coords[ci]);
-      st.carG.setAttribute('transform','translate('+(xy[0]-22)+','+(xy[1]-18)+')');
       var sr=st.svg.parentElement.getBoundingClientRect();
-      var sx=sr.width/600;
+      var sx=sr.width/600, sy=340/340;
+      if(st.carDiv){st.carDiv.style.left=(xy[0]*sx)+'px';st.carDiv.style.top=(xy[1]*sy)+'px';}
       st.tip.style.left=(xy[0]*sx)+'px';
-      st.tip.style.top=(xy[1])+'px';
+      st.tip.style.top=(xy[1]*sy)+'px';
       // شارژ
       var dk=(st.idx/(st.coords.length-1))*st.totalKm;
       var pct=Math.max(0,Math.round(st.soc-(dk*st.cons/100)/st.battery*100));
