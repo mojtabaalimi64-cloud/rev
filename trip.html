@@ -395,7 +395,7 @@ window.revRenderSavedPlans=renderSavedPlans;
       return '<div class="saved-plan"><div class="sp-main"><div class="sp-name">'+esc(origin)+' \u2190 '+esc(destination)+'</div>'+
         '<div class="sp-meta">'+(km?faNum(Math.round(km*10)/10):'\u2014')+' km \u00b7 '+esc(dstr)+'</div></div>'+
         '<div class="sp-btns"><button type="button" class="go" data-rev-start="'+esc(p.id)+'">\u0634\u0631\u0648\u0639 \u0633\u0641\u0631</button>'+
-        '<button type="button" onclick="if(window.revOpenPreview)window.revOpenPreview('"+esc(p.id)+"')" style="background:#e0f2f1;border:1px solid #0d9488;color:#00695c;border-radius:8px;padding:6px 10px;cursor:pointer;font-size:13px;margin:0 4px;">◉ پیش‌نمایش</button><button type="button" class="del" data-rev-del="'+esc(p.id)+'">\u062d\u0630\u0641</button></div></div>';
+        '<button type="button" class="del" data-rev-del="'+esc(p.id)+'">\u062d\u0630\u0641</button></div></div>';
     }).join('');
   }
   function attachSave(){
@@ -540,116 +540,64 @@ window.revRenderSavedPlans=renderSavedPlans;
 
 
 <script>
-window.revOpenPreview=function(pid){
-  try{
-    var plans=JSON.parse(localStorage.getItem('rev_saved_trip_plans_v1')||'[]');
-    var plan=null;
-    for(var i=0;i<plans.length;i++) if(plans[i].id===pid){plan=plans[i];break;}
-    if(!plan||!plan.coords||!plan.coords.length){alert('یافت نشد');return;}
-    var old=document.getElementById('rvPvM'); if(old)old.remove();
-    var rt=plan.params||{}, km=parseFloat(plan.routeKm||0)||0;
-    var m=document.createElement('div'); m.id='rvPvM';
-    m.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;';
-    m.innerHTML='<div style="background:#fff;border-radius:14px;max-width:600px;width:100%;max-height:92vh;overflow:auto;">'
-      +'<div style="display:flex;justify-content:space-between;padding:12px 16px;border-bottom:1px solid #eee;"><b>پیش‌نمایش</b><button onclick="document.getElementById(\'rvPvM\').remove()" style="border:none;background:none;font-size:18px;">✕</button></div>'
-      +'<div style="padding:8px 16px;font-size:13px;">'+(rt.origin||'-')+' ← '+(rt.destination||'-')+' • '+(km?Math.round(km*10)/10+'km':'-')+'</div>'
-      +'<div style="position:relative;"><svg id="rvPvS" viewBox="0 0 600 320" style="width:100%;display:block;background:#eef6f8;"></svg><div id="rvPvC" style="position:absolute;font-size:30px;transform:translate(-50%,-50%);">🚗</div></div>'
-      +'<div style="text-align:center;padding:10px;"><button id="rvPvP" style="padding:8px 18px;background:#0d9488;color:#fff;border:none;border-radius:8px;">⏸ توقف</button> <span id="rvPvI" style="margin:0 10px;color:#666;"></span></div></div>';
-    document.body.appendChild(m);
-    m.onclick=function(e){if(e.target===m)m.remove();};
-    var svg=document.getElementById('rvPvS'), coords=plan.coords, W=600,H=320,pad=40;
-    var a=1e9,b=-1e9,c=1e9,d=-1e9;
-    coords.forEach(function(x){if(x[0]<a)a=x[0];if(x[0]>b)b=x[0];if(x[1]<c)c=x[1];if(x[1]>d)d=x[1];});
-    function px(o){return [pad+(o[0]-a)/((b-a)||1)*(W-2*pad), H-pad-(o[1]-c)/((d-c)||1)*(H-2*pad)];}
-    var ns='http://www.w3.org/2000/svg', path=document.createElementNS(ns,'path'), ds='M', st=Math.max(1,Math.floor(coords.length/200));
-    for(var j=0;j<coords.length;j+=st){var p=px(coords[j]);ds+=(j?'L':'')+p[0].toFixed(1)+','+p[1].toFixed(1)+' ';}
-    path.setAttribute('d',ds);path.setAttribute('fill','none');path.setAttribute('stroke','#0d9488');path.setAttribute('stroke-width','5');
-    svg.appendChild(path);
-    var car=document.getElementById('rvPvC'), info=document.getElementById('rvPvI'), idx=0, play=true;
-    document.getElementById('rvPvP').onclick=function(){play=!play;this.textContent=play?'⏸ توقف':'▶ ادامه';};
-    (function fr(){
-      if(!document.getElementById('rvPvM'))return;
-      if(play){idx+=1.8;if(idx>=coords.length-1){idx=coords.length-1;play=false;document.getElementById('rvPvP').textContent='▶ ادامه';}}
-      var xy=px(coords[Math.round(idx)]), r=svg.parentElement.getBoundingClientRect(), sx=r.width/600;
-      car.style.left=(xy[0]*sx)+'px';car.style.top=xy[1]+'px';
-      info.textContent=Math.round(100*idx/(coords.length-1))+'٪';
-      requestAnimationFrame(fr);
-    })();
-  }catch(e){alert('خطا: '+e.message);}
-};
-</script>
-
-
-<script>
 (function(){
-  // هندلر ذخیره ساده - مستقل از کدهای دیگر
   var KEY='rev_saved_trip_plans_v1';
-  function doSave(){
-    var statusEl=document.getElementById('status');
-    function say(m){ if(statusEl) statusEl.textContent=m; else alert(m); }
+  function save(){
+    var st=document.getElementById('status');
+    var say=function(m){ if(st) st.textContent=m; };
+    // lastRoute از trip-app.js
+    var lr=null;
+    try{ lr=window.lastRoute||eval('typeof lastRoute!=="undefined"?lastRoute:null'); }catch(e){}
+    if(!lr||!lr.geometry||!lr.geometry.coordinates||!lr.geometry.coordinates.length){
+      say('ابتدا مسیر را محاسبه کنید.');
+      return;
+    }
+    var oE=document.getElementById('origin'), dE=document.getElementById('destination');
+    var coords=lr.geometry.coordinates;
+    if(coords.length>400){
+      var nc=[], step=(coords.length-1)/399;
+      for(var k=0;k<400;k++) nc.push(coords[Math.round(k*step)]);
+      coords=nc;
+    }
+    var plan={
+      id:'p'+Date.now(),
+      createdAt:Date.now(),
+      params:{
+        origin:oE?oE.value:'',
+        destination:dE?dE.value:''
+      },
+      routeKm:lr.distance/1000,
+      coords:coords,
+      stations:[],
+      stops:[]
+    };
+    var arr=[];
+    try{ arr=JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){ arr=[]; }
+    arr.unshift(plan);
     try{
-      // پیدا کردن lastRoute از window یا اسکوپ سراسری
-      var lr=window.lastRoute||(typeof lastRoute!=='undefined'?lastRoute:null);
-      if(!lr||!lr.geometry||!lr.geometry.coordinates||!lr.geometry.coordinates.length){
-        say('ابتدا مسیر را محاسبه کنید.');
-        return;
-      }
-      var oEl=document.getElementById('origin'), dEl=document.getElementById('destination');
-      var coords=lr.geometry.coordinates;
-      if(coords.length>400){
-        var sc=[], st=(coords.length-1)/399;
-        for(var k=0;k<400;k++) sc.push(coords[Math.round(k*st)]);
-        coords=sc;
-      }
-      var plan={
-        id:'p'+Date.now(),
-        createdAt:Date.now(),
-        params:{
-          origin:oEl?(oEl.value||''):'',
-          destination:dEl?(dEl.value||''):'',
-          battery:(document.getElementById('battery')||{}).value||'',
-          soc:(document.getElementById('soc')||{}).value||'',
-          consumption:(document.getElementById('consumption')||{}).value||''
-        },
-        routeKm:lr.distance/1000,
-        coords:coords,
-        stations:[],
-        stops:[]
-      };
-      // خواندن ایستگاه‌ها اگر موجود است
-      try{
-        if(typeof stations!=='undefined'&&Array.isArray(stations)){
-          plan.stations=stations.slice(0,40).map(function(s){return{name:s.name||'',lat:s.lat,lon:s.lon,power:s.power||''};});
-        }
-      }catch(e){}
-      var arr=[];
-      try{ arr=JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){}
-      if(!Array.isArray(arr)) arr=[];
-      arr.unshift(plan);
       localStorage.setItem(KEY, JSON.stringify(arr.slice(0,20)));
       say('برنامه سفر ذخیره شد.');
-      // رفرش لیست
-      if(window.renderSavedPlans) try{window.renderSavedPlans();}catch(e){}
-      var rl=document.getElementById('savedPlansList');
-      if(rl) setTimeout(function(){ location.reload(); }, 800);
+      setTimeout(function(){ location.reload(); }, 600);
     }catch(e){
-      say('خطا در ذخیره: '+(e.message||e));
+      say('خطا: حافظه پر است');
     }
   }
-  // اتصال با تاخیر تا مطمئن شویم دکمه وجود دارد
+  // اتصال دکمه
+  var wired=false;
   function wire(){
-    var btn=document.getElementById('savePlanBtn');
-    if(btn&&!btn._simpleWired){
-      btn._simpleWired=true;
-      btn.addEventListener('click', function(e){
-        e.preventDefault();
-        e.stopImmediatePropagation();
-        doSave();
-      }, true);
+    if(wired) return;
+    var b=document.getElementById('savePlanBtn');
+    if(b){
+      wired=true;
+      // حذف هندلرهای قبلی با clone
+      var nb=b.cloneNode(true);
+      b.parentNode.replaceChild(nb, b);
+      nb.addEventListener('click', function(e){ e.preventDefault(); save(); });
     }
   }
-  setInterval(wire, 1000);
-  wire();
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded', wire);
+  else wire();
+  setInterval(wire, 2000);
 })();
 </script>
 
