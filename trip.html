@@ -364,5 +364,38 @@ renderSavedPlans();
 <script>
 (function(){function s(){var b=document.getElementById('savePlanBtn');if(!b)return;b.addEventListener('click',function(){try{var lr=(typeof lastRoute!=='undefined')?lastRoute:null;if(!lr||!lr.geometry||!lr.geometry.coordinates){var e1=document.getElementById('status');if(e1)e1.textContent='ابتدا مسیر را محاسبه کنید.';return}var o=document.getElementById('origin'),d=document.getElementById('destination');var p={id:'p'+Date.now(),createdAt:Date.now(),params:{origin:o?o.value:'',destination:d?d.value:'',routeKm:String(lr.distance/1000)},coords:lr.geometry.coordinates.slice(0,500)};var k='rev_saved_trip_plans_v1',a=[];try{a=JSON.parse(localStorage.getItem(k)||'[]')}catch(e){}if(!Array.isArray(a))a=[];a.unshift(p);localStorage.setItem(k,JSON.stringify(a.slice(0,20)));var e2=document.getElementById('status');if(e2)e2.textContent='برنامه سفر ذخیره شد.';if(typeof renderSavedPlans==='function')renderSavedPlans();}catch(err){var e3=document.getElementById('status');if(e3)e3.textContent='خطا: '+(err.message||'نامشخص')}})});if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',s);else s();})();
 </script>
+<script>
+(function(){
+  function attachSave(){
+    var btn=document.getElementById('savePlanBtn');
+    if(!btn||btn.__revSaveWired)return;
+    btn.__revSaveWired=true;
+    btn.addEventListener('click',function(){
+      var statusEl=document.getElementById('status');
+      function say(m){if(statusEl)statusEl.textContent=m;}
+      try{
+        var lr=(typeof lastRoute!=='undefined')?lastRoute:null;
+        if(!lr||!lr.geometry||!lr.geometry.coordinates||!lr.geometry.coordinates.length){
+          say('ابتدا مسیر را محاسبه کنید.');
+          return;
+        }
+        var oEl=document.getElementById('origin'),dEl=document.getElementById('destination');
+        var coords=lr.geometry.coordinates;
+        if(coords.length>500){var sc=[],st=(coords.length-1)/499;for(var k=0;k<500;k++)sc.push(coords[Math.round(k*st)]);coords=sc;}
+        var plan={id:'p'+Date.now(),createdAt:Date.now(),params:{origin:oEl?(oEl.value||''): '',destination:dEl?(dEl.value||''): '',routeKm:String(lr.distance/1000)},coords:coords};
+        var key='rev_saved_trip_plans_v1',arr=[];
+        try{arr=JSON.parse(localStorage.getItem(key)||'[]');}catch(e){arr=[];}
+        if(!Array.isArray(arr))arr=[];
+        arr.unshift(plan);
+        localStorage.setItem(key,JSON.stringify(arr.slice(0,20)));
+        say('برنامه سفر ذخیره شد.');
+        if(typeof renderSavedPlans==='function'){try{renderSavedPlans();}catch(e){}}
+      }catch(err){say('خطا در ذخیره: '+(err&&err.message?err.message:'نامشخص'));}
+    });
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',attachSave);
+  else attachSave();
+})();
+</script>
 </body>
 </html>
