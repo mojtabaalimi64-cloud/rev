@@ -3,7 +3,7 @@
   'use strict';
   var params = new URLSearchParams(location.search);
   var isAppHome = /\/mobile-app\/index\.html$/.test(location.pathname);
-\n  var appMode = params.get('app') === '1' || isAppHome;
+  var appMode = params.get('app') === '1' || isAppHome;
   if (!appMode) return;
   document.documentElement.setAttribute('data-rev-app', '1');
   var style = document.createElement('style');
