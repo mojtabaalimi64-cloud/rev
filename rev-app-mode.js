@@ -2,7 +2,8 @@
 (function () {
   'use strict';
   var params = new URLSearchParams(location.search);
-  var isAppHome = /\\/mobile-app\\/index\\.html$/.test(location.pathname);\n  var appMode = params.get('app') === '1' || isAppHome;
+  var isAppHome = /\/mobile-app\/index\.html$/.test(location.pathname);
+\n  var appMode = params.get('app') === '1' || isAppHome;
   if (!appMode) return;
   document.documentElement.setAttribute('data-rev-app', '1');
   var style = document.createElement('style');
@@ -44,7 +45,8 @@
     {href:'/rev/travel-plans.html',label:'سفرها',icon:'🧭',match:/\/(trip|travel-plans|trips)\.html$/},
     {href:'/rev/businesses.html',label:'خدمات',icon:'🔧',match:/\/businesses\.html$/}
   ];
-  if (isAppHome) { var oldNav = document.querySelector('.bottom-nav'); if (oldNav) oldNav.remove(); }\n  var nav = document.createElement('nav');
+  if (isAppHome) { var oldNav = document.querySelector('.bottom-nav'); if (oldNav) oldNav.remove(); }
+  var nav = document.createElement('nav');
   nav.id = 'rev-app-bottom-nav';
   nav.setAttribute('aria-label','ناوبری اصلی اپ REV');
   items.forEach(function (item) {
