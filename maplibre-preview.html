@@ -55,7 +55,8 @@ var map = new maplibregl.Map({
   },
   center: route[0],
   zoom: 15.5,
-  pitch: 60,
+  pitch: 65,
+  maxPitch: 70,
   bearing: 20,
   attributionControl:false
 });
@@ -83,14 +84,14 @@ map.on('load', function(){
     var lng=a[0]+(b[0]-a[0])*p, lat=a[1]+(b[1]-a[1])*p;
     carMarker.setLngLat([lng,lat]);
     // دوربین دنبال ماشین، ماشین پایین صفحه
-    map.easeTo({center:[lng,lat],bearing:bearing(a,b),pitch:60,duration:delay,easing:function(x){return x;}});
+    map.easeTo({center:[lng,lat],bearing:bearing(a,b),pitch:65,duration:delay,easing:function(x){return x;}});
     i++;
     if(p>=0.99) seg++;
     setTimeout(move,delay);
   }
   setTimeout(move,1000);
 });
-document.getElementById('b3d').onclick=function(){map.easeTo({pitch:60,duration:600});};
+document.getElementById('b3d').onclick=function(){map.easeTo({pitch:65,duration:600});};
 document.getElementById('b2d').onclick=function(){map.easeTo({pitch:0,bearing:0,duration:600});};
 </script>
 </body>
