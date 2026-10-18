@@ -436,13 +436,36 @@ window.revRenderSavedPlans=renderSavedPlans;
           try{localStorage.setItem(KEY,JSON.stringify(arr));}catch(e){}
           renderList();
         }else if(startId){
-          var plans=readPlans();
-          for(var i=0;i<plans.length;i++)if(plans[i].id===startId){
-            try{localStorage.setItem('rev_planned_route',JSON.stringify(plans[i]));}catch(e){}
-            var se=document.getElementById('status');
-            if(se)se.textContent='برنامه برای شروع سفر آماده شد.';
-            break;
+          var plans=readPlans(), selected=null;
+          for(var i=0;i<plans.length;i++)if(String(plans[i].id)===String(startId)){selected=plans[i];break;}
+          var se=document.getElementById('status');
+          if(!selected){if(se)se.textContent='برنامه ذخیره‌شده پیدا نشد؛ فهرست را تازه‌سازی کنید.';return;}
+          var params=selected.params||{};
+          var origin=String(params.origin||selected.origin||'').trim();
+          var destination=String(params.destination||selected.destination||'').trim();
+          if(!origin||!destination){
+            if(se)se.textContent='مبدأ یا مقصد در این برنامه ذخیره نشده است. برنامه را دوباره محاسبه و ذخیره کنید.';
+            return;
           }
+          var routePayload={
+            coordinates:Array.isArray(selected.coords)?selected.coords:
+              (selected.route&&Array.isArray(selected.route)?selected.route:[]),
+            origin:origin,destination:destination,
+            distance:(Number(selected.routeKm||params.routeKm||0)||0)*1000,
+            duration:Number(selected.durationS||0),createdAt:Number(selected.createdAt)||Date.now()
+          };
+          try{
+            sessionStorage.setItem('rev_planned_route',JSON.stringify(routePayload));
+            localStorage.setItem('rev_planned_route',JSON.stringify(routePayload));
+            sessionStorage.setItem('rev_driver_trip_settings',JSON.stringify(params));
+            localStorage.setItem('rev_driver_trip_settings',JSON.stringify(params));
+            sessionStorage.setItem('rev_nav_start',JSON.stringify({origin:origin,destination:destination}));
+          }catch(storageError){
+            if(se)se.textContent='ذخیره موقت اطلاعات سفر ناموفق بود؛ فضای ذخیره‌سازی مرورگر را بررسی کنید.';
+            return;
+          }
+          if(se)se.textContent='برنامه بارگذاری شد؛ در حال باز کردن نقشه و شروع مسیریابی…';
+          window.location.href='./nearby-map.html?navstart=1';
         }
       });
     }
