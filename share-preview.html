@@ -68,7 +68,16 @@ document.getElementById('rd').textContent=rt.destination||'-';
 document.getElementById('rm').textContent=Math.round(km*10)/10+' کیلومتر';
 document.getElementById('einfo').textContent='طول مسیر: '+Math.round(km*10)/10+' کیلومتر';
 var map=L.map('map',{zoomControl:false}).setView([coords[0][1],coords[0][0]],16);
-L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+var layers=[
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}),
+L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',{maxZoom:19,subdomains:'abc'}),
+L.tileLayer('https://mt0.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',{maxZoom:19,subdomains:'0123'})
+];
+var li=0;
+layers[0].addTo(map);
+layers[0].on('tileerror',function(){
+if(li<layers.length-1){map.removeLayer(layers[li]);li++;layers[li].addTo(map);}
+});
 var latlngs=coords.map(function(c){return [c[1],c[0]];});
 var doneLine=L.polyline([],{color:'#00e676',weight:8}).addTo(map);
 L.polyline(latlngs,{color:'#fff',weight:4,opacity:.4,dashArray:'2,10'}).addTo(map);
