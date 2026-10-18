@@ -691,6 +691,16 @@ window.revRenderSavedPlans=renderSavedPlans;
       var bEl=document.getElementById('rvPvB');
       bEl.textContent='🔋'+pct+'٪';
       bEl.style.color=pct>50?'#22c55e':(pct>20?'#f59e0b':'#ef4444');
+      if(pct<=0&&!state.batteryDead){
+        state.batteryDead=true;state.play=false;
+        document.getElementById('rvPvP').textContent='▶ ادامه';
+        var warn=document.createElement('div');warn.id='rvPvWarn';
+        warn.style.cssText='position:absolute;top:10px;left:50%;transform:translateX(-50%);background:#fee2e2;border:2px solid #ef4444;color:#991b1b;padding:10px 20px;border-radius:12px;font-weight:bold;font-size:14px;z-index:20;';
+        warn.textContent='⚠️ باتری تمام شد! خودرو متوقف شد';
+        svg.parentElement.appendChild(warn);
+        info.textContent='⚠️ باتری تمام شد در '+pr+'٪ مسیر!';
+        info.style.color='#dc2626';info.style.fontWeight='bold';
+      }
       // آب‌وهوا
       var near=null,bd=1e9;
       state.wpts.forEach(function(w){var dd2=Math.abs(w.i-state.idx);if(dd2<bd){bd=dd2;near=w;}});
