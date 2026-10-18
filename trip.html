@@ -563,7 +563,8 @@ window.revRenderSavedPlans=renderSavedPlans;
       var idx=Math.round(s*(coords.length-1)/(numSamples-1));
       wPts.push({idx:idx,code:null,temp:null,lon:coords[idx][0],lat:coords[idx][1]});
     }
-    previewState={map:map,marker:carMarker,tip:wTip,coords:latlngs,idx:0,playing:true,speed:3,wPts:wPts,infoEl:document.getElementById('revPreviewInfo'),elevData:null,elevIdx:[]};
+    previewState={map:map,marker:carMarker,tip:wTip,coords:latlngs,idx:0,playing:true,speed:3,wPts:wPts,infoEl:document.getElementById('revPreviewInfo'),elevData:null,elevIdx:[],
+    battery:parseFloat((plan.params&&plan.params.battery)||60),startSoc:parseFloat((plan.params&&plan.params.soc)||90),consumption:parseFloat((plan.params&&plan.params.consumption)||18),totalKm:km};
     document.getElementById('revPreviewPlay').onclick=function(){
       previewState.playing=!previewState.playing;
       this.textContent=previewState.playing?'\u23f8 \u062a\u0648\u0642\u0641':'\u25b6 \u0627\u062f\u0627\u0645\u0647';
@@ -605,6 +606,7 @@ window.revRenderSavedPlans=renderSavedPlans;
   }catch(e){alert('Preview error: '+(e.message||e));}
   }
   function previewTick(){
+  try{
     if(!previewState)return;
     var st=previewState;
     if(st.playing){
@@ -620,9 +622,14 @@ window.revRenderSavedPlans=renderSavedPlans;
     var nearest=null,bd=1e9;
     st.wPts.forEach(function(wp){var d=Math.abs(wp.idx-st.idx);if(d<bd){bd=d;nearest=wp;}});
     var progress=Math.round(100*st.idx/(st.coords.length-1));
+    // محاسبه شارژ تقریبی
+    var distKm=(st.idx/(st.coords.length-1))*st.totalKm;
+    var usedKwh=distKm*st.consumption/100;
+    var chargePct=Math.max(0,Math.round(st.startSoc-(usedKwh/st.battery*100)));
+    var chargeColor=chargePct>50?'#22c55e':(chargePct>20?'#f59e0b':'#ef4444');
     if(nearest&&nearest.code!=null){
-      st.tip.setContent('<span style="font-size:22px;">'+weatherIcon(nearest.code)+'</span>');
-      if(st.infoEl)st.infoEl.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a '+progress+'٪ — '+nearest.temp+'°';
+      st.tip.setContent('<div style="text-align:center;"><div style="font-size:22px;">'+weatherIcon(nearest.code)+'</div><div style="font-size:11px;font-weight:bold;color:'+chargeColor+';background:#fff;border-radius:6px;padding:1px 6px;margin-top:2px;">\U0001f50b '+chargePct+'٪</div></div>');
+      if(st.infoEl)st.infoEl.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a '+progress+'٪ — '+nearest.temp+'° — شارژ '+chargePct+'٪';
     }else{
       if(st.infoEl)st.infoEl.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a '+progress+'٪';
     }
@@ -637,6 +644,7 @@ window.revRenderSavedPlans=renderSavedPlans;
       if(elb&&st.elevRange)elb.textContent='\u0627\u0631\u062a\u0641\u0627\u0639 \u0641\u0639\u0644\u06cc: '+curElev+' \u0645\u062a\u0631 (\u0627\u0632 '+Math.round(st.elevRange.min)+' \u062a\u0627 '+Math.round(st.elevRange.max)+')';
     }
     requestAnimationFrame(previewTick);
+  }catch(e){console.error('previewTick:',e);try{requestAnimationFrame(previewTick);}catch(e2){}}
   }
   function attachSave(){
     var btn=document.getElementById('savePlanBtn');
