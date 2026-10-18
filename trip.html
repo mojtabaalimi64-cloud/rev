@@ -430,26 +430,24 @@ window.revRenderSavedPlans=renderSavedPlans;
   }
   // پیش‌نمایش: مودال با خودروی متحرک و آب‌وهوا
   var previewState=null;
-  // آیکون خودروی سفارشی با چمدان روی سقف و نشانگر سفر
+  // پیش‌نمایش با نقشه واقعی Leaflet
   function carSvg(){
     return '<svg width="44" height="36" viewBox="0 0 44 36">'+
     '<rect x="10" y="2" width="24" height="8" rx="2" fill="#8B5E34" stroke="#5d3f22" stroke-width="1.5"/>'+
     '<rect x="14" y="0" width="16" height="4" rx="1" fill="#A0714A"/>'+
     '<path d="M6 30 L8 18 Q9 14 13 14 L17 14 L20 8 Q21 6 24 6 L28 6 Q31 6 32 8 L35 14 L39 14 Q43 14 43 18 L43 30 Z" fill="#0d9488" stroke="#0a6b62" stroke-width="1.5"/>'+
     '<rect x="20" y="10" width="12" height="6" rx="1" fill="#bfe8e4"/>'+
-    '<circle cx="14" cy="30" r="5" fill="#333" stroke="#111" stroke-width="1"/><circle cx="14" cy="30" r="2" fill="#999"/>'+
-    '<circle cx="36" cy="30" r="5" fill="#333" stroke="#111" stroke-width="1"/><circle cx="36" cy="30" r="2" fill="#999"/>'+
+    '<circle cx="14" cy="30" r="5" fill="#333"/><circle cx="14" cy="30" r="2" fill="#999"/>'+
+    '<circle cx="36" cy="30" r="5" fill="#333"/><circle cx="36" cy="30" r="2" fill="#999"/>'+
     '<circle cx="38" cy="4" r="6" fill="#ff6b35" stroke="#fff" stroke-width="1.5"/>'+
-    '<text x="38" y="8" font-size="8" text-anchor="middle" fill="#fff">\u25b6</text>'+
-    '</svg>';
+    '<text x="38" y="8" font-size="8" text-anchor="middle" fill="#fff">\u25b6</text></svg>';
   }
   function weatherIcon(code){
     if(code===0||code===1)return '\u2600\ufe0f';
     if(code===2)return '\u26c5';
     if(code===3)return '\u2601\ufe0f';
     if(code===45||code===48)return '\U0001f32b\ufe0f';
-    if((code>=51&&code<=57)||(code>=80&&code<=82))return '\U0001f327\ufe0f';
-    if((code>=61&&code<=67))return '\U0001f327\ufe0f';
+    if((code>=51&&code<=82))return '\U0001f327\ufe0f';
     if((code>=71&&code<=77))return '\u2744\ufe0f';
     if(code===95)return '\u26c8';
     return '\u26c5';
@@ -457,6 +455,7 @@ window.revRenderSavedPlans=renderSavedPlans;
   function closePreview(){
     var m=document.getElementById('revPreviewModal');
     if(m)m.remove();
+    if(window._revPreviewMap){try{window._revPreviewMap.remove();}catch(e){} window._revPreviewMap=null;}
     previewState=null;
   }
   function openPreview(planId){
@@ -464,159 +463,139 @@ window.revRenderSavedPlans=renderSavedPlans;
     var plans=readPlans(),plan=null;
     for(var i=0;i<plans.length;i++)if(plans[i].id===planId){plan=plans[i];break;}
     if(!plan){alert('برنامه یافت نشد.');return;}
-    if(!plan.coords||!plan.coords.length){
-      alert('این برنامه قدیمی است و مختصات مسیر ندارد. لطفاً دوباره ذخیره کنید.');
-      return;
-    }
+    if(!plan.coords||!plan.coords.length){alert('این برنامه مختصات ندارد. دوباره ذخیره کنید.');return;}
+    if(typeof L==='undefined'){alert('نقشه لود نشد. اینترنت را چک کنید.');return;}
     closePreview();
     var route=plan.params||{};
     var coords=plan.coords;
-    var minLon=1e9,maxLon=-1e9,minLat=1e9,maxLat=-1e9;
-    coords.forEach(function(c){if(c[0]<minLon)minLon=c[0];if(c[0]>maxLon)maxLon=c[0];if(c[1]<minLat)minLat=c[1];if(c[1]>maxLat)maxLat=c[1];});
-    var W=600,H=340,pad=40;
-    function proj(c){
-      var x=pad+(c[0]-minLon)/(maxLon-minLon||1)*(W-2*pad);
-      var y=H-pad-(c[1]-minLat)/(maxLat-minLat||1)*(H-2*pad);
-      return [x,y];
-    }
-    var step=Math.max(1,Math.floor(coords.length/200));
-    var pts=[];
-    for(var i=0;i<coords.length;i+=step)pts.push(proj(coords[i]));
-    pts.push(proj(coords[coords.length-1]));
-    var pathD='M'+pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' L');
-    // ایستگاه‌های شارژ
+    var latlngs=coords.map(function(c){return [c[1],c[0]];});
+    var km=parseFloat(plan.routeKm||route.routeKm||0)||0;
+    var dstr='';try{dstr=new Date(Number(plan.createdAt)||Date.now()).toLocaleDateString('fa-IR');}catch(e){}
     var stations=plan.stations||[];
-    var stSvg=stations.map(function(st){
-      if(!isFinite(st.lat)||!isFinite(st.lon))return '';
-      var xy=proj([st.lon,st.lat]);
-      return '<g class="st-pin" data-name="'+esc(st.name||'ایستگاه شارژ')+'">'+
-        '<circle cx="'+xy[0]+'" cy="'+xy[1]+'" r="9" fill="#ff9800" stroke="#fff" stroke-width="2"/>'+
-        '<text x="'+xy[0]+'" y="'+(xy[1]+4)+'" font-size="10" text-anchor="middle">\u26a1</text>'+
-        '<title>'+esc(st.name||'ایستگاه شارژ')+'</title></g>';
-    }).join('');
+    var stops=plan.stops||[];
+    // اطلاعات برنامه
+    var infoHtml='<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:13px;">'+
+      '<div>\U0001f4cd مبدأ: <b>'+esc(route.origin||'-')+'</b></div>'+
+      '<div>\U0001f3c1 مقصد: <b>'+esc(route.destination||'-')+'</b></div>'+
+      '<div>\U0001f4cf مسافت: <b>'+(km?faNum(Math.round(km*10)/10)+' km':'-')+'</b></div>'+
+      '<div>\U0001f4c5 تاریخ: <b>'+esc(dstr)+'</b></div>'+
+      '<div>\u26a1 ایستگاه شارژ: <b>'+faNum(stations.length)+'</b></div>'+
+      '<div>\U0001f6d1 توقف: <b>'+faNum(stops.length)+'</b></div></div>';
+    var modal=document.createElement('div');
+    modal.className='rev-preview-modal';modal.id='revPreviewModal';
+    modal.innerHTML='<div class="rev-preview-box" style="max-width:700px;">'+
+      '<div class="rev-preview-head"><h3>\u067e\u06cc\u0634\u200c\u0646\u0645\u0627\u06cc\u0634 \u0633\u0641\u0631</h3>'+
+      '<button class="rev-preview-close" id="revPreviewClose">\u2715</button></div>'+
+      '<div style="padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;">'+infoHtml+'</div>'+
+      '<div id="revPreviewMap" style="height:380px;width:100%;background:#e0e0e0;"></div>'+
+      '<div class="rev-preview-controls"><button id="revPreviewPlay">\u23f8 \u062a\u0648\u0642\u0641</button>'+
+      '<button id="revPreviewRestart">\u21ba \u0627\u0632 \u0628\u062a\u062f\u0627</button>'+
+      '<span style="font-size:12px;">\u0633\u0631\u0639\u062a: <input type="range" id="revSpeed" min="1" max="10" value="3" style="width:70px;"></span></div>'+
+      '<div class="rev-preview-info" id="revPreviewInfo">\u0622\u0645\u0627\u062f\u0647...</div></div>';
+    document.body.appendChild(modal);
+    document.getElementById('revPreviewClose').onclick=closePreview;
+    modal.onclick=function(e){if(e.target===modal)closePreview();};
+    // ساخت نقشه Leaflet
+    var map=L.map('revPreviewMap');
+    window._revPreviewMap=map;
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OSM'}).addTo(map);
+    L.polyline(latlngs,{color:'#0d9488',weight:5}).addTo(map);
+    // مبدأ و مقصد
+    L.marker(latlngs[0]).addTo(map).bindPopup('\U0001f4cd '+esc(route.origin||'مبدأ'));
+    L.marker(latlngs[latlngs.length-1]).addTo(map).bindPopup('\U0001f3c1 '+esc(route.destination||'مقصد'));
+    // پین ایستگاه‌های شارژ
+    var stIcon=L.divIcon({className:'',html:'<div style="background:#ff9800;border:2px solid #fff;border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;font-size:16px;box-shadow:0 2px 6px rgba(0,0,0,.3);">\u26a1</div>',iconSize:[28,28],iconAnchor:[14,14]});
+    stations.forEach(function(st){
+      if(!isFinite(st.lat)||!isFinite(st.lon))return;
+      L.marker([st.lat,st.lon],{icon:stIcon}).addTo(map).bindPopup('<b>'+esc(st.name||'ایستگاه شارژ')+'</b>'+(st.power?'<br>'+esc(st.power):''));
+    });
+    // توقف‌ها
+    stops.forEach(function(sp){
+      var slat=sp.lat||sp.latitude, slon=sp.lon||sp.lng||sp.longitude;
+      if(!isFinite(slat)||!isFinite(slon))return;
+      L.circleMarker([slat,slon],{radius:8,color:'#ff6b35',fillColor:'#ff6b35',fillOpacity:.8}).addTo(map).bindPopup('\U0001f6d1 '+esc(sp.name||'توقف'));
+    });
+    map.fitBounds(L.polyline(latlngs).getBounds(),{padding:[30,30]});
+    setTimeout(function(){try{map.invalidateSize();}catch(e){}},200);
+    // خودروی متحرک
+    var carIcon=L.divIcon({className:'',html:carSvg(),iconSize:[44,36],iconAnchor:[22,18]});
+    var carMarker=L.marker(latlngs[0],{icon:carIcon,zIndexOffset:1000}).addTo(map);
+    var wTip=L.tooltip({permanent:true,direction:'top',offset:[0,-25],className:'rev-car-label'}).setContent('\u26c5');
+    carMarker.bindTooltip(wTip).openTooltip();
     // نقاط آب‌وهوا
-    var totalKm=parseFloat(plan.routeKm||(route.routeKm||0))||0;
+    var totalKm=km;
     var numSamples=Math.min(6,Math.max(3,Math.round(totalKm/80)));
     var wPts=[];
     for(var s=0;s<numSamples;s++){
       var idx=Math.round(s*(coords.length-1)/(numSamples-1));
-      wPts.push({idx:idx,weather:null,code:null,lon:coords[idx][0],lat:coords[idx][1]});
+      wPts.push({idx:idx,code:null,temp:null,lon:coords[idx][0],lat:coords[idx][1]});
     }
-    // نمودار ارتفاع
-    var elevPts=[];
-    var numElev=Math.min(40,Math.max(10,Math.round(coords.length/20)));
-    for(var e=0;e<numElev;e++){
-      var eidx=Math.round(e*(coords.length-1)/(numElev-1));
-      elevPts.push({idx:eidx,lon:coords[eidx][0],lat:coords[eidx][1],elev:null});
-    }
-    var modal=document.createElement('div');
-    modal.className='rev-preview-modal';modal.id='revPreviewModal';
-    modal.innerHTML='<div class="rev-preview-box" style="max-width:680px;">'+
-      '<div class="rev-preview-head"><h3>\u067e\u06cc\u0634\u200c\u0646\u0645\u0627\u06cc\u0634 \u0633\u0641\u0631: '+esc(route.origin||'')+' \u2190 '+esc(route.destination||'')+'</h3>'+
-      '<button class="rev-preview-close" id="revPreviewClose">\u2715</button></div>'+
-      '<div style="position:relative;background:#e8f4f8;">'+
-      '<svg id="revPreviewSvg" viewBox="0 0 '+W+' '+H+'" style="width:100%;height:340px;display:block;">'+
-      '<path d="'+pathD+'" fill="none" stroke="#0d9488" stroke-width="4" stroke-linecap="round"/>'+stSvg+
-      '<g id="revCarG" transform="translate(-22,-18)"><g id="revCarInner">'+carSvg()+'</g></g>'+
-      '</svg>'+
-      '<div id="revWeatherTip" style="position:absolute;background:rgba(255,255,255,.95);border:2px solid #0d9488;border-radius:50%;width:44px;height:44px;display:flex;align-items:center;justify-content:center;font-size:24px;box-shadow:0 2px 8px rgba(0,0,0,.25);pointer-events:none;transform:translate(-50%,-130%);">\u26c5</div>'+
-      '</div>'+
-      '<div style="background:#f8fafc;border-top:1px solid #e2e8f0;padding:8px 12px;">'+
-      '<div style="font-size:11px;color:#64748b;margin-bottom:4px;">\u0646\u0645\u0648\u062f\u0627\u0631 \u0627\u0631\u062a\u0641\u0627\u0639 \u0645\u0633\u06cc\u0631</div>'+
-      '<svg id="revElevSvg" viewBox="0 0 '+W+' 80" style="width:100%;height:80px;display:block;"><path id="revElevPath" fill="rgba(13,148,136,.15)" stroke="#0d9488" stroke-width="2"/><line id="revElevMarker" y1="0" y2="80" stroke="#ff6b35" stroke-width="2"/></svg>'+
-      '<div id="revElevLabel" style="font-size:11px;color:#475569;text-align:center;">\u062f\u0631 \u062d\u0627\u0644 \u062f\u0631\u06cc\u0627\u0641\u062a \u0627\u0637\u0644\u0627\u0639\u0627\u062a \u0627\u0631\u062a\u0641\u0627\u0639...</div>'+
-      '</div>'+
-      '<div class="rev-preview-controls"><button id="revPreviewPlay">\u23f8 \u062a\u0648\u0642\u0641</button>'+
-      '<button id="revPreviewRestart">\u21ba \u0627\u0632 \u0628\u062a\u062f\u0627</button>'+
-      '<span style="font-size:12px;color:#666;">\u0633\u0631\u0639\u062a: <input type="range" id="revSpeed" min="1" max="10" value="3" style="width:80px;vertical-align:middle;"></span></div>'+
-      '<div class="rev-preview-info" id="revPreviewInfo">\u0622\u0645\u0627\u062f\u0647...</div>'+
-      '</div>';
-    document.body.appendChild(modal);
-    document.getElementById('revPreviewClose').onclick=closePreview;
-    modal.onclick=function(e){if(e.target===modal)closePreview();};
-    var svg=document.getElementById('revPreviewSvg');
-    var carG=document.getElementById('revCarG');
-    var tip=document.getElementById('revWeatherTip');
-    var infoEl=document.getElementById('revPreviewInfo');
-    previewState={idx:0,playing:true,speed:2,coords:coords,proj:proj,svg:svg,carG:carG,tip:tip,infoEl:infoEl,W:W,H:H,wPts:wPts,elevPts:elevPts};
+    previewState={map:map,marker:carMarker,tip:wTip,coords:latlngs,idx:0,playing:true,speed:3,wPts:wPts,infoEl:document.getElementById('revPreviewInfo')};
     document.getElementById('revPreviewPlay').onclick=function(){
       previewState.playing=!previewState.playing;
       this.textContent=previewState.playing?'\u23f8 \u062a\u0648\u0642\u0641':'\u25b6 \u0627\u062f\u0627\u0645\u0647';
     };
     document.getElementById('revPreviewRestart').onclick=function(){previewState.idx=0;};
     document.getElementById('revSpeed').oninput=function(){previewState.speed=parseInt(this.value,10);};
-    // آب‌وهوا
     wPts.forEach(function(wp){
       fetch('https://api.open-meteo.com/v1/forecast?latitude='+wp.lat+'&longitude='+wp.lon+'&current=temperature_2m,weather_code&timezone=auto')
-        .then(function(r){return r.json();})
-        .then(function(d){if(d&&d.current){wp.weather={temp:Math.round(d.current.temperature_2m)};wp.code=d.current.weather_code;}})
-        .catch(function(){});
+        .then(function(r){return r.json();}).then(function(d){
+          if(d&&d.current){wp.temp=Math.round(d.current.temperature_2m);wp.code=d.current.weather_code;}
+        }).catch(function(){});
     });
-    // ارتفاع
-    var elevLats=elevPts.map(function(p){return p.lat;}).join(',');
-    var elevLons=elevPts.map(function(p){return p.lon;}).join(',');
-    fetch('https://api.open-meteo.com/v1/elevation?latitude='+elevLats+'&longitude='+elevLons)
-      .then(function(r){return r.json();})
-      .then(function(d){
+    // نمودار ارتفاع (در پایین مودال)
+    var elevDiv=document.createElement('div');
+    elevDiv.style.cssText='background:#f8fafc;border-top:1px solid #e2e8f0;padding:8px 12px;';
+    elevDiv.innerHTML='<div style="font-size:11px;color:#64748b;margin-bottom:4px;">\u0646\u0645\u0648\u062f\u0627\u0631 \u0627\u0631\u062a\u0641\u0627\u0639</div><svg id="revElevSvg" viewBox="0 0 600 70" style="width:100%;height:70px;display:block;"><path id="revElevPath" fill="rgba(13,148,136,.15)" stroke="#0d9488" stroke-width="2"/><line id="revElevMarker" y1="0" y2="70" stroke="#ff6b35" stroke-width="2"/></svg><div id="revElevLabel" style="font-size:11px;color:#475569;text-align:center;">...</div>';
+    modal.querySelector('.rev-preview-box').insertBefore(elevDiv,modal.querySelector('.rev-preview-controls'));
+    var numElev=Math.min(30,Math.max(10,Math.round(coords.length/25)));
+    var eLats=[],eLons=[];
+    for(var e=0;e<numElev;e++){var ei=Math.round(e*(coords.length-1)/(numElev-1));eLats.push(coords[ei][1]);eLons.push(coords[ei][0]);}
+    fetch('https://api.open-meteo.com/v1/elevation?latitude='+eLats.join(',')+'&longitude='+eLons.join(','))
+      .then(function(r){return r.json();}).then(function(d){
         if(d&&d.elevation){
-          var minE=1e9,maxE=-1e9;
-          d.elevation.forEach(function(e,i){elevPts[i].elev=e;if(e<minE)minE=e;if(e>maxE)maxE=e;});
-          drawElev(minE,maxE);
+          var mn=1e9,mx=-1e9;
+          d.elevation.forEach(function(v){if(v<mn)mn=v;if(v>mx)mx=v;});
+          var path='M0,70 ',rg=(mx-mn)||1;
+          d.elevation.forEach(function(v,i){
+            var x=(i/(d.elevation.length-1))*600, y=65-((v-mn)/rg)*55;
+            path+='L'+x.toFixed(1)+','+y.toFixed(1)+' ';
+          });
+          path+='L600,70 Z';
+          var pe=document.getElementById('revElevPath');
+          if(pe)pe.setAttribute('d',path);
+          var lb=document.getElementById('revElevLabel');
+          if(lb)lb.textContent='\u0627\u0631\u062a\u0641\u0627\u0639: '+Math.round(mn)+' \u062a\u0627 '+Math.round(mx)+' \u0645\u062a\u0631';
         }
       }).catch(function(){});
-    function drawElev(minE,maxE){
-      var path=document.getElementById('revElevPath');
-      if(!path)return;
-      var range=(maxE-minE)||1;
-      var d='M0,80 ';
-      elevPts.forEach(function(p,i){
-        var x=(i/(elevPts.length-1))*W;
-        var y=75-((p.elev-minE)/range)*65;
-        d+='L'+x.toFixed(1)+','+y.toFixed(1)+' ';
-      });
-      d+='L'+W+',80 Z';
-      path.setAttribute('d',d);
-      var lbl=document.getElementById('revElevLabel');
-      if(lbl)lbl.textContent='\u0627\u0631\u062a\u0641\u0627\u0639: '+Math.round(minE)+' \u062a\u0627 '+Math.round(maxE)+' \u0645\u062a\u0631';
-      if(previewState)previewState.elevRange={min:minE,max:maxE};
-    }
-    requestAnimationFrame(previewTickSvg);
+    requestAnimationFrame(previewTick);
   }catch(e){alert('Preview error: '+(e.message||e));}
   }
-  function previewTickSvg(){
+  function previewTick(){
     if(!previewState)return;
     var st=previewState;
     if(st.playing){
-      st.idx+=st.speed*0.5;
+      st.idx+=st.speed*0.4;
       if(st.idx>=st.coords.length-1){st.idx=st.coords.length-1;st.playing=false;
         var pb=document.getElementById('revPreviewPlay');
         if(pb)pb.textContent='\u25b6 \u0627\u062f\u0627\u0645\u0647';
       }
     }
-    var c=st.coords[Math.round(st.idx)];
-    var xy=st.proj(c);
-    st.carG.setAttribute('transform','translate('+(xy[0]-22)+','+(xy[1]-18)+')');
-    var boxRect=st.svg.parentElement.getBoundingClientRect();
-    var scaleX=boxRect.width/st.W;
-    st.tip.style.left=(xy[0]*scaleX)+'px';
-    st.tip.style.top=(xy[1]*(340/st.H))+'px';
+    var pos=st.coords[Math.round(st.idx)];
+    st.marker.setLatLng(pos);
+    if(st.map)st.map.panTo(pos,{animate:false});
     var nearest=null,bd=1e9;
     st.wPts.forEach(function(wp){var d=Math.abs(wp.idx-st.idx);if(d<bd){bd=d;nearest=wp;}});
     var progress=Math.round(100*st.idx/(st.coords.length-1));
     if(nearest&&nearest.code!=null){
-      st.tip.textContent=weatherIcon(nearest.code);
-      if(st.infoEl)st.infoEl.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a '+progress+'٪ — '+nearest.weather.temp+'°';
+      st.tip.setContent('<span style="font-size:22px;">'+weatherIcon(nearest.code)+'</span>');
+      if(st.infoEl)st.infoEl.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a '+progress+'٪ — '+nearest.temp+'°';
     }else{
-      st.tip.textContent='\u26c5';
       if(st.infoEl)st.infoEl.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a '+progress+'٪';
     }
-    // نشانگر روی نمودار ارتفاع
     var em=document.getElementById('revElevMarker');
-    if(em){
-      var ex=(st.idx/(st.coords.length-1))*st.W;
-      em.setAttribute('x1',ex);em.setAttribute('x2',ex);
-    }
-    requestAnimationFrame(previewTickSvg);
+    if(em){var ex=(st.idx/(st.coords.length-1))*600;em.setAttribute('x1',ex);em.setAttribute('x2',ex);}
+    requestAnimationFrame(previewTick);
   }
   function attachSave(){
     var btn=document.getElementById('savePlanBtn');
