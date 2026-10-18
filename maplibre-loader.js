@@ -1,0 +1,25 @@
+// لودر maplibre از قسمت‌ها
+(function(){
+  var parts = [];
+  for(var i=1; i<=9; i++) parts.push('maplibre-gl.p'+i+'.js');
+  var loaded = [];
+  function loadNext(idx){
+    if(idx >= parts.length){
+      // همه لود شدن، اجرا کن
+      var code = loaded.join('');
+      var s = document.createElement('script');
+      s.textContent = code;
+      document.head.appendChild(s);
+      // ایونت برای اطلاع
+      window.dispatchEvent(new Event('maplibre-ready'));
+      return;
+    }
+    fetch(parts[idx]).then(function(r){return r.text();}).then(function(t){
+      loaded[idx] = t;
+      loadNext(idx+1);
+    }).catch(function(e){
+      console.error('خطا در لود قسمت', idx+1, e);
+    });
+  }
+  loadNext(0);
+})();
