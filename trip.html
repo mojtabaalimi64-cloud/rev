@@ -579,5 +579,79 @@ window.revOpenPreview=function(pid){
 };
 </script>
 
+
+<script>
+(function(){
+  // هندلر ذخیره ساده - مستقل از کدهای دیگر
+  var KEY='rev_saved_trip_plans_v1';
+  function doSave(){
+    var statusEl=document.getElementById('status');
+    function say(m){ if(statusEl) statusEl.textContent=m; else alert(m); }
+    try{
+      // پیدا کردن lastRoute از window یا اسکوپ سراسری
+      var lr=window.lastRoute||(typeof lastRoute!=='undefined'?lastRoute:null);
+      if(!lr||!lr.geometry||!lr.geometry.coordinates||!lr.geometry.coordinates.length){
+        say('ابتدا مسیر را محاسبه کنید.');
+        return;
+      }
+      var oEl=document.getElementById('origin'), dEl=document.getElementById('destination');
+      var coords=lr.geometry.coordinates;
+      if(coords.length>400){
+        var sc=[], st=(coords.length-1)/399;
+        for(var k=0;k<400;k++) sc.push(coords[Math.round(k*st)]);
+        coords=sc;
+      }
+      var plan={
+        id:'p'+Date.now(),
+        createdAt:Date.now(),
+        params:{
+          origin:oEl?(oEl.value||''):'',
+          destination:dEl?(dEl.value||''):'',
+          battery:(document.getElementById('battery')||{}).value||'',
+          soc:(document.getElementById('soc')||{}).value||'',
+          consumption:(document.getElementById('consumption')||{}).value||''
+        },
+        routeKm:lr.distance/1000,
+        coords:coords,
+        stations:[],
+        stops:[]
+      };
+      // خواندن ایستگاه‌ها اگر موجود است
+      try{
+        if(typeof stations!=='undefined'&&Array.isArray(stations)){
+          plan.stations=stations.slice(0,40).map(function(s){return{name:s.name||'',lat:s.lat,lon:s.lon,power:s.power||''};});
+        }
+      }catch(e){}
+      var arr=[];
+      try{ arr=JSON.parse(localStorage.getItem(KEY)||'[]'); }catch(e){}
+      if(!Array.isArray(arr)) arr=[];
+      arr.unshift(plan);
+      localStorage.setItem(KEY, JSON.stringify(arr.slice(0,20)));
+      say('برنامه سفر ذخیره شد.');
+      // رفرش لیست
+      if(window.renderSavedPlans) try{window.renderSavedPlans();}catch(e){}
+      var rl=document.getElementById('savedPlansList');
+      if(rl) setTimeout(function(){ location.reload(); }, 800);
+    }catch(e){
+      say('خطا در ذخیره: '+(e.message||e));
+    }
+  }
+  // اتصال با تاخیر تا مطمئن شویم دکمه وجود دارد
+  function wire(){
+    var btn=document.getElementById('savePlanBtn');
+    if(btn&&!btn._simpleWired){
+      btn._simpleWired=true;
+      btn.addEventListener('click', function(e){
+        e.preventDefault();
+        e.stopImmediatePropagation();
+        doSave();
+      }, true);
+    }
+  }
+  setInterval(wire, 1000);
+  wire();
+})();
+</script>
+
 </body>
 </html>
