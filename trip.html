@@ -553,8 +553,7 @@ window.revRenderSavedPlans=renderSavedPlans;
     // خودروی متحرک
     var carIcon=L.divIcon({className:'',html:carSvg(),iconSize:[44,36],iconAnchor:[22,18]});
     var carMarker=L.marker(latlngs[0],{icon:carIcon,zIndexOffset:1000}).addTo(map);
-    var wTip=L.tooltip({permanent:true,direction:'top',offset:[0,-25],className:'rev-car-label'}).setContent('\u26c5');
-    carMarker.bindTooltip(wTip).openTooltip();
+    carMarker.bindTooltip('<span style="font-size:22px;">\u26c5</span>',{permanent:true,direction:'top',offset:[0,-25],className:'rev-car-label'}).openTooltip();
     // نقاط آب‌وهوا
     var totalKm=km;
     var numSamples=Math.min(6,Math.max(3,Math.round(totalKm/80)));
@@ -563,7 +562,7 @@ window.revRenderSavedPlans=renderSavedPlans;
       var idx=Math.round(s*(coords.length-1)/(numSamples-1));
       wPts.push({idx:idx,code:null,temp:null,lon:coords[idx][0],lat:coords[idx][1]});
     }
-    previewState={map:map,marker:carMarker,tip:wTip,coords:latlngs,idx:0,playing:true,speed:3,wPts:wPts,infoEl:document.getElementById('revPreviewInfo'),elevData:null,elevIdx:[],
+    previewState={map:map,marker:carMarker,coords:latlngs,idx:0,playing:true,speed:3,wPts:wPts,infoEl:document.getElementById('revPreviewInfo'),elevData:null,elevIdx:[],
     battery:parseFloat((plan.params&&plan.params.battery)||60),startSoc:parseFloat((plan.params&&plan.params.soc)||90),consumption:parseFloat((plan.params&&plan.params.consumption)||18),totalKm:km};
     document.getElementById('revPreviewPlay').onclick=function(){
       previewState.playing=!previewState.playing;
@@ -628,7 +627,7 @@ window.revRenderSavedPlans=renderSavedPlans;
     var chargePct=Math.max(0,Math.round(st.startSoc-(usedKwh/st.battery*100)));
     var chargeColor=chargePct>50?'#22c55e':(chargePct>20?'#f59e0b':'#ef4444');
     if(nearest&&nearest.code!=null){
-      st.tip.setContent('<div style="text-align:center;"><div style="font-size:22px;">'+weatherIcon(nearest.code)+'</div><div style="font-size:11px;font-weight:bold;color:'+chargeColor+';background:#fff;border-radius:6px;padding:1px 6px;margin-top:2px;">\U0001f50b '+chargePct+'٪</div></div>');
+      st.marker.setTooltipContent('<div style="text-align:center;"><div style="font-size:22px;">'+weatherIcon(nearest.code)+'</div><div style="font-size:11px;font-weight:bold;color:'+chargeColor+';background:#fff;border-radius:6px;padding:1px 6px;margin-top:2px;">\U0001f50b '+chargePct+'٪</div></div>');
       if(st.infoEl)st.infoEl.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a '+progress+'٪ — '+nearest.temp+'° — شارژ '+chargePct+'٪';
     }else{
       if(st.infoEl)st.infoEl.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a '+progress+'٪';
