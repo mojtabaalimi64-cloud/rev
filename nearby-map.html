@@ -144,18 +144,19 @@ if(routes.length<3){
       const jj=await rr.json();
       if(jj.code!=="Ok"||!jj.routes||!jj.routes.length)continue;
       const candidate=jj.routes[0],main=routes[0],ratio=candidate.distance/main.distance;
-      if(ratio<1.01||ratio>1.65)continue;
+      if(ratio<0.98||ratio>2.5)continue;
       const cb=candidate.geometry.coordinates;
       const duplicate=routes.some(existing=>{
         const ca=existing.geometry.coordinates;
         if(!ca.length||!cb.length)return true;
-        let differences=0,samples=0;
-        for(let z=0;z<10;z++){
-          const ia=Math.floor(z*(ca.length-1)/9),ib=Math.floor(z*(cb.length-1)/9);
-          samples++;
-          if(Math.abs(ca[ia][0]-cb[ib][0])>.01||Math.abs(ca[ia][1]-cb[ib][1])>.01)differences++;
+        let differences=0;
+        for(let z=0;z<12;z++){
+          const ia=Math.floor(z*(ca.length-1)/11),ib=Math.floor(z*(cb.length-1)/11);
+          const dx=(ca[ia][0]-cb[ib][0])*Math.cos(ca[ia][1]*Math.PI/180);
+          const dy=ca[ia][1]-cb[ib][1];
+          if(Math.sqrt(dx*dx+dy*dy)>.003)differences++;
         }
-        return differences<2;
+        return differences<3;
       });
       if(!duplicate)routes.push(candidate);
     }catch(ignore){}
