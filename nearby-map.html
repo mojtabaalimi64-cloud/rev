@@ -255,12 +255,12 @@ $('rmCancel').addEventListener('click',closeModal);
 $('reportModal').addEventListener('click',function(e){if(e.target===$('reportModal'))closeModal()});
 $('rmSubmit').addEventListener('click',async function(){
   var te=document.querySelector('input[name="rmType"]:checked');var type=te?te.value:'other';var details=$('rmDetails').value.trim();
-  if(!cur.id){say('شناسه جایگاه یافت نشد؛ لطفاً دوباره روی پین بزنید.',false);return;}
+  if(!cur.id){say('شناسه جایگاه یافت نشد (name:'+(cur.name||'?')+')؛ لطفاً دوباره روی پین بزنید.',false);return;}
   var btn=$('rmSubmit');btn.disabled=true;say('',false);
   var payload={station_id:cur.id,station_name:cur.name,report_type:type,details:details};
   if(cur.lat!=null)payload.latitude=cur.lat;
   if(cur.lon!=null)payload.longitude=cur.lon;
-  try{var r=await fetch(REPORT_API,{method:'POST',credentials:'include',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
+  try{var r=await fetch(REPORT_API,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload)});
     var txt=await r.text();var j=null;try{j=JSON.parse(txt)}catch(_){};
     if(!r.ok||(j&&j.success===false)){
       var msg=(j&&(j.error||j.message))||txt.slice(0,200)||('HTTP '+r.status);
