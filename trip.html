@@ -286,7 +286,7 @@ function fillSummary(){
   document.getElementById('planActions').hidden=false;
   try{document.getElementById('planSummary').scrollIntoView({block:'start',behavior:'smooth'})}catch(e){}
 }
-document.getElementById('savePlanBtn').addEventListener('click',function(){
+/* disabled: using fallback handler */ void(document.getElementById('savePlanBtn'))&&false&&document.getElementById('savePlanBtn').addEventListener('click',function(){
   try{
     var d=collectPlanData();
     if(!d){
