@@ -89,7 +89,7 @@
       <div class="warning">برنامه توقف بر اساس ظرفیت باتری، مصرف، شارژ اولیه و ذخیره ایمنی تخمین زده می‌شود. اطلاعات زنده‌بودن، اشغال بودن، توان و سازگاری کانکتور ایستگاه‌ها تضمین نمی‌شود؛ پیش از سفر بررسی کنید.</div>
       <details class="compact-disclosure" id="resultsDetails"><summary>نمایش بیشتر · ایستگاه‌های شارژ و توقف‌ها</summary><div class="disclosure-content"><div class="results" id="results"><h2 style="margin-top:10px">شارژرهای نزدیک مسیر</h2><div class="sub">پس از محاسبه مسیر، فهرست اینجا نمایش داده می‌شود.</div></div></div></details>
     </aside>
-<section class="plan-summary" id="planSummary" hidden>
+<section class="plan-summary" id="planSummary">
 <h2>خلاصه برنامه سفر</h2>
 <div class="plan-summary-grid">
 <div class="plan-summary-metric"><small>مسافت</small><b id="sumDistance">—</b></div>
@@ -98,7 +98,7 @@
 <div class="plan-summary-metric"><small>رسیدن تخمینی</small><b id="sumArrival">—</b></div>
 </div>
 </section>
-<div class="plan-actions" id="planActions" hidden>
+<div class="plan-actions" id="planActions">
 <button type="button" class="pa-map" id="viewOnMapBtn">🗺 نقشه</button>
 <button type="button" class="pa-save" id="savePlanBtn">💾 ذخیره</button>
 <button type="button" class="pa-start" id="startTripBtn">▶ شروع سفر</button>
@@ -1336,7 +1336,7 @@ var lastShownRoute=null;
 var resultsEl=document.getElementById('results');
 if(resultsEl&&window.MutationObserver){
   new MutationObserver(function(){
-    if(typeof lastRoute!=='undefined'&&lastRoute&&lastRoute!==lastShownRoute&&resultsEl.children.length>1){
+    if(typeof lastRoute!=='undefined'&&lastRoute&&lastRoute!==lastShownRoute&&resultsEl.children.length>0){
       lastShownRoute=lastRoute;fillSummary();
     }
   }).observe(resultsEl,{childList:true});
