@@ -1,16 +1,15 @@
-// لودر maplibre از قسمت‌ها
+// لودر maplibre از قسمت‌ها (مسیر مطلق)
 (function(){
+  var base = 'https://mojtabaalimi64-cloud.github.io/rev/';
   var parts = [];
-  for(var i=1; i<=9; i++) parts.push('maplibre-gl.p'+i+'.js');
+  for(var i=1; i<=9; i++) parts.push(base + 'maplibre-gl.p'+i+'.js');
   var loaded = [];
   function loadNext(idx){
     if(idx >= parts.length){
-      // همه لود شدن، اجرا کن
       var code = loaded.join('');
       var s = document.createElement('script');
       s.textContent = code;
       document.head.appendChild(s);
-      // ایونت برای اطلاع
       window.dispatchEvent(new Event('maplibre-ready'));
       return;
     }
