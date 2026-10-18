@@ -454,6 +454,11 @@ window.revRenderSavedPlans=renderSavedPlans;
     if(code===95)return '\u26c8';
     return '\u26c5';
   }
+  function closePreview(){
+    var m=document.getElementById('revPreviewModal');
+    if(m)m.remove();
+    previewState=null;
+  }
   function openPreview(planId){
   try{
     var plans=readPlans(),plan=null;
@@ -650,7 +655,6 @@ window.revRenderSavedPlans=renderSavedPlans;
       list.__revWired=true;
       list.addEventListener('click',function(ev){
         var t=ev.target;
-        if(t&&t.className&&t.className.indexOf('preview')>=0){alert('preview clicked: '+t.getAttribute('data-rev-preview'));}
         var getId=function(attr){return t.getAttribute&&t.getAttribute(attr);};
         var delId=getId('data-rev-del'),startId=getId('data-rev-start'),prevId=getId('data-rev-preview');
         // ممکن است روی span داخلی کلیک شده باشد
