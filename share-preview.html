@@ -36,7 +36,13 @@ body{background:#000;font-family:Tahoma,sans-serif;display:flex;justify-content:
 <body>
 <div id="s">
 <div id="ld"><div>در حال بارگذاری...</div></div>
-<div id="mapw"><svg id="smap" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice"></svg><div id="marker"><div style="width:52px;height:52px;background:rgba(0,0,0,.6);border-radius:50%;display:flex;align-items:center;justify-content:center;border:3px solid #00e676;box-shadow:0 4px 16px rgba(0,0,0,.5)"><span style="font-size:28px">⚡</span></div></div></div>
+<div id="mapw"><svg id="smap" viewBox="0 0 600 800" preserveAspectRatio="xMidYMid slice"></svg><div id="marker"><div style="width:56px;height:56px;filter:drop-shadow(0 4px 12px rgba(0,0,0,.5))">
+<svg width="56" height="56" viewBox="0 0 56 56">
+<circle cx="28" cy="28" r="26" fill="rgba(0,0,0,.6)" stroke="#00e676" stroke-width="3"/>
+<path d="M20 38 L24 22 Q25 18 29 18 L33 18 Q37 18 38 22 L42 38" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round"/>
+<rect x="26" y="10" width="8" height="10" rx="2" fill="#00e676"/>
+<path d="M28 38 L28 46 M24 42 L32 42" stroke="#ffd54f" stroke-width="3" stroke-linecap="round"/>
+</svg></div></div></div>
 <div class="hdr"><div class="logo">⚡ رانش <b>EV</b></div><div class="prof"><span id="pn">—</span></div></div>
 <div id="route"><div class="r"><span id="ro">—</span> ← <span id="rd">—</span></div><div class="m" id="rm">—</div></div>
 <div id="stats">
@@ -95,11 +101,16 @@ done.setAttribute('stroke-width','7');done.setAttribute('stroke-linecap','round'
 svg.appendChild(done);
 // مبدأ و مقصد
 var s0=px(coords[0]),s1=px(coords[coords.length-1]);
-[[s0,'#00e676'],[s1,'#ff5252']].forEach(function(q){
-var cc=document.createElementNS(ns,'circle');
-cc.setAttribute('cx',q[0][0]);cc.setAttribute('cy',q[0][1]);cc.setAttribute('r','14');
-cc.setAttribute('fill',q[1]);cc.setAttribute('stroke','#fff');cc.setAttribute('stroke-width','3');
-svg.appendChild(cc);});
+// مبدأ: دایره سبز
+var cc0=document.createElementNS(ns,'circle');
+cc0.setAttribute('cx',s0[0]);cc0.setAttribute('cy',s0[1]);cc0.setAttribute('r','14');
+cc0.setAttribute('fill','#00e676');cc0.setAttribute('stroke','#fff');cc0.setAttribute('stroke-width','3');
+svg.appendChild(cc0);
+// مقصد: دوشاخه برق
+var plug=document.createElementNS(ns,'text');
+plug.setAttribute('x',s1[0]);plug.setAttribute('y',s1[1]+12);
+plug.setAttribute('text-anchor','middle');plug.setAttribute('font-size','36');
+plug.textContent='🔌';svg.appendChild(plug);
 var marker=document.getElementById('marker');
 var mapw=document.getElementById('mapw');
 var st={i:0,play:true,bat:parseFloat(rt.battery||60),soc:parseFloat(rt.soc||90),con:parseFloat(rt.consumption||18)};
