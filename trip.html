@@ -1073,6 +1073,7 @@ async function planTrip(){
       let departure=new Date(departureValue);
       if(!Number.isFinite(departure.getTime())||departure.getTime()<Date.now()-5*60*1000)departure=new Date();
       configureTimeline({coords,routeKm:km,durationSeconds:hours,departure,weatherSamples:[],battery:1,soc:100,consumption:0,stops:[],stationList:[],vehicleType,electricKm,regenerationKwh});
+      ensurePlanActionsVisible();
       const hybridRadius=num("radius",10);
       renderFuelStations(coords,hybridRadius).then(count=>{if(count===0)console.warn("REV: no mapped fuel stations returned for this route");}).catch(e=>console.warn("REV fuel layer:",e));
       renderBusinessDirectory(coords,hybridRadius).catch(e=>console.warn("REV business layer:",e));
@@ -1119,6 +1120,7 @@ async function planTrip(){
     const plan=buildChargingPlan(stations,coords,km,params);
     const stationTimeline=stations.map(s=>({...s,...stationAlongRouteKm(s,routeMetrics(coords))}));
     configureTimeline({coords,routeKm:km,durationSeconds:hours,departure:weatherAnalysis?.departure||new Date($("departure").value),weatherSamples:weatherAnalysis?.samples||[],battery,soc,consumption,reserve,stops:plan.stops||[],stationList:stationTimeline,vehicleType:"bev",electricKm:0});
+    ensurePlanActionsVisible();
     
     const sourceNote = window.revStationSourceWarning
       ? `\nهشدار منبع آنلاین: ${window.revStationSourceWarning}\nفهرست ایستگاه‌ها ممکن است ناقص باشد؛ صفر ایستگاه به معنی نبود شارژر واقعی نیست.`
@@ -1334,13 +1336,24 @@ if(planBtn)planBtn.addEventListener('click',function(){
 });
 var lastShownRoute=null;
 var resultsEl=document.getElementById('results');
+function ensurePlanActionsVisible(){
+  if(typeof lastRoute==='undefined'||!lastRoute||!lastRoute.geometry||!lastRoute.geometry.coordinates)return;
+  var summary=document.getElementById('planSummary'),actions=document.getElementById('planActions');
+  if(summary)summary.hidden=false;
+  if(actions)actions.hidden=false;
+  try{fillSummary();}catch(e){console.warn('REV trip summary:',e);}
+}
 if(resultsEl&&window.MutationObserver){
   new MutationObserver(function(){
     if(typeof lastRoute!=='undefined'&&lastRoute&&lastRoute!==lastShownRoute&&resultsEl.children.length>0){
-      lastShownRoute=lastRoute;fillSummary();
+      try{
+        ensurePlanActionsVisible();
+        if(document.getElementById('planActions')&&!document.getElementById('planActions').hidden)lastShownRoute=lastRoute;
+      }catch(e){console.warn('REV plan actions:',e);}
     }
-  }).observe(resultsEl,{childList:true});
+  }).observe(resultsEl,{childList:true,subtree:true});
 }
+document.addEventListener('DOMContentLoaded',function(){renderSavedPlans();});
 renderSavedPlans();
 })();
 </script><nav class="bottom-nav" aria-label="پیمایش اصلی REV"><div class="bottom-nav-inner">
