@@ -431,68 +431,115 @@ window.revRenderSavedPlans=renderSavedPlans;
   try{
     var plans=readPlans(),plan=null;
     for(var i=0;i<plans.length;i++)if(plans[i].id===planId){plan=plans[i];break;}
-    if(!plan){alert('\u0628\u0631\u0646\u0627\u0645\u0647 \u06cc\u0627\u0641\u062a \u0646\u0634\u062f.');return;}
+    if(!plan){alert('برنامه یافت نشد.');return;}
     if(!plan.coords||!plan.coords.length){
-      alert('\u0627\u06cc\u0646 \u0628\u0631\u0646\u0627\u0645\u0647 \u0642\u062f\u06cc\u0645\u06cc \u0627\u0633\u062a \u0648 \u0645\u062e\u062a\u0635\u0627\u062a \u0645\u0633\u06cc\u0631 \u0646\u062f\u0627\u0631\u062f. \u0644\u0637\u0641\u0627\u064b \u062f\u0648\u0628\u0627\u0631\u0647 \u0630\u062e\u06cc\u0631\u0647 \u06a9\u0646\u06cc\u062f.');
+      alert('این برنامه قدیمی است و مختصات مسیر ندارد. لطفاً دوباره ذخیره کنید.');
       return;
     }
     closePreview();
+    var route=plan.params||{};
+    var coords=plan.coords;
+    // محاسبه bounding box برای نرمال‌سازی
+    var minLon=1e9,maxLon=-1e9,minLat=1e9,maxLat=-1e9;
+    coords.forEach(function(c){if(c[0]<minLon)minLon=c[0];if(c[0]>maxLon)maxLon=c[0];if(c[1]<minLat)minLat=c[1];if(c[1]>maxLat)maxLat=c[1];});
+    var W=600,H=380,pad=30;
+    function proj(c){
+      var x=pad+(c[0]-minLon)/(maxLon-minLon||1)*(W-2*pad);
+      var y=H-pad-(c[1]-minLat)/(maxLat-minLat||1)*(H-2*pad);
+      return [x,y];
+    }
+    // نمونه‌برداری برای مسیر (حداکثر ۲۰۰ نقطه برای SVG)
+    var step=Math.max(1,Math.floor(coords.length/200));
+    var pts=[];
+    for(var i=0;i<coords.length;i+=step)pts.push(proj(coords[i]));
+    pts.push(proj(coords[coords.length-1]));
+    var pathD='M'+pts.map(function(p){return p[0].toFixed(1)+','+p[1].toFixed(1);}).join(' L');
+    // نقاط آب‌وهوا
+    var totalKm=parseFloat(plan.routeKm||(route.routeKm||0))||0;
+    var numSamples=Math.min(6,Math.max(3,Math.round(totalKm/80)));
+    var wPts=[];
+    for(var s=0;s<numSamples;s++){
+      var idx=Math.round(s*(coords.length-1)/(numSamples-1));
+      wPts.push({idx:idx,xy:proj(coords[idx]),weather:null,lon:coords[idx][0],lat:coords[idx][1]});
+    }
     var modal=document.createElement('div');
     modal.className='rev-preview-modal';modal.id='revPreviewModal';
-    var route=plan.params||{};
     modal.innerHTML='<div class="rev-preview-box">'+
       '<div class="rev-preview-head"><h3>\u067e\u06cc\u0634\u200c\u0646\u0645\u0627\u06cc\u0634 \u0633\u0641\u0631: '+esc(route.origin||'')+' \u2190 '+esc(route.destination||'')+'</h3>'+
       '<button class="rev-preview-close" id="revPreviewClose">\u2715</button></div>'+
-      '<div id="revPreviewMap"></div>'+
+      '<div style="position:relative;background:#e8f4f8;">'+
+      '<svg id="revPreviewSvg" viewBox="0 0 '+W+' '+H+'" style="width:100%;height:380px;display:block;">'+
+      '<path d="'+pathD+'" fill="none" stroke="#0d9488" stroke-width="4" stroke-linecap="round"/>'+
+      '<circle id="revCarDot" r="10" fill="#ff6b35" stroke="#fff" stroke-width="3"/>'+
+      '<text id="revCarEmoji" font-size="24" text-anchor="middle">\U0001f697</text>'+
+      '</svg>'+
+      '<div id="revWeatherTip" style="position:absolute;background:#fff;border:2px solid #0d9488;border-radius:8px;padding:6px 10px;font-size:12px;box-shadow:0 2px 8px rgba(0,0,0,.2);pointer-events:none;transform:translate(-50%,-120%);white-space:nowrap;">...</div>'+
+      '</div>'+
       '<div class="rev-preview-controls"><button id="revPreviewPlay">\u23f8 \u062a\u0648\u0642\u0641</button>'+
-      '<button id="revPreviewRestart">\u21ba \u0627\u0632 \u0627\u0628\u062a\u062f\u0627</button></div>'+
-      '<div class="rev-preview-info" id="revPreviewInfo">\u062f\u0631 \u062d\u0627\u0644 \u0628\u0627\u0631\u06af\u0630\u0627\u0631\u06cc \u0646\u0642\u0634\u0647...</div>'+
+      '<button id="revPreviewRestart">\u21ba \u0627\u0632 \u0628\u062a\u062f\u0627</button></div>'+
+      '<div class="rev-preview-info" id="revPreviewInfo">\u062f\u0631 \u062d\u0627\u0644 \u0628\u0627\u0631\u06af\u0630\u0627\u0631\u06cc...</div>'+
       '</div>';
     document.body.appendChild(modal);
     document.getElementById('revPreviewClose').onclick=closePreview;
     modal.onclick=function(e){if(e.target===modal)closePreview();};
-    // ساخت نقشه (با تأخیر تا مودال رندر شود)
-    var coords=plan.coords;
-    var latlngs=coords.map(function(c){return [c[1],c[0]];});
-    var mapDiv=document.getElementById('revPreviewMap');
-    if(mapDiv){mapDiv.style.height='380px';mapDiv.style.width='100%';mapDiv.style.minHeight='380px';}
+    var svg=document.getElementById('revPreviewSvg');
+    var carDot=document.getElementById('revCarDot');
+    var carEmoji=document.getElementById('revCarEmoji');
+    var tip=document.getElementById('revWeatherTip');
     var infoEl=document.getElementById('revPreviewInfo');
-    function pErr(m){if(infoEl)infoEl.textContent='\u062e\u0637\u0627: '+m;}
-    if(typeof L==='undefined'){pErr('Leaflet \u0644\u0648\u062f \u0646\u0634\u062f.');return;}
-    if(!latlngs.length||!latlngs[0]||!isFinite(latlngs[0][0])){pErr('\u0645\u062e\u062a\u0635\u0627\u062a \u0646\u0627\u0645\u0639\u062a\u0628\u0631.');return;}
-    var map;
-    try{map=L.map('revPreviewMap').setView(latlngs[0],10);}
-    catch(e){pErr('L.map: '+(e.message||e));return;}
-    setTimeout(function(){try{map.invalidateSize();}catch(e){}},300);
-    setTimeout(function(){try{map.invalidateSize();}catch(e){}},1000);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19}).addTo(map);
-    L.polyline(latlngs,{color:'#0d9488',weight:4}).addTo(map);
-    map.fitBounds(L.polyline(latlngs).getBounds(),{padding:[20,20]});
-    // نشانگر خودرو
-    var carIcon=L.divIcon({className:'',html:'<div style="font-size:28px">\U0001f697</div>',iconSize:[30,30],iconAnchor:[15,15]});
-    var carMarker=L.marker(latlngs[0],{icon:carIcon}).addTo(map);
-    var label=L.tooltip({permanent:true,direction:'top',offset:[0,-20],className:'rev-car-label'}).setContent('...');
-    carMarker.bindTooltip(label).openTooltip();
-    // نقاط آب‌وهوا (نمونه‌برداری هر ~50 کیلومتر)
-    var weatherPoints=[];
-    var totalKm=parseFloat(plan.routeKm||(route.routeKm||0))||0;
-    var numSamples=Math.min(8,Math.max(3,Math.round(totalKm/50)));
-    for(var s=0;s<numSamples;s++){
-      var idx=Math.round(s*(coords.length-1)/(numSamples-1));
-      weatherPoints.push({coord:coords[idx],idx:idx,weather:null});
-    }
-    previewState={map:map,marker:carMarker,label:label,coords:latlngs,idx:0,playing:true,speed:8,weatherPoints:weatherPoints,plan:plan};
+    previewState={idx:0,playing:true,speed:Math.max(1,Math.round(coords.length/300)),coords:coords,pts:pts,wPts:wPts,proj:proj,svg:svg,carDot:carDot,carEmoji:carEmoji,tip:tip,infoEl:infoEl,W:W,H:H};
     document.getElementById('revPreviewPlay').onclick=function(){
       previewState.playing=!previewState.playing;
       this.textContent=previewState.playing?'\u23f8 \u062a\u0648\u0642\u0641':'\u25b6 \u0627\u062f\u0627\u0645\u0647';
-      this.className=previewState.playing?'':'paused';
     };
     document.getElementById('revPreviewRestart').onclick=function(){previewState.idx=0;};
     // بارگذاری آب‌وهوا
-    loadWeatherForPreview();
-    // شروع انیمیشن
-    requestAnimationFrame(previewTick);
-  }catch(e){alert('Preview error: '+(e.message||e)+'\n'+(e.stack||'').substring(0,200));}
+    wPts.forEach(function(wp){
+      fetch('https://api.open-meteo.com/v1/forecast?latitude='+wp.lat+'&longitude='+wp.lon+'&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto')
+        .then(function(r){return r.json();})
+        .then(function(d){if(d&&d.current)wp.weather={temp:Math.round(d.current.temperature_2m),desc:weatherDesc(d.current.weather_code),wind:Math.round(d.current.wind_speed_10m)};})
+        .catch(function(){});
+    });
+    requestAnimationFrame(previewTickSvg);
+  }catch(e){alert('Preview error: '+(e.message||e));}
+  }
+  function previewTickSvg(){
+    if(!previewState)return;
+    var st=previewState;
+    if(st.playing){
+      st.idx+=st.speed;
+      if(st.idx>=st.coords.length-1){st.idx=st.coords.length-1;st.playing=false;
+        var pb=document.getElementById('revPreviewPlay');
+        if(pb)pb.textContent='\u25b6 \u0627\u062f\u0627\u0645\u0647';
+      }
+    }
+    // موقعیت خودرو
+    var c=st.coords[Math.round(st.idx)];
+    var xy=st.proj(c);
+    // تبدیل به درصد برای position absolute
+    var svgRect=st.svg.getBoundingClientRect();
+    var boxRect=st.svg.parentElement.getBoundingClientRect();
+    st.carDot.setAttribute('cx',xy[0]);
+    st.carDot.setAttribute('cy',xy[1]);
+    st.carEmoji.setAttribute('x',xy[0]);
+    st.carEmoji.setAttribute('y',xy[1]+8);
+    // موقعیت tooltip (به پیکسل نسبت به container)
+    var scaleX=boxRect.width/st.W, scaleY=380/st.H;
+    st.tip.style.left=(xy[0]*scaleX)+'px';
+    st.tip.style.top=(xy[1]*scaleY)+'px';
+    // نزدیک‌ترین آب‌وهوا
+    var nearest=null,bd=1e9;
+    st.wPts.forEach(function(wp){var d=Math.abs(wp.idx-st.idx);if(d<bd){bd=d;nearest=wp;}});
+    var progress=Math.round(100*st.idx/(st.coords.length-1));
+    if(nearest&&nearest.weather){
+      var w=nearest.weather;
+      st.tip.textContent='\U0001f321\ufe0f '+w.temp+'° '+w.desc+' \U0001f32c\ufe0f '+w.wind+'km/h';
+      if(st.infoEl)st.infoEl.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a '+progress+'٪ — '+w.temp+'°، '+w.desc+'، باد '+w.wind+' km/h';
+    }else{
+      st.tip.textContent='\U0001f697 '+progress+'٪';
+      if(st.infoEl)st.infoEl.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a '+progress+'٪';
+    }
+    requestAnimationFrame(previewTickSvg);
   }
   function closePreview(){
     var m=document.getElementById('revPreviewModal');
@@ -514,36 +561,6 @@ window.revRenderSavedPlans=renderSavedPlans;
           if(d&&d.current)pt.weather={temp:Math.round(d.current.temperature_2m),desc:weatherDesc(d.current.weather_code),wind:Math.round(d.current.wind_speed_10m)};
         }).catch(function(){});
     });
-  }
-  function previewTick(){
-    if(!previewState)return;
-    var st=previewState;
-    if(st.playing){
-      st.idx+=st.speed;
-      if(st.idx>=st.coords.length-1){st.idx=st.coords.length-1;st.playing=false;
-        var pb=document.getElementById('revPreviewPlay');
-        if(pb){pb.textContent='\u25b6 \u0627\u062f\u0627\u0645\u0647';pb.className='paused';}
-      }
-      var pos=st.coords[Math.round(st.idx)];
-      st.marker.setLatLng(pos);
-      // پیدا کردن نزدیک‌ترین نقطه آب‌وهوا
-      var nearest=null,bestDist=1e9;
-      st.weatherPoints.forEach(function(pt){
-        var d=Math.abs(pt.idx-st.idx);
-        if(d<bestDist){bestDist=d;nearest=pt;}
-      });
-      var info=document.getElementById('revPreviewInfo');
-      var progress=Math.round(100*st.idx/(st.coords.length-1));
-      if(nearest&&nearest.weather){
-        var w=nearest.weather;
-        st.label.setContent('\U0001f321\ufe0f '+w.temp+'° | '+w.desc+' | \U0001f32c\ufe0f '+w.wind+' km/h');
-        if(info)info.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a: '+progress+'٪ — \u062f\u0645\u0627 '+w.temp+'°، '+w.desc+'، \u0628\u0627\u062f '+w.wind+' km/h';
-      }else{
-        st.label.setContent('\U0001f697 '+progress+'٪');
-        if(info)info.textContent='\u067e\u06cc\u0634\u0631\u0641\u062a: '+progress+'٪ — \u062f\u0631 \u062d\u0627\u0644 \u062f\u0631\u06cc\u0627\u0641\u062a \u0627\u0637\u0644\u0627\u0639\u0627\u062a \u0622\u0628\u200c\u0648\u0647\u0648\u0627...';
-      }
-    }
-    requestAnimationFrame(previewTick);
   }
   function attachSave(){
     var btn=document.getElementById('savePlanBtn');
