@@ -1053,6 +1053,14 @@ async function planTrip(){
     $("distance").textContent=km.toFixed(0);
     $("duration").textContent=fmtDuration(hours);
     const vehicleType=$("vehicleType").value;
+    // Publish a usable route summary immediately after routing succeeds. Later weather,
+    // charger, or business lookups are optional and must not block saving the route.
+    let summaryDeparture=new Date($("departure").value);
+    if(!Number.isFinite(summaryDeparture.getTime()))summaryDeparture=new Date();
+    configureTimeline({coords,routeKm:km,durationSeconds:hours,departure:summaryDeparture,
+      weatherSamples:[],battery:num("battery",60),soc:num("soc",90),consumption:num("consumption",18),
+      stops:[],stationList:[],vehicleType,electricKm:0,regenerationKwh:0});
+    if(window.ensurePlanActionsVisible)window.ensurePlanActionsVisible();
     if(vehicleType==="hev"||vehicleType==="mhev"||vehicleType==="phev"){
       const fuelRate=num("fuelConsumption",5.5),fuelPrice=num("fuelPrice",3000),tank=num("fuelTank",45);
       if(fuelRate<=0||tank<=0||fuelPrice<0)throw new Error("مصرف بنزین، ظرفیت باک و قیمت سوخت را بررسی کنید.");
