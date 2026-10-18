@@ -1218,8 +1218,30 @@ function readPlans(){
   }catch(e){return[]}
 }
 function writePlans(a){
-  try{localStorage.setItem(KEY,JSON.stringify(a.slice(0,20)));return true}
-  catch(e){return false}
+  // Keep local storage resilient: route geometry can be large, especially after several trips.
+  // Retain a sampled geometry for map/start-trip actions and drop optional station detail first.
+  try{
+    var compact=(Array.isArray(a)?a:[]).slice(0,20).map(function(p){
+      var q=Object.assign({},p), coords=Array.isArray(p.coords)?p.coords:[];
+      if(coords.length>500){
+        var step=(coords.length-1)/499, sampled=[];
+        for(var i=0;i<500;i++)sampled.push(coords[Math.round(i*step)]);
+        q.coords=sampled;
+      }
+      q.stations=Array.isArray(p.stations)?p.stations.slice(0,30):[];
+      q.stops=Array.isArray(p.stops)?p.stops.slice(0,30):[];
+      return q;
+    });
+    try{localStorage.setItem(KEY,JSON.stringify(compact));return true}catch(firstError){}
+    // Quota fallback: remove station catalog data, preserve trip identity, settings, stops and route.
+    compact=compact.map(function(p){var q=Object.assign({},p);q.stations=[];if(Array.isArray(q.stops))q.stops=q.stops.slice(0,10);return q;});
+    try{localStorage.setItem(KEY,JSON.stringify(compact));return true}catch(secondError){}
+    // Last fallback keeps the latest plan only, with a compact route.
+    if(compact.length){
+      try{localStorage.setItem(KEY,JSON.stringify([compact[0]]));return true}catch(lastError){}
+    }
+    return false;
+  }catch(e){console.error('REV write saved plans failed',e);return false}
 }
 function esc(v){return String(v==null?'':v).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
 function faNum(v,d){var n=Number(v);if(!isFinite(n))return'\u2014';try{return new Intl.NumberFormat('fa-IR',{maximumFractionDigits:d==null?0:d}).format(n)}catch(e){return String(Math.round(n))}}
