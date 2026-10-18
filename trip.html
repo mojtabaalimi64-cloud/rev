@@ -487,6 +487,10 @@ window.revRenderSavedPlans=renderSavedPlans;
       '<div class="rev-preview-head"><h3>\u067e\u06cc\u0634\u200c\u0646\u0645\u0627\u06cc\u0634 \u0633\u0641\u0631</h3>'+
       '<button class="rev-preview-close" id="revPreviewClose">\u2715</button></div>'+
       '<div style="padding:12px 16px;background:#f8fafc;border-bottom:1px solid #e2e8f0;">'+infoHtml+'</div>'+
+      '<div style="padding:10px 16px;background:#fffdf5;border-bottom:1px solid #f0e6c8;max-height:160px;overflow-y:auto;">'+
+      '<div style="font-size:13px;font-weight:bold;margin-bottom:6px;">\U0001f4cb برنامه توقف‌ها و شارژ</div>'+
+      '<div id="revStopsList" style="font-size:12px;"></div></div>'+
+
       '<div id="revPreviewMap" style="height:380px;width:100%;background:#e0e0e0;"></div>'+
       '<div class="rev-preview-controls"><button id="revPreviewPlay">\u23f8 \u062a\u0648\u0642\u0641</button>'+
       '<button id="revPreviewRestart">\u21ba \u0627\u0632 \u0628\u062a\u062f\u0627</button>'+
@@ -495,6 +499,35 @@ window.revRenderSavedPlans=renderSavedPlans;
     document.body.appendChild(modal);
     document.getElementById('revPreviewClose').onclick=closePreview;
     modal.onclick=function(e){if(e.target===modal)closePreview();};
+    // رندر لیست توقف‌ها
+    (function(){
+      var sl=document.getElementById('revStopsList');
+      if(!sl)return;
+      var html='';
+      if(stops&&stops.length){
+        html=stops.map(function(sp,idx){
+          var nm=sp.name||('توقف '+(idx+1));
+          var pw=sp.power?(' - '+sp.power+'kW'):'';
+          var cn=sp.connector?(' ('+sp.connector+')'):'';
+          var ph=sp.phone?(' \u260e '+sp.phone):'';
+          return '<div style="padding:6px 8px;margin:4px 0;background:#fff;border:1px solid #f0e6c8;border-radius:8px;">'+
+            '<div style="font-weight:bold;">\u26a1 '+(idx+1)+'. '+esc(nm)+pw+cn+'</div>'+
+            (sp.address?'<div style="color:#666;">'+esc(sp.address)+'</div>':'')+
+            '<div style="color:#0d9488;margin-top:2px;">\u2713 شارژ تا ۸۰٪ \u2022 استراحت ۱۵ دقیقه'+ph+'</div></div>';
+        }).join('');
+      } else if(stations&&stations.length){
+        html='<div style="color:#666;">'+stations.length+' ایستگاه شارژ در مسیر (جزئیات توقف ثبت نشده)</div>';
+      } else {
+        html='<div style="color:#999;">توقفی برنامه‌ریزی نشده — در صورت نیاز، از نقشه نزدیک‌ترین شارژر را پیدا کن.</div>';
+      }
+      // کارهای پیشنهادی
+      html+='<div style="margin-top:8px;padding:8px;background:#e8f5f3;border-radius:8px;">'+
+        '<div style="font-weight:bold;margin-bottom:4px;">\U0001f4a1 کارهای پیشنهادی:</div>'+
+        '<div>\u2022 قبل از حرکت: باد لاستیک و شارژ کامل را چک کن</div>'+
+        '<div>\u2022 هر ۲ ساعت یا ۱۵۰km: ۱۵ دقیقه استراحت</div>'+
+        '<div>\u2022 شارژ را بین ۲۰٪ تا ۸۰٪ نگه دار (برای سلامت باتری)</div></div>';
+      sl.innerHTML=html;
+    })();
     // ساخت نقشه Leaflet
     var map=L.map('revPreviewMap');
     window._revPreviewMap=map;
