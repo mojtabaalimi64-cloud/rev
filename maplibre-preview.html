@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>پیش‌نمایش مسیریاب سه‌بعدی (MapLibre)</title>
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js"></script>
+<link href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;font-family:Tahoma}
+#map{position:absolute;inset:0}
+/* بنر بالا */
+#topbar{position:absolute;top:12px;right:12px;left:12px;z-index:10;background:#fff;border-radius:14px;padding:10px 14px;box-shadow:0 2px 12px rgba(0,0,0,.2);display:flex;align-items:center;gap:10px}
+#topbar .turn{width:44px;height:44px;background:#0d9488;border-radius:12px;color:#fff;font-size:24px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+#topbar .info b{font-size:14px;display:block}
+#topbar .info span{font-size:12px;color:#666}
+/* نشانگر ماشین */
+#car{width:54px;height:54px;margin:-27px 0 0 -27px;position:relative}
+#car .dot{position:absolute;inset:0;background:#0d9488;border:3px solid #fff;border-radius:50%;box-shadow:0 2px 10px rgba(0,0,0,.4)}
+#car .arr{position:absolute;top:-14px;right:50%;transform:translateX(50%);width:0;height:0;border-right:10px solid transparent;border-left:10px solid transparent;border-bottom:16px solid #0d9488;filter:drop-shadow(0 -1px 2px rgba(0,0,0,.3))}
+/* دکمه‌ها */
+#ctrl{position:absolute;bottom:24px;right:12px;z-index:10;display:flex;flex-direction:column;gap:8px}
+#ctrl button{width:46px;height:46px;border:none;border-radius:50%;background:#fff;box-shadow:0 2px 8px rgba(0,0,0,.25);font-size:20px;cursor:pointer}
+#note{position:absolute;bottom:24px;left:12px;z-index:10;background:rgba(0,0,0,.65);color:#fff;font-size:11px;padding:8px 12px;border-radius:10px;max-width:45%}
+</style>
+</head>
+<body>
+<div id="map"></div>
+<div id="topbar">
+  <div class="turn">↱</div>
+  <div class="info"><b>۲۵۰ متر دیگر به راست بپیچید</b><span>خیابان ولیعصر • ۱۲ دقیقه تا مقصد</span></div>
+</div>
+<div id="ctrl">
+  <button id="b3d" title="سه‌بعدی">🏔️</button>
+  <button id="b2d" title="دوبعدی">🗺️</button>
+</div>
+<div id="note">پیش‌نمایش MapLibre — نمای سه‌بعدی شبیه ویز<br>ماشین پایین صفحه، نقشه با جهت می‌چرخد</div>
+
+<script>
+// مسیر نمونه: میدان ونک تا تجریش تهران
+var route = [
+  [51.4090,35.7580],[51.4105,35.7620],[51.4120,35.7670],[51.4140,35.7720],
+  [51.4160,35.7780],[51.4180,35.7840],[51.4200,35.7900],[51.4215,35.7960],
+  [51.4230,35.8020]
+];
+var map = new maplibregl.Map({
+  container:'map',
+  style:'https://demotiles.maplibre.org/style.json',
+  center: route[0],
+  zoom: 15.5,
+  pitch: 60,
+  bearing: 20,
+  attributionControl:false
+});
+map.addControl(new maplibregl.NavigationControl({visualizePitch:true}),'bottom-left');
+
+var carEl = document.createElement('div');
+carEl.id='car';
+carEl.innerHTML='<div class="arr"></div><div class="dot"></div>';
+var carMarker = new maplibregl.Marker({element:carEl}).setLngLat(route[0]).addTo(map);
+
+map.on('load', function(){
+  // رسم مسیر
+  map.addSource('route',{type:'geojson',data:{type:'Feature',properties:{},geometry:{type:'LineString',coordinates:route}}});
+  map.addLayer({id:'route',type:'line',source:'route',layout:{'line-join':'round','line-cap':'round'},paint:{'line-color':'#0d9488','line-width':7}});
+  // شبیه‌سازی حرکت
+  var i=0, steps=400, delay=50;
+  var from=route[0], seg=0;
+  function bearing(a,b){
+    var d=Math.atan2(b[0]-a[0],b[1]-a[1])*180/Math.PI;
+    return (d+360)%360;
+  }
+  function move(){
+    if(seg>=route.length-1){ setTimeout(function(){seg=0;move();},2000); return; }
+    var a=route[seg], b=route[seg+1], p=(i%100)/100;
+    var lng=a[0]+(b[0]-a[0])*p, lat=a[1]+(b[1]-a[1])*p;
+    carMarker.setLngLat([lng,lat]);
+    // دوربین دنبال ماشین، ماشین پایین صفحه
+    map.easeTo({center:[lng,lat],bearing:bearing(a,b),pitch:60,duration:delay,easing:function(x){return x;}});
+    i++;
+    if(p>=0.99) seg++;
+    setTimeout(move,delay);
+  }
+  setTimeout(move,1000);
+});
+document.getElementById('b3d').onclick=function(){map.easeTo({pitch:60,duration:600});};
+document.getElementById('b2d').onclick=function(){map.easeTo({pitch:0,bearing:0,duration:600});};
+</script>
+</body>
+</html>
