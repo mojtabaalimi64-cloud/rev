@@ -81,11 +81,13 @@ background:linear-gradient(180deg,rgba(0,0,0,.5) 0%,transparent 25%,transparent 
     try{ps2=JSON.parse(localStorage.getItem('rev_saved_trip_plans_v1')||'[]');}catch(e){}
     if(ps2.length){
       ldel.innerHTML='<div style="text-align:center;padding:20px;"><h3 style="margin-bottom:12px;">🗺️ سفرت رو انتخاب کن</h3>'
-        +ps2.map(function(p){var r2=p.params||{};return '<div onclick="location.search='?plan='+p.id+''" style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;margin:8px 0;cursor:pointer;border:1px solid rgba(255,255,255,.2)"><b>'+(r2.origin||'-')+' ← '+(r2.destination||'-')+'</b><br><span style="color:#90a4ae;font-size:13px">'+Math.round((p.routeKm||0)*10)/10+' km</span></div>';}).join('')
+        +ps2.map(function(p){var r2=p.params||{};return '<div class="pickcard" data-pid="'+p.id+'" style="background:rgba(255,255,255,.1);border-radius:12px;padding:12px;margin:8px 0;cursor:pointer;border:1px solid rgba(255,255,255,.2)"><b>'+(r2.origin||'-')+' \u2190 '+(r2.destination||'-')+'</b><br><span style="color:#90a4ae;font-size:13px">'+Math.round((p.routeKm||0)*10)/10+' km</span></div>';}).join('')
         +'</div>';
+      ldel.querySelectorAll('.pickcard').forEach(function(cc){cc.onclick=function(){location.search='?plan='+cc.getAttribute('data-pid');};});
     }else{
-      ldel.innerHTML='<div style="text-align:center;padding:20px;"><div style="font-size:48px;margin-bottom:12px;">🗺️</div><div style="margin-bottom:12px;">سفر ذخیره‌شده‌ای نداری</div><div style="color:#90a4ae;font-size:14px;margin-bottom:16px;">اول از صفحه برنامه‌ریزی سفر یه مسیر رو ذخیره کن</div><button onclick="location.href='trip.html'" style="background:#00e676;color:#000;border:none;border-radius:24px;padding:12px 32px;font-size:16px;font-weight:bold;cursor:pointer;">رفتن به برنامه‌ریزی سفر</button></div>';
+      ldel.innerHTML='<div style="text-align:center;padding:20px;"><div style="font-size:48px;margin-bottom:12px;">🗺️</div><div style="margin-bottom:12px;">سفر ذخیره‌شده‌ای نداری</div><div style="color:#90a4ae;font-size:14px;margin-bottom:16px;">اول از صفحه برنامه‌ریزی سفر یه مسیر رو ذخیره کن</div><button id="gotripbtn" style="background:#00e676;color:#000;border:none;border-radius:24px;padding:12px 32px;font-size:16px;font-weight:bold;cursor:pointer;">رفتن به برنامه‌ریزی سفر</button></div>';
     }
+    var gb=document.getElementById('gotripbtn');if(gb)gb.onclick=function(){location.href='trip.html';};
     return;
   }
   document.getElementById('ld').style.display='none';
