@@ -77,9 +77,19 @@ background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,transparent 20%,transparent
   document.getElementById('rm').textContent=Math.round(km*10)/10+' کیلومتر';
   document.getElementById('einfo').textContent='طول مسیر: '+Math.round(km*10)/10+' کیلومتر';
   try{var up=JSON.parse(localStorage.getItem('rev_user_profile')||'null');if(up&&up.name)document.getElementById('pn').textContent=up.name;}catch(e){}
-  // نقشه ماهواره‌ای با کیفیت بالا
-  var map=L.map('map',{zoomControl:false,zoomSnap:.5}).setView([coords[0][1],coords[0][0]],16);
-  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri'}).addTo(map);
+  // نقشه ماهواره‌ای با پیش‌لود و لایه پشتیبان
+  var map=L.map('map',{zoomControl:false,zoomSnap:.5});
+  var satLayer=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{maxZoom:19,attribution:'© Esri',keepBuffer:8,updateWhenIdle:false});
+  var osmLayer=L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OSM',keepBuffer:8});
+  satLayer.addTo(map);
+  // اگر تایل ماهواره‌ای خطا داد، OSM رو زیرش نشون بده
+  satLayer.on('tileerror',function(){ if(!map.hasLayer(osmLayer)){osmLayer.addTo(map);osmLayer.setZIndex(0);} });
+  var bounds=L.latLngBounds(latlngs);
+  map.fitBounds(bounds.pad(.1));
+  // صبر کن تایل‌ها لود بشن بعد انیمیشن رو شروع کن
+  var tilesLoaded=false;
+  satLayer.on('load',function(){tilesLoaded=true;});
+  setTimeout(function(){tilesLoaded=true;},4000); // حداکثر ۴ ثانیه صبر
   var latlngs=coords.map(function(c){return [c[1],c[0]];});
   var doneLine=L.polyline([],{color:'#00e676',weight:8,opacity:.95}).addTo(map);
   L.polyline(latlngs,{color:'#fff',weight:4,opacity:.45,dashArray:'2,10'}).addTo(map);
@@ -105,7 +115,12 @@ background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,transparent 20%,transparent
   function fa(n){try{return Number(n).toLocaleString('fa-IR');}catch(e){return n;}}
   document.getElementById('bplay').onclick=function(){st.play=!st.play;this.textContent=st.play?'⏸':'▶';};
   var mapEl=document.getElementById('map');
-  (function fr(){
+  function waitForTiles(){
+    if(tilesLoaded){ map.setView(latlngs[0],16); requestAnimationFrame(fr); }
+    else setTimeout(waitForTiles,200);
+  }
+  waitForTiles();
+  function fr(){
     if(st.play&&!st.finished){st.i+=1.2;
       if(st.i>=coords.length-1){st.i=coords.length-1;st.finished=true;
         // پایان: نمایش کل مسیر از بالا
@@ -134,7 +149,7 @@ background:linear-gradient(180deg,rgba(0,0,0,.55) 0%,transparent 20%,transparent
       if(mk2){mk2.setAttribute('cx',(st.i/(coords.length-1))*600);mk2.setAttribute('cy',45-((st.el[eii]-st.elR.mn)/((st.elR.mx-st.elR.mn)||1))*36);}}
     if(!st.finished) requestAnimationFrame(fr);
     else setTimeout(function(){st.i=0;st.finished=false;map.setView(pos,16);requestAnimationFrame(fr);},4000);
-  })();
+  }
   document.getElementById('bshare').onclick=function(){
     var dc={o:rt.origin,d:rt.destination,k:Math.round(km*10)/10,b:st.bat,s:st.soc,c:st.con,
       c:coords.filter(function(_,ix){return ix%Math.max(1,Math.floor(coords.length/120))===0;}).map(function(p){return [Math.round(p[0]*1e5),Math.round(p[1]*1e5)];}),
