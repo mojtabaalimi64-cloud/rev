@@ -454,6 +454,7 @@ async function ensureExperiencesSchema(env) {
  )`).run();
  try { await env.DB.prepare("ALTER TABLE rev_travel_experiences ADD COLUMN comments_enabled INTEGER NOT NULL DEFAULT 1").run(); } catch (e) {}
  try { await env.DB.prepare("ALTER TABLE rev_travel_experiences ADD COLUMN experience_type TEXT NOT NULL DEFAULT 'experience'").run(); } catch (e) {}
+ try { await env.DB.prepare("ALTER TABLE rev_travel_experiences ADD COLUMN route_json TEXT").run(); } catch (e) {}
  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_travel_experience_comments (
   id TEXT PRIMARY KEY, experience_id TEXT NOT NULL, user_id TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL
  )`).run();
@@ -476,7 +477,7 @@ async function travelExperiencesApi(request,env,url,method,user) {
  if((p==="/api/experiences/mine"||p==="/api/experiences/saved")&&method==="GET"){
   if(!user)return response(request,env,{success:false,error:"برای دیدن پست‌های خودت یا ذخیره‌شده ابتدا وارد حساب REV شو."},401);
   const isSaved=p==="/api/experiences/saved";
-  const sql="SELECT e.id,e.user_id,e.title,e.experience_type,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,e.comments_enabled,u.display_name AS author_name, up.avatar_data AS author_avatar, COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg, (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count, (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id LEFT JOIN rev_user_profiles up ON up.user_id=e.user_id WHERE e.status='published' AND "+(isSaved?"EXISTS (SELECT 1 FROM rev_travel_experience_reactions b WHERE b.experience_id=e.id AND b.user_id=? AND b.reaction_type='bookmark'":"e.user_id=?")+" ORDER BY e.published_at DESC LIMIT ?";
+  const sql="SELECT e.id,e.user_id,e.title,e.experience_type,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.route_json,e.created_at,e.comments_enabled,u.display_name AS author_name, up.avatar_data AS author_avatar, COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg, (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count, (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id LEFT JOIN rev_user_profiles up ON up.user_id=e.user_id WHERE e.status='published' AND "+(isSaved?"EXISTS (SELECT 1 FROM rev_travel_experience_reactions b WHERE b.experience_id=e.id AND b.user_id=? AND b.reaction_type='bookmark'":"e.user_id=?")+" ORDER BY e.published_at DESC LIMIT ?";
   const rows=await env.DB.prepare(sql).bind(user.id,30).all();
   const ids=(rows.results||[]).map(x=>x.id);let comments=[];
   if(ids.length){const marks=ids.map(()=>"?").join(",");const mineCommentExpr="(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions mine WHERE mine.comment_id=c.id AND mine.user_id=?)";comments=(await env.DB.prepare(`SELECT c.id,c.experience_id,c.body,c.created_at,u.display_name AS author_name,(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions cr WHERE cr.comment_id=c.id) AS like_count,${mineCommentExpr} AS liked FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id IN (${marks}) ORDER BY c.created_at ASC`).bind(user.id,...ids).all()).results||[];}
@@ -484,12 +485,12 @@ async function travelExperiencesApi(request,env,url,method,user) {
   if(commentIds.length){const marks=commentIds.map(()=>"?").join(",");replies=(await env.DB.prepare(`SELECT r.id,r.comment_id,r.body,r.created_at,u.display_name AS author_name,(SELECT COUNT(*) FROM rev_travel_experience_reply_reactions rr WHERE rr.reply_id=r.id) AS like_count,(SELECT COUNT(*) FROM rev_travel_experience_reply_reactions mine WHERE mine.reply_id=r.id AND mine.user_id=?) AS liked FROM rev_travel_experience_comment_replies r LEFT JOIN rev_users u ON u.id=r.user_id WHERE r.comment_id IN (${marks}) ORDER BY r.created_at ASC`).bind(user.id,...commentIds).all()).results||[];}
   const repliesByComment={};for(const r of replies){(repliesByComment[r.comment_id]||(repliesByComment[r.comment_id]=[])).push({...r,author_name:r.author_name||"کاربر REV"});}
   const byId={};for(const c of comments){(byId[c.experience_id]||(byId[c.experience_id]=[])).push({...c,author_name:c.author_name||"کاربر REV",replies:repliesByComment[c.id]||[]});}
-  const experiences=(rows.results||[]).map(row=>{let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,...safe}=row;return {...safe,is_owner:row.user_id===user.id,photos,comments:(byId[row.id]||[]).slice(-10)};});
+  const experiences=(rows.results||[]).map(row=>{let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,route_json,...safe}=row;let route_data=null;try{route_data=route_json?JSON.parse(route_json):null}catch{}return {...safe,route_data,is_owner:row.user_id===user.id,photos,comments:(byId[row.id]||[]).slice(-10)};});
   return response(request,env,{success:true,experiences});
  }
  if(p==="/api/experiences" && method==="GET") {
   const limit=Math.max(1,Math.min(30,parseInt(url.searchParams.get("limit")||"20",10)||20));
-  const rows=await env.DB.prepare(`SELECT e.id,e.user_id,e.title,e.experience_type,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,e.comments_enabled,u.display_name AS author_name, up.avatar_data AS author_avatar,
+  const rows=await env.DB.prepare(`SELECT e.id,e.user_id,e.title,e.experience_type,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.route_json,e.created_at,e.comments_enabled,u.display_name AS author_name, up.avatar_data AS author_avatar,
    COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg,
    (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count,
    (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count
@@ -551,23 +552,30 @@ async function travelExperiencesApi(request,env,url,method,user) {
   const title=String(b?.title||"").trim().slice(0,90),story=String(b?.story||"").trim().slice(0,3000);
   if(!title)return response(request,env,{success:false,error:"عنوان تجربه الزامی است."},400);
   const photos=Array.isArray(b.photos)?b.photos.slice(0,5):[];
+  let routeData=null;
+  if(b.experience_type==="trip_plan"&&b.route_data&&typeof b.route_data==="object"){
+   const rd=b.route_data;
+   const coords=Array.isArray(rd.coords)?rd.coords.filter(q=>Array.isArray(q)&&q.length>=2&&Number.isFinite(Number(q[0]))&&Number.isFinite(Number(q[1]))).slice(0,500):[];
+   routeData={coords,stops:Array.isArray(rd.stops)?rd.stops.slice(0,40):[],stations:Array.isArray(rd.stations)?rd.stations.slice(0,40):[],weatherRecommendation:rd.weatherRecommendation??null,routeKm:Number(rd.routeKm)||0,durationS:Number(rd.durationS)||0};
+   if(JSON.stringify(routeData).length>300000)return response(request,env,{success:false,error:"اطلاعات مسیر برای انتشار بیش از حد حجیم است."},413);
+  }
   if(photos.some(x=>typeof x!=="string"||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(x)||x.length>350000))return response(request,env,{success:false,error:"هر عکس باید تصویر فشرده JPEG/PNG/WebP با حجم کمتر از حدود 260 کیلوبایت باشد."},413);
   if(JSON.stringify(photos).length>1500000)return response(request,env,{success:false,error:"حجم مجموع عکس‌ها زیاد است؛ تعداد یا حجم عکس‌ها را کاهش دهید."},413);
   const id=crypto.randomUUID(),now=new Date().toISOString();
-  await env.DB.prepare("INSERT INTO rev_travel_experiences(id,user_id,title,experience_type,origin,destination,story,vehicle_name,distance_km,duration_minutes,energy_kwh,photos_json,created_at,published_at,status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'published')")
-   .bind(id,user.id,title,b.experience_type==="trip_plan"?"trip_plan":"experience",String(b.origin||"").slice(0,100),String(b.destination||"").slice(0,100),story,String(b.vehicle_name||"").slice(0,80),Math.max(0,Math.min(5000,Number(b.distance_km)||0)),Math.max(0,Math.min(100000,Math.floor(Number(b.duration_minutes)||0))),Math.max(0,Math.min(2000,Number(b.energy_kwh)||0)),JSON.stringify(photos),now,now).run();
+  await env.DB.prepare("INSERT INTO rev_travel_experiences(id,user_id,title,experience_type,origin,destination,story,vehicle_name,distance_km,duration_minutes,energy_kwh,photos_json,route_json,created_at,published_at,status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?, 'published')")
+   .bind(id,user.id,title,b.experience_type==="trip_plan"?"trip_plan":"experience",String(b.origin||"").slice(0,100),String(b.destination||"").slice(0,100),story,String(b.vehicle_name||"").slice(0,80),Math.max(0,Math.min(5000,Number(b.distance_km)||0)),Math.max(0,Math.min(100000,Math.floor(Number(b.duration_minutes)||0))),Math.max(0,Math.min(2000,Number(b.energy_kwh)||0)),JSON.stringify(photos),routeData?JSON.stringify(routeData):null,now,now).run();
   return response(request,env,{success:true,id,message:"تجربه منتشر شد."},201);
  }
  if(one){
   const id=one[1],action=one[2]||"";
   if(method==="GET"&&!action){
-   const row=await env.DB.prepare(`SELECT e.id,e.user_id,e.title,e.experience_type,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,e.comments_enabled,u.display_name AS author_name, up.avatar_data AS author_avatar,
+   const row=await env.DB.prepare(`SELECT e.id,e.user_id,e.title,e.experience_type,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.route_json,e.created_at,e.comments_enabled,u.display_name AS author_name, up.avatar_data AS author_avatar,
     COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg,
     (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count,
     (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count
     FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id LEFT JOIN rev_user_profiles up ON up.user_id=e.user_id WHERE e.id=? AND e.status='published' LIMIT 1`).bind(id).first();
    if(!row)return response(request,env,{success:false,error:"این تجربه پیدا نشد یا دیگر منتشر نیست."},404);
-   let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,...safe}=row;
+   let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,route_json,...safe}=row;let route_data=null;try{route_data=route_json?JSON.parse(route_json):null}catch{}
    const comments=(await env.DB.prepare("SELECT c.id,c.body,c.created_at,u.display_name AS author_name,(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions cr WHERE cr.comment_id=c.id) AS like_count FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id=? ORDER BY c.created_at ASC LIMIT 30").bind(id).all()).results||[];
    const commentIds=comments.map(c=>c.id);let replies=[];
    if(commentIds.length){const marks=commentIds.map(()=>"?").join(",");replies=(await env.DB.prepare(`SELECT r.id,r.comment_id,r.body,r.created_at,u.display_name AS author_name FROM rev_travel_experience_comment_replies r LEFT JOIN rev_users u ON u.id=r.user_id WHERE r.comment_id IN (${marks}) ORDER BY r.created_at ASC`).bind(...commentIds).all()).results||[];}
