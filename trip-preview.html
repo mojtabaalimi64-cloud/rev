@@ -190,29 +190,50 @@ const REVPreview = {
   },
   drawRoute(){
     const c = this.config;
-    // مسیر واقعی از OSRM
-    const url = `https://router.project-osrm.org/route/v1/driving/${c.originLL[1]},${c.originLL[0]};${c.destLL[1]},${c.destLL[0]}?overview=full&geometries=geojson`;
-    fetch(url).then(r=>r.json()).then(d=>{
-      if(d.code!=='OK'||!d.routes||!d.routes[0]) return this.drawStraight();
-      const coords = d.routes[0].geometry.coordinates; // [lng,lat]
-      const latlngs = coords.map(p=>[p[1],p[0]]);
-      c._routeLL = latlngs;
-      // روی نقشه
-      if(this.routeLine) this.map.removeLayer(this.routeLine);
-      if(this.routeGlow) this.map.removeLayer(this.routeGlow);
-      this.routeGlow = L.polyline(latlngs,{color:'#14b8a6',weight:10,opacity:.25}).addTo(this.map);
-      this.routeLine = L.polyline(latlngs,{color:'#14b8a6',weight:4,opacity:.95}).addTo(this.map);
-      this.map.fitBounds(L.latLngBounds(latlngs).pad(0.25));
-      // روی نوار بالا (SVG)
-      this.drawRouteSvg(latlngs);
-      // زمان تقریبی
-      const mins = Math.round(d.routes[0].duration/60);
-      const hrs = Math.floor(mins/60), mm = mins%60;
-      document.getElementById('rEta').textContent = 'زمان تقریبی: ' +
-        (hrs>0 ? FA_D(hrs)+' ساعت و ' : '') + FA_D(mm) + ' دقیقه';
-    }).catch(()=>this.drawStraight());
-    // مارکرها
+    const oD = `${c.originLL[1]},${c.originLL[0]};${c.destLL[1]},${c.destLL[0]}`;
+    const servers = [
+      `https://router.project-osrm.org/route/v1/driving/${oD}?overview=full&geometries=geojson`,
+      `https://routing.openstreetmap.de/routed-car/route/v1/driving/${oD}?overview=full&geometries=geojson`
+    ];
+    const tryFetch = (i) => {
+      if(i >= servers.length) return this.drawCurved();
+      fetch(servers[i]).then(r=>r.json()).then(d=>{
+        if(d.code!=='Ok'&&d.code!=='OK'||!d.routes||!d.routes[0]) return tryFetch(i+1);
+        const coords = d.routes[0].geometry.coordinates;
+        const latlngs = coords.map(p=>[p[1],p[0]]);
+        c._routeLL = latlngs;
+        if(this.routeLine) this.map.removeLayer(this.routeLine);
+        if(this.routeGlow) this.map.removeLayer(this.routeGlow);
+        this.routeGlow = L.polyline(latlngs,{color:'#14b8a6',weight:10,opacity:.25}).addTo(this.map);
+        this.routeLine = L.polyline(latlngs,{color:'#14b8a6',weight:4,opacity:.95}).addTo(this.map);
+        this.map.fitBounds(L.latLngBounds(latlngs).pad(0.25));
+        this.drawRouteSvg(latlngs);
+        const mins = Math.round(d.routes[0].duration/60);
+        const hrs = Math.floor(mins/60), mm = mins%60;
+        document.getElementById('rEta').textContent = 'زمان تقریبی: ' +
+          (hrs>0 ? FA_D(hrs)+' ساعت و ' : '') + FA_D(mm) + ' دقیقه';
+      }).catch(()=>tryFetch(i+1));
+    };
+    tryFetch(0);
     this.drawMarkers();
+  },
+  drawCurved(){
+    // فالبک: مسیر منحنی زیبا به‌جای خط صاف
+    const c=this.config;
+    const [la1,ln1]=c.originLL, [la2,ln2]=c.destLL;
+    const pts=[];
+    for(let i=0;i<=40;i++){
+      const t=i/40;
+      const curve=Math.sin(t*Math.PI)*0.15; // انحنا
+      pts.push([la1+(la2-la1)*t+curve*(ln2-ln1)*0.3, ln1+(ln2-ln1)*t-curve*(la2-la1)*0.3]);
+    }
+    if(this.routeLine) this.map.removeLayer(this.routeLine);
+    if(this.routeGlow) this.map.removeLayer(this.routeGlow);
+    this.routeGlow=L.polyline(pts,{color:'#14b8a6',weight:10,opacity:.2}).addTo(this.map);
+    this.routeLine=L.polyline(pts,{color:'#14b8a6',weight:4,opacity:.9}).addTo(this.map);
+    this.map.fitBounds(L.latLngBounds(pts).pad(0.3));
+    this.drawRouteSvg(pts);
+    document.getElementById('rEta').textContent = 'زمان تقریبی: --';
   },
   drawStraight(){
     const c=this.config, pts=[c.originLL,c.destLL];
