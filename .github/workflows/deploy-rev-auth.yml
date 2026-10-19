@@ -58,3 +58,5 @@ jobs:
           node -e "const fs=require('fs');const x=JSON.parse(fs.readFileSync('/tmp/rev-auth-health.json','utf8'));if(x.success!==true||x.service!=='REV Auth'||x.database!=='connected')process.exit(1);console.log('REV Auth health and D1 connectivity OK')"
           curl --fail --silent --show-error 'https://rev-auth-api.mojtaba-alimi64.workers.dev/api/auth/status' -o /tmp/rev-auth-status.json
           node -e "const fs=require('fs');const x=JSON.parse(fs.readFileSync('/tmp/rev-auth-status.json','utf8'));if(x.success!==true||typeof x.enabled!=='boolean'||typeof x.emailConfigured!=='boolean')process.exit(1);console.log('REV Auth status endpoint OK; registration remains controlled by server configuration')"
+          curl --fail --silent --show-error 'https://rev-auth-api.mojtaba-alimi64.workers.dev/api/experiences?limit=1' -o /tmp/rev-experiences.json
+          node -e "const fs=require('fs');const x=JSON.parse(fs.readFileSync('/tmp/rev-experiences.json','utf8'));if(x.success!==true||!Array.isArray(x.experiences))process.exit(1);console.log('REV public travel experiences endpoint and D1 schema OK')"
