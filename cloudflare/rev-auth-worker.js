@@ -460,6 +460,8 @@ async function ensureExperiencesSchema(env) {
  )`).run();
  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_experiences_published ON rev_travel_experiences(status,published_at DESC)").run();
  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_experience_comments ON rev_travel_experience_comments(experience_id,created_at)").run();
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_travel_experience_reactions (experience_id TEXT NOT NULL,user_id TEXT NOT NULL,reaction_type TEXT NOT NULL CHECK(reaction_type IN ('like','bookmark')),created_at TEXT NOT NULL,PRIMARY KEY(experience_id,user_id,reaction_type))").run();
+ await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_experience_reactions ON rev_travel_experience_reactions(experience_id,reaction_type)").run();
 }
 async function travelExperiencesApi(request,env,url,method,user) {
  await ensureExperiencesSchema(env);
@@ -468,7 +470,8 @@ async function travelExperiencesApi(request,env,url,method,user) {
   const limit=Math.max(1,Math.min(30,parseInt(url.searchParams.get("limit")||"20",10)||20));
   const rows=await env.DB.prepare(`SELECT e.id,e.user_id,e.title,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,u.display_name AS author_name,
    COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg,
-   (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count
+   (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count,
+   (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count
    FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id
    WHERE e.status='published' ORDER BY e.published_at DESC LIMIT ?`).bind(limit).all();
   const ids=(rows.results||[]).map(x=>x.id);let comments=[];
@@ -498,7 +501,8 @@ async function travelExperiencesApi(request,env,url,method,user) {
   if(method==="GET"&&!action){
    const row=await env.DB.prepare(`SELECT e.id,e.user_id,e.title,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,u.display_name AS author_name,
     COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg,
-    (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count
+    (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count,
+    (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count
     FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id WHERE e.id=? AND e.status='published' LIMIT 1`).bind(id).first();
    if(!row)return response(request,env,{success:false,error:"این تجربه پیدا نشد یا دیگر منتشر نیست."},404);
    let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,...safe}=row;
@@ -510,6 +514,16 @@ async function travelExperiencesApi(request,env,url,method,user) {
    if(!sameOrigin(request,env))return response(request,env,{success:false,error:"مبدأ درخواست مجاز نیست."},403);
    const r=await env.DB.prepare("UPDATE rev_travel_experiences SET status='deleted' WHERE id=? AND user_id=? AND status='published'").bind(id,user.id).run();
    return response(request,env,{success:true,deleted:Number(r.meta?.changes||0)});
+  }
+  if(method==="POST"&&(action==="like"||action==="bookmark")){
+   if(!user)return response(request,env,{success:false,error:"برای لایک یا ذخیره تجربه ابتدا وارد حساب REV شوید."},401);
+   if(!sameOrigin(request,env))return response(request,env,{success:false,error:"مبدأ درخواست مجاز نیست."},403);
+   const found=await env.DB.prepare("SELECT id FROM rev_travel_experiences WHERE id=? AND status='published'").bind(id).first();
+   if(!found)return response(request,env,{success:false,error:"تجربه پیدا نشد."},404);
+   const exists=await env.DB.prepare("SELECT 1 AS ok FROM rev_travel_experience_reactions WHERE experience_id=? AND user_id=? AND reaction_type=?").bind(id,user.id,action).first();
+   if(exists)await env.DB.prepare("DELETE FROM rev_travel_experience_reactions WHERE experience_id=? AND user_id=? AND reaction_type=?").bind(id,user.id,action).run();
+   else await env.DB.prepare("INSERT INTO rev_travel_experience_reactions(experience_id,user_id,reaction_type,created_at) VALUES(?,?,?,?)").bind(id,user.id,action,new Date().toISOString()).run();
+   return response(request,env,{success:true,active:!exists});
   }
   if(method==="POST"&&action==="comments"){
    if(!user)return response(request,env,{success:false,error:"برای ثبت نظر ابتدا وارد حساب REV شوید."},401);
