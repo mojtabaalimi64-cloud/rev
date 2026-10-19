@@ -272,14 +272,31 @@ const REVPreview = {
       FA_D(String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0'));
   }
 };
+/* ===== خواندن پارامتر از URL (اگر سایت پاس بده) ===== */
+(function(){
+  const q = new URLSearchParams(location.search);
+  const cfg = {};
+  if(q.get('origin')) cfg.origin = q.get('origin');
+  if(q.get('destination')) cfg.destination = q.get('destination');
+  if(q.get('olat') && q.get('olng')) cfg.originLL = [parseFloat(q.get('olat')), parseFloat(q.get('olng'))];
+  if(q.get('dlat') && q.get('dlng')) cfg.destLL = [parseFloat(q.get('dlat')), parseFloat(q.get('dlng'))];
+  if(q.get('speed')) cfg.speed = parseFloat(q.get('speed'));
+  if(q.get('dist')) cfg.distanceKm = parseFloat(q.get('dist'));
+  if(q.get('battery')) cfg.battery = parseFloat(q.get('battery'));
+  if(q.get('temp')) cfg.temp = parseFloat(q.get('temp'));
+  if(q.get('progress')) cfg.progress = parseFloat(q.get('progress'));
+  window._urlCfg = cfg;
+})();
 /* ===== نمونه: سایت این‌طوری صدا می‌زنه ===== */
-REVPreview.init({
+const _defaults = {
   origin:'تهران', destination:'چالوس', progress:35, speed:110, distanceKm:145,
   battery:68, temp:24, weatherDesc:'صاف و آفتابی', weatherIcon:'☀️',
   nextChargerKm:32, chargerPorts:4,
   originLL:[35.6892,51.3890], destLL:[36.6540,51.4210],
   chargers:[{name:'شارژر کرج', ll:[35.84,50.97]}, {name:'شارژر کندوان', ll:[36.10,51.30]}]
-});
+};
+REVPreview.init(Object.assign({}, _defaults, window._urlCfg || {}));
+/* نمونه قدیمی حذف شد */
 </script>
 </body>
 </html>
