@@ -33,14 +33,33 @@ async function geocode(place){
   if(!data.length) throw new Error("مکان پیدا نشد: "+place+"؛ نام شهر یا نشانی دقیق‌تری وارد کنید.");
   return [Number(data[0].lat),Number(data[0].lon)];
 }
+function routePreference(id, fallback=false){const el=$(id);return el?el.checked:fallback;}
+function scoreRoute(route, prefs){
+  const km=Math.max(0.1,(Number(route.distance)||0)/1000);
+  const minutes=Math.max(1,(Number(route.duration)||0)/60);
+  const steps=(route.legs||[]).flatMap(leg=>leg.steps||[]);
+  const roads=steps.map(s=>String(s.name||"")+" "+String(s.ref||"")).join(" ").toLowerCase();
+  const majorTerms=/(آزادراه|بزرگراه|جاده اصلی|راه اصلی|highway|motorway|trunk|expressway|autostrada|\\b[ema]-?\\d+\\b|\\b[ema]\\s?\\d+\\b)/i;
+  const localTerms=/(کوچه|محلی|خاکی|دسترسی محلی|service road|residential|living_street|track|unclassified)/i;
+  let score=prefs.fastest?minutes:km;
+  if(prefs.major&&majorTerms.test(roads))score*=0.88;
+  if(prefs.avoidLocal&&localTerms.test(roads))score*=1.22;
+  return score;
+}
 async function getRoute(start,end){
   const coords=`${start[1]},${start[0]};${end[1]},${end[0]}`;
-  const url=`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true`;
+  const prefs={major:routePreference("routeMajorRoads",true),fastest:routePreference("routeFastest",true),avoidLocal:routePreference("routeAvoidLocal",false)};
+  const url=`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=true&alternatives=3`;
   const r=await fetch(url);
-  if(!r.ok) throw new Error("سرویس مسیریابی پاسخ نداد.");
+  if(!r.ok)throw new Error("سرویس مسیریابی پاسخ نداد.");
   const data=await r.json();
-  if(data.code!=="Ok"||!data.routes?.length) throw new Error("مسیر جاده‌ای پیدا نشد.");
-  return data.routes[0];
+  if(data.code!=="Ok"||!data.routes?.length)throw new Error("مسیر جاده‌ای پیدا نشد.");
+  const ranked=data.routes.map((route,index)=>({route,index,score:scoreRoute(route,prefs)})).sort((a,b)=>a.score-b.score);
+  const selected=ranked[0].route;
+  selected.revAlternativesCount=data.routes.length;
+  selected.revPreferenceLabel=prefs.major?"با اولویت جاده‌های اصلی":"بر اساس زمان/مسافت";
+  selected.revComparedRoutes=ranked.map(x=>({distance:x.route.distance,duration:x.route.duration,selected:x.route===selected}));
+  return selected;
 }
 function haversine(a,b){
   const rad=x=>x*Math.PI/180, R=6371;
@@ -436,7 +455,7 @@ function renderDirections(route){
     panel.appendChild(msg);return;
   }
   const total=steps.length;
-  $("directionsSummary").textContent=total+" مرحله";
+  $("directionsSummary").textContent=total+" مرحله · بررسی "+(route.revAlternativesCount||1)+" مسیر جایگزین";
   const list=document.createElement("div");
   steps.forEach((step,index)=>{
     const item=document.createElement("div");item.className="direction-item";
