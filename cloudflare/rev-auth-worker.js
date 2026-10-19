@@ -580,7 +580,7 @@ async function travelExperiencesApi(request,env,url,method,user) {
    const commentIds=comments.map(c=>c.id);let replies=[];
    if(commentIds.length){const marks=commentIds.map(()=>"?").join(",");replies=(await env.DB.prepare(`SELECT r.id,r.comment_id,r.body,r.created_at,u.display_name AS author_name FROM rev_travel_experience_comment_replies r LEFT JOIN rev_users u ON u.id=r.user_id WHERE r.comment_id IN (${marks}) ORDER BY r.created_at ASC`).bind(...commentIds).all()).results||[];}
    const repliesByComment={};for(const r of replies){(repliesByComment[r.comment_id]||(repliesByComment[r.comment_id]=[])).push({...r,author_name:r.author_name||"کاربر REV"});}
-   return response(request,env,{success:true,experience:{...safe,is_owner:!!user&&row.user_id===user.id,photos,comments:comments.map(c=>({...c,author_name:c.author_name||"کاربر REV",replies:repliesByComment[c.id]||[]}))}});
+   return response(request,env,{success:true,experience:{...safe,route_data,is_owner:!!user&&row.user_id===user.id,photos,comments:comments.map(c=>({...c,author_name:c.author_name||"کاربر REV",replies:repliesByComment[c.id]||[]}))}});
   }
   if(method==="DELETE"&&!action){
    if(!user)return response(request,env,{success:false,error:"ابتدا وارد حساب شوید."},401);
