@@ -93,7 +93,16 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:Tahoma,Arial,s
 
     <div id="route" class="glass fadein" style="animation-delay:.25s">
       <div class="cities"><span id="cOrigin">تهران</span><span id="cDest">چالوس</span></div>
-      <div class="track"><div class="fill" id="rFill" style="width:35%"></div><div class="dot" id="rDot" style="right:35%"></div></div>
+      <svg id="routeSvg" viewBox="0 0 600 80" preserveAspectRatio="none" style="width:100%;height:44px;display:block">
+        <path id="routePathBg" d="" fill="none" stroke="rgba(255,255,255,.15)" stroke-width="5" stroke-linecap="round"/>
+        <path id="routePathFill" d="" fill="none" stroke="#14b8a6" stroke-width="5" stroke-linecap="round"
+          style="filter:drop-shadow(0 0 6px #14b8a6)"/>
+        <circle id="routeDot" r="8" fill="#14b8a6" stroke="#fff" stroke-width="3"
+          style="filter:drop-shadow(0 0 8px #14b8a6)"/>
+      </svg>
+      <div style="display:flex;justify-content:space-between;font-size:11px;color:#9fd8d0;margin-top:4px">
+        <span id="rPct">۳۵٪ مسیر</span><span id="rEta">زمان تقریبی: --</span>
+      </div>
     </div>
 
     <div id="weather" class="glass fadein" style="animation-delay:.35s">
@@ -139,7 +148,7 @@ html,body{height:100%;overflow:hidden;background:#000;font-family:Tahoma,Arial,s
 const FA_D = s => String(s).replace(/[0-9]/g, d => '۰۱۲۳۴۵۶۷۸۹'[d]);
 /* ===== API: سایت با این تابع هر مسیری رو رندر می‌کنه ===== */
 const REVPreview = {
-  map: null, routeLine: null, chargerMarkers: [],
+  map: null, routeLine: null, routeGlow: null, chargerMarkers: [], _routeLen: 0,
   config: {origin:'تهران', destination:'چالوس', progress:35, speed:110,
     distanceKm:145, battery:68, temp:24, weatherDesc:'صاف و آفتابی',
     weatherIcon:'☀️', nextChargerKm:32, chargerPorts:4,
@@ -156,8 +165,8 @@ const REVPreview = {
     const c = this.config;
     document.getElementById('cOrigin').textContent = c.origin;
     document.getElementById('cDest').textContent = c.destination;
-    document.getElementById('rFill').style.width = c.progress + '%';
-    document.getElementById('rDot').style.right = c.progress + '%';
+    document.getElementById('rPct').textContent = FA_D(c.progress) + '٪ مسیر';
+    this.updateRouteDot();
     document.getElementById('spdNum').textContent = FA_D(c.speed);
     document.getElementById('speedArc').style.strokeDashoffset = 276 - (276 * Math.min(c.speed,200)/200);
     document.getElementById('dstNum').textContent = FA_D(c.distanceKm);
@@ -176,25 +185,86 @@ const REVPreview = {
     const c = this.config;
     this.map = L.map('minimap', {zoomControl:false, attributionControl:false}).setView(c.originLL, 9);
     L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',{maxZoom:19}).addTo(this.map);
+    setTimeout(()=>this.map.invalidateSize(), 400);
     this.drawRoute();
   },
   drawRoute(){
     const c = this.config;
+    // مسیر واقعی از OSRM
+    const url = `https://router.project-osrm.org/route/v1/driving/${c.originLL[1]},${c.originLL[0]};${c.destLL[1]},${c.destLL[0]}?overview=full&geometries=geojson`;
+    fetch(url).then(r=>r.json()).then(d=>{
+      if(d.code!=='OK'||!d.routes||!d.routes[0]) return this.drawStraight();
+      const coords = d.routes[0].geometry.coordinates; // [lng,lat]
+      const latlngs = coords.map(p=>[p[1],p[0]]);
+      c._routeLL = latlngs;
+      // روی نقشه
+      if(this.routeLine) this.map.removeLayer(this.routeLine);
+      if(this.routeGlow) this.map.removeLayer(this.routeGlow);
+      this.routeGlow = L.polyline(latlngs,{color:'#14b8a6',weight:10,opacity:.25}).addTo(this.map);
+      this.routeLine = L.polyline(latlngs,{color:'#14b8a6',weight:4,opacity:.95}).addTo(this.map);
+      this.map.fitBounds(L.latLngBounds(latlngs).pad(0.25));
+      // روی نوار بالا (SVG)
+      this.drawRouteSvg(latlngs);
+      // زمان تقریبی
+      const mins = Math.round(d.routes[0].duration/60);
+      const hrs = Math.floor(mins/60), mm = mins%60;
+      document.getElementById('rEta').textContent = 'زمان تقریبی: ' +
+        (hrs>0 ? FA_D(hrs)+' ساعت و ' : '') + FA_D(mm) + ' دقیقه';
+    }).catch(()=>this.drawStraight());
+    // مارکرها
+    this.drawMarkers();
+  },
+  drawStraight(){
+    const c=this.config, pts=[c.originLL,c.destLL];
     if(this.routeLine) this.map.removeLayer(this.routeLine);
+    this.routeLine=L.polyline(pts,{color:'#14b8a6',weight:4,opacity:.9}).addTo(this.map);
+    this.map.fitBounds(L.latLngBounds(pts).pad(0.3));
+    this.drawRouteSvg(pts);
+  },
+  drawRouteSvg(latlngs){
+    // نرمالایز به viewBox 600x80
+    const lats=latlngs.map(p=>p[0]), lngs=latlngs.map(p=>p[1]);
+    const mLa=Math.min(...lats), xLa=Math.max(...lats), mLn=Math.min(...lngs), xLn=Math.max(...lngs);
+    const pad=12, W=600-2*pad, H=80-2*pad;
+    const dx=(xLn-mLn)||1, dy=(xLa-mLa)||1;
+    const sc=Math.min(W/dx, H/dy);
+    const ox=pad+(W-dx*sc)/2, oy=pad+(H-dy*sc)/2;
+    // معکوس کردن y چون SVG از بالا شروع می‌شه
+    const pts=latlngs.map(p=>[ox+(p[1]-mLn)*sc, oy+(1-(p[0]-mLa)/dy)*dy*sc]);
+    let dStr='M'+pts.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L');
+    // ساده‌سازی: هر ۵ نقطه یکی
+    const simp=pts.filter((_,i)=>i%5===0||i===pts.length-1);
+    dStr='M'+simp.map(p=>p[0].toFixed(1)+','+p[1].toFixed(1)).join(' L');
+    document.getElementById('routePathBg').setAttribute('d',dStr);
+    const fill=document.getElementById('routePathFill');
+    fill.setAttribute('d',dStr);
+    this._routeLen=fill.getTotalLength();
+    this.updateRouteDot();
+  },
+  updateRouteDot(){
+    const fill=document.getElementById('routePathFill');
+    const dot=document.getElementById('routeDot');
+    if(!fill||!this._routeLen) return;
+    const len=this._routeLen*this.config.progress/100;
+    fill.style.strokeDasharray=this._routeLen;
+    fill.style.strokeDashoffset=this._routeLen-len;
+    try{
+      const pt=fill.getPointAtLength(len);
+      dot.setAttribute('cx',pt.x); dot.setAttribute('cy',pt.y);
+    }catch(e){}
+  },
+  drawMarkers(){
+    const c=this.config;
     this.chargerMarkers.forEach(m=>this.map.removeLayer(m)); this.chargerMarkers=[];
-    const pts = [c.originLL, c.destLL];
-    this.routeLine = L.polyline(pts, {color:'#14b8a6', weight:4,
-      opacity:.9}).addTo(this.map);
-    // glow
-    L.polyline(pts, {color:'#14b8a6', weight:10, opacity:.25}).addTo(this.map);
-    L.circleMarker(c.originLL,{radius:6,color:'#fff',fillColor:'#14b8a6',fillOpacity:1,weight:2}).addTo(this.map);
-    L.circleMarker(c.destLL,{radius:6,color:'#fff',fillColor:'#ff5252',fillOpacity:1,weight:2}).addTo(this.map);
+    if(this._originM) this.map.removeLayer(this._originM);
+    if(this._destM) this.map.removeLayer(this._destM);
+    this._originM=L.circleMarker(c.originLL,{radius:6,color:'#fff',fillColor:'#14b8a6',fillOpacity:1,weight:2}).addTo(this.map);
+    this._destM=L.circleMarker(c.destLL,{radius:6,color:'#fff',fillColor:'#ff5252',fillOpacity:1,weight:2}).addTo(this.map);
     c.chargers.forEach(ch=>{
-      const m = L.circleMarker(ch.ll,{radius:5,color:'#fff',fillColor:'#ffd34d',fillOpacity:1,weight:2})
+      const m=L.circleMarker(ch.ll,{radius:5,color:'#fff',fillColor:'#ffd34d',fillOpacity:1,weight:2})
         .bindTooltip('⚡ '+ch.name).addTo(this.map);
       this.chargerMarkers.push(m);
     });
-    this.map.fitBounds(L.latLngBounds(pts).pad(0.3));
   },
   tick(){
     const now = new Date();
