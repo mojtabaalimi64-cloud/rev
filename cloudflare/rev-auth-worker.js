@@ -445,6 +445,7 @@ async function engagementApi(request,env,url,method){
 
 
 async function ensureExperiencesSchema(env) {
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_user_profiles (user_id TEXT PRIMARY KEY, avatar_data TEXT, updated_at TEXT NOT NULL)").run();
  await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_travel_experiences (
   id TEXT PRIMARY KEY, user_id TEXT NOT NULL, title TEXT NOT NULL, origin TEXT, destination TEXT, story TEXT,
   vehicle_name TEXT, distance_km REAL NOT NULL DEFAULT 0, duration_minutes INTEGER NOT NULL DEFAULT 0,
@@ -474,7 +475,7 @@ async function travelExperiencesApi(request,env,url,method,user) {
  if((p==="/api/experiences/mine"||p==="/api/experiences/saved")&&method==="GET"){
   if(!user)return response(request,env,{success:false,error:"برای دیدن پست‌های خودت یا ذخیره‌شده ابتدا وارد حساب REV شو."},401);
   const isSaved=p==="/api/experiences/saved";
-  const sql="SELECT e.id,e.user_id,e.title,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,e.comments_enabled,u.display_name AS author_name, up.avatar_data AS author_avatar, COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg, (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count, (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id WHERE e.status='published' AND "+(isSaved?"EXISTS (SELECT 1 FROM rev_travel_experience_reactions b WHERE b.experience_id=e.id AND b.user_id=? AND b.reaction_type='bookmark'":"e.user_id=?")+" ORDER BY e.published_at DESC LIMIT ?";
+  const sql="SELECT e.id,e.user_id,e.title,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,e.comments_enabled,u.display_name AS author_name, up.avatar_data AS author_avatar, COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg, (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count, (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id LEFT JOIN rev_user_profiles up ON up.user_id=e.user_id WHERE e.status='published' AND "+(isSaved?"EXISTS (SELECT 1 FROM rev_travel_experience_reactions b WHERE b.experience_id=e.id AND b.user_id=? AND b.reaction_type='bookmark'":"e.user_id=?")+" ORDER BY e.published_at DESC LIMIT ?";
   const rows=await env.DB.prepare(sql).bind(user.id,30).all();
   const ids=(rows.results||[]).map(x=>x.id);let comments=[];
   if(ids.length){const marks=ids.map(()=>"?").join(",");const mineCommentExpr="(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions mine WHERE mine.comment_id=c.id AND mine.user_id=?)";comments=(await env.DB.prepare(`SELECT c.id,c.experience_id,c.body,c.created_at,u.display_name AS author_name,(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions cr WHERE cr.comment_id=c.id) AS like_count,${mineCommentExpr} AS liked FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id IN (${marks}) ORDER BY c.created_at ASC`).bind(user.id,...ids).all()).results||[];}
@@ -491,7 +492,7 @@ async function travelExperiencesApi(request,env,url,method,user) {
    COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg,
    (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count,
    (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count
-   FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id
+   FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id LEFT JOIN rev_user_profiles up ON up.user_id=e.user_id
    WHERE e.status='published' ORDER BY e.published_at DESC LIMIT ?`).bind(limit).all();
   const ids=(rows.results||[]).map(x=>x.id);let comments=[];
   if(ids.length){const marks=ids.map(()=>"?").join(",");const mineCommentExpr=user?"(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions mine WHERE mine.comment_id=c.id AND mine.user_id=?)":"0";comments=(await env.DB.prepare(`SELECT c.id,c.experience_id,c.body,c.created_at,u.display_name AS author_name,(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions cr WHERE cr.comment_id=c.id) AS like_count,${mineCommentExpr} AS liked FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id IN (${marks}) ORDER BY c.created_at ASC`).bind(...(user?[user.id,...ids]:ids)).all()).results||[];}
@@ -563,7 +564,7 @@ async function travelExperiencesApi(request,env,url,method,user) {
     COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg,
     (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count,
     (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count
-    FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id WHERE e.id=? AND e.status='published' LIMIT 1`).bind(id).first();
+    FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id LEFT JOIN rev_user_profiles up ON up.user_id=e.user_id WHERE e.id=? AND e.status='published' LIMIT 1`).bind(id).first();
    if(!row)return response(request,env,{success:false,error:"این تجربه پیدا نشد یا دیگر منتشر نیست."},404);
    let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,...safe}=row;
    const comments=(await env.DB.prepare("SELECT c.id,c.body,c.created_at,u.display_name AS author_name,(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions cr WHERE cr.comment_id=c.id) AS like_count FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id=? ORDER BY c.created_at ASC LIMIT 30").bind(id).all()).results||[];
