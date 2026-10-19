@@ -495,6 +495,16 @@ async function travelExperiencesApi(request,env,url,method,user) {
  }
  if(one){
   const id=one[1],action=one[2]||"";
+  if(method==="GET"&&!action){
+   const row=await env.DB.prepare(`SELECT e.id,e.user_id,e.title,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,u.display_name AS author_name,
+    COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg,
+    (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count
+    FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id WHERE e.id=? AND e.status='published' LIMIT 1`).bind(id).first();
+   if(!row)return response(request,env,{success:false,error:"این تجربه پیدا نشد یا دیگر منتشر نیست."},404);
+   let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,...safe}=row;
+   const comments=(await env.DB.prepare("SELECT c.body,c.created_at,u.display_name AS author_name FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id=? ORDER BY c.created_at ASC LIMIT 30").bind(id).all()).results||[];
+   return response(request,env,{success:true,experience:{...safe,photos,comments:comments.map(c=>({...c,author_name:c.author_name||"کاربر REV"}))}});
+  }
   if(method==="DELETE"&&!action){
    if(!user)return response(request,env,{success:false,error:"ابتدا وارد حساب شوید."},401);
    if(!sameOrigin(request,env))return response(request,env,{success:false,error:"مبدأ درخواست مجاز نیست."},403);
