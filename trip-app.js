@@ -22,6 +22,11 @@ const toggleStations=$("toggleStations");
 const toggleBusinesses=$("toggleBusinesses");
 if(toggleStations)toggleStations.addEventListener("change",()=>setMapLayerVisibility(stationLayer,toggleStations.checked));
 if(toggleBusinesses)toggleBusinesses.addEventListener("change",()=>setMapLayerVisibility(businessLayer,toggleBusinesses.checked));
+(function initRoutePreferences(){
+  const ids=["routeMajorRoads","routeFastest","routeAvoidLocal"];
+  try{const saved=JSON.parse(localStorage.getItem("rev_route_preferences_v1")||"{}");ids.forEach(id=>{const el=$(id);if(el&&typeof saved[id]==="boolean")el.checked=saved[id];});}catch(e){}
+  ids.forEach(id=>{const el=$(id);if(el)el.addEventListener("change",()=>{const prefs={};ids.forEach(key=>{const input=$(key);if(input)prefs[key]=input.checked;});try{localStorage.setItem("rev_route_preferences_v1",JSON.stringify(prefs));}catch(e){}});});
+})();
 function setStatus(message){ $("status").textContent = message; }
 function num(id, fallback){ const n=Number($(id).value); return Number.isFinite(n)&&n>0?n:fallback; }
 function escapeHTML(s){return String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));}
@@ -39,7 +44,7 @@ function scoreRoute(route, prefs){
   const minutes=Math.max(1,(Number(route.duration)||0)/60);
   const steps=(route.legs||[]).flatMap(leg=>leg.steps||[]);
   const roads=steps.map(s=>String(s.name||"")+" "+String(s.ref||"")).join(" ").toLowerCase();
-  const majorTerms=/(آزادراه|بزرگراه|جاده اصلی|راه اصلی|highway|motorway|trunk|expressway|autostrada|\\b[ema]-?\\d+\\b|\\b[ema]\\s?\\d+\\b)/i;
+  const majorTerms=/(آزادراه|بزرگراه|جاده اصلی|راه اصلی|highway|motorway|trunk|expressway|autostrada|\b[ema]-?\d+\b|\b[ema]\s?\d+\b)/i;
   const localTerms=/(کوچه|محلی|خاکی|دسترسی محلی|service road|residential|living_street|track|unclassified)/i;
   let score=prefs.fastest?minutes:km;
   if(prefs.major&&majorTerms.test(roads))score*=0.88;
