@@ -465,6 +465,7 @@ async function ensureExperiencesSchema(env) {
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_travel_experience_comment_reactions (comment_id TEXT NOT NULL,user_id TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(comment_id,user_id))").run();
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_travel_experience_comment_replies (id TEXT PRIMARY KEY,comment_id TEXT NOT NULL,experience_id TEXT NOT NULL,user_id TEXT NOT NULL,body TEXT NOT NULL,created_at TEXT NOT NULL)").run();
  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_experience_comment_replies ON rev_travel_experience_comment_replies(comment_id,created_at)").run();
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_travel_experience_reply_reactions (reply_id TEXT NOT NULL,user_id TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(reply_id,user_id))").run();
 }
 async function travelExperiencesApi(request,env,url,method,user) {
  await ensureExperiencesSchema(env);
@@ -478,13 +479,27 @@ async function travelExperiencesApi(request,env,url,method,user) {
    FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id
    WHERE e.status='published' ORDER BY e.published_at DESC LIMIT ?`).bind(limit).all();
   const ids=(rows.results||[]).map(x=>x.id);let comments=[];
-  if(ids.length){const marks=ids.map(()=>"?").join(",");comments=(await env.DB.prepare(`SELECT c.id,c.experience_id,c.body,c.created_at,u.display_name AS author_name,(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions cr WHERE cr.comment_id=c.id) AS like_count FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id IN (${marks}) ORDER BY c.created_at ASC`).bind(...ids).all()).results||[];}
+  if(ids.length){const marks=ids.map(()=>"?").join(",");const mineCommentExpr=user?"(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions mine WHERE mine.comment_id=c.id AND mine.user_id=?)":"0";comments=(await env.DB.prepare(`SELECT c.id,c.experience_id,c.body,c.created_at,u.display_name AS author_name,(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions cr WHERE cr.comment_id=c.id) AS like_count,${mineCommentExpr} AS liked FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id IN (${marks}) ORDER BY c.created_at ASC`).bind(...(user?[user.id,...ids]:ids)).all()).results||[];}
   const commentIds=comments.map(c=>c.id);let replies=[];
-  if(commentIds.length){const marks=commentIds.map(()=>"?").join(",");replies=(await env.DB.prepare(`SELECT r.id,r.comment_id,r.body,r.created_at,u.display_name AS author_name FROM rev_travel_experience_comment_replies r LEFT JOIN rev_users u ON u.id=r.user_id WHERE r.comment_id IN (${marks}) ORDER BY r.created_at ASC`).bind(...commentIds).all()).results||[];}
+  if(commentIds.length){const marks=commentIds.map(()=>"?").join(",");const mineReplyExpr=user?"(SELECT COUNT(*) FROM rev_travel_experience_reply_reactions mine WHERE mine.reply_id=r.id AND mine.user_id=?)":"0";replies=(await env.DB.prepare(`SELECT r.id,r.comment_id,r.body,r.created_at,u.display_name AS author_name,(SELECT COUNT(*) FROM rev_travel_experience_reply_reactions rr WHERE rr.reply_id=r.id) AS like_count,${mineReplyExpr} AS liked FROM rev_travel_experience_comment_replies r LEFT JOIN rev_users u ON u.id=r.user_id WHERE r.comment_id IN (${marks}) ORDER BY r.created_at ASC`).bind(...(user?[user.id,...commentIds]:commentIds)).all()).results||[];}
   const repliesByComment={};for(const r of replies){(repliesByComment[r.comment_id]||(repliesByComment[r.comment_id]=[])).push({...r,author_name:r.author_name||"کاربر REV"});}
   const byId={};for(const c of comments){(byId[c.experience_id]||(byId[c.experience_id]=[])).push({...c,author_name:c.author_name||"کاربر REV",replies:repliesByComment[c.id]||[]});}
   const experiences=(rows.results||[]).map(row=>{let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,...safe}=row;return {...safe,photos,comments:(byId[row.id]||[]).slice(-10)};});
   return response(request,env,{success:true,experiences});
+ }
+ const replyLikeAction=p.match(/^\/api\/experiences\/([A-Za-z0-9_-]{1,80})\/replies\/([A-Za-z0-9_-]{1,80})\/like$/);
+ if(replyLikeAction){
+  const experienceId=replyLikeAction[1],replyId=replyLikeAction[2];
+  if(method!=="POST")return response(request,env,{success:false,error:"Method not allowed"},405);
+  if(!user)return response(request,env,{success:false,error:"برای لایک پاسخ ابتدا وارد حساب REV شوید."},401);
+  if(!sameOrigin(request,env))return response(request,env,{success:false,error:"مبدأ درخواست مجاز نیست."},403);
+  const reply=await env.DB.prepare("SELECT id FROM rev_travel_experience_comment_replies WHERE id=? AND experience_id=?").bind(replyId,experienceId).first();
+  if(!reply)return response(request,env,{success:false,error:"پاسخ پیدا نشد."},404);
+  const exists=await env.DB.prepare("SELECT 1 AS ok FROM rev_travel_experience_reply_reactions WHERE reply_id=? AND user_id=?").bind(replyId,user.id).first();
+  if(exists)await env.DB.prepare("DELETE FROM rev_travel_experience_reply_reactions WHERE reply_id=? AND user_id=?").bind(replyId,user.id).run();
+  else await env.DB.prepare("INSERT INTO rev_travel_experience_reply_reactions(reply_id,user_id,created_at) VALUES(?,?,?)").bind(replyId,user.id,new Date().toISOString()).run();
+  const count=await env.DB.prepare("SELECT COUNT(*) AS n FROM rev_travel_experience_reply_reactions WHERE reply_id=?").bind(replyId).first();
+  return response(request,env,{success:true,active:!exists,like_count:Number(count?.n||0)});
  }
  const commentAction=p.match(/^\/api\/experiences\/([A-Za-z0-9_-]{1,80})\/comments\/([A-Za-z0-9_-]{1,80})\/(like|replies)$/);
  if(commentAction){
