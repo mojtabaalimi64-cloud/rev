@@ -443,6 +443,89 @@ async function engagementApi(request,env,url,method){
  return null;
 }
 
+
+async function ensureExperiencesSchema(env) {
+ await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_travel_experiences (
+  id TEXT PRIMARY KEY, user_id TEXT NOT NULL, title TEXT NOT NULL, origin TEXT, destination TEXT, story TEXT,
+  vehicle_name TEXT, distance_km REAL NOT NULL DEFAULT 0, duration_minutes INTEGER NOT NULL DEFAULT 0,
+  energy_kwh REAL NOT NULL DEFAULT 0, photos_json TEXT NOT NULL DEFAULT '[]', created_at TEXT NOT NULL,
+  published_at TEXT, status TEXT NOT NULL DEFAULT 'published' CHECK(status IN ('published','deleted'))
+ )`).run();
+ await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_travel_experience_comments (
+  id TEXT PRIMARY KEY, experience_id TEXT NOT NULL, user_id TEXT NOT NULL, body TEXT NOT NULL, created_at TEXT NOT NULL
+ )`).run();
+ await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_travel_experience_ratings (
+  experience_id TEXT NOT NULL, user_id TEXT NOT NULL, rating INTEGER NOT NULL CHECK(rating BETWEEN 1 AND 5),
+  created_at TEXT NOT NULL, PRIMARY KEY(experience_id,user_id)
+ )`).run();
+ await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_experiences_published ON rev_travel_experiences(status,published_at DESC)").run();
+ await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_experience_comments ON rev_travel_experience_comments(experience_id,created_at)").run();
+}
+async function travelExperiencesApi(request,env,url,method,user) {
+ await ensureExperiencesSchema(env);
+ const p=url.pathname;
+ if(p==="/api/experiences" && method==="GET") {
+  const limit=Math.max(1,Math.min(30,parseInt(url.searchParams.get("limit")||"20",10)||20));
+  const rows=await env.DB.prepare(`SELECT e.id,e.user_id,e.title,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,u.display_name AS author_name,
+   COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg,
+   (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count
+   FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id
+   WHERE e.status='published' ORDER BY e.published_at DESC LIMIT ?`).bind(limit).all();
+  const ids=(rows.results||[]).map(x=>x.id);let comments=[];
+  if(ids.length){const marks=ids.map(()=>"?").join(",");comments=(await env.DB.prepare(`SELECT c.experience_id,c.body,c.created_at,u.display_name AS author_name FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id IN (${marks}) ORDER BY c.created_at ASC`).bind(...ids).all()).results||[];}
+  const byId={};for(const c of comments){(byId[c.experience_id]||(byId[c.experience_id]=[])).push({body:c.body,created_at:c.created_at,author_name:c.author_name||"کاربر REV"});}
+  const experiences=(rows.results||[]).map(row=>{let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,...safe}=row;return {...safe,photos,comments:(byId[row.id]||[]).slice(-10)};});
+  return response(request,env,{success:true,experiences});
+ }
+ const one=p.match(/^\/api\/experiences\/([A-Za-z0-9_-]{1,80})(?:\/(comments|rating))?$/);
+ if(p==="/api/experiences" && method==="POST") {
+  if(!user)return response(request,env,{success:false,error:"برای انتشار تجربه ابتدا وارد حساب REV شوید."},401);
+  if(!sameOrigin(request,env))return response(request,env,{success:false,error:"مبدأ درخواست مجاز نیست."},403);
+  if(await rateLimited(request,env,"experience-create",8,3600))return response(request,env,{success:false,error:"تعداد انتشارها زیاد است؛ بعداً دوباره تلاش کنید."},429);
+  let b;try{b=await request.json()}catch{return response(request,env,{success:false,error:"اطلاعات ارسالی معتبر نیست."},400)}
+  const title=String(b?.title||"").trim().slice(0,90),story=String(b?.story||"").trim().slice(0,3000);
+  if(!title)return response(request,env,{success:false,error:"عنوان تجربه الزامی است."},400);
+  const photos=Array.isArray(b.photos)?b.photos.slice(0,5):[];
+  if(photos.some(x=>typeof x!=="string"||!/^data:image\/(jpeg|png|webp);base64,[A-Za-z0-9+/=]+$/.test(x)||x.length>350000))return response(request,env,{success:false,error:"هر عکس باید تصویر فشرده JPEG/PNG/WebP با حجم کمتر از حدود 260 کیلوبایت باشد."},413);
+  if(JSON.stringify(photos).length>1500000)return response(request,env,{success:false,error:"حجم مجموع عکس‌ها زیاد است؛ تعداد یا حجم عکس‌ها را کاهش دهید."},413);
+  const id=crypto.randomUUID(),now=new Date().toISOString();
+  await env.DB.prepare("INSERT INTO rev_travel_experiences(id,user_id,title,origin,destination,story,vehicle_name,distance_km,duration_minutes,energy_kwh,photos_json,created_at,published_at,status) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,'published')")
+   .bind(id,user.id,title,String(b.origin||"").slice(0,100),String(b.destination||"").slice(0,100),story,String(b.vehicle_name||"").slice(0,80),Math.max(0,Math.min(5000,Number(b.distance_km)||0)),Math.max(0,Math.min(100000,Math.floor(Number(b.duration_minutes)||0))),Math.max(0,Math.min(2000,Number(b.energy_kwh)||0)),JSON.stringify(photos),now,now).run();
+  return response(request,env,{success:true,id,message:"تجربه منتشر شد."},201);
+ }
+ if(one){
+  const id=one[1],action=one[2]||"";
+  if(method==="DELETE"&&!action){
+   if(!user)return response(request,env,{success:false,error:"ابتدا وارد حساب شوید."},401);
+   if(!sameOrigin(request,env))return response(request,env,{success:false,error:"مبدأ درخواست مجاز نیست."},403);
+   const r=await env.DB.prepare("UPDATE rev_travel_experiences SET status='deleted' WHERE id=? AND user_id=? AND status='published'").bind(id,user.id).run();
+   return response(request,env,{success:true,deleted:Number(r.meta?.changes||0)});
+  }
+  if(method==="POST"&&action==="comments"){
+   if(!user)return response(request,env,{success:false,error:"برای ثبت نظر ابتدا وارد حساب REV شوید."},401);
+   if(!sameOrigin(request,env))return response(request,env,{success:false,error:"مبدأ درخواست مجاز نیست."},403);
+   const b=await request.json().catch(()=>null),body=String(b?.body||"").trim().slice(0,500);
+   if(!body)return response(request,env,{success:false,error:"متن نظر خالی است."},400);
+   const found=await env.DB.prepare("SELECT id FROM rev_travel_experiences WHERE id=? AND status='published'").bind(id).first();
+   if(!found)return response(request,env,{success:false,error:"تجربه پیدا نشد."},404);
+   if(await rateLimited(request,env,"experience-comment",15,3600))return response(request,env,{success:false,error:"تعداد نظرها زیاد است؛ بعداً دوباره تلاش کنید."},429);
+   await env.DB.prepare("INSERT INTO rev_travel_experience_comments(id,experience_id,user_id,body,created_at) VALUES(?,?,?,?,?)").bind(crypto.randomUUID(),id,user.id,body,new Date().toISOString()).run();
+   return response(request,env,{success:true});
+  }
+  if(method==="POST"&&action==="rating"){
+   if(!user)return response(request,env,{success:false,error:"برای امتیازدهی ابتدا وارد حساب REV شوید."},401);
+   if(!sameOrigin(request,env))return response(request,env,{success:false,error:"مبدأ درخواست مجاز نیست."},403);
+   const b=await request.json().catch(()=>null),rating=Number(b?.rating);
+   if(!Number.isInteger(rating)||rating<1||rating>5)return response(request,env,{success:false,error:"امتیاز باید بین ۱ تا ۵ باشد."},400);
+   const found=await env.DB.prepare("SELECT id FROM rev_travel_experiences WHERE id=? AND status='published'").bind(id).first();
+   if(!found)return response(request,env,{success:false,error:"تجربه پیدا نشد."},404);
+   await env.DB.prepare("INSERT INTO rev_travel_experience_ratings(experience_id,user_id,rating,created_at) VALUES(?,?,?,?) ON CONFLICT(experience_id,user_id) DO UPDATE SET rating=excluded.rating,created_at=excluded.created_at").bind(id,user.id,rating,new Date().toISOString()).run();
+   return response(request,env,{success:true});
+  }
+ }
+ return response(request,env,{success:false,error:"مسیر تجربه سفر پیدا نشد."},404);
+}
+
 export default {
  async fetch(request,env) {
   const url=new URL(request.url), path=url.pathname, method=request.method;
@@ -458,6 +541,7 @@ export default {
     }
    }
    if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL),smsConfigured:!!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD),smsPatternConfigured:!!(env.MELIPAYAMAK_OTP_BODY_ID||"557785")});
+   if(path==="/api/experiences" || /^\/api\/experiences\/[A-Za-z0-9_-]{1,80}(?:\/(comments|rating))?$/.test(path)) { const user=method==="GET"?null:await currentUser(request,env); return await travelExperiencesApi(request,env,url,method,user); }
    if(path==="/api/driver/groups" || path==="/api/driver/groups/code" || path==="/api/driver/groups/settings" || path==="/api/driver/notifications" || path==="/api/driver/notifications/read" || /^\/api\/driver\/groups\/[0-9a-f-]{36}\/(respond|location|end)$/i.test(path)) { const user=await currentUser(request,env); return await driverGroupsApi(request,env,url,method,user); }
    if(path==="/api/driver/shares" || path==="/api/driver/shares/view" || /^\/api\/driver\/shares\/[0-9a-f-]{36}\/(location|revoke)$/i.test(path)) {
     const user=path==="/api/driver/shares/view" ? null : await currentUser(request,env);
