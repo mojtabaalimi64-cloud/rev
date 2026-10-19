@@ -235,7 +235,7 @@ const TYPES={
  ,serviceCenters:{label:'تعمیرگاه‌های مجاز خودرو برقی',one:'تعمیرگاه',fields:[['title','نام تعمیرگاه','text'],['image','تصویر تعمیرگاه','img'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا صفحه رزرو','text'],['brands','برندهای تحت پوشش (با ویرگول جدا کنید)','text'],['services','خدمات (مثلاً عیب‌یابی، باتری، موتور، اینورتر، نرم‌افزار)','area'],['authorization','مرجع/مدرک مجوز و شماره آن','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری (مثلاً شنبه تا چهارشنبه ۹ تا ۱۸؛ پنجشنبه ۹ تا ۱۳)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (در صورت وجود داده)','text'],['satisfactionCount','تعداد رأی‌های رضایت کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
  ,partsStores:{label:'فروشگاه‌های قطعات خودرو برقی',one:'فروشگاه قطعات',fields:[['title','نام فروشگاه','text'],['image','تصویر فروشگاه','img'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا لینک سفارش','text'],['brands','برندها و مدل‌های سازگار (با ویرگول جدا کنید)','text'],['products','دسته‌های قطعات (باتری، شارژر، اینورتر، موتور، کابل و...)','area'],['authorization','مرجع/مدرک نمایندگی یا مجوز','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری فروشگاه (روزها و بازه زمانی)','area'],['deliveryHours','ساعات ارسال/تحویل (اختیاری)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (اختیاری)','text'],['satisfactionCount','تعداد امتیازهای ثبت‌شده کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
 };
-const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),site:'تنظیمات عمومی سایت',stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',users:'مدیریت کاربران','portal-businesses':'درخواست‌های کسب‌وکار',ratings:'امتیازها و سابقه','station-reports':'گزارش خطای جایگاه‌ها','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',plans:'پلن‌های درآمدی',engagement:'مانیتورینگ و اعلان‌ها',music:'موزیک سفر',set:'تنظیمات'};
+const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),site:'تنظیمات عمومی سایت',stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',users:'مدیریت کاربران','portal-businesses':'درخواست‌های کسب‌وکار',ratings:'امتیازها و سابقه','station-reports':'گزارش خطای جایگاه‌ها','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',plans:'پلن‌های درآمدی',engagement:'مانیتورینگ و اعلان‌ها',meetups:'برنامه‌های قرار گروهی',music:'موزیک سفر',set:'تنظیمات'};
 let portalBusinessesCache=null, portalBusinessesBusy=false, portalBusinessesError='', stationsCache=null, stationEdit=null, stationBusy=false, stationSearchValue='', stationSortValue='name', usersCache=[], usersSearchValue='', usersCategoryValue='all', usersSortValue='created_at', usersOrder='desc', usersPage=1, usersBusy=false, usersAccess={settings:{registration_open:1,max_users:50,allowlist_enabled:1},phones:[],registered_count:0}, usersAccessBusy=false, usersDebounce=null, ratingsCache=null, ratingsBusy=false, stationReportsCache=null, stationReportsBusy=false, stationReportsError='', ratingSearchValue='', ratingSelected=null, ratingOverride=null, ratingSaveBusy=false, listSearchValue='', listSortValue='default', ratingSortValue='name', ratingHistoryFilter='all', ratingOverridesCache=null, ratingOverridesBusy=false;
 const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
 const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
@@ -822,12 +822,33 @@ function draw(){
   if(!tok) return login();
   if(!c){load();return}
   const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
-  const body=tab==='site'?sitePanel():tab==='plans'?plansPanel():tab==='engagement'?engagementPanel():tab==='users'?usersPanel():tab==='portal-businesses'?portalBusinessPanel():tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='station-reports'?stationReportsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='music'?musicPanel():tab==='set'?settings():list();
+  const body=tab==='site'?sitePanel():tab==='plans'?plansPanel():tab==='engagement'?engagementPanel():tab==='meetups'?meetupPlansPanel():tab==='users'?usersPanel():tab==='portal-businesses'?portalBusinessPanel():tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='station-reports'?stationReportsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='music'?musicPanel():tab==='set'?settings():list();
   root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
   applyAdminAppearance();
   fixDropdownContrast();
+  if(tab==='meetups')loadMeetupPlans();
 }
 
+function meetupPlansPanel(){
+ return '<section class="box"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><h2>برنامه‌های قرار گروهی</h2><p class="hint">برنامه‌های سه‌نفره ذخیره‌شده از اپ سفر REV؛ مسیر، مسافت و زمان هر نفر و فاصله جاده‌ای بین افراد.</p></div><button class="btn main" data-a="meetups-refresh">بروزرسانی فهرست</button></div><div id="meetup-plans-status" class="hint" style="margin:12px 0">در حال بارگذاری…</div><div id="meetup-plans-list"></div></section>';
+}
+async function loadMeetupPlans(){
+ const status=$('meetup-plans-status'),list=$('meetup-plans-list');if(!status||!list)return;
+ status.textContent='در حال دریافت برنامه‌ها از دیتابیس…';list.innerHTML='';
+ try{
+  const r=await fetch(AUTH_WORKER+'/api/admin/meetup-plans',{headers:H(),cache:'no-store'}),j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+  const plans=Array.isArray(j.plans)?j.plans:[];
+  status.textContent='تعداد برنامه‌های ثبت‌شده: '+plans.length;
+  if(!plans.length){list.innerHTML='<div class="row">هنوز برنامه قرار گروهی ثبت نشده است.</div>';return;}
+  list.innerHTML=plans.map(p=>{
+   const people=Array.isArray(p.participants)?p.participants:[],pairs=Array.isArray(p.pairs)?p.pairs:[];
+   const peopleHtml=people.map(x=>'<div class="row"><div><b>'+esc(x.name||'همراه')+'</b><small>مبدأ: '+esc(x.origin_label||'—')+'</small><small>مسیر تا مقصد: '+esc(x.distance_km??'—')+' کیلومتر · '+esc(x.duration_minutes??'—')+' دقیقه</small></div></div>').join('');
+   const pairHtml=pairs.map(x=>'<small>'+esc(x.a)+' ↔ '+esc(x.b)+': '+esc(x.km)+' کیلومتر · '+esc(x.minutes)+' دقیقه</small>').join('');
+   return '<article class="box"><h3>'+esc(p.title||'برنامه قرار گروهی')+'</h3><p class="hint">مقصد: '+esc(p.destination_label||'—')+'</p><p class="hint">ثبت‌کننده: '+esc(p.creator_name||'—')+' · '+esc(p.creator_email||'')+' · '+esc(p.created_at||'')+'</p><h4 style="margin-top:12px">مسیر هر نفر</h4>'+peopleHtml+'<h4 style="margin-top:12px">فاصله بین افراد</h4>'+pairHtml+'</article>';
+  }).join('');
+ }catch(e){status.textContent='بارگذاری برنامه‌ها ناموفق بود: '+(e.message||'خطای اتصال');}
+}
 async function loadAuthSettings(){
   const status=$('auth-status'), toggle=$('auth-enabled');
   if(status)status.textContent='در حال بررسی وضعیت سرویس احراز هویت...';
@@ -1204,6 +1225,7 @@ root.addEventListener('click',async e=>{
   else if(a==='station-delete'){const s=stationsCache[i];if(s&&confirm('جایگاه «'+s.name+'» حذف شود؟')){try{const r=await fetch(WORKER+'/api/admin/stations/'+encodeURIComponent(s.id),{method:'DELETE',headers:H()});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationsCache=null;note='جایگاه حذف شد.';await loadStations()}catch(e){msg('حذف انجام نشد: '+(e.message||'خطای اتصال'))}}}
   else if(a==='station-import')$('station-csv').click()
   else if(a==='station-template')downloadStationTemplate()
+  else if(a==='meetups-refresh'){loadMeetupPlans()}
   else if(a==='registration-save')saveRegistrationAccess();
   else if(a==='registration-add')changeRegistrationPhone('add_phone');
   else if(a==='registration-remove'){const p=e.target.closest('[data-phone]')?.dataset.phone;if(p&&confirm('شماره '+p+' از فهرست مجاز حذف شود؟'))changeRegistrationPhone('remove_phone',p);}
