@@ -462,6 +462,9 @@ async function ensureExperiencesSchema(env) {
  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_experience_comments ON rev_travel_experience_comments(experience_id,created_at)").run();
  await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_travel_experience_reactions (experience_id TEXT NOT NULL,user_id TEXT NOT NULL,reaction_type TEXT NOT NULL CHECK(reaction_type IN ('like','bookmark')),created_at TEXT NOT NULL,PRIMARY KEY(experience_id,user_id,reaction_type))").run();
  await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_experience_reactions ON rev_travel_experience_reactions(experience_id,reaction_type)").run();
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_travel_experience_comment_reactions (comment_id TEXT NOT NULL,user_id TEXT NOT NULL,created_at TEXT NOT NULL,PRIMARY KEY(comment_id,user_id))").run();
+ await env.DB.prepare("CREATE TABLE IF NOT EXISTS rev_travel_experience_comment_replies (id TEXT PRIMARY KEY,comment_id TEXT NOT NULL,experience_id TEXT NOT NULL,user_id TEXT NOT NULL,body TEXT NOT NULL,created_at TEXT NOT NULL)").run();
+ await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_experience_comment_replies ON rev_travel_experience_comment_replies(comment_id,created_at)").run();
 }
 async function travelExperiencesApi(request,env,url,method,user) {
  await ensureExperiencesSchema(env);
@@ -475,10 +478,35 @@ async function travelExperiencesApi(request,env,url,method,user) {
    FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id
    WHERE e.status='published' ORDER BY e.published_at DESC LIMIT ?`).bind(limit).all();
   const ids=(rows.results||[]).map(x=>x.id);let comments=[];
-  if(ids.length){const marks=ids.map(()=>"?").join(",");comments=(await env.DB.prepare(`SELECT c.experience_id,c.body,c.created_at,u.display_name AS author_name FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id IN (${marks}) ORDER BY c.created_at ASC`).bind(...ids).all()).results||[];}
-  const byId={};for(const c of comments){(byId[c.experience_id]||(byId[c.experience_id]=[])).push({body:c.body,created_at:c.created_at,author_name:c.author_name||"کاربر REV"});}
+  if(ids.length){const marks=ids.map(()=>"?").join(",");comments=(await env.DB.prepare(`SELECT c.id,c.experience_id,c.body,c.created_at,u.display_name AS author_name,(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions cr WHERE cr.comment_id=c.id) AS like_count FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id IN (${marks}) ORDER BY c.created_at ASC`).bind(...ids).all()).results||[];}
+  const commentIds=comments.map(c=>c.id);let replies=[];
+  if(commentIds.length){const marks=commentIds.map(()=>"?").join(",");replies=(await env.DB.prepare(`SELECT r.id,r.comment_id,r.body,r.created_at,u.display_name AS author_name FROM rev_travel_experience_comment_replies r LEFT JOIN rev_users u ON u.id=r.user_id WHERE r.comment_id IN (${marks}) ORDER BY r.created_at ASC`).bind(...commentIds).all()).results||[];}
+  const repliesByComment={};for(const r of replies){(repliesByComment[r.comment_id]||(repliesByComment[r.comment_id]=[])).push({...r,author_name:r.author_name||"کاربر REV"});}
+  const byId={};for(const c of comments){(byId[c.experience_id]||(byId[c.experience_id]=[])).push({...c,author_name:c.author_name||"کاربر REV",replies:repliesByComment[c.id]||[]});}
   const experiences=(rows.results||[]).map(row=>{let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,...safe}=row;return {...safe,photos,comments:(byId[row.id]||[]).slice(-10)};});
   return response(request,env,{success:true,experiences});
+ }
+ const commentAction=p.match(/^\/api\/experiences\/([A-Za-z0-9_-]{1,80})\/comments\/([A-Za-z0-9_-]{1,80})\/(like|replies)$/);
+ if(commentAction){
+  const experienceId=commentAction[1],commentId=commentAction[2],action=commentAction[3];
+  if(method!=="POST")return response(request,env,{success:false,error:"Method not allowed"},405);
+  if(!user)return response(request,env,{success:false,error:"برای لایک یا پاسخ‌دادن ابتدا وارد حساب REV شوید."},401);
+  if(!sameOrigin(request,env))return response(request,env,{success:false,error:"مبدأ درخواست مجاز نیست."},403);
+  const comment=await env.DB.prepare("SELECT id FROM rev_travel_experience_comments WHERE id=? AND experience_id=?").bind(commentId,experienceId).first();
+  if(!comment)return response(request,env,{success:false,error:"دیدگاه پیدا نشد."},404);
+  if(action==="like"){
+   const exists=await env.DB.prepare("SELECT 1 AS ok FROM rev_travel_experience_comment_reactions WHERE comment_id=? AND user_id=?").bind(commentId,user.id).first();
+   if(exists)await env.DB.prepare("DELETE FROM rev_travel_experience_comment_reactions WHERE comment_id=? AND user_id=?").bind(commentId,user.id).run();
+   else await env.DB.prepare("INSERT INTO rev_travel_experience_comment_reactions(comment_id,user_id,created_at) VALUES(?,?,?)").bind(commentId,user.id,new Date().toISOString()).run();
+   const count=await env.DB.prepare("SELECT COUNT(*) AS n FROM rev_travel_experience_comment_reactions WHERE comment_id=?").bind(commentId).first();
+   return response(request,env,{success:true,active:!exists,like_count:Number(count?.n||0)});
+  }
+  const b=await request.json().catch(()=>null),body=String(b?.body||"").trim().slice(0,500);
+  if(!body)return response(request,env,{success:false,error:"متن پاسخ را بنویسید."},400);
+  if(await rateLimited(request,env,"experience-comment-reply",20,3600))return response(request,env,{success:false,error:"تعداد پاسخ‌ها زیاد است؛ بعداً دوباره تلاش کنید."},429);
+  const replyId=crypto.randomUUID(),now=new Date().toISOString();
+  await env.DB.prepare("INSERT INTO rev_travel_experience_comment_replies(id,comment_id,experience_id,user_id,body,created_at) VALUES(?,?,?,?,?,?)").bind(replyId,commentId,experienceId,user.id,body,now).run();
+  return response(request,env,{success:true,reply:{id:replyId,comment_id:commentId,body,created_at:now,author_name:user.display_name||"کاربر REV"}},201);
  }
  const one=p.match(/^\/api\/experiences\/([A-Za-z0-9_-]{1,80})(?:\/(comments|rating|like|bookmark))?$/);
  if(p==="/api/experiences" && method==="POST") {
@@ -506,8 +534,11 @@ async function travelExperiencesApi(request,env,url,method,user) {
     FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id WHERE e.id=? AND e.status='published' LIMIT 1`).bind(id).first();
    if(!row)return response(request,env,{success:false,error:"این تجربه پیدا نشد یا دیگر منتشر نیست."},404);
    let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,...safe}=row;
-   const comments=(await env.DB.prepare("SELECT c.body,c.created_at,u.display_name AS author_name FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id=? ORDER BY c.created_at ASC LIMIT 30").bind(id).all()).results||[];
-   return response(request,env,{success:true,experience:{...safe,photos,comments:comments.map(c=>({...c,author_name:c.author_name||"کاربر REV"}))}});
+   const comments=(await env.DB.prepare("SELECT c.id,c.body,c.created_at,u.display_name AS author_name,(SELECT COUNT(*) FROM rev_travel_experience_comment_reactions cr WHERE cr.comment_id=c.id) AS like_count FROM rev_travel_experience_comments c LEFT JOIN rev_users u ON u.id=c.user_id WHERE c.experience_id=? ORDER BY c.created_at ASC LIMIT 30").bind(id).all()).results||[];
+   const commentIds=comments.map(c=>c.id);let replies=[];
+   if(commentIds.length){const marks=commentIds.map(()=>"?").join(",");replies=(await env.DB.prepare(`SELECT r.id,r.comment_id,r.body,r.created_at,u.display_name AS author_name FROM rev_travel_experience_comment_replies r LEFT JOIN rev_users u ON u.id=r.user_id WHERE r.comment_id IN (${marks}) ORDER BY r.created_at ASC`).bind(...commentIds).all()).results||[];}
+   const repliesByComment={};for(const r of replies){(repliesByComment[r.comment_id]||(repliesByComment[r.comment_id]=[])).push({...r,author_name:r.author_name||"کاربر REV"});}
+   return response(request,env,{success:true,experience:{...safe,photos,comments:comments.map(c=>({...c,author_name:c.author_name||"کاربر REV",replies:repliesByComment[c.id]||[]}))}});
   }
   if(method==="DELETE"&&!action){
    if(!user)return response(request,env,{success:false,error:"ابتدا وارد حساب شوید."},401);
@@ -565,7 +596,7 @@ export default {
     }
    }
    if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL),smsConfigured:!!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD),smsPatternConfigured:!!(env.MELIPAYAMAK_OTP_BODY_ID||"557785")});
-   if(path==="/api/experiences" || /^\/api\/experiences\/[A-Za-z0-9_-]{1,80}(?:\/(comments|rating|like|bookmark))?$/.test(path)) { const user=method==="GET"?null:await currentUser(request,env); return await travelExperiencesApi(request,env,url,method,user); }
+   if(path==="/api/experiences" || /^\/api\/experiences\/[A-Za-z0-9_-]{1,80}(?:\/(comments|rating|like|bookmark)(?:\/[A-Za-z0-9_-]{1,80}\/(?:like|replies))?)?$/.test(path)) { const user=method==="GET"?null:await currentUser(request,env); return await travelExperiencesApi(request,env,url,method,user); }
    if(path==="/api/driver/groups" || path==="/api/driver/groups/code" || path==="/api/driver/groups/settings" || path==="/api/driver/notifications" || path==="/api/driver/notifications/read" || /^\/api\/driver\/groups\/[0-9a-f-]{36}\/(respond|location|end)$/i.test(path)) { const user=await currentUser(request,env); return await driverGroupsApi(request,env,url,method,user); }
    if(path==="/api/driver/shares" || path==="/api/driver/shares/view" || /^\/api\/driver\/shares\/[0-9a-f-]{36}\/(location|revoke)$/i.test(path)) {
     const user=path==="/api/driver/shares/view" ? null : await currentUser(request,env);
