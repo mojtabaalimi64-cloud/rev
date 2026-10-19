@@ -470,6 +470,14 @@ async function ensureExperiencesSchema(env) {
 async function travelExperiencesApi(request,env,url,method,user) {
  await ensureExperiencesSchema(env);
  const p=url.pathname;
+ if((p==="/api/experiences/mine"||p==="/api/experiences/saved")&&method==="GET"){
+  if(!user)return response(request,env,{success:false,error:"برای دیدن پست‌های خودت یا ذخیره‌شده ابتدا وارد حساب REV شو."},401);
+  const isSaved=p==="/api/experiences/saved";
+  const sql="SELECT e.id,e.user_id,e.title,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,u.display_name AS author_name, COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg, (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count, (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count FROM rev_travel_experiences e LEFT JOIN rev_users u ON u.id=e.user_id WHERE e.status='published' AND "+(isSaved?"EXISTS (SELECT 1 FROM rev_travel_experience_reactions b WHERE b.experience_id=e.id AND b.user_id=? AND b.reaction_type='bookmark')":"e.user_id=?")+" ORDER BY e.published_at DESC LIMIT ?";
+  const rows=await env.DB.prepare(sql).bind(user.id,30).all();
+  const experiences=(rows.results||[]).map(row=>{let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,...safe}=row;return {...safe,photos,comments:[]};});
+  return response(request,env,{success:true,experiences});
+ }
  if(p==="/api/experiences" && method==="GET") {
   const limit=Math.max(1,Math.min(30,parseInt(url.searchParams.get("limit")||"20",10)||20));
   const rows=await env.DB.prepare(`SELECT e.id,e.user_id,e.title,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,u.display_name AS author_name,
@@ -611,7 +619,7 @@ export default {
     }
    }
    if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL),smsConfigured:!!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD),smsPatternConfigured:!!(env.MELIPAYAMAK_OTP_BODY_ID||"557785")});
-   if(path==="/api/experiences" || /^\/api\/experiences\/[A-Za-z0-9_-]{1,80}(?:\/(comments|rating|like|bookmark|replies)(?:\/[A-Za-z0-9_-]{1,80}\/(?:like|replies))?)?$/.test(path)) { const user=method==="GET"?null:await currentUser(request,env); return await travelExperiencesApi(request,env,url,method,user); }
+   if(path==="/api/experiences" || /^\/api\/experiences\/[A-Za-z0-9_-]{1,80}(?:\/(comments|rating|like|bookmark|replies)(?:\/[A-Za-z0-9_-]{1,80}\/(?:like|replies))?)?$/.test(path)) { const personalList=method==="GET"&&(/^\/api\/experiences\/(mine|saved)$/.test(path)); const user=(method==="GET"&&!personalList)?null:await currentUser(request,env); return await travelExperiencesApi(request,env,url,method,user); }
    if(path==="/api/driver/groups" || path==="/api/driver/groups/code" || path==="/api/driver/groups/settings" || path==="/api/driver/notifications" || path==="/api/driver/notifications/read" || /^\/api\/driver\/groups\/[0-9a-f-]{36}\/(respond|location|end)$/i.test(path)) { const user=await currentUser(request,env); return await driverGroupsApi(request,env,url,method,user); }
    if(path==="/api/driver/shares" || path==="/api/driver/shares/view" || /^\/api\/driver\/shares\/[0-9a-f-]{36}\/(location|revoke)$/i.test(path)) {
     const user=path==="/api/driver/shares/view" ? null : await currentUser(request,env);
