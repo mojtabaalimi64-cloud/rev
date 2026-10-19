@@ -86,6 +86,7 @@
       <select id="radius"><option value="5">۵ کیلومتر</option><option value="10">۱۰ کیلومتر</option><option value="20">۲۰ کیلومتر</option><option value="30">۳۰ کیلومتر</option><option value="50" selected>۵۰ کیلومتر</option></select><div class="sub" style="margin-top:6px">این محدوده برای ایستگاه‌های شارژ، تعمیرگاه‌ها و فروشگاه‌های ثبت‌شده اعمال می‌شود. پوشش داده‌ها به اطلاعات در دسترس بستگی دارد.</div>
       <button class="primary" id="planBtn">محاسبه مسیر و یافتن شارژرها</button>
       <button class="secondary" id="shareTripBtn" type="button" style="width:100%;margin-top:8px">اشتراک‌گذاری این سفر</button>
+      <button class="secondary" id="publishPlanExperienceBtn" type="button" style="width:100%;margin-top:8px">🧭 انتشار برنامه سفر در تجربه‌های REV</button>
       <button class="primary" id="continueTripBtn" type="button" style="display:none;width:100%;margin-top:8px">تأیید برنامه و رفتن به شروع سفر</button>
       <div class="sub" id="continueTripHint" style="display:none;margin-top:6px">پس از بررسی مبدأ، مقصد و برآوردها، با ادامه‌دادن به صفحه راننده می‌روید؛ GPS فقط با فشردن دکمه شروع سفر فعال می‌شود.</div>
       <div class="status" id="status" aria-live="polite">برای شروع، دکمه محاسبه مسیر را بزنید.</div>
@@ -334,6 +335,20 @@ document.getElementById('savedPlansList').addEventListener('click',function(e){
   else if(act==='details'){showSavedPlanDetails(p);}
   else if(act==='map'){viewOnMap(p);}
   else if(act==='start'){startTripFromPlan(p);}
+});
+var publishPlanExperienceBtn=document.getElementById('publishPlanExperienceBtn');
+if(publishPlanExperienceBtn)publishPlanExperienceBtn.addEventListener('click',function(){
+  var origin=(document.getElementById('origin')||{}).value||'';
+  var destination=(document.getElementById('destination')||{}).value||'';
+  var distanceText=(document.getElementById('distance')||{}).textContent||'';
+  var durationText=(document.getElementById('duration')||{}).textContent||'';
+  var distance=Number(String(distanceText).replace(/[^0-9.]/g,''));
+  var duration=Number(String(durationText).replace(/[^0-9.]/g,''));
+  if(!origin.trim()||!destination.trim()){alert('ابتدا مبدأ و مقصد را وارد کنید.');return;}
+  var q=new URLSearchParams({create:'1',app:'1',type:'trip_plan',origin:origin.trim(),destination:destination.trim()});
+  if(Number.isFinite(distance)&&distance>0)q.set('distance',String(distance));
+  if(Number.isFinite(duration)&&duration>0)q.set('duration',String(duration*60));
+  location.href='https://mojtabaalimi64-cloud.github.io/rev-mobile/experiences.html?'+q.toString();
 });
 var planBtn=document.getElementById('planBtn');
 if(planBtn)planBtn.addEventListener('click',function(){
