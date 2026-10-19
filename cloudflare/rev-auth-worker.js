@@ -270,6 +270,45 @@ async function ensureUserGroupCode(env,userId){
  let row=await env.DB.prepare("SELECT code,updated_at FROM rev_driver_group_codes WHERE user_id=? LIMIT 1").bind(userId).first();if(row)return row;
  for(let i=0;i<8;i++){const code=newGroupCode(),now=new Date().toISOString();try{await env.DB.prepare("INSERT INTO rev_driver_group_codes(user_id,code,updated_at) VALUES(?,?,?)").bind(userId,code,now).run();return {code,updated_at:now};}catch(e){if(i===7)throw e;}}
 }
+async function ensureMeetupPlansSchema(env){
+ await env.DB.prepare(`CREATE TABLE IF NOT EXISTS rev_meetup_plans(
+ id TEXT PRIMARY KEY, creator_user_id TEXT NOT NULL, title TEXT NOT NULL, destination_label TEXT NOT NULL,
+ participants_json TEXT NOT NULL, pairs_json TEXT NOT NULL, status TEXT NOT NULL DEFAULT 'planned',
+ created_at TEXT NOT NULL, FOREIGN KEY(creator_user_id) REFERENCES rev_users(id) ON DELETE CASCADE
+ )`).run();
+ await env.DB.prepare("CREATE INDEX IF NOT EXISTS idx_rev_meetup_plans_created ON rev_meetup_plans(created_at DESC)").run();
+}
+async function meetupPlansApi(request,env,url,method,user){
+ await ensureMeetupPlansSchema(env);
+ if(url.pathname==="/api/admin/meetup-plans"&&method==="GET"){
+  if(!await admin(request,env))return response(request,env,{success:false,error:"Unauthorized"},401);
+  const rows=await env.DB.prepare("SELECT p.id,p.title,p.destination_label,p.participants_json,p.pairs_json,p.status,p.created_at,u.display_name AS creator_name,u.email_normalized AS creator_email FROM rev_meetup_plans p JOIN rev_users u ON u.id=p.creator_user_id ORDER BY p.created_at DESC LIMIT 200").all();
+  return response(request,env,{success:true,plans:(rows.results||[]).map(x=>{let participants=[],pairs=[];try{participants=JSON.parse(x.participants_json||"[]")}catch{}try{pairs=JSON.parse(x.pairs_json||"[]")}catch{}return {...x,participants,pairs};})});
+ }
+ if(!user)return response(request,env,{success:false,error:"برای ذخیره برنامه قرار، ابتدا وارد حساب REV شوید."},401);
+ if(method!=="GET"&&!sameOrigin(request,env))return response(request,env,{success:false,error:"درخواست از مبدأ مجاز نیست."},403);
+ if(url.pathname==="/api/driver/meetup-plans"&&method==="GET"){
+  const rows=await env.DB.prepare("SELECT id,title,destination_label,participants_json,pairs_json,status,created_at FROM rev_meetup_plans WHERE creator_user_id=? ORDER BY created_at DESC LIMIT 30").bind(user.id).all();
+  return response(request,env,{success:true,plans:(rows.results||[]).map(x=>{let participants=[],pairs=[];try{participants=JSON.parse(x.participants_json||"[]")}catch{}try{pairs=JSON.parse(x.pairs_json||"[]")}catch{}return {...x,participants,pairs};})});
+ }
+ if(url.pathname==="/api/driver/meetup-plans"&&method==="POST"){
+  let b;try{b=await request.json()}catch{return response(request,env,{success:false,error:"اطلاعات برنامه معتبر نیست."},400)}
+  const title=String(b?.title||"برنامه قرار گروهی").trim().slice(0,120),destination=String(b?.destination_label||"").trim().slice(0,180);
+  if(!destination||!Array.isArray(b?.participants)||b.participants.length!==3)return response(request,env,{success:false,error:"مقصد مشترک و اطلاعات هر سه نفر الزامی است."},400);
+  const participants=[];
+  for(const p of b.participants){
+   const name=String(p?.name||"همراه").trim().slice(0,60),origin=String(p?.origin_label||"").trim().slice(0,180),lat=Number(p?.origin_lat),lon=Number(p?.origin_lon),km=Number(p?.distance_km),mins=Number(p?.duration_minutes);
+   if(!origin||!Number.isFinite(lat)||Math.abs(lat)>90||!Number.isFinite(lon)||Math.abs(lon)>180||!Number.isFinite(km)||km<0||km>10000||!Number.isFinite(mins)||mins<0||mins>100000)return response(request,env,{success:false,error:"یکی از مسیرهای شرکت‌کنندگان معتبر نیست."},400);
+   const coords=Array.isArray(p.route_coordinates)?p.route_coordinates.slice(0,350).filter(c=>Array.isArray(c)&&Number.isFinite(Number(c[0]))&&Math.abs(Number(c[0]))<=180&&Number.isFinite(Number(c[1]))&&Math.abs(Number(c[1]))<=90).map(c=>[Number(c[0]),Number(c[1])]):[];
+   participants.push({name,origin_label:origin,origin_lat:lat,origin_lon:lon,distance_km:Math.round(km*10)/10,duration_minutes:Math.round(mins),route_coordinates:coords});
+  }
+  const pairs=Array.isArray(b.pairs)?b.pairs.slice(0,3).map(p=>({a:String(p?.a||"").slice(0,60),b:String(p?.b||"").slice(0,60),km:Math.max(0,Math.min(10000,Number(p?.km)||0)),minutes:Math.max(0,Math.min(100000,Number(p?.minutes)||0))})):[];
+  const id=crypto.randomUUID(),created=new Date().toISOString();
+  await env.DB.prepare("INSERT INTO rev_meetup_plans(id,creator_user_id,title,destination_label,participants_json,pairs_json,status,created_at) VALUES(?,?,?,?,?,?,'planned',?)").bind(id,user.id,title,destination,JSON.stringify(participants),JSON.stringify(pairs),created).run();
+  return response(request,env,{success:true,id,message:"برنامه قرار گروهی ذخیره شد و در پنل مدیریت نمایش داده می‌شود."},201);
+ }
+ return response(request,env,{success:false,error:"مسیر درخواست پشتیبانی نمی‌شود."},404);
+}
 async function driverGroupsApi(request,env,url,method,user){
  if(!user)return response(request,env,{success:false,error:"برای استفاده از سفر گروهی باید وارد حساب REV شوید."},401);
  if(method!=="GET"&&!sameOrigin(request,env))return response(request,env,{success:false,error:"درخواست از مبدأ مجاز نیست."},403);
@@ -638,6 +677,10 @@ export default {
   if(method==="OPTIONS") return new Response(null,{status:204,headers:corsHeaders(request,env)});
   if(path==="/api/engagement/heartbeat" || path==="/api/announcements" || path==="/api/announcements/click" || path==="/api/announcements/view" || path==="/api/admin/engagement" || path==="/api/admin/announcements" || /^\/api\/admin\/announcements\/[0-9a-f-]{36}\/(toggle|delete)$/i.test(path)) return await engagementApi(request,env,url,method);
   try {
+   if(path==="/api/driver/meetup-plans" || path==="/api/admin/meetup-plans") {
+    const u=path==="/api/admin/meetup-plans"?null:await currentUser(request,env);
+    return await meetupPlansApi(request,env,url,method,u);
+   }
    if(path==="/api/health" && method==="GET") {
     try {
      await env.DB.prepare("SELECT 1 AS ok").first();
