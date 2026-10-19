@@ -319,5 +319,32 @@ const _defaults = {
 REVPreview.init(Object.assign({}, _defaults, window._urlCfg || {}));
 /* نمونه قدیمی حذف شد */
 </script>
+
+<script>
+// فالبک پخش ویدیو برای موبایل
+(function(){
+  var v = document.getElementById('bgvid');
+  function tryPlay(){
+    if(v && v.paused){
+      var p = v.play();
+      if(p) p.catch(function(){});
+    }
+  }
+  ['touchstart','click','touchend'].forEach(function(ev){
+    document.addEventListener(ev, tryPlay, {once:false, passive:true});
+  });
+  // تلاش اولیه
+  tryPlay();
+  setTimeout(tryPlay, 1000);
+  setTimeout(tryPlay, 3000);
+  // اگه ویدیو خطا داد، پوستر رو نگه دار
+  v.addEventListener('error', function(){
+    v.style.display = 'none';
+    document.getElementById('stage').style.background =
+      'url(https://mojtabaalimi64-cloud.github.io/rev/poster.jpg) center/cover no-repeat #000';
+  });
+})();
+</script>
+
 </body>
 </html>
