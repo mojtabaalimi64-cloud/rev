@@ -87,6 +87,7 @@
       <button class="primary" id="planBtn">محاسبه مسیر و یافتن شارژرها</button>
       <button class="secondary" id="shareTripBtn" type="button" style="width:100%;margin-top:8px">اشتراک‌گذاری این سفر</button>
       <button class="secondary" id="publishPlanExperienceBtn" type="button" style="width:100%;margin-top:8px">🧭 انتشار برنامه سفر در تجربه‌های REV</button>
+      <button class="secondary" id="videoPreviewBtn" type="button" style="width:100%;margin-top:8px">🎬 پیش‌نمایش ویدیویی سفر</button>
       <button class="primary" id="continueTripBtn" type="button" style="display:none;width:100%;margin-top:8px">تأیید برنامه و رفتن به شروع سفر</button>
       <div class="sub" id="continueTripHint" style="display:none;margin-top:6px">پس از بررسی مبدأ، مقصد و برآوردها، با ادامه‌دادن به صفحه راننده می‌روید؛ GPS فقط با فشردن دکمه شروع سفر فعال می‌شود.</div>
       <div class="status" id="status" aria-live="polite">برای شروع، دکمه محاسبه مسیر را بزنید.</div>
@@ -1032,5 +1033,31 @@ document.getElementById('openDatePicker').addEventListener('click', function(e){
 document.getElementById('departureJalali').addEventListener('click', function(e){ e.preventDefault(); JalaliPicker.open(); });
 
 </script>
+
+<script>
+document.getElementById('videoPreviewBtn').addEventListener('click', function(){
+  var origin = (document.getElementById('origin')||{}).value || '';
+  var destination = (document.getElementById('destination')||{}).value || '';
+  var params = new URLSearchParams();
+  if(origin) params.set('origin', origin);
+  if(destination) params.set('destination', destination);
+  // مختصات اگر در دسترس باشه (از متغیرهای سراسری)
+  try {
+    if(window._lastRoute && window._lastRoute.originLL) {
+      params.set('olat', window._lastRoute.originLL[0]);
+      params.set('olng', window._lastRoute.originLL[1]);
+    }
+    if(window._lastRoute && window._lastRoute.destLL) {
+      params.set('dlat', window._lastRoute.destLL[0]);
+      params.set('dlng', window._lastRoute.destLL[1]);
+    }
+    if(window._lastRoute && window._lastRoute.distanceKm) {
+      params.set('dist', window._lastRoute.distanceKm);
+    }
+  } catch(e){}
+  window.open('trip-preview.html?' + params.toString(), '_blank');
+});
+</script>
+
 </body>
 </html>
