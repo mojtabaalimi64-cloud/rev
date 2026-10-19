@@ -488,7 +488,7 @@ async function travelExperiencesApi(request,env,url,method,user) {
  }
  if(p==="/api/experiences" && method==="GET") {
   const limit=Math.max(1,Math.min(30,parseInt(url.searchParams.get("limit")||"20",10)||20));
-  const rows=await env.DB.prepare(`SELECT e.id,e.user_id,e.title,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,e.comments_enabled,u.display_name AS author_name,
+  const rows=await env.DB.prepare(`SELECT e.id,e.user_id,e.title,e.origin,e.destination,e.story,e.vehicle_name,e.distance_km,e.duration_minutes,e.energy_kwh,e.photos_json,e.created_at,e.comments_enabled,u.display_name AS author_name, up.avatar_data AS author_avatar,
    COALESCE((SELECT AVG(r.rating) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id),0) AS rating_avg,
    (SELECT COUNT(*) FROM rev_travel_experience_ratings r WHERE r.experience_id=e.id) AS rating_count,
    (SELECT COUNT(*) FROM rev_travel_experience_reactions q WHERE q.experience_id=e.id AND q.reaction_type='like') AS like_count
