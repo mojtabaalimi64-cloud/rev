@@ -480,7 +480,7 @@ async function travelExperiencesApi(request,env,url,method,user) {
   const experiences=(rows.results||[]).map(row=>{let photos=[];try{photos=JSON.parse(row.photos_json||"[]");}catch{}const {photos_json,...safe}=row;return {...safe,photos,comments:(byId[row.id]||[]).slice(-10)};});
   return response(request,env,{success:true,experiences});
  }
- const one=p.match(/^\/api\/experiences\/([A-Za-z0-9_-]{1,80})(?:\/(comments|rating))?$/);
+ const one=p.match(/^\/api\/experiences\/([A-Za-z0-9_-]{1,80})(?:\/(comments|rating|like|bookmark))?$/);
  if(p==="/api/experiences" && method==="POST") {
   if(!user)return response(request,env,{success:false,error:"برای انتشار تجربه ابتدا وارد حساب REV شوید."},401);
   if(!sameOrigin(request,env))return response(request,env,{success:false,error:"مبدأ درخواست مجاز نیست."},403);
@@ -565,7 +565,7 @@ export default {
     }
    }
    if(path==="/api/auth/status" && method==="GET") return response(request,env,{success:true,enabled:await enabled(env),emailConfigured:!!(env.RESEND_API_KEY&&env.EMAIL_FROM&&env.SITE_URL),smsConfigured:!!(env.MELIPAYAMAK_USERNAME&&env.MELIPAYAMAK_PASSWORD),smsPatternConfigured:!!(env.MELIPAYAMAK_OTP_BODY_ID||"557785")});
-   if(path==="/api/experiences" || /^\/api\/experiences\/[A-Za-z0-9_-]{1,80}(?:\/(comments|rating))?$/.test(path)) { const user=method==="GET"?null:await currentUser(request,env); return await travelExperiencesApi(request,env,url,method,user); }
+   if(path==="/api/experiences" || /^\/api\/experiences\/[A-Za-z0-9_-]{1,80}(?:\/(comments|rating|like|bookmark))?$/.test(path)) { const user=method==="GET"?null:await currentUser(request,env); return await travelExperiencesApi(request,env,url,method,user); }
    if(path==="/api/driver/groups" || path==="/api/driver/groups/code" || path==="/api/driver/groups/settings" || path==="/api/driver/notifications" || path==="/api/driver/notifications/read" || /^\/api\/driver\/groups\/[0-9a-f-]{36}\/(respond|location|end)$/i.test(path)) { const user=await currentUser(request,env); return await driverGroupsApi(request,env,url,method,user); }
    if(path==="/api/driver/shares" || path==="/api/driver/shares/view" || /^\/api\/driver\/shares\/[0-9a-f-]{36}\/(location|revoke)$/i.test(path)) {
     const user=path==="/api/driver/shares/view" ? null : await currentUser(request,env);
