@@ -170,7 +170,7 @@ async function ensureDriverTripsSchema(env) {
     vehicle_type TEXT NOT NULL DEFAULT 'bev' CHECK (vehicle_type IN ('bev','phev','hev','mhev')),
     started_at TEXT NOT NULL,
     ended_at TEXT NOT NULL,
-    distance_km REAL NOT NULL CHECK (distance_km > 0 AND distance_km <= 5000),
+    distance_km REAL NOT NULL CHECK (distance_km >= 0 AND distance_km <= 5000),
     energy_kwh REAL NOT NULL CHECK (energy_kwh >= 0 AND energy_kwh <= 2000),
     start_soc REAL CHECK (start_soc IS NULL OR (start_soc >= 0 AND start_soc <= 100)),
     end_soc REAL CHECK (end_soc IS NULL OR (end_soc >= 0 AND end_soc <= 100)),
@@ -339,7 +339,7 @@ async function driverTripsApi(request, env, url, method, user) {
     const routeJson = saveRoute && points.length ? JSON.stringify(points.filter(p=>p && Number.isFinite(Number(p.lat)) && Math.abs(Number(p.lat))<=90 && Number.isFinite(Number(p.lon)) && Math.abs(Number(p.lon))<=180).map(p=>({lat:Number(p.lat),lon:Number(p.lon),ts:Number(p.ts)||null,accuracy:Number.isFinite(Number(p.accuracy))?Number(p.accuracy):null,speed_kmh:Number.isFinite(Number(p.speed_kmh))?Math.max(0,Math.min(350,Number(p.speed_kmh))):null}))) : null;
     const ds=body.driving_stats&&typeof body.driving_stats==="object"&&!Array.isArray(body.driving_stats)?body.driving_stats:{};
     const drivingStats={max_speed_kmh:boundedMetric(ds.max_speed_kmh,0,350),average_speed_kmh:boundedMetric(ds.average_speed_kmh,0,250),gps_speed_sample_count:boundedMetric(ds.gps_speed_sample_count,0,5000),hard_acceleration_events:boundedMetric(ds.hard_acceleration_events,0,10000),hard_braking_events:boundedMetric(ds.hard_braking_events,0,10000),speed_source:"phone_gps",estimated:true};
-    if (!Number.isFinite(distance) || distance <= 0 || distance > 5000 || !Number.isFinite(energy) || energy < 0 || energy > 2000 || !validIsoDate(started) || !validIsoDate(ended) || Date.parse(ended) < Date.parse(started) || !validOptionalSoc(body.start_soc) || !validOptionalSoc(body.end_soc)) {
+    if (!Number.isFinite(distance) || distance < 0 || distance > 5000 || !Number.isFinite(energy) || energy < 0 || energy > 2000 || !validIsoDate(started) || !validIsoDate(ended) || Date.parse(ended) < Date.parse(started) || !validOptionalSoc(body.start_soc) || !validOptionalSoc(body.end_soc)) {
       return response(request,env,{success:false,error:"اطلاعات سفر معتبر نیست؛ مسافت، انرژی، زمان‌ها و درصد باتری را بررسی کنید."},400);
     }
     const id = crypto.randomUUID(), now = new Date().toISOString();
