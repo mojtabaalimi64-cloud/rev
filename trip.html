@@ -15,6 +15,23 @@
 .planner-tab.active{background:#fff;color:#087fcb;border-color:#d5e8f5;box-shadow:0 2px 7px rgba(20,41,59,.07)}
 .planner-tab-panel[hidden]{display:none!important}
 .planner-settings-title{font-size:17px;margin:2px 0 4px;font-weight:900}
+
+.route-visual-panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin:0 0 14px;box-shadow:var(--shadow)}
+.route-visual-panel h2{font-size:16px;margin:0 0 4px}
+.route-map-box{position:relative;background:#f2f7fa;border:1px solid #dce8ef;border-radius:14px;overflow:hidden;margin:12px 0 14px}
+.route-map-box svg{display:block;width:100%;height:auto;min-height:170px}
+.route-map-legend{display:flex;flex-wrap:wrap;gap:8px;font-size:10px;padding:8px 10px;background:#fff;border-top:1px solid var(--line)}
+.route-legend-item{display:flex;align-items:center;gap:5px}.route-legend-dot{width:9px;height:9px;border-radius:50%;display:inline-block}
+.route-choice-list{display:grid;gap:8px}
+.route-choice{display:block;width:100%;text-align:right;border:1px solid var(--line);background:#fff;border-radius:13px;padding:12px;cursor:pointer;color:var(--text)}
+.route-choice.selected{border:2px solid #1684e8;background:#f2f8ff;box-shadow:0 3px 12px #1684e81c}
+.route-choice-head{display:flex;align-items:center;justify-content:space-between;gap:8px}.route-choice-title{font-weight:900;font-size:13px}.route-choice-badge{font-size:10px;color:#087fcb;background:#e8f3ff;border-radius:99px;padding:3px 8px}
+.route-choice-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;margin-top:9px}
+.route-choice-metric{background:#f5f8fa;border-radius:9px;padding:7px}.route-choice-metric small{display:block;font-size:9px;color:var(--muted)}.route-choice-metric b{font-size:12px}
+.route-choice-forecast{font-size:11px;color:#53697b;line-height:1.8;margin-top:8px}.route-choice-foot{font-size:10px;color:var(--muted);margin-top:5px}
+.route-elevation{width:100%;height:100px;display:block;background:linear-gradient(180deg,#f3f9ff,#fff);border:1px solid var(--line);border-radius:12px;margin:8px 0}.route-visual-note{font-size:10px;color:var(--muted);line-height:1.8}
+@media(min-width:700px){.route-choice-list{grid-template-columns:1fr 1fr}}
+
 </style>
 
 
@@ -124,6 +141,16 @@
 <div class="plan-summary-metric"><small>توقف شارژ</small><b id="sumStops">—</b></div>
 <div class="plan-summary-metric"><small>رسیدن تخمینی</small><b id="sumArrival">—</b></div>
 </div>
+</section>
+<section class="route-visual-panel" id="routeVisualPanel" hidden>
+  <h2>🧭 مقایسه تصویری مسیرها</h2>
+  <div class="sub">مسیرها را روی نمای کلی انتخاب کن؛ زمان، هواشناسی و برآورد ارتفاع هر گزینه با انتخاب مسیر دوباره محاسبه می‌شود.</div>
+  <div class="route-map-box" id="routeOverviewMap" aria-label="نمای کلی مسیرهای جایگزین"></div>
+  <h2 style="font-size:14px;margin-top:8px">پیش‌بینی و مقایسه ۴ مسیر</h2>
+  <div class="route-choice-list" id="routeChoiceList"><div class="sub">در حال آماده‌سازی گزینه‌ها…</div></div>
+  <h2 style="font-size:14px;margin-top:14px">پروفایل ارتفاعی مسیر انتخاب‌شده</h2>
+  <svg class="route-elevation" id="routeElevationChart" viewBox="0 0 600 100" role="img" aria-label="نمودار ارتفاع مسیر"><text x="300" y="52" text-anchor="middle" fill="#7e93a6" font-size="13">پس از دریافت داده ارتفاع نمایش داده می‌شود</text></svg>
+  <div class="route-visual-note">برآورد هواشناسی بر اساس پیش‌بینی نزدیک مسیر و زمان تقریبی عبور است. ارتفاع از داده‌های مدل ارتفاعی تخمین زده می‌شود؛ تعداد گزینه‌های واقعی را سرویس مسیریابی تعیین می‌کند و ممکن است کمتر از چهار مسیر برگرداند.</div>
 </section>
 <div class="plan-actions" id="planActions">
 <button type="button" class="pa-map" id="viewOnMapBtn">🗺 نقشه</button>
