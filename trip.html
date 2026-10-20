@@ -69,8 +69,6 @@
       <div class="sub">مبدأ، مقصد و مشخصات باتری را وارد کنید تا مسیر، شارژرهای ثبت‌شده و توقف‌های پیشنهادی محاسبه شوند.</div>
       <label for="origin">مبدأ</label><input id="origin" placeholder="مثلاً تهران، میدان آزادی" value="">
       <label for="destination">مقصد</label><input id="destination" placeholder="مثلاً اصفهان، میدان نقش جهان" value=""><div class="grid2"><div><label for="departureJalali">تاریخ حرکت (شمسی)</label><div class="datePickerWrap"><input id="departureJalali" type="text" placeholder="انتخاب تاریخ شمسی" autocomplete="off" required readonly aria-haspopup="dialog"><button type="button" id="openDatePicker" class="pickerButton" aria-label="باز کردن تقویم">▦</button></div><input id="departure" type="hidden"></div><div><label for="departureClock">ساعت حرکت</label><input id="departureClock" type="time" required aria-label="ساعت حرکت"><label for="weatherModel">منبع هواشناسی</label><select id="weatherModel"><option value="auto" selected>پیش‌بینی خودکار</option></select></div></div><dialog id="calendarDialog" class="calendarDialog" aria-label="تقویم شمسی"><div class="calendarHeader"><button type="button" id="prevMonth" aria-label="ماه قبل">‹</button><strong id="calendarTitle">انتخاب تاریخ</strong><button type="button" id="nextMonth" aria-label="ماه بعد">›</button></div><div class="calendarGrid" id="calendarGrid"></div><div class="calendarActions"><button type="button" id="calendarToday">امروز</button><button type="button" id="calendarCancel">انصراف</button></div></dialog><div class="sub" style="margin-top:6px">آب‌وهوا بر اساس زمان عبور تخمینی از نقاط مسیر دریافت می‌شود؛ باد به‌صورت خودکار تحلیل می‌شود.</div>
-      </div>
-      <div id="plannerPanelSettings" class="planner-tab-panel" role="tabpanel" aria-labelledby="plannerTabSettings" hidden>
       <h2 class="planner-settings-title">تنظیمات خودرو و مسیر</h2>
       <p class="sub">نوع خودرو، مشخصات انرژی، اولویت جاده‌ها و فاصله قابل‌قبول خدمات را اینجا تنظیم کن.</p>
       <label for="vehicleType">نوع خودرو</label>
@@ -109,6 +107,10 @@
         <div class="sub">برای هیبرید شارژی، بخش برقی و بنزینی جداگانه برآورد می‌شوند. در هیبرید معمولی و ملایم، شارژر عمومی برای ادامه سفر الزامی نیست.</div>
       </section>
 
+      <label for="radius">فاصله قابل‌قبول شارژر از مسیر</label>
+      <select id="radius"><option value="5">۵ کیلومتر</option><option value="10">۱۰ کیلومتر</option><option value="20">۲۰ کیلومتر</option><option value="30">۳۰ کیلومتر</option><option value="50" selected>۵۰ کیلومتر</option></select><div class="sub" style="margin-top:6px">این محدوده برای ایستگاه‌های شارژ، تعمیرگاه‌ها و فروشگاه‌های ثبت‌شده اعمال می‌شود. پوشش داده‌ها به اطلاعات در دسترس بستگی دارد.</div>
+      </div>
+      <div id="plannerPanelSettings" class="planner-tab-panel" role="tabpanel" aria-labelledby="plannerTabSettings" hidden>
       <details class="route-preferences" open>
         <summary>⚙️ ترجیحات مسیریابی <span class="sub">شخصی‌سازی مسیر</span></summary>
         <div class="route-pref-row"><div><strong>اولویت جاده‌های اصلی و بین‌شهری</strong><small>در انتخاب بین مسیرهای جایگزین، مسیرهای دارای نشانه‌های بزرگراهی و جاده‌های اصلی ترجیح داده می‌شوند.</small></div><label class="ios-switch"><input id="routeMajorRoads" type="checkbox" checked><span></span></label></div>
@@ -116,8 +118,7 @@
         <div class="route-pref-row"><div><strong>پرهیز از مسیرهای محلی و فرعی</strong><small>تا جایی که داده‌های نقشه اجازه دهند، مسیرهای دارای نشانه‌های محلی یا کم‌اهمیت امتیاز کمتری می‌گیرند.</small></div><label class="ios-switch"><input id="routeAvoidLocal" type="checkbox"><span></span></label></div>
         <div class="sub route-pref-note">REV چند مسیر جایگزین را بررسی می‌کند؛ کیفیت انتخاب به اطلاعات OpenStreetMap و محدودیت سرویس عمومی OSRM وابسته است و تضمین نمی‌کند همه جاده‌ها دقیقاً طبقه‌بندی شده باشند.</div>
       </details>
-      <label for="radius">فاصله قابل‌قبول شارژر از مسیر</label>
-      <select id="radius"><option value="5">۵ کیلومتر</option><option value="10">۱۰ کیلومتر</option><option value="20">۲۰ کیلومتر</option><option value="30">۳۰ کیلومتر</option><option value="50" selected>۵۰ کیلومتر</option></select><div class="sub" style="margin-top:6px">این محدوده برای ایستگاه‌های شارژ، تعمیرگاه‌ها و فروشگاه‌های ثبت‌شده اعمال می‌شود. پوشش داده‌ها به اطلاعات در دسترس بستگی دارد.</div>
+
       </div>
       <button class="primary" id="planBtn">محاسبه مسیر و یافتن شارژرها</button>
       <button class="secondary" id="shareTripBtn" type="button" style="width:100%;margin-top:8px">اشتراک‌گذاری این سفر</button>
@@ -964,10 +965,14 @@ body.rev-result-only .plan-summary{margin-top:0}
  var routeOnlyAfterSettings=[];
  var routeOnlyNode=settingsPanel.nextElementSibling;
  while(routeOnlyNode){routeOnlyAfterSettings.push(routeOnlyNode);routeOnlyNode=routeOnlyNode.nextElementSibling;}
+ var outsidePlanner=[];
+ ['savedPlansCard','planSummary','routeVisualPanel','planActions'].forEach(function(id){var el=document.getElementById(id);if(el)outsidePlanner.push(el);});
+ var mainPanel=document.querySelector('.layout>main.panel');if(mainPanel)outsidePlanner.push(mainPanel);
  function showPlannerTab(which){
    var settings=which==='settings';
    routePanel.hidden=settings;settingsPanel.hidden=!settings;
    routeOnlyAfterSettings.forEach(function(node){node.hidden=settings;});
+   outsidePlanner.forEach(function(node){node.hidden=settings;});
    routeTab.classList.toggle('active',!settings);settingsTab.classList.toggle('active',settings);
    routeTab.setAttribute('aria-selected',String(!settings));settingsTab.setAttribute('aria-selected',String(settings));
  }
