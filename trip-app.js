@@ -14,6 +14,7 @@ L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
 const routeLayer = L.layerGroup().addTo(map);
 const stationLayer = L.layerGroup().addTo(map);
 const businessLayer = L.layerGroup().addTo(map);
+window.revAltRouteLayer=L.layerGroup().addTo(map);
 function setMapLayerVisibility(layer,visible){if(visible){if(!map.hasLayer(layer))layer.addTo(map)}else if(map.hasLayer(layer)){map.removeLayer(layer)}}
 
 let lastRoute = null;
@@ -75,13 +76,25 @@ function renderRouteVisuals(routes, selectedRoute){
   const colors=["#1684e8","#f59e0b","#10a477","#8b5cf6"];
   const all=routes.map(r=>r.geometry.coordinates||[]).filter(a=>a.length);
   const pts=all.flat(); if(!pts.length)return;
-  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),minX=xs.reduce((m,v)=>Math.min(m,v),Infinity),maxX=xs.reduce((m,v)=>Math.max(m,v),-Infinity),minY=ys.reduce((m,v)=>Math.min(m,v),Infinity),maxY=ys.reduce((m,v)=>Math.max(m,v),-Infinity);
   const xy=p=>[20+(p[0]-minX)/((maxX-minX)||1)*560,220-(p[1]-minY)/((maxY-minY)||1)*190];
   let svg='<svg viewBox="0 0 600 240" role="img" aria-label="نمای شماتیک مسیرهای جایگزین"><path d="M0 40 Q150 10 300 80 T600 30 M0 190 Q160 130 280 190 T600 150" stroke="#dce8ef" stroke-width="1" fill="none"/>';
   all.forEach((coords,i)=>{const path=coords.filter((_,n)=>n%Math.max(1,Math.floor(coords.length/300))===0||n===coords.length-1).map((p,n)=>{const q=xy(p);return(n?'L':'M')+q[0].toFixed(1)+','+q[1].toFixed(1)}).join(' ');svg+='<path d="'+path+'" fill="none" stroke="'+colors[i%4]+'" stroke-width="'+(routes[i]===selectedRoute?6:3)+'" stroke-linecap="round" stroke-linejoin="round" opacity="'+(routes[i]===selectedRoute?1:.65)+'"/>';});
   const start=xy(all[0][0]),end=xy(all[0][all[0].length-1]);
   svg+='<circle cx="'+start[0]+'" cy="'+start[1]+'" r="7" fill="#16a34a" stroke="#fff" stroke-width="3"/><circle cx="'+end[0]+'" cy="'+end[1]+'" r="7" fill="#dc2626" stroke="#fff" stroke-width="3"/><text x="'+Math.min(550,start[0]+10)+'" y="'+Math.max(15,start[1]-10)+'" font-size="12" fill="#166534">مبدأ</text><text x="'+Math.min(550,end[0]+10)+'" y="'+Math.max(15,end[1]-10)+'" font-size="12" fill="#991b1b">مقصد</text></svg><div class="route-map-legend">'+routes.map((r,i)=>'<span class="route-legend-item"><i class="route-legend-dot" style="background:'+colors[i%4]+'"></i>مسیر '+(i+1)+(r===selectedRoute?' ✓':'')+'</span>').join('')+'</div>';
   mapBox.innerHTML=svg;
+  try{
+    if(window.revAltRouteLayer&&window.L){
+      window.revAltRouteLayer.clearLayers();
+      routes.forEach((r,i)=>{const cc=(r.geometry.coordinates||[]).map(p=>[p[1],p[0]]);if(cc.length>1)L.polyline(cc,{color:colors[i%4],weight:r===selectedRoute?7:4,opacity:r===selectedRoute?1:.72}).addTo(window.revAltRouteLayer);});
+      const first=(routes[0].geometry.coordinates||[]);if(first.length>1){
+        L.marker([first[0][1],first[0][0]]).addTo(window.revAltRouteLayer).bindPopup("مبدأ");
+        const last=first[first.length-1];L.marker([last[1],last[0]]).addTo(window.revAltRouteLayer).bindPopup("مقصد");
+        map.fitBounds(L.latLngBounds(routes.flatMap(r=>(r.geometry.coordinates||[]).filter((_,n)=>n%Math.max(1,Math.floor((r.geometry.coordinates||[]).length/250))===0).map(p=>[p[1],p[0]]))),{padding:[20,20]});
+        setTimeout(()=>map.invalidateSize(),120);
+      }
+    }
+  }catch(mapError){console.warn("REV route map:",mapError);}
   list.innerHTML=routes.map((r,i)=>'<button type="button" class="route-choice '+(r===selectedRoute?'selected':'')+'" data-route-choice="'+i+'"><div class="route-choice-head"><span class="route-choice-title">مسیر '+(i+1)+(i===0?' · پیشنهاد اولیه':'')+'</span>'+(r===selectedRoute?'<span class="route-choice-badge">انتخاب‌شده</span>':'<span class="route-choice-badge">انتخاب مسیر</span>')+'</div><div class="route-choice-metrics"><div class="route-choice-metric"><small>مسافت</small><b>'+Math.round(r.distance/1000).toLocaleString('fa-IR')+' km</b></div><div class="route-choice-metric"><small>زمان رانندگی</small><b>'+fmtDuration(r.duration)+'</b></div><div class="route-choice-metric"><small>اختلاف با کوتاه‌ترین</small><b>+'+Math.max(0,Math.round(r.distance/1000-routes.reduce((m,x)=>Math.min(m,x.distance/1000),Infinity))).toLocaleString('fa-IR')+' km</b></div></div><div class="route-choice-forecast" id="routeForecast'+i+'">در حال محاسبه آب‌وهوا و ارتفاع…</div></button>').join('');
   list.querySelectorAll('[data-route-choice]').forEach(btn=>btn.addEventListener('click',()=>{const i=Number(btn.dataset.routeChoice);if(!Number.isFinite(i)||routes[i]===selectedRoute)return;window.revSelectedRouteIndex=i;planTrip();}));
   const selectedCoords=selectedRoute.geometry.coordinates||[];
