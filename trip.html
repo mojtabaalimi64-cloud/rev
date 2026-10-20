@@ -961,9 +961,13 @@ body.rev-result-only .plan-summary{margin-top:0}
  var routeTab=document.getElementById('plannerTabRoute'),settingsTab=document.getElementById('plannerTabSettings');
  var routePanel=document.getElementById('plannerPanelRoute'),settingsPanel=document.getElementById('plannerPanelSettings');
  if(!routeTab||!settingsTab||!routePanel||!settingsPanel)return;
+ var routeOnlyAfterSettings=[];
+ var routeOnlyNode=settingsPanel.nextElementSibling;
+ while(routeOnlyNode){routeOnlyAfterSettings.push(routeOnlyNode);routeOnlyNode=routeOnlyNode.nextElementSibling;}
  function showPlannerTab(which){
    var settings=which==='settings';
    routePanel.hidden=settings;settingsPanel.hidden=!settings;
+   routeOnlyAfterSettings.forEach(function(node){node.hidden=settings;});
    routeTab.classList.toggle('active',!settings);settingsTab.classList.toggle('active',settings);
    routeTab.setAttribute('aria-selected',String(!settings));settingsTab.setAttribute('aria-selected',String(settings));
  }
