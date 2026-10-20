@@ -968,6 +968,16 @@ body.rev-result-only .plan-summary{margin-top:0}
    routePanel.hidden=settings;settingsPanel.hidden=!settings;
    routeOnlyAfterSettings.forEach(function(node){node.hidden=settings;});
    outsidePlanner.forEach(function(node){node.hidden=settings;});
+   // همه ابزارهای وابسته به مسیر باید فقط در تب «مسیر سفر» دیده شوند.
+   ['planBtn','shareTripBtn','publishPlanExperienceBtn','videoPreviewBtn',
+    'continueTripBtn','continueTripHint','status','resultsDetails'].forEach(function(id){
+      var el=document.getElementById(id);
+      if(el) el.hidden=settings;
+   });
+   var stats=document.querySelector('.layout>aside .stats');
+   var warning=document.querySelector('.layout>aside .warning');
+   if(stats) stats.hidden=settings;
+   if(warning) warning.hidden=settings;
    routeTab.classList.toggle('active',!settings);settingsTab.classList.toggle('active',settings);
    routeTab.setAttribute('aria-selected',String(!settings));settingsTab.setAttribute('aria-selected',String(settings));
  }
