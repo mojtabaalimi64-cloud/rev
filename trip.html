@@ -18,6 +18,7 @@
 .planner-settings-title{font-size:17px;margin:2px 0 4px;font-weight:900}
 
 .route-visual-panel{background:#fff;border:1px solid var(--line);border-radius:18px;padding:14px;margin:0 0 14px;box-shadow:var(--shadow)}
+.route-visual-panel{padding:0;overflow:hidden}#map{height:min(72vh,760px)!important;min-height:420px;width:100%;border-radius:18px;touch-action:pan-x pan-y}.leaflet-overlay-pane path{cursor:pointer;pointer-events:stroke}
 .route-visual-panel h2{font-size:16px;margin:0 0 4px}
 .route-map-box{position:relative;background:#f2f7fa;border:1px solid #dce8ef;border-radius:14px;overflow:hidden;margin:12px 0 14px}
 .route-map-box svg{display:block;width:100%;height:auto;min-height:170px}
@@ -145,15 +146,8 @@
 <div class="plan-summary-metric"><small>رسیدن تخمینی</small><b id="sumArrival">—</b></div>
 </div>
 </section>
-<section class="route-visual-panel" id="routeVisualPanel" hidden>
-  <h2>🧭 مقایسه تصویری مسیرها</h2>
-  <div class="sub">مسیرها را روی نمای کلی انتخاب کن؛ زمان، هواشناسی و برآورد ارتفاع هر گزینه با انتخاب مسیر دوباره محاسبه می‌شود.</div>
-  <div id="map" aria-label="نقشه تعاملی مسیرهای جایگزین"></div><div class="route-map-box" id="routeOverviewMap" aria-label="نمای کلی شماتیک مسیرهای جایگزین"></div>
-  <h2 style="font-size:14px;margin-top:8px">پیش‌بینی و مقایسه ۴ مسیر</h2>
-  <div class="route-choice-list" id="routeChoiceList"><div class="sub">در حال آماده‌سازی گزینه‌ها…</div></div>
-  <h2 style="font-size:14px;margin-top:14px">پروفایل ارتفاعی مسیر انتخاب‌شده</h2>
-  <svg class="route-elevation" id="routeElevationChart" viewBox="0 0 600 100" role="img" aria-label="نمودار ارتفاع مسیر"><text x="300" y="52" text-anchor="middle" fill="#7e93a6" font-size="13">پس از دریافت داده ارتفاع نمایش داده می‌شود</text></svg>
-  <div class="route-visual-note">برآورد هواشناسی بر اساس پیش‌بینی نزدیک مسیر و زمان تقریبی عبور است. ارتفاع از داده‌های مدل ارتفاعی تخمین زده می‌شود؛ تعداد گزینه‌های واقعی را سرویس مسیریابی تعیین می‌کند و ممکن است کمتر از چهار مسیر برگرداند.</div>
+<section class="route-visual-panel" id="routeVisualPanel" hidden aria-label="نقشه انتخاب مسیر">
+  <div id="map" aria-label="نقشه تعاملی؛ برای انتخاب مسیر جایگزین روی خط آن لمس کنید"></div>
 </section>
 <div class="plan-actions" id="planActions">
 <button type="button" class="pa-map" id="viewOnMapBtn">🗺 نقشه</button>
