@@ -70,37 +70,40 @@ async function getRoute(start,end){
   return selected;
 }
 function renderRouteVisuals(routes, selectedRoute){
-  const panel=$("routeVisualPanel"), mapBox=$("routeOverviewMap"), list=$("routeChoiceList"), elev=$("routeElevationChart");
-  if(!panel||!mapBox||!list||!routes||!routes.length)return;
+  const panel=$("routeVisualPanel");
+  if(!panel||!routes||!routes.length||!window.revAltRouteLayer||!window.L)return;
   panel.hidden=false;
   const colors=["#1684e8","#f59e0b","#10a477","#8b5cf6"];
-  const all=routes.map(r=>r.geometry.coordinates||[]).filter(a=>a.length);
-  const pts=all.flat(); if(!pts.length)return;
-  const xs=pts.map(p=>p[0]),ys=pts.map(p=>p[1]),minX=xs.reduce((m,v)=>Math.min(m,v),Infinity),maxX=xs.reduce((m,v)=>Math.max(m,v),-Infinity),minY=ys.reduce((m,v)=>Math.min(m,v),Infinity),maxY=ys.reduce((m,v)=>Math.max(m,v),-Infinity);
-  const xy=p=>[20+(p[0]-minX)/((maxX-minX)||1)*560,220-(p[1]-minY)/((maxY-minY)||1)*190];
-  let svg='<svg viewBox="0 0 600 240" role="img" aria-label="نمای شماتیک مسیرهای جایگزین"><path d="M0 40 Q150 10 300 80 T600 30 M0 190 Q160 130 280 190 T600 150" stroke="#dce8ef" stroke-width="1" fill="none"/>';
-  all.forEach((coords,i)=>{const path=coords.filter((_,n)=>n%Math.max(1,Math.floor(coords.length/300))===0||n===coords.length-1).map((p,n)=>{const q=xy(p);return(n?'L':'M')+q[0].toFixed(1)+','+q[1].toFixed(1)}).join(' ');svg+='<path d="'+path+'" fill="none" stroke="'+colors[i%4]+'" stroke-width="'+(routes[i]===selectedRoute?6:3)+'" stroke-linecap="round" stroke-linejoin="round" opacity="'+(routes[i]===selectedRoute?1:.65)+'"/>';});
-  const start=xy(all[0][0]),end=xy(all[0][all[0].length-1]);
-  svg+='<circle cx="'+start[0]+'" cy="'+start[1]+'" r="7" fill="#16a34a" stroke="#fff" stroke-width="3"/><circle cx="'+end[0]+'" cy="'+end[1]+'" r="7" fill="#dc2626" stroke="#fff" stroke-width="3"/><text x="'+Math.min(550,start[0]+10)+'" y="'+Math.max(15,start[1]-10)+'" font-size="12" fill="#166534">مبدأ</text><text x="'+Math.min(550,end[0]+10)+'" y="'+Math.max(15,end[1]-10)+'" font-size="12" fill="#991b1b">مقصد</text></svg><div class="route-map-legend">'+routes.map((r,i)=>'<span class="route-legend-item"><i class="route-legend-dot" style="background:'+colors[i%4]+'"></i>مسیر '+(i+1)+(r===selectedRoute?' ✓':'')+'</span>').join('')+'</div>';
-  mapBox.innerHTML=svg;
-  try{
-    if(window.revAltRouteLayer&&window.L){
-      window.revAltRouteLayer.clearLayers();
-      routes.forEach((r,i)=>{const cc=(r.geometry.coordinates||[]).map(p=>[p[1],p[0]]);if(cc.length>1)L.polyline(cc,{color:colors[i%4],weight:r===selectedRoute?7:4,opacity:r===selectedRoute?1:.72}).addTo(window.revAltRouteLayer);});
-      const first=(routes[0].geometry.coordinates||[]);if(first.length>1){
-        L.marker([first[0][1],first[0][0]]).addTo(window.revAltRouteLayer).bindPopup("مبدأ");
-        const last=first[first.length-1];L.marker([last[1],last[0]]).addTo(window.revAltRouteLayer).bindPopup("مقصد");
-        map.fitBounds(L.latLngBounds(routes.flatMap(r=>(r.geometry.coordinates||[]).filter((_,n)=>n%Math.max(1,Math.floor((r.geometry.coordinates||[]).length/250))===0).map(p=>[p[1],p[0]]))),{padding:[20,20]});
-        setTimeout(()=>map.invalidateSize(),120);
-      }
-    }
-  }catch(mapError){console.warn("REV route map:",mapError);}
-  list.innerHTML=routes.map((r,i)=>'<button type="button" class="route-choice '+(r===selectedRoute?'selected':'')+'" data-route-choice="'+i+'"><div class="route-choice-head"><span class="route-choice-title">مسیر '+(i+1)+(i===0?' · پیشنهاد اولیه':'')+'</span>'+(r===selectedRoute?'<span class="route-choice-badge">انتخاب‌شده</span>':'<span class="route-choice-badge">انتخاب مسیر</span>')+'</div><div class="route-choice-metrics"><div class="route-choice-metric"><small>مسافت</small><b>'+Math.round(r.distance/1000).toLocaleString('fa-IR')+' km</b></div><div class="route-choice-metric"><small>زمان رانندگی</small><b>'+fmtDuration(r.duration)+'</b></div><div class="route-choice-metric"><small>اختلاف با کوتاه‌ترین</small><b>+'+Math.max(0,Math.round(r.distance/1000-routes.reduce((m,x)=>Math.min(m,x.distance/1000),Infinity))).toLocaleString('fa-IR')+' km</b></div></div><div class="route-choice-forecast" id="routeForecast'+i+'">در حال محاسبه آب‌وهوا و ارتفاع…</div></button>').join('');
-  list.querySelectorAll('[data-route-choice]').forEach(btn=>btn.addEventListener('click',()=>{const i=Number(btn.dataset.routeChoice);if(!Number.isFinite(i)||routes[i]===selectedRoute)return;window.revSelectedRouteIndex=i;planTrip();}));
-  const selectedCoords=selectedRoute.geometry.coordinates||[];
-  const samples=[];for(let i=0;i<8;i++){const p=selectedCoords[Math.round(i*(selectedCoords.length-1)/7)];if(p)samples.push(p);}
-  if(samples.length){fetch('https://api.open-meteo.com/v1/elevation?latitude='+samples.map(p=>p[1]).join(',')+'&longitude='+samples.map(p=>p[0]).join(',')).then(r=>r.json()).then(d=>{if(!d.elevation||!d.elevation.length)return;const vals=d.elevation,mn=Math.min(...vals),mx=Math.max(...vals),range=(mx-mn)||1;let path='M0,92 ';vals.forEach((v,i)=>path+='L'+(i/(vals.length-1)*600).toFixed(1)+','+(88-(v-mn)/range*68).toFixed(1)+' ');path+='L600,100 L0,100 Z';elev.innerHTML='<path d="'+path+'" fill="#b9e0fa" opacity=".8"/><path d="'+path.replace(/L600,100 L0,100 Z$/,'')+'" fill="none" stroke="#1684e8" stroke-width="3"/><text x="8" y="15" font-size="11" fill="#48677d">'+Math.round(mx)+' m</text><text x="8" y="94" font-size="11" fill="#48677d">'+Math.round(mn)+' m</text>';}).catch(()=>{});}
-  routes.forEach((r,i)=>{const c=r.geometry.coordinates||[];if(!c.length)return;const p=c[Math.floor(c.length/2)];const target=$("routeForecast"+i);if(!target)return;const dep=$("departure").value,clock=$("departureClock").value;const dt=new Date((dep||new Date().toISOString().slice(0,10))+'T'+(clock||'12:00')+':00');dt.setTime(dt.getTime()+r.duration*500);const lat=p[1],lon=p[0];fetch('https://api.open-meteo.com/v1/forecast?latitude='+lat+'&longitude='+lon+'&hourly=temperature_2m,precipitation_probability,wind_speed_10m,wind_gusts_10m,weather_code&forecast_days=7&timezone=auto').then(x=>x.json()).then(w=>{const times=w.hourly&&w.hourly.time||[];if(!times.length)throw 0;let best=0,delta=Infinity;times.forEach((t,j)=>{const d=Math.abs(new Date(t).getTime()-dt.getTime());if(d<delta){delta=d;best=j;}});const h=w.hourly;target.textContent='نقطه میانی: '+Math.round(h.temperature_2m[best])+'°C · باد '+Math.round(h.wind_speed_10m[best])+' km/h · بارش '+(h.precipitation_probability[best]??'—')+'٪ · تندباد '+Math.round(h.wind_gusts_10m[best])+' km/h';}).catch(()=>{target.textContent='پیش‌بینی هوا برای این مسیر فعلاً در دسترس نیست؛ زمان و مسافت بر اساس سرویس مسیریابی است.'});});
+  const usable=routes.map((route,index)=>({route,index,coords:route.geometry&&route.geometry.coordinates||[]})).filter(x=>x.coords.length>1);
+  if(!usable.length)return;
+  window.revAltRouteLayer.clearLayers();
+  usable.forEach(({route,index,coords})=>{
+    const selected=route===selectedRoute;
+    const line=L.polyline(coords.map(p=>[p[1],p[0]]),{
+      color:colors[index%colors.length],
+      weight:selected?9:6,
+      opacity:selected?1:.78,
+      lineCap:"round",
+      lineJoin:"round",
+      bubblingMouseEvents:false,
+      interactive:true
+    }).addTo(window.revAltRouteLayer);
+    line.on("click",function(){
+      if(route===lastRoute||route===selectedRoute)return;
+      window.revSelectedRouteIndex=index;
+      planTrip();
+    });
+    line.on("mouseover",function(){if(!selected)line.setStyle({weight:9,opacity:1});});
+    line.on("mouseout",function(){if(!selected)line.setStyle({weight:6,opacity:.78});});
+    line.bindTooltip("مسیر "+(index+1)+(selected?" · انتخاب‌شده":" · برای انتخاب لمس کنید"),{sticky:true,direction:"top"});
+  });
+  const first=usable[0].coords;
+  const last=first[first.length-1];
+  L.marker([first[0][1],first[0][0]]).addTo(window.revAltRouteLayer).bindPopup("مبدأ");
+  L.marker([last[1],last[0]]).addTo(window.revAltRouteLayer).bindPopup("مقصد");
+  const bounds=L.latLngBounds(usable.flatMap(x=>x.coords.filter((_,n)=>n%Math.max(1,Math.floor(x.coords.length/250))===0).map(p=>[p[1],p[0]])));
+  if(bounds.isValid())map.fitBounds(bounds,{padding:[24,24]});
+  setTimeout(()=>map.invalidateSize(),160);
 }
 function haversine(a,b){
   const rad=x=>x*Math.PI/180, R=6371;
