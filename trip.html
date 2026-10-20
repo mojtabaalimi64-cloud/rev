@@ -965,7 +965,6 @@ body.rev-result-only .plan-summary{margin-top:0}
     var origin=q.get('origin')||'', destination=q.get('destination')||'';
     var date=q.get('date')||'', time=q.get('time')||'';
     if(!origin||!destination||!date||!time)return;
-    document.body.classList.add('rev-result-only');
     var o=document.getElementById('origin'), d=document.getElementById('destination');
     var j=document.getElementById('departureJalali'), c=document.getElementById('departureClock');
     if(o)o.value=origin;
