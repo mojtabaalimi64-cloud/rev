@@ -1,0 +1,21 @@
+{
+  "schemaVersion": 1,
+  "note": "مشخصات خودرو باید بر اساس تیپ/سال ساخت تأیید شوند. مقدار توان شارژ DC برای KMC EJ7 در منبع منتشرشده گزارش شده و پیش از استفاده عملی با دفترچه همان خودرو تطبیق داده شود. مصرف برق عمداً پیش‌فرض‌گذاری نشده است.",
+  "vehicles": [
+    {
+      "id": "kmc-ej7",
+      "make": "KMC",
+      "model": "EJ7",
+      "label": "KMC EJ7 برقی",
+      "drivetrain": "BEV",
+      "batteryKwh": 50.1,
+      "maxDcChargeKw": 30,
+      "consumptionKwhPer100Km": null,
+      "connector": "CN (گزارش‌شده؛ نوع سوکت خودرو را بررسی کنید)",
+      "sourceUrl": "https://www.rafieemotor.com/product/kmc_ej7/",
+      "sourceLabel": "صفحه مشخصات نمایندگی کرمان موتور رفیعی",
+      "confidence": "reported",
+      "updatedAt": "2026-10-21"
+    }
+  ]
+}
