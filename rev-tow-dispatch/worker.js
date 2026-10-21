@@ -273,6 +273,7 @@ async function handle(req, env, cors) {
     const d = await driverByToken(env, b.token);
     if (!d) return json({ ok: false }, 401, cors);
     if (isFinite(Number(b.lat)) && isFinite(Number(b.lng))) { d.lat = Number(b.lat); d.lng = Number(b.lng); }
+    if (b.radius !== undefined && b.radius !== null && b.radius !== "") d.radius = clampRadius(b.radius);
     d.lastSeen = now();
     await saveDriver(env, d);
     return json({ ok: true }, 200, cors);
