@@ -389,6 +389,13 @@ function stationAlongRouteKm(station,metrics){
   }
   return {routeKm:bestKm,offRouteKm:best};
 }
+function estimateArrivalSoc(currentSoc, legKm, consumption, battery) {
+  const values = [currentSoc, legKm, consumption, battery].map(Number);
+  if (!values.every(Number.isFinite) || values[0] < 0 || values[0] > 100 ||
+      values[1] < 0 || values[2] < 0 || values[3] <= 0) return NaN;
+  // kWh consumed / usable battery capacity gives a fraction; convert it to percentage points.
+  return values[0] - (values[1] * values[2] / values[3] * 100);
+}
 function buildChargingPlan(stations,routeCoords,routeKm,params){
   const {battery,soc,consumption,reserve,targetSoc,radius}=params;
   const metrics=routeMetrics(routeCoords);
@@ -427,10 +434,10 @@ function buildChargingPlan(stations,routeCoords,routeKm,params){
     }
     if(!chosen) chosen=reachable[reachable.length-1];
     const legKm=chosen.routeKm-currentKm;
-    const arrivalSoc=currentSoc-(legKm*consumption/battery);
+    const arrivalSoc=estimateArrivalSoc(currentSoc,legKm,consumption,battery);
     // The range test should protect reserve, but report an alert if data rounding or
     // route geometry causes the calculated arrival SOC to fall below reserve.
-    if(arrivalSoc<reserve-0.5) return {status:'alert',message:'به‌دلیل فاصله ایستگاه‌ها یا خطای داده مسیر، رسیدن به ایستگاه بعدی با ذخیره ایمنی قابل تأیید نیست.',stops,candidates};
+    if(!Number.isFinite(arrivalSoc)||arrivalSoc<reserve-0.5) return {status:'alert',message:'به‌دلیل فاصله ایستگاه‌ها یا خطای داده مسیر، رسیدن به ایستگاه بعدی با ذخیره ایمنی قابل تأیید نیست.',stops,candidates};
     const energyToTarget=Math.max(0,(targetSoc-arrivalSoc)/100*battery);
     const effectivePower=chosen.power>0?chosen.power*0.7:null;
     const chargeMinutes=effectivePower?Math.round(energyToTarget/effectivePower*60):null;
