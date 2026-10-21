@@ -957,7 +957,7 @@ async function reviewStationSubmission(id,action){
   buttons.forEach(x=>x.disabled=true);
   if(status)status.textContent=(action==='approve'||action==='recover')?'در حال ثبت جایگاه در دیتابیس اصلی و تأیید آن…':'در حال رد درخواست…';
   try{
-    if(action==='approve'){
+    if(action==='approve'||action==='recover'){
       const latitude=Number(s.latitude??s.lat), longitude=Number(s.longitude??s.lng??s.lon);
       if(!Number.isFinite(latitude)||latitude < -90||latitude > 90||!Number.isFinite(longitude)||longitude < -180||longitude > 180){
         throw new Error('مختصات جغرافیایی درخواست معتبر نیست؛ ابتدا مختصات را اصلاح کنید.');
