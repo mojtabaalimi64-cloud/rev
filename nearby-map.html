@@ -477,7 +477,7 @@ buildTypes();
 (function(){
  const API="https://rev-status-api.mojtaba-alimi64.workers.dev";
  const $=id=>document.getElementById(id);
- const modal=$("revAddStationModal"),form=$("revAddStationForm"),coords=$("rasCoords"),msg=modal.querySelector("[data-ras-message"),submit=$("rasSubmit");
+ const modal=$("revAddStationModal"),form=$("revAddStationForm"),coords=$("rasCoords"),msg=modal.querySelector("[data-ras-message]"),submit=$("rasSubmit");
  let selected=null,picking=false;
  function showMessage(t,ok){msg.textContent=t;msg.style.color=ok?"#166534":"#b91c1c";}
  function open(){modal.classList.add("open");selected=null;picking=false;coords.textContent="هنوز موقعیت روی نقشه انتخاب نشده است؛ دکمه انتخاب محل را بزنید.";showMessage("",true);}
