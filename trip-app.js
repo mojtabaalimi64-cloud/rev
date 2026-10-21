@@ -335,6 +335,12 @@ function stationAlongRouteKm(station,metrics){
   }
   return {routeKm:bestKm,offRouteKm:best};
 }
+function effectiveChargingPower(stationPowerKw,vehicleMaxDcKw){
+  const station=Number(stationPowerKw),vehicle=Number(vehicleMaxDcKw);
+  if(!Number.isFinite(station)||station<=0)return null;
+  if(!Number.isFinite(vehicle)||vehicle<=0)return station;
+  return Math.min(station,vehicle);
+}
 function estimateChargingMinutes(batteryKwh,arrivalSoc,targetSoc,stationPowerKw){
   const battery=Number(batteryKwh),from=Number(arrivalSoc),to=Number(targetSoc),power=Number(stationPowerKw);
   if(!Number.isFinite(battery)||battery<=0||!Number.isFinite(from)||!Number.isFinite(to)||from<0||to>100||to<=from||!Number.isFinite(power)||power<=0)return null;
@@ -354,7 +360,7 @@ function estimateChargingMinutes(batteryKwh,arrivalSoc,targetSoc,stationPowerKw)
 }
 
 function buildChargingPlan(stations,routeCoords,routeKm,params){
-  const {battery,soc,consumption,reserve,targetSoc,radius}=params;
+  const {battery,soc,consumption,reserve,targetSoc,radius,maxChargePower}=params;
   const metrics=routeMetrics(routeCoords);
   const usableRange=pct=>Math.max(0,(pct-reserve)/100*battery/consumption*100);
   const candidates=stations.map(s=>({...s,...stationAlongRouteKm(s,metrics)}))
@@ -396,8 +402,9 @@ function buildChargingPlan(stations,routeCoords,routeKm,params){
     // route geometry causes the calculated arrival SOC to fall below reserve.
     if(arrivalSoc<reserve-0.5) return {status:'alert',message:'به‌دلیل فاصله ایستگاه‌ها یا خطای داده مسیر، رسیدن به ایستگاه بعدی با ذخیره ایمنی قابل تأیید نیست.',stops,candidates};
     const energyToTarget=Math.max(0,(targetSoc-arrivalSoc)/100*battery);
-    const chargeMinutes=estimateChargingMinutes(battery,arrivalSoc,targetSoc,chosen.power);
-    stops.push({...chosen,legKm,arrivalSoc,targetSoc,energyToTarget,chargeMinutes});
+    const effectivePower=effectiveChargingPower(chosen.power,maxChargePower);
+    const chargeMinutes=estimateChargingMinutes(battery,arrivalSoc,targetSoc,effectivePower);
+    stops.push({...chosen,legKm,arrivalSoc,targetSoc,energyToTarget,chargeMinutes,effectivePower});
     currentKm=chosen.routeKm;
     currentSoc=targetSoc;
     for(let i=remaining.length-1;i>=0;i--) if(remaining[i].routeKm<=currentKm+2) remaining.splice(i,1);
@@ -416,7 +423,7 @@ function renderChargingPlan(plan){
     item.innerHTML=`<strong>توقف ${i+1}: ${escapeHTML(s.name)}</strong>
       <div class="plan-meta">حدود کیلومتر ${Math.round(s.routeKm)} مسیر · ${s.legKm.toFixed(0)} کیلومتر از توقف قبلی · ${s.routeDistance.toFixed(1)} کیلومتر فاصله مستقیم از جاده</div>
       <div class="plan-meta">شارژ هنگام رسیدن: حدود ${Math.round(s.arrivalSoc)}٪ · هدف شارژ: ${s.targetSoc}٪ · انرژی نظری موردنیاز: ${s.energyToTarget.toFixed(1)} kWh</div>
-      <div class="plan-meta">${time}${s.power?` · توان ثبت‌شده ${s.power} kW` : ''}</div>
+      <div class="plan-meta">${time}${s.effectivePower?` · توان مؤثر خودرو/ایستگاه ${s.effectivePower} kW` : ''}</div>
       <div class="plan-meta">زمان شارژ، در صورت نمایش، با فرض میانگین ۷۰٪ توان نامی تخمین زده شده؛ زمان واقعی می‌تواند بیشتر باشد.</div>`;
     box.appendChild(item);
   });
@@ -1001,7 +1008,7 @@ async function planTrip(){
     }
     if($("timelineSlider"))$("timelineSlider").disabled=false;
     if($("timelineDetails"))$("timelineDetails").textContent="پس از محاسبه مسیر، زمان‌بندی پیشنهادی شارژ نمایش داده می‌شود.";
-    const battery=num("battery",60),soc=num("soc",90),baseConsumption=num("consumption",18),reserve=num("reserve",15);
+    const battery=num("battery",60),soc=num("soc",90),baseConsumption=num("consumption",18),reserve=num("reserve",15),maxChargePower=num("maxChargePower",150);
     let weatherAnalysis=null,consumption=baseConsumption,weatherWarning="";
     $("weatherPanel").innerHTML='<div class="directions-head"><h2>هواشناسی مسیر</h2><span class="sub">در حال دریافت پیش‌بینی ساعتی…</span></div>';
     setStatus("در حال دریافت پیش‌بینی آب‌وهوا برای زمان عبور از نقاط مسیر و تحلیل جهت باد…");
@@ -1025,7 +1032,7 @@ async function planTrip(){
     const targetSoc=Math.min(100,Math.max(reserve+5,num('targetSoc',80)));
     if(soc<=reserve) throw new Error('درصد شارژ اولیه باید از درصد ذخیره ایمنی بیشتر باشد.');
     if(targetSoc<=reserve) throw new Error('شارژ هدف باید از درصد ذخیره ایمنی بیشتر باشد.');
-    const params={battery,soc,consumption,reserve,targetSoc,radius};
+    const params={battery,soc,consumption,reserve,targetSoc,radius,maxChargePower};
     await loadStationRatings(stations);
     renderStations(stations,coords,km,params);
     await renderBusinessDirectory(coords,radius);
@@ -1044,7 +1051,7 @@ async function planTrip(){
 }
 function applySharedTripParams(){
   const q=new URLSearchParams(window.location.search);
-  const fields={origin:"origin",destination:"destination",vehicleType:"vehicleType",battery:"battery",soc:"soc",consumption:"consumption",reserve:"reserve",targetSoc:"targetSoc",fuelConsumption:"fuelConsumption",fuelPrice:"fuelPrice",fuelTank:"fuelTank",electricRange:"electricRange",phevBattery:"phevBattery",phevSoc:"phevSoc",radius:"radius",hvac:"hvacMode",date:"departureJalali",time:"departureClock"};
+  const fields={origin:"origin",destination:"destination",vehicleType:"vehicleType",battery:"battery",soc:"soc",consumption:"consumption",reserve:"reserve",targetSoc:"targetSoc",maxChargePower:"maxChargePower",fuelConsumption:"fuelConsumption",fuelPrice:"fuelPrice",fuelTank:"fuelTank",electricRange:"electricRange",phevBattery:"phevBattery",phevSoc:"phevSoc",radius:"radius",hvac:"hvacMode",date:"departureJalali",time:"departureClock"};
   let applied=0;
   for(const [key,id] of Object.entries(fields)){
     const value=q.get(key),el=$(id);
@@ -1054,14 +1061,14 @@ function applySharedTripParams(){
     else if(key==="time"&&/^([01]\d|2[0-3]):[0-5]\d$/.test(value))el.value=value;
     else if(key==="hvac"&&["auto","off"].includes(value))el.value=value;
     else if(key==="vehicleType"&&["bev","phev","hev","mhev"].includes(value)){el.value=value;updateVehicleFields();}
-    else if(["battery","soc","consumption","reserve","targetSoc","fuelConsumption","fuelPrice","fuelTank","electricRange","phevBattery","phevSoc","radius"].includes(key)&&Number.isFinite(Number(value)))el.value=value;
+    else if(["battery","soc","consumption","reserve","targetSoc","maxChargePower","fuelConsumption","fuelPrice","fuelTank","electricRange","phevBattery","phevSoc","radius"].includes(key)&&Number.isFinite(Number(value)))el.value=value;
     applied++;
   }
   syncDepartureInput();
   if(applied)$("status").textContent="تنظیمات سفر از لینک اشتراکی بارگذاری شد. برای محاسبه مسیر، دکمه سبز را بزنید.";
 }
 function buildTripShareUrl(){
-  const q=new URLSearchParams({origin:$("origin").value.trim(),destination:$("destination").value.trim(),vehicleType:$("vehicleType").value,battery:$("battery").value,soc:$("soc").value,consumption:$("consumption").value,reserve:$("reserve").value,targetSoc:$("targetSoc").value,fuelConsumption:$("fuelConsumption").value,fuelPrice:$("fuelPrice").value,fuelTank:$("fuelTank").value,electricRange:$("electricRange").value,phevBattery:$("phevBattery").value,phevSoc:$("phevSoc").value,radius:$("radius").value,hvac:$("hvacMode").value,date:$("departureJalali").value.trim(),time:$("departureClock").value});
+  const q=new URLSearchParams({origin:$("origin").value.trim(),destination:$("destination").value.trim(),vehicleType:$("vehicleType").value,battery:$("battery").value,soc:$("soc").value,consumption:$("consumption").value,reserve:$("reserve").value,targetSoc:$("targetSoc").value,maxChargePower:$("maxChargePower").value,fuelConsumption:$("fuelConsumption").value,fuelPrice:$("fuelPrice").value,fuelTank:$("fuelTank").value,electricRange:$("electricRange").value,phevBattery:$("phevBattery").value,phevSoc:$("phevSoc").value,radius:$("radius").value,hvac:$("hvacMode").value,date:$("departureJalali").value.trim(),time:$("departureClock").value});
   return window.location.origin+window.location.pathname+"?"+q.toString();
 }
 async function shareTrip(){
