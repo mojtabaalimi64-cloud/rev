@@ -948,18 +948,29 @@ async function loadStationSubmissions(){
   }
 }
 async function reviewStationSubmission(index,action){
-  const s=stationSubmissionsCache?.[index];if(!s?.id||!['approve','reject'].includes(action))return;
+  const s=stationSubmissionsCache?.[index];
+  if(!s?.id||!['approve','reject'].includes(action)){msg('اطلاعات درخواست معتبر نیست؛ فهرست را دوباره بارگذاری کنید.');return}
   const token=String($('station-submission-token')?.value||sessionStorage.getItem('rev_station_review_token')||'').trim();
   if(!token){msg('رمز مدیریتی بررسی درخواست‌ها را وارد کنید.');return}
-  if(!confirm('درخواست جایگاه «'+(s.name||'بدون نام')+'» '+(action==='approve'?'تأیید':'رد')+' شود؟'))return;
+  const status=$('station-submissions-status');
+  const buttons=root.querySelectorAll('[data-a="station-submission-review"]');
+  buttons.forEach(x=>x.disabled=true);
+  if(status)status.textContent=action==='approve'?'در حال تأیید درخواست و ثبت نتیجه…':'در حال رد درخواست…';
   try{
-    const r=await fetch(SUBMISSION_WORKER+'/moderate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,id:s.id,action})});
+    const r=await fetch(SUBMISSION_WORKER+'/moderate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,id:String(s.id),action}),cache:'no-store'});
     const j=await r.json().catch(()=>({}));
     if(!r.ok||!j.ok)throw new Error(j.error||('HTTP '+r.status));
     stationSubmissionsCache=stationSubmissionsCache.filter(x=>String(x.id)!==String(s.id));
-    stationSubmissionsError=action==='approve'?'درخواست تأیید شد؛ برای نمایش روی نقشه، جایگاه را در فهرست اصلی نیز ثبت کنید.':'درخواست رد شد.';
-    draw();msg(stationSubmissionsError);
-  }catch(e){msg('ثبت نتیجه بررسی ناموفق بود: '+(e.message||'خطای اتصال'))}
+    stationSubmissionsError=action==='approve'?'درخواست تأیید شد. توجه: برای نمایش روی نقشه، باید جایگاه در فهرست اصلی جایگاه‌ها نیز ثبت شود.':'درخواست رد شد.';
+    draw();
+    msg(stationSubmissionsError);
+  }catch(e){
+    const detail=e?.message||'خطای اتصال';
+    stationSubmissionsError='ثبت نتیجه بررسی ناموفق بود: '+detail;
+    if(status)status.textContent=stationSubmissionsError;
+    buttons.forEach(x=>x.disabled=false);
+    msg(stationSubmissionsError);
+  }
 }
 async function loadStations(){
   if(stationBusy)return; stationBusy=true; note='در حال دریافت جایگاه‌ها از دیتابیس...'; draw();
