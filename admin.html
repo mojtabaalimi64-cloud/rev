@@ -1134,8 +1134,9 @@ root.addEventListener('change',async e=>{
   if(e.target.id==='station-csv'&&e.target.files?.[0]){const file=e.target.files[0];try{const text=await file.text();const rows=parseCSV(text);if(!rows.length){msg('هیچ ردیف معتبری در فایل پیدا نشد.');return}if(!confirm(`${rows.length} ردیف برای ورود آماده است. موارد هم‌مختصات/هم‌شناسه به‌روزرسانی می‌شوند. ادامه می‌دهید؟`))return;msg('در حال ورود گروهی...');const r=await fetch(WORKER+'/api/admin/stations/bulk',{method:'POST',headers:H(),body:JSON.stringify({stations:rows})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationsCache=null;note=`ورود گروهی موفق بود؛ ${j.count} ردیف پردازش شد.`;await loadStations()}catch(err){msg('ورود CSV ناموفق بود: '+(err.message||'خطای فایل'))}finally{e.target.value=''}}
 });
 
-root.addEventListener('click',async e=>{
+document.addEventListener('click',async e=>{
   const b=e.target.closest('[data-a]'); if(!b) return;
+  if(b.dataset.a==='station-submissions-refresh') e.preventDefault();
   const a=b.dataset.a, i=+b.dataset.i;
   if(a==='login'){tok=$('t').value.trim();gitTok=$('gt').value.trim();if(!tok){msg('رمز مدیریتی را وارد کنید.');return}sessionStorage.setItem('rev_admin_token',tok);if(gitTok)sessionStorage.setItem('rev_github_token',gitTok);else sessionStorage.removeItem('rev_github_token');c=null;draw()}
   else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
