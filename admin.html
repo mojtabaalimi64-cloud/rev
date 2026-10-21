@@ -950,7 +950,7 @@ async function reviewStationSubmission(index,action){
     draw();msg(stationSubmissionsError);
   }catch(e){msg('ثبت نتیجه بررسی ناموفق بود: '+(e.message||'خطای اتصال'))}
 }
-function loadStations(){
+async function loadStations(){
   if(stationBusy)return; stationBusy=true; note='در حال دریافت جایگاه‌ها از دیتابیس...'; draw();
   let lastError=null;
   try{
