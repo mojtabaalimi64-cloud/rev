@@ -1281,7 +1281,8 @@ document.addEventListener('click',async e=>{
     try{const r=await fetch(RATING_WORKER+'/api/admin/station-reports/'+id,{method:'PUT',headers:H(),body:JSON.stringify({status,admin_note:adminNote})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationReportsCache=null;msg(j.message||'وضعیت گزارش ذخیره شد.');await loadStationReports()}
     catch(err){msg('ذخیره وضعیت گزارش ناموفق بود: '+(err.message||'خطای اتصال'))}
   }
-  else if(a==='station-submissions-refresh'){await loadStationSubmissions('pending')}\n  else if(a==='station-submissions-approved'){await loadStationSubmissions('approved')}
+  else if(a==='station-submissions-refresh'){await loadStationSubmissions('pending')}
+  else if(a==='station-submissions-approved'){await loadStationSubmissions('approved')}
   else if(a==='station-submission-review'){await reviewStationSubmission(b.dataset.id,b.dataset.status)}
   else if(a==='station-refresh'){stationsCache=null;loadStations()}
   else if(a==='station-new'){stationEdit={isNew:true,item:{source:'rev',status:'unknown'}};draw()}
