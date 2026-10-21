@@ -921,7 +921,7 @@ function renderStationSubmissions(){
   if(stationSubmissionsBusy)return '<p class="hint">در حال دریافت درخواست‌ها...</p>';
   if(!stationSubmissionsCache)return '<p class="hint">هنوز درخواست‌ها بارگذاری نشده‌اند.</p>';
   if(!stationSubmissionsCache.length)return '<p class="hint">درخواست در انتظار بررسی وجود ندارد.</p>';
-  return stationSubmissionsCache.map((s,i)=>'<div class="row" style="align-items:flex-start"><div style="min-width:220px;flex:1"><strong>'+esc(s.name||'جایگاه بدون نام')+'</strong><small>'+esc(s.city||'شهر نامشخص')+' · '+esc(s.address||'نشانی ثبت نشده')+'</small><small>توان: '+esc(s.power_kw??'—')+' kW · اتصال‌ها: '+esc(s.connectors||'—')+'</small><small>مختصات: '+esc(s.lat??'—')+', '+esc(s.lng??'—')+' · تلفن: '+esc(s.phone||'—')+'</small><small>ثبت: '+esc(s.at?new Date(s.at).toLocaleString('fa-IR'):'—')+'</small></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn main" data-a="station-submission-review" data-i="${i}" data-status="approve">تأیید</button><button class="btn red" data-a="station-submission-review" data-i="${i}" data-status="reject">رد</button></div></div>').join('');
+  return stationSubmissionsCache.map((s,i)=>'<div class="row" style="align-items:flex-start"><div style="min-width:220px;flex:1"><strong>'+esc(s.name||'جایگاه بدون نام')+'</strong><small>'+esc(s.city||'شهر نامشخص')+' · '+esc(s.address||'نشانی ثبت نشده')+'</small><small>توان: '+esc(s.power_kw??'—')+' kW · اتصال‌ها: '+esc(s.connectors||'—')+'</small><small>مختصات: '+esc(s.lat??'—')+', '+esc(s.lng??'—')+' · تلفن: '+esc(s.phone||'—')+'</small><small>ثبت: '+esc(s.at?new Date(s.at).toLocaleString('fa-IR'):'—')+'</small></div><div style="display:flex;gap:6px;flex-wrap:wrap"><button class="btn main" data-a="station-submission-review" data-id="${esc(s.id)}" data-status="approve">تأیید</button><button class="btn red" data-a="station-submission-review" data-id="${esc(s.id)}" data-status="reject">رد</button></div></div>').join('');
 }
 async function loadStationSubmissions(){
   const input=$('station-submission-token');
@@ -947,9 +947,9 @@ async function loadStationSubmissions(){
     draw();
   }
 }
-async function reviewStationSubmission(index,action){
-  const s=stationSubmissionsCache?.[index];
-  if(!s?.id||!['approve','reject'].includes(action)){msg('اطلاعات درخواست معتبر نیست؛ فهرست را دوباره بارگذاری کنید.');return}
+async function reviewStationSubmission(id,action){
+  const s=stationSubmissionsCache?.find(x=>String(x.id)===String(id));
+  if(!id||!s?.id||!['approve','reject'].includes(action)){msg('شناسه درخواست پیدا نشد؛ فهرست را دوباره بارگذاری کنید.');return}
   const token=String($('station-submission-token')?.value||sessionStorage.getItem('rev_station_review_token')||'').trim();
   if(!token){msg('رمز مدیریتی بررسی درخواست‌ها را وارد کنید.');return}
   const status=$('station-submissions-status');
@@ -1257,7 +1257,7 @@ document.addEventListener('click',async e=>{
     catch(err){msg('ذخیره وضعیت گزارش ناموفق بود: '+(err.message||'خطای اتصال'))}
   }
   else if(a==='station-submissions-refresh'){await loadStationSubmissions()}
-  else if(a==='station-submission-review'){await reviewStationSubmission(Number(b.dataset.i),b.dataset.status)}
+  else if(a==='station-submission-review'){await reviewStationSubmission(b.dataset.id,b.dataset.status)}
   else if(a==='station-refresh'){stationsCache=null;loadStations()}
   else if(a==='station-new'){stationEdit={isNew:true,item:{source:'rev',status:'unknown'}};draw()}
   else if(a==='station-review'){
