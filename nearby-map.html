@@ -335,7 +335,7 @@ function revRenderRouteChargers(){
  fetch("https://rev-api.mojtaba-alimi64.workers.dev/api/stations",{cache:"no-store"}).then(function(res){if(!res.ok)throw Error("stations");return res.json()}).then(function(data){
   if(request!==revRouteChargerRequest||!o||!Array.isArray(o.coords))return;
   var stations=[data&&data.stations,data&&data.data,data&&data.data&&data.data.stations,data&&data.data&&data.data.data,data&&data.result&&data.result.stations,data&&data.result&&data.result.data,data&&data.result].find(Array.isArray)||[];
-  var coords=o.coords,cum=o.cum||[],progress=Number(l)||0,seen={},count=0;
+  var coords=o.coords,cum=o.cum||[],progress=Number(l)||0,seen={},count=0,compatibleCount=0;
   function pointSegmentMeters(lat,lon,a,b){
    var cos=Math.cos(lat*Math.PI/180),ax=(a[0]-lon)*111320*cos,ay=(a[1]-lat)*110540,bx=(b[0]-lon)*111320*cos,by=(b[1]-lat)*110540,dx=bx-ax,dy=by-ay,len=dx*dx+dy*dy,q=len?Math.max(0,Math.min(1,-(ax*dx+ay*dy)/len)):0;
    return {distance:Math.hypot(ax+q*dx,ay+q*dy),fraction:q};
@@ -355,9 +355,11 @@ function revRenderRouteChargers(){
    if(best>5000||along<Math.max(0,progress-1000))return;
    var key=lat.toFixed(5)+","+lon.toFixed(5);if(seen[key])return;seen[key]=1;
    var name=String(st.name||st.title||"ایستگاه شارژ REV"),power=st.power_kw??st.power??null,connectors=st.connectors||st.connector_types||[],detail=document.createElement("div");
+   var chosen=document.getElementById("revNavConnector"),chosenConnector=chosen&&chosen.value?chosen.value.toLowerCase().replace(/\\s+/g,""):"",stationConnectorText=(Array.isArray(connectors)?connectors.join(" "):String(connectors||"")).toLowerCase().replace(/\\s+/g,""),compatible=false;
+   if(chosenConnector&&stationConnectorText){var aliases={"type2":["type2","type-2","type 2"],"gb/t":["gb/t","gbt"],"ccs2":["ccs2","ccs-2"],"ccs1":["ccs1","ccs-1"],"chademo":["chademo"],"nacs":["nacs"]};var keys=aliases[chosenConnector]||[chosenConnector];compatible=keys.some(function(k){return stationConnectorText.indexOf(k.replace(/\\s+/g,""))>=0});if(compatible)compatibleCount++;}
    var title=document.createElement("strong");title.textContent="⚡ "+name;detail.appendChild(title);
    var meta=document.createElement("div");meta.style.cssText="font-size:12px;line-height:1.7;margin-top:4px;color:#475569";
-   var parts=[];var chosen=document.getElementById("revNavConnector"),chosenConnector=chosen&&chosen.value?chosen.value.toLowerCase().replace(/\s+/g,""):"",stationConnectorText=(Array.isArray(connectors)?connectors.join(" "):String(connectors||"")).toLowerCase().replace(/\s+/g,"");if(chosenConnector){if(stationConnectorText){var compatible=stationConnectorText.indexOf(chosenConnector)>=0;parts.push(compatible?"✓ کانکتور سازگار":"⚠ سازگاری کانکتور تأیید نشد")}else parts.push("نوع کانکتور این جایگاه ثبت نشده")}if(power!==null&&power!==""&&Number.isFinite(Number(power)))parts.push("توان "+Number(power)+" کیلووات");
+   var parts=[];if(chosenConnector){if(stationConnectorText){parts.push(compatible?"✓ کانکتور سازگار":"⚠ سازگاری کانکتور تأیید نشد")}else parts.push("نوع کانکتور این جایگاه ثبت نشده")};if(power!==null&&power!==""&&Number.isFinite(Number(power)))parts.push("توان "+Number(power)+" کیلووات");
    if(Array.isArray(connectors)&&connectors.length)parts.push("سوکت "+connectors.join("، "));else if(typeof connectors==="string"&&connectors.trim())parts.push("سوکت "+connectors);
    parts.push("فاصله از مسیر "+(best>=1000?(best/1000).toFixed(1)+" کیلومتر":Math.round(best)+" متر"));
    meta.textContent=parts.join(" · ");detail.appendChild(meta);
@@ -365,7 +367,7 @@ function revRenderRouteChargers(){
    L.marker([lat,lon],{keyboard:true,zIndexOffset:650,icon:pin}).bindPopup(detail,{maxWidth:260}).addTo(revRouteChargerLayer);count++;
   });
   var chip=document.getElementById("revRouteChargerNotice");
-  if(count){if(!chip){chip=document.createElement("div");chip.id="revRouteChargerNotice";chip.setAttribute("role","status");chip.style.cssText="position:fixed;top:calc(124px + env(safe-area-inset-top));left:12px;z-index:1250;background:#fff;color:#17436b;border:1px solid #cfe3f7;border-radius:12px;padding:7px 11px;box-shadow:0 3px 14px #0b2a4520;font:700 12px/1.5 Vazirmatn,Tahoma,sans-serif;pointer-events:none";document.body.appendChild(chip)}chip.textContent="⚡ "+count+" ایستگاه شارژ تأییدشده نزدیک مسیر";chip.hidden=false}else if(chip)chip.hidden=true;
+  if(count){if(!chip){chip=document.createElement("div");chip.id="revRouteChargerNotice";chip.setAttribute("role","status");chip.style.cssText="position:fixed;top:calc(124px + env(safe-area-inset-top));left:12px;z-index:1250;background:#fff;color:#17436b;border:1px solid #cfe3f7;border-radius:12px;padding:7px 11px;box-shadow:0 3px 14px #0b2a4520;font:700 12px/1.5 Vazirmatn,Tahoma,sans-serif;pointer-events:none";document.body.appendChild(chip)}chip.textContent="⚡ "+count+" ایستگاه تأییدشده نزدیک مسیر"+(chosenConnector?" · "+compatibleCount+" سازگار با خودرو":"");chip.hidden=false}else if(chip)chip.hidden=true;
  }).catch(function(){if(request===revRouteChargerRequest){var chip=document.getElementById("revRouteChargerNotice");if(chip)chip.hidden=true}});
 }
 function revEnsureEnergyPanel(){
@@ -377,7 +379,10 @@ function revEnsureEnergyPanel(){
  box.appendChild(toggle);box.appendChild(panel);dash.appendChild(box);
  toggle.addEventListener("click",function(){panel.hidden=!panel.hidden;toggle.setAttribute("aria-expanded",String(!panel.hidden))});
  var ids=["revNavCap","revNavSoc","revNavCons","revNavConnector"],saved={};try{saved=JSON.parse(localStorage.getItem("rev-nav-energy-v1")||"{}")||{}}catch(e){}
+ var vehicleProfile=null;try{vehicleProfile=JSON.parse(localStorage.getItem("rev_driver_vehicle_profile")||"null")}catch(e){}
+ if(vehicleProfile){if(saved.revNavCap==null||saved.revNavCap==="")saved.revNavCap=vehicleProfile.battery_kwh||"";if(saved.revNavCons==null||saved.revNavCons==="")saved.revNavCons=vehicleProfile.consumption||"";}
  ids.forEach(function(id){var el=document.getElementById(id);if(el&&saved[id]!=null)el.value=saved[id];if(el)el.addEventListener("input",revSaveEnergySettings)});
+ if(vehicleProfile&&vehicleProfile.vehicle_name){var vehicleNote=document.createElement("div");vehicleNote.id="revNavVehicleProfileNote";vehicleNote.style.cssText="font-size:11px;color:#475569;margin:0 0 7px";vehicleNote.textContent="خودروی پروفایل: "+String(vehicleProfile.vehicle_name)+" · ظرفیت و مصرف از پروفایل خوانده می‌شود؛ کانکتور را در صورت نیاز انتخاب کنید.";panel.insertBefore(vehicleNote,panel.firstChild)}
  function revSaveEnergySettings(){var data={};ids.forEach(function(id){var el=document.getElementById(id);if(el)data[id]=el.value});try{localStorage.setItem("rev-nav-energy-v1",JSON.stringify(data))}catch(e){}revUpdateEnergy()}
  revEnsureEnergyPanel.save=revSaveEnergySettings;revUpdateEnergy();
 }
