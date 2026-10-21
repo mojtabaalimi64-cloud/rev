@@ -108,6 +108,24 @@ async function getDriver(env, id) {
   return raw ? JSON.parse(raw) : null;
 }
 async function saveDriver(env, d) { await env.TOW.put(kDriver(d.id), JSON.stringify(d)); }
+function normStats(d) {
+  if (!d.stats || typeof d.stats !== "object") d.stats = { accepted: 0, completed: 0, rejected: 0, missed: 0 };
+  for (const k of ["accepted", "completed", "rejected", "missed"]) if (!Number.isFinite(d.stats[k])) d.stats[k] = 0;
+  return d;
+}
+async function listRequests(env) {
+  const out = [];
+  let cursor;
+  do {
+    const page = await env.TOW.list({ prefix: "req:", cursor });
+    for (const k of page.keys) {
+      const raw = await env.TOW.get(k.name);
+      if (raw) out.push(JSON.parse(raw));
+    }
+    cursor = page.list_complete ? null : page.cursor;
+  } while (cursor);
+  return out;
+}
 async function getReq(env, id) {
   const raw = await env.TOW.get(kReq(id));
   return raw ? JSON.parse(raw) : null;
@@ -144,6 +162,8 @@ async function sweepOffer(env, reqId) {
   if (!req || req.status === "لغو شد" || req.status === "انجام شد") return null;
   req.skipped = [...(req.skipped || []), offer.driverId];
   req.log.push({ t: now(), ev: `راننده ${offer.driverId} در ${ACCEPT_TIMEOUT_MIN} دقیقه پاسخ نداد — ارجاع به نفر بعدی` });
+  const md = await getDriver(env, offer.driverId);
+  if (md) { normStats(md); md.stats.missed++; await saveDriver(env, md); }
   await saveReq(env, req);
   return await dispatchToNext(env, req);
 }
@@ -156,7 +176,7 @@ async function dispatchToNext(env, req) {
     return null;
   }
   const drivers = (await listDrivers(env)).filter(d =>
-    d.active !== false && d.lastSeen && now() - d.lastSeen < DRIVER_STALE_MIN * 60 * 1000);
+    d.active !== false && d.approved === true && d.lastSeen && now() - d.lastSeen < DRIVER_STALE_MIN * 60 * 1000);
   const ranked = rankDrivers(drivers, req.gps, req.skipped || []);
   if (!ranked.length) {
     req.status = "در انتظار اپراتور";
@@ -255,16 +275,21 @@ async function handle(req, env, cors) {
     if (!validPhone(b.phone)) return json({ ok: false, err: "شماره موبایل معتبر نیست" }, 400, cors);
     if (!isFinite(Number(b.lat)) || !isFinite(Number(b.lng)))
       return json({ ok: false, err: "مختصات لازم است" }, 400, cors);
+    const phone = String(b.phone).trim();
+    const dup = (await listDrivers(env)).find(x => x.phone === phone);
+    if (dup) return json({ ok: false, err: "این شماره قبلاً به‌عنوان راننده ثبت شده است؛ برای بازیابی دسترسی با مدیر REV در تماس باش." }, 409, cors);
     const id = "DRV-" + Math.random().toString(36).slice(2, 8).toUpperCase();
     const token = crypto.randomUUID().replace(/-/g, "");
     const d = {
-      id, name: String(b.name).trim(), phone: String(b.phone).trim(),
+      id, name: String(b.name).trim(), phone,
+      vehicle: String(b.vehicle || "").trim(), city: String(b.city || "").trim(),
       lat: Number(b.lat), lng: Number(b.lng),
       radius: clampRadius(b.radius), score: 100, token,
-      active: true, created: now(), lastSeen: now(), missed: 0,
+      active: true, approved: false, created: now(), lastSeen: now(), missed: 0,
+      stats: { accepted: 0, completed: 0, rejected: 0, missed: 0 },
     };
     await saveDriver(env, d);
-    return json({ ok: true, id, token, radius: d.radius }, 200, cors);
+    return json({ ok: true, id, token, radius: d.radius, approved: false }, 200, cors);
   }
 
   // ---- driver: heartbeat ----
@@ -284,6 +309,7 @@ async function handle(req, env, cors) {
     const d = await driverByToken(env, url.searchParams.get("token"));
     if (!d) return json({ ok: false }, 401, cors);
     d.lastSeen = now(); await saveDriver(env, d);
+    if (d.approved !== true) return json({ ok: true, offer: null, approved: false }, 200, cors);
     const keys = await env.TOW.list({ prefix: "offer:" });
     let mine = null;
     for (const k of keys.keys) {
@@ -316,6 +342,7 @@ async function handle(req, env, cors) {
 
     if (b.accept === true) {
       await env.TOW.delete(kOffer(r.id));
+      normStats(d); d.stats.accepted++;
       r.status = "راننده در راه";
       r.assignedDriver = d.id;
       r.serviceCode = String(Math.floor(1000 + Math.random() * 9000));
@@ -326,12 +353,46 @@ async function handle(req, env, cors) {
       return json({ ok: true, status: r.status, serviceCode: r.serviceCode }, 200, cors);
     }
     // reject → same as timeout: move to next driver
+    normStats(d); d.stats.rejected++; await saveDriver(env, d);
     await env.TOW.delete(kOffer(r.id));
     r.skipped = [...(r.skipped || []), d.id];
     r.log.push({ t: now(), ev: `راننده ${d.name} رد کرد — ارجاع به نفر بعدی` });
     await saveReq(env, r);
     await dispatchToNext(env, r);
     return json({ ok: true, moved: true }, 200, cors);
+  }
+
+  // ---- driver: complete mission ----
+  if (path === "/api/driver/complete" && method === "POST") {
+    const b = await body(req);
+    const d = await driverByToken(env, b.token);
+    if (!d) return json({ ok: false }, 401, cors);
+    const r = await getReq(env, b.reqId);
+    if (!r || r.assignedDriver !== d.id) return json({ ok: false, err: "این مأموریت برای شما نیست" }, 403, cors);
+    if (r.status !== "راننده در راه") return json({ ok: false, err: "مأموریت در وضعیت پایان نیست" }, 409, cors);
+    r.status = "انجام شد";
+    r.completedAt = now();
+    r.log.push({ t: now(), ev: `مأموریت توسط راننده ${d.name} انجام شد` });
+    normStats(d); d.stats.completed++;
+    await saveReq(env, r); await saveDriver(env, d);
+    return json({ ok: true, status: r.status }, 200, cors);
+  }
+
+  // ---- driver: history & stats ----
+  if (path === "/api/driver/history" && method === "GET") {
+    const d = await driverByToken(env, url.searchParams.get("token"));
+    if (!d) return json({ ok: false }, 401, cors);
+    normStats(d);
+    const missions = (await listRequests(env))
+      .filter(r => r.assignedDriver === d.id)
+      .sort((a, b) => b.ts - a.ts)
+      .slice(0, 30)
+      .map(r => ({ id: r.id, ts: r.ts, status: r.status, problem: r.problem, car: r.car, loc: r.loc, serviceCode: r.serviceCode || null }));
+    return json({ ok: true, driver: {
+      id: d.id, name: d.name, phone: d.phone, vehicle: d.vehicle || "", city: d.city || "",
+      radius: d.radius, score: d.score, active: d.active !== false, approved: d.approved === true,
+      stats: d.stats,
+    }, missions }, 200, cors);
   }
 
   // ---- admin ----
@@ -368,6 +429,22 @@ async function handle(req, env, cors) {
       d.active = b.active !== false;
       await saveDriver(env, d);
       return json({ ok: true }, 200, cors);
+    }
+    if (path === "/api/admin/driver/approve" && method === "POST") {
+      const b = await body(req);
+      const d = await getDriver(env, b.id);
+      if (!d) return json({ ok: false }, 404, cors);
+      d.approved = b.approved !== false;
+      await saveDriver(env, d);
+      return json({ ok: true, approved: d.approved }, 200, cors);
+    }
+    if (path === "/api/admin/driver/reset-token" && method === "POST") {
+      const b = await body(req);
+      const d = await getDriver(env, b.id);
+      if (!d) return json({ ok: false }, 404, cors);
+      d.token = crypto.randomUUID().replace(/-/g, "");
+      await saveDriver(env, d);
+      return json({ ok: true, token: d.token }, 200, cors);
     }
     if (path === "/api/admin/sweep" && method === "POST") {
       const page = await env.TOW.list({ prefix: "offer:" });

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>پنل مدیریت REV — یدک‌کش و امداد</title>
+<style>
+:root{--ink:#080B0D;--ink-2:#121A1F;--paper:#F5F7F8;--line:#DDE3E6;--muted:#5B666D;--green:#39FF88;--teal:#0887a7;--teal-d:#066d88;--red:#b3261e;--amber:#8a5a00;
+--font:"Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--paper);color:var(--ink);line-height:1.8;font-size:15px}
+button,input,select{font:inherit;color:inherit}
+header{background:var(--ink);color:#fff;padding:14px 20px;font-weight:900;font-size:19px;display:flex;justify-content:space-between;align-items:center}
+header b{color:var(--green)}
+header a{font-size:13px;font-weight:400;color:#C3CBD0;text-decoration:none}
+.wrap{width:min(100% - 28px,880px);margin:22px auto 60px}
+.card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
+.card h2{font-size:16px;font-weight:900;margin-bottom:6px}
+.mut{color:var(--muted);font-size:12.5px}
+.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+input[type=password],input[type=text]{border:1.5px solid var(--line);border-radius:10px;padding:9px 11px;background:#fff;flex:1;min-width:200px}
+button{border:0;border-radius:10px;padding:8px 14px;font-weight:800;cursor:pointer;font-size:13px}
+button:disabled{opacity:.5;cursor:default}
+.btn-teal{background:var(--teal);color:#fff}
+.btn-dark{background:var(--ink);color:#fff}
+.btn-ghost{background:#fff;color:var(--teal-d);border:1.5px solid #cbe6f0}
+.btn-red{background:#fdf1f1;color:var(--red);border:1.5px solid #f0c9c6}
+.btn-green{background:#e9f9ee;color:#11703c;border:1.5px solid #bfe6cc}
+.pill{display:inline-block;padding:2px 9px;border-radius:999px;font-size:11px;font-weight:800}
+.pill.green{background:#dcf5e3;color:#11703c}
+.pill.amber{background:#fdf0d7;color:var(--amber)}
+.pill.grey{background:#eef1f3;color:#61707a}
+.pill.teal{background:#e5f3f8;color:var(--teal-d)}
+.drv{border:1px solid var(--line);border-radius:12px;padding:12px 14px;margin-top:10px;background:#fff}
+.drv .top{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;align-items:center}
+.drv .meta{font-size:12.5px;color:var(--muted);line-height:1.9}
+.drv .acts{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.req{border:1px solid var(--line);border-radius:12px;padding:10px 14px;margin-top:8px;background:#fff;font-size:13px}
+.req .meta{color:var(--muted);font-size:12px;line-height:1.9}
+.err{color:var(--red);font-size:13px;min-height:18px}
+.tokbox{background:#f7fafc;border:1px dashed var(--teal);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:12px;word-break:break-all}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<header><span>پنل مدیریت <b>REV</b> — یدک‌کش و امداد</span><a href="./admin-panel.html">بازگشت به پنل اصلی</a></header>
+<main class="wrap">
+
+  <section class="card">
+    <h2>🔑 اتصال مدیر</h2>
+    <p class="mut">کلید مدیریت ورکر دیسپچ (ADMIN_KEY) را وارد کن؛ فقط در مرورگر خودت ذخیره می‌شود.</p>
+    <div class="row" style="margin-top:10px">
+      <input type="password" id="keyInput" dir="ltr" style="text-align:left" placeholder="ADMIN_KEY" autocomplete="off">
+      <button class="btn-dark" id="btnConnect" type="button">اتصال و بارگذاری</button>
+      <button class="btn-ghost" id="btnRefresh" type="button">🔄 به‌روزرسانی</button>
+    </div>
+    <div class="err" id="connErr"></div>
+    <div class="mut" id="connOk"></div>
+  </section>
+
+  <section class="card hidden" id="driversCard">
+    <h2>🚛 راننده‌های یدک‌کش <span class="mut" id="drvCount"></span></h2>
+    <p class="mut">راننده تازه تا وقتی تأییدش نکنی هیچ درخواستی نمی‌گیرد. «توکن جدید» برای وقتی است که راننده دسترسی‌اش را از دست داده؛ توکن را به خودش بده تا در پنل راننده بازیابی کند.</p>
+    <div id="driverList"></div>
+  </section>
+
+  <section class="card hidden" id="requestsCard">
+    <h2>🚨 درخواست‌های امداد <span class="mut" id="reqCount"></span></h2>
+    <div id="requestList"></div>
+  </section>
+
+</main>
+<script>
+(function(){
+  var API='https://rev-tow-dispatch.mojtaba-alimi64.workers.dev';
+  var KEYLS='rev_tow_admin_key';
+  function $(id){return document.getElementById(id)}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function faN(n){try{return Number(n).toLocaleString('fa-IR')}catch(e){return String(n)}}
+  function faDate(ts){try{return new Date(ts).toLocaleDateString('fa-IR')+' '+new Date(ts).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})}catch(e){return '—'}}
+  function key(){return ($('keyInput').value||'').trim()||localStorage.getItem(KEYLS)||''}
+  function ago(ts){if(!ts)return '—';var m=Math.max(0,Math.round((Date.now()-ts)/60000));if(m<1)return 'همین حالا';if(m<60)return faN(m)+' دقیقه پیش';var h=Math.floor(m/60);if(h<24)return faN(h)+' ساعت پیش';return faN(Math.floor(h/24))+' روز پیش'}
+
+  function api(path,opts){
+    opts=opts||{};opts.headers=Object.assign({'x-admin-key':key(),'Content-Type':'application/json'},opts.headers||{});
+    return fetch(API+path,opts).then(function(r){return r.json()});
+  }
+
+  function statusPill(r){
+    if(r.status==='انجام شد')return '<span class="pill green">انجام شد</span>';
+    if(r.status==='راننده در راه')return '<span class="pill teal">راننده در راه</span>';
+    if(r.status==='لغو شد')return '<span class="pill grey">لغو شد</span>';
+    if(r.status==='در انتظار اپراتور')return '<span class="pill amber">در انتظار اپراتور</span>';
+    return '<span class="pill amber">'+esc(r.status)+'</span>';
+  }
+
+  var driversById={};
+  function renderDrivers(drivers){
+    driversById={};drivers.forEach(function(d){driversById[d.id]=d});
+    $('drvCount').textContent='('+faN(drivers.length)+')';
+    if(!drivers.length){$('driverList').innerHTML='<p class="mut">هنوز راننده‌ای ثبت‌نام نکرده.</p>';return}
+    $('driverList').innerHTML=drivers.map(function(d){
+      var st=d.stats||{accepted:0,completed:0,rejected:0,missed:0};
+      return '<div class="drv"><div class="top"><b>'+esc(d.name)+'</b><span>'
+        +(d.approved===true?'<span class="pill green">تأیید شده</span>':'<span class="pill amber">در انتظار تأیید</span>')+' '
+        +(d.active!==false?'<span class="pill teal">فعال</span>':'<span class="pill grey">غیرفعال</span>')+'</span></div>'
+        +'<div class="meta" dir="rtl">📱 <span dir="ltr">'+esc(d.phone)+'</span> · کد: '+esc(d.id)
+        +(d.vehicle?'<br>🚛 '+esc(d.vehicle):'')+(d.city?' · '+esc(d.city):'')
+        +'<br>شعاع پوشش: '+faN(d.radius)+' km · امتیاز: '+faN(d.score)+' · آخرین حضور: '+ago(d.lastSeen)
+        +'<br>📊 قبول: '+faN(st.accepted)+' · انجام‌شده: '+faN(st.completed)+' · رد: '+faN(st.rejected)+' · بی‌پاسخ: '+faN(st.missed)+'</div>'
+        +'<div class="acts">'
+        +(d.approved===true
+          ? '<button class="btn-red" data-act="unapprove" data-id="'+esc(d.id)+'" type="button">لغو تأیید</button>'
+          : '<button class="btn-green" data-act="approve" data-id="'+esc(d.id)+'" type="button">✔️ تأیید راننده</button>')
+        +(d.active!==false
+          ? '<button class="btn-ghost" data-act="deactivate" data-id="'+esc(d.id)+'" type="button">غیرفعال</button>'
+          : '<button class="btn-ghost" data-act="activate" data-id="'+esc(d.id)+'" type="button">فعال</button>')
+        +'<button class="btn-ghost" data-act="token" data-id="'+esc(d.id)+'" type="button">🔑 توکن جدید</button>'
+        +'</div><div class="tokbox hidden" id="tok-'+esc(d.id)+'"></div></div>';
+    }).join('');
+    $('driverList').querySelectorAll('[data-act]').forEach(function(b){
+      b.addEventListener('click',function(){driverAction(b)});
+    });
+  }
+
+  function driverAction(b){
+    var id=b.getAttribute('data-id'),act=b.getAttribute('data-act');
+    b.disabled=true;
+    var done=function(){loadAll()};
+    if(act==='approve'||act==='unapprove'){
+      api('/api/admin/driver/approve',{method:'POST',body:JSON.stringify({id:id,approved:act==='approve'})}).then(done).catch(done);
+    }else if(act==='activate'||act==='deactivate'){
+      api('/api/admin/driver/active',{method:'POST',body:JSON.stringify({id:id,active:act==='activate'})}).then(done).catch(done);
+    }else if(act==='token'){
+      api('/api/admin/driver/reset-token',{method:'POST',body:JSON.stringify({id:id})})
+      .then(function(d){
+        b.disabled=false;
+        var box=$('tok-'+id);
+        if(d&&d.ok){box.classList.remove('hidden');box.innerHTML='توکن جدید راننده (به خودش بده تا در پنل، بخش «بازیابی» وارد کند):<br><b dir="ltr">'+esc(d.token)+'</b>'}
+      }).catch(function(){b.disabled=false});
+    }
+  }
+
+  function renderRequests(reqs){
+    $('reqCount').textContent='('+faN(reqs.length)+')';
+    if(!reqs.length){$('requestList').innerHTML='<p class="mut">درخواستی ثبت نشده.</p>';return}
+    $('requestList').innerHTML=reqs.map(function(r){
+      var drv=r.assignedDriver&&driversById[r.assignedDriver]?driversById[r.assignedDriver].name:(r.assignedDriver||'—');
+      return '<div class="req"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b dir="ltr" style="font-size:12px">'+esc(r.id)+'</b>'+statusPill(r)+'</div>'
+        +'<div class="meta">'+esc(r.problem)+(r.car?' · '+esc(r.car):'')+' · '+esc(faDate(r.ts))
+        +'<br>مشتری: '+esc(r.name||'')+' · <span dir="ltr">'+esc(r.phone||'')+'</span>'
+        +(r.loc?'<br>📍 '+esc(r.loc):'')
+        +'<br>راننده: '+esc(drv)+(r.serviceCode?' · 🔐 کد امداد: <b dir="ltr">'+esc(r.serviceCode)+'</b>':'')
+        +'</div></div>';
+    }).join('');
+  }
+
+  function loadAll(){
+    if(!key()){$('connErr').textContent='اول کلید مدیریت را وارد کن.';return}
+    $('connErr').textContent='';
+    Promise.all([api('/api/admin/drivers'),api('/api/admin/requests')])
+    .then(function(res){
+      var dd=res[0],rr=res[1];
+      if(!dd||!dd.ok){$('connErr').textContent='کلید مدیریت درست نیست یا سرور پاسخ نمی‌دهد.';return}
+      try{localStorage.setItem(KEYLS,key())}catch(e){}
+      $('connOk').textContent='✓ متصل شدی — '+faDate(Date.now());
+      $('driversCard').classList.remove('hidden');
+      $('requestsCard').classList.remove('hidden');
+      renderDrivers(dd.drivers||[]);
+      renderRequests((rr&&rr.requests)||[]);
+    })
+    .catch(function(){$('connErr').textContent='اتصال برقرار نشد.';});
+  }
+
+  $('btnConnect').addEventListener('click',loadAll);
+  $('btnRefresh').addEventListener('click',loadAll);
+  (function init(){
+    var saved='';try{saved=localStorage.getItem(KEYLS)||''}catch(e){}
+    if(saved){$('keyInput').value=saved;loadAll()}
+  })();
+})();
+</script>
+</body>
+</html>
