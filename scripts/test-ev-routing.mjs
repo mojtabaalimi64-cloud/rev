@@ -3,7 +3,7 @@ import fs from "node:fs";
 import vm from "node:vm";
 
 const source = fs.readFileSync("trip-app.js", "utf8");
-const match = source.match(/function estimateArrivalSoc\\(currentSoc, legKm, consumption, battery\\) \\{[\\s\\S]*?\\n\\}/);
+const match = source.match(/function estimateArrivalSoc\(currentSoc, legKm, consumption, battery\) \{[\s\S]*?\n\}/);
 assert.ok(match, "estimateArrivalSoc must exist in the route planner source");
 assert.ok(
   source.includes("const arrivalSoc=estimateArrivalSoc(currentSoc,legKm,consumption,battery);"),
