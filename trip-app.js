@@ -423,7 +423,7 @@ function renderChargingPlan(plan){
     item.innerHTML=`<strong>توقف ${i+1}: ${escapeHTML(s.name)}</strong>
       <div class="plan-meta">حدود کیلومتر ${Math.round(s.routeKm)} مسیر · ${s.legKm.toFixed(0)} کیلومتر از توقف قبلی · ${s.routeDistance.toFixed(1)} کیلومتر فاصله مستقیم از جاده</div>
       <div class="plan-meta">شارژ هنگام رسیدن: حدود ${Math.round(s.arrivalSoc)}٪ · هدف شارژ: ${s.targetSoc}٪ · انرژی نظری موردنیاز: ${s.energyToTarget.toFixed(1)} kWh</div>
-      <div class="plan-meta">${time}${s.power?` · توان ثبت‌شده ${s.power} kW` : ''}</div>
+      <div class="plan-meta">${time}${s.effectivePower?` · توان مؤثر خودرو/ایستگاه ${s.effectivePower} kW` : ''}</div>
       <div class="plan-meta">زمان شارژ، در صورت نمایش، با فرض میانگین ۷۰٪ توان نامی تخمین زده شده؛ زمان واقعی می‌تواند بیشتر باشد.</div>`;
     box.appendChild(item);
   });
