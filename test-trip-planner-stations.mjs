@@ -14,3 +14,8 @@ assert.ok(!source.includes("const ONLINE_STATIONS_API"), "unused external chargi
 assert.ok(source.includes("ایستگاه تأییدشده از بانک REV"), "route result must identify the approved REV station count");
 assert.ok(source.includes("در بانک تأییدشده REV ایستگاهی در شعاع انتخاب‌شده از مسیر پیدا نشد"), "empty state must explain internal data coverage");
 console.log("REV trip planner station-source checks passed.");
+
+const continuation = source.slice(source.indexOf("function continueToDriverProfile()"), source.indexOf("async function planTrip()"));
+assert.ok(continuation.includes('get("from")==="rev-mobile"'), "planner must recognize the mobile-app handoff");
+assert.ok(continuation.includes("stops:(revTimeline.stops||[])"), "saved trip must preserve planned charging stops");
+assert.ok(continuation.includes("/rev-mobile/nearby-map.html?navstart=1"), "mobile handoff must return to the app map for navigation");
