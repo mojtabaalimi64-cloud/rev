@@ -233,7 +233,7 @@ async function handle(req, env, cors) {
       const d = await getDriver(env, r.assignedDriver);
       if (d) driver = { name: d.name, phone: d.phone };
     }
-    return json({ ok: true, id: r.id, status: r.status, driver, log: r.log.slice(-8) }, 200, cors);
+    return json({ ok: true, id: r.id, status: r.status, driver, serviceCode: r.serviceCode || null, log: r.log.slice(-8) }, 200, cors);
   }
 
   // ---- customer: cancel ----
@@ -318,10 +318,12 @@ async function handle(req, env, cors) {
       await env.TOW.delete(kOffer(r.id));
       r.status = "راننده در راه";
       r.assignedDriver = d.id;
+      r.serviceCode = String(Math.floor(1000 + Math.random() * 9000));
       r.log.push({ t: now(), ev: `راننده ${d.name} پذیرفت` });
+      r.log.push({ t: now(), ev: "کد اختصاصی امداد صادر شد" });
       d.score = Math.min(200, (d.score || 100) + 1);
       await saveReq(env, r); await saveDriver(env, d);
-      return json({ ok: true, status: r.status }, 200, cors);
+      return json({ ok: true, status: r.status, serviceCode: r.serviceCode }, 200, cors);
     }
     // reject → same as timeout: move to next driver
     await env.TOW.delete(kOffer(r.id));
