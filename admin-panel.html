@@ -1,0 +1,1326 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>پنل مدیریت REV — نسخه تازه</title>
+<style>
+:root{--ink:#080B0D;--ink-2:#121A1F;--paper:#F5F7F8;--line:#DDE3E6;--muted:#5B666D;--green:#39FF88;--teal-d:#00806F;
+--font:"Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--paper);color:var(--ink);line-height:1.8;font-size:16px}
+button,input,select,textarea{font:inherit;color:inherit}
+header{background:var(--ink);color:#fff;padding:14px 20px;font-weight:900;font-size:20px;display:flex;justify-content:space-between;align-items:center}
+header b{color:var(--green)}header a{font-size:14px;font-weight:400;color:#C3CBD0}
+.wrap{width:min(100% - 32px,860px);margin:24px auto 60px}
+.bar2{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:16px;position:sticky;top:0;background:var(--paper);padding:8px 0;z-index:5}
+.tab{padding:6px 16px;border-radius:999px;border:1px solid var(--line);background:#fff;cursor:pointer}
+.tab.on{background:var(--ink);color:#fff;border-color:var(--ink)}
+.pub{margin-inline-start:auto;background:var(--green);color:var(--ink);font-weight:700;border:0;border-radius:999px;padding:6px 22px;cursor:pointer}
+.box{background:#fff;border:1px solid var(--line);border-radius:14px;padding:20px;margin-bottom:12px}
+.box h3{margin-bottom:6px}
+.row{display:flex;justify-content:space-between;align-items:center;gap:12px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 16px;margin-bottom:8px}
+.row small{color:var(--muted);display:block}
+.btn{border:1px solid var(--line);background:#fff;border-radius:8px;padding:2px 14px;cursor:pointer}
+.btn.red{color:#B3261E}.btn.main{background:var(--ink);color:#fff;border-color:var(--ink)}
+label{display:block;margin:12px 0 4px;font-weight:700;font-size:14px}
+input[type=text],input[type=password],input[type=number],select,textarea{width:100%;border:1px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff}
+input[type=color]{width:64px;height:36px;border:1px solid var(--line);border-radius:8px;padding:2px;background:#fff;cursor:pointer}
+#msg{min-height:26px;color:var(--teal-d);margin-bottom:8px}
+.lnk{background:none;border:0;color:var(--muted);cursor:pointer;text-decoration:underline}
+ol{padding-inline-start:20px;color:var(--muted);font-size:14px;margin-top:10px}
+.tb{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px;align-items:center}
+.imgf{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.imgf input{flex:1;min-width:180px}
+.imgf img{max-height:90px;border-radius:8px;border:1px solid var(--line)}
+.hint{color:var(--muted);font-size:13px}
+:focus-visible{outline:3px solid var(--green);outline-offset:2px}
+:root{--shadow:0 10px 30px rgba(8,11,13,.07);--radius:18px}
+body{background:linear-gradient(180deg,#edf2f3 0,#f7f9fa 260px);font-size:15px}
+header{position:sticky;top:0;z-index:20;padding:13px clamp(16px,3vw,34px);box-shadow:0 4px 18px rgba(0,0,0,.12);min-height:66px}
+header>span{display:flex;align-items:center;gap:10px}header>span:first-letter{letter-spacing:1px}
+.wrap{width:min(100% - 28px,1180px);margin:24px auto 64px}
+.bar2{top:66px;background:rgba(247,249,250,.94);backdrop-filter:blur(12px);padding:12px;border:1px solid rgba(221,227,230,.85);border-radius:16px;box-shadow:var(--shadow)}
+.tab{padding:8px 15px;transition:transform .15s,background .15s,border-color .15s}
+.tab:hover,.btn:hover{transform:translateY(-1px);border-color:#8b9ba3}
+.tab.on{box-shadow:0 5px 14px rgba(8,11,13,.16)}
+.pub{padding:9px 20px;box-shadow:0 5px 15px rgba(57,255,136,.16);transition:transform .15s}
+.pub:hover{transform:translateY(-1px)}
+.box{border-color:#e2e8eb;border-radius:var(--radius);padding:clamp(16px,2.2vw,26px);margin-bottom:16px;box-shadow:var(--shadow)}
+.box h2,.box h3{letter-spacing:-.2px}
+.row{border-radius:14px;padding:13px 16px;transition:border-color .15s,box-shadow .15s}
+.row:hover{border-color:#b5c3c9;box-shadow:0 5px 15px rgba(8,11,13,.04)}
+.btn{padding:6px 13px;transition:all .15s}
+.btn.main{background:linear-gradient(135deg,#10181d,#26353d)}
+label{margin:14px 0 5px;color:#27343a}
+input[type=text],input[type=password],input[type=number],select,textarea{padding:10px 13px;min-height:42px;transition:border-color .15s,box-shadow .15s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--teal-d);box-shadow:0 0 0 3px rgba(0,128,111,.10)}
+textarea{min-height:110px;resize:vertical}
+#msg{position:sticky;top:120px;z-index:4;background:#f7f9fa;padding:5px 0}
+.hint{line-height:1.9}
+@media(max-width:680px){header{font-size:17px}.wrap{width:min(100% - 18px,1180px);margin-top:12px}.bar2{top:60px;gap:6px}.tab{font-size:13px;padding:7px 10px}.pub{width:100%;margin-inline-start:0}.box{padding:15px}.row{align-items:flex-start;flex-wrap:wrap}}
+
+
+/* REV Admin redesign v2 — high-contrast, clearly visible refresh */
+body{background:#eef3f4;color:#142027}
+header{background:linear-gradient(115deg,#07100e 0%,#102a25 58%,#075c4e 100%);border-bottom:3px solid #39ff88;min-height:82px;padding:18px clamp(18px,4vw,48px);box-shadow:0 8px 28px rgba(5,25,21,.2)}
+header>span{font-size:24px;letter-spacing:.2px}
+header>span b{background:#39ff88;color:#07100e;padding:2px 10px;border-radius:8px}
+header a{color:#e1fff0;border:1px solid rgba(225,255,240,.35);border-radius:10px;padding:7px 13px;text-decoration:none;transition:background .2s}
+header a:hover{background:rgba(255,255,255,.12)}
+.wrap{width:min(100% - 32px,1280px);margin:28px auto 72px}
+.bar2{top:82px;display:flex;gap:9px;background:#101a1e;border:1px solid #253b3c;border-radius:18px;padding:12px;box-shadow:0 12px 30px rgba(8,20,23,.18);margin-bottom:22px}
+.tab{background:#1b292d;color:#d8e5e7;border-color:#34494d;border-radius:11px;padding:10px 15px;font-weight:700}
+.tab:hover,.btn:hover{transform:translateY(-2px)}
+.tab.on{background:#39ff88;color:#07100e;border-color:#39ff88;box-shadow:0 5px 16px rgba(57,255,136,.22)}
+.pub{background:#39ff88;color:#07100e;border-radius:11px;padding:10px 18px;font-weight:900;box-shadow:none}
+.box{border:1px solid #d9e4e5;border-radius:18px;padding:clamp(18px,2.4vw,30px);box-shadow:0 8px 24px rgba(17,40,44,.07);margin-bottom:18px}
+.box h2{font-size:clamp(22px,2.3vw,30px);line-height:1.5;margin-bottom:10px;color:#102a25}
+.box h3{font-size:18px;color:#123d35;margin-bottom:10px}
+.row{border:1px solid #dce6e7;background:linear-gradient(110deg,#fff,#fbfdfd);border-radius:13px;padding:14px 17px;margin-bottom:10px}
+.row:hover{border-color:#75c8a0;box-shadow:0 7px 18px rgba(15,71,52,.08)}
+.btn{border-radius:10px;padding:8px 14px;font-weight:700}
+.btn.main{background:#102a25;color:#fff;border-color:#102a25}
+.btn.red{background:#fff3f1;border-color:#ffd5ce;color:#a1261d}
+label{color:#173d35;font-size:14px;font-weight:800}
+input[type=text],input[type=password],input[type=number],select,textarea{border:1px solid #ccdada;border-radius:11px;background:#fcfefe;padding:11px 14px;min-height:44px}
+input:focus,select:focus,textarea:focus{border-color:#00806f;box-shadow:0 0 0 4px rgba(0,128,111,.12)}
+#msg{top:118px;border:1px solid #d8e7df;border-radius:10px;padding:7px 12px;box-shadow:0 3px 12px rgba(15,50,35,.04)}
+.hint{color:#64747a}
+@media(max-width:680px){header{min-height:66px;padding:12px 14px}header>span{font-size:18px}.bar2{top:66px;border-radius:13px;padding:8px}.tab{padding:8px 10px}.wrap{width:calc(100% - 16px);margin-top:14px}.pub{width:100%}}
+
+
+/* REV Admin search normalization patch */
+/* Search handles generated business codes, pasted UUIDs, Persian/Arabic letters and digits. */
+/* REV Admin compact readability patch */
+body{font-size:13px;line-height:1.65}
+header{min-height:62px;padding:10px clamp(14px,2.5vw,28px)}
+header>span{font-size:19px}
+header a{font-size:12px;padding:5px 9px}
+.wrap{margin-top:16px;margin-bottom:40px}
+.bar2{gap:6px;padding:8px;margin-bottom:14px;border-radius:12px}
+.tab{font-size:12px;padding:6px 10px;border-radius:8px}
+.pub{font-size:12px;padding:7px 12px;border-radius:8px}
+.box{padding:15px;margin-bottom:12px;border-radius:12px}
+.box h2{font-size:21px;line-height:1.45;margin-bottom:7px}
+.box h3{font-size:15px;line-height:1.5;margin-bottom:7px}
+.row{padding:9px 12px;margin-bottom:6px;border-radius:9px;gap:8px}
+.row strong{font-size:13px}
+.row small,.hint{font-size:11px;line-height:1.65}
+.btn{font-size:11px;line-height:1.4;padding:4px 8px;border-radius:6px;font-weight:600}
+label{font-size:12px;margin:10px 0 4px}
+input[type=text],input[type=password],input[type=number],select,textarea{font-size:12px;min-height:35px;padding:7px 9px;border-radius:7px}
+textarea{min-height:85px}
+#msg{font-size:12px;top:95px}
+table{font-size:11.5px;line-height:1.55;border-collapse:collapse!important;border:1px solid #cbd6da}
+thead th{font-size:11.5px;font-weight:800;background:#e8eff0!important;color:#1a302f;border-bottom:2px solid #9eafb4!important;border-left:1px solid #d2dcdf;padding:8px!important;white-space:nowrap}
+tbody td{padding:7px 8px!important;border-bottom:1px solid #d5dfe2!important;border-left:1px solid #e1e7e9;vertical-align:middle}
+tbody tr:nth-child(even){background:#f5f8f8}
+tbody tr:hover{background:#eaf6ef}
+tbody tr:last-child td{border-bottom:0!important}
+table button.btn{font-size:10.5px;padding:3px 6px;line-height:1.35;min-height:24px}
+table [data-a="edit"],table [data-a="del"],table [data-a="station-edit"],table [data-a="station-delete"]{font-size:10.5px;padding:3px 6px;min-width:26px;min-height:24px}
+table button[title],button.icon,button.icon-btn{width:27px;height:27px;min-width:27px;min-height:27px;padding:3px;font-size:13px;line-height:1;display:inline-flex;align-items:center;justify-content:center}
+table td strong{font-size:11.5px}
+table td span[style*="direction:ltr"]{font-size:10px!important;font-weight:700!important}
+@media(max-width:680px){
+ body{font-size:12px}
+ header{min-height:56px;padding:9px 11px}
+ header>span{font-size:16px}
+ .wrap{width:calc(100% - 12px);margin-top:9px}
+ .bar2{top:56px;padding:6px;gap:5px}
+ .tab{font-size:11px;padding:6px 8px}
+ .box{padding:11px}
+ .row{padding:8px 9px}
+ table{font-size:10.5px}
+ thead th,tbody td{padding:6px!important}
+}
+
+
+/* REV dropdown visibility fix v2: force readable native select controls and popup options */
+html body #root select,
+html body #root select:focus,
+html body #root select:hover {
+  color: #142027 !important;
+  background: #ffffff !important;
+  -webkit-text-fill-color: #142027 !important;
+  opacity: 1 !important;
+  color-scheme: light !important;
+  forced-color-adjust: none !important;
+  appearance: auto !important;
+  -webkit-appearance: menulist !important;
+  text-shadow: none !important;
+}
+html body #root select option,
+html body #root select optgroup,
+html body #root select option:checked,
+html body #root select option:hover {
+  color: #142027 !important;
+  background: #ffffff !important;
+  -webkit-text-fill-color: #142027 !important;
+  opacity: 1 !important;
+  forced-color-adjust: none !important;
+  text-shadow: none !important;
+}
+/* Keep selected options dark too: some native browser menus ignore option backgrounds. */
+html body #root select option:checked {
+  color: #142027 !important;
+  background: #ffffff !important;
+  -webkit-text-fill-color: #142027 !important;
+}
+html body #root select[data-t] {
+  border: 1px solid #aebfc2 !important;
+  font-weight: 600 !important;
+}
+
+/* REV Admin: light organizational palette, white and green */
+:root{--ink:#123D35!important;--ink-2:#EAF6F0!important;--paper:#F7FBF8!important;--line:#D5E7DC!important;--muted:#5D7167!important;--green:#39FF88!important;--teal-d:#00806F!important;--shadow:0 8px 24px rgba(0,90,55,.07)!important}
+html,body{background:#F7FBF8!important;color:#18352C!important}
+body{background:linear-gradient(180deg,#EAF7EF 0,#F7FBF8 260px)!important;color:#18352C!important}
+header{background:#FFFFFF!important;color:#173D32!important;border-bottom:3px solid #39FF88!important;box-shadow:0 5px 20px rgba(0,80,48,.08)!important}
+header>span b{background:#39FF88!important;color:#10372B!important}
+header a{color:#08745E!important;border-color:#CBE6D6!important}
+header a:hover{background:#EAF8F0!important}
+.bar2{background:rgba(255,255,255,.96)!important;border:1px solid #D5E7DC!important;box-shadow:0 8px 24px rgba(0,90,55,.07)!important}
+.tab{background:#F5FAF6!important;color:#285344!important;border-color:#D5E7DC!important}
+.tab:hover{background:#E7F7ED!important;border-color:#8BCFA8!important}
+.tab.on{background:#DDFBE8!important;color:#075C43!important;border-color:#39C979!important;box-shadow:0 3px 12px rgba(0,128,111,.10)!important}
+.pub{background:#39FF88!important;color:#10372B!important;box-shadow:0 4px 12px rgba(0,128,80,.12)!important}
+.box,.row{background:#FFFFFF!important;color:#18352C!important;border-color:#D5E7DC!important;box-shadow:0 6px 20px rgba(0,90,55,.05)!important}
+.row{background:linear-gradient(110deg,#FFFFFF,#F9FDFB)!important}
+.row:hover{border-color:#80CBA0!important;box-shadow:0 6px 16px rgba(0,100,60,.08)!important}
+.box h2,.box h3{color:#15523F!important}
+.btn{background:#FFFFFF!important;color:#245343!important;border-color:#CFE2D6!important}
+.btn.main{background:#00806F!important;color:#FFFFFF!important;border-color:#00806F!important}
+.btn.red{background:#FFF4F2!important;color:#A1261D!important;border-color:#F5D0CA!important}
+label{color:#285344!important}
+input[type=text],input[type=password],input[type=number],select,textarea{background:#FFFFFF!important;color:#18352C!important;border-color:#CFE2D6!important}
+input::placeholder,textarea::placeholder{color:#82958B!important}
+input:focus,select:focus,textarea:focus{border-color:#00806F!important;box-shadow:0 0 0 3px rgba(0,128,111,.12)!important}
+#msg{background:#F0FBF4!important;color:#08745E!important;border-color:#CFE8D8!important}
+.hint,.row small{color:#667B70!important}
+table{background:#FFFFFF!important;color:#18352C!important;border-color:#D5E7DC!important}
+thead th{background:#E5F5EB!important;color:#174B39!important;border-color:#CFE2D6!important}
+tbody tr:nth-child(even){background:#F7FCF9!important}
+tbody tr:hover{background:#EAF8F0!important}
+:focus-visible{outline:3px solid #00806F!important;outline-offset:2px}
+@media(max-width:680px){.bar2{background:rgba(255,255,255,.97)!important}.tab.on{background:#DDFBE8!important}}
+
+</style>
+
+<link rel="stylesheet" href="./rev-theme.css?v=1">
+<link rel="stylesheet" href="./rev-mobile-theme.css?v=20261017-7">
+</head>
+<body>
+<header><span>REV <b>پنل مدیریت</b></span><div style="display:flex;gap:8px;flex-wrap:wrap"><a href="./admin-businesses.html">پلن و بررسی کسب‌وکارها</a><a href="./admin-billing.html">بررسی پرداخت‌های مسیریاب</a><a href="./admin-music.html">مدیریت موزیک سفر</a><a href="./">مشاهده سایت ←</a></div></header>
+<div class="wrap" id="root"><div class="box"><h2>پنل مدیریت REV</h2><p>در حال راه‌اندازی پنل...</p><p class="hint">اگر این پیام باقی ماند، یک‌بار صفحه را با Ctrl+F5 تازه‌سازی کنید.</p></div></div>
+<script>
+window.addEventListener('error',function(e){const r=document.getElementById('root');if(r)r.innerHTML='<div class="box"><h2>خطا در اجرای پنل مدیریت</h2><p>بخشی از کد پنل اجرا نشد.</p><p class="hint" dir="ltr"></p><p>لطفاً همین پیام خطا را برای پشتیبانی ارسال کنید.</p></div>';const p=r&&r.querySelector('.hint');if(p)p.textContent=(e.message||'JavaScript error')+(e.lineno?' — line '+e.lineno:'');});
+const OWNER='mojtabaalimi64-cloud', REPO='rev', FILE='content.json';
+const API=`https://api.github.com/repos/${OWNER}/${REPO}/contents/`;
+const WORKER='https://rev-api.mojtaba-alimi64.workers.dev';
+const AUTH_WORKER='https://rev-auth-api.mojtaba-alimi64.workers.dev';
+const RATING_WORKER='https://rev-ratings-api.mojtaba-alimi64.workers.dev';
+const LIVE_CONTENT='https://mojtabaalimi64-cloud.github.io/rev/content.json';
+const PARTS={battery:'باتری',motor:'موتور',charging:'شارژ',electronics:'اینورتر و برق',software:'نرم‌افزار و هوش مصنوعی'};
+const TYPES={
+ articles:{label:'مقالات',one:'مقاله',fields:[['title','عنوان','text'],['part','بخش','part'],['date','تاریخ (مثلاً ۱۴۰۵/۰۷/۲۰)','text'],['image','تصویر شاخص مقاله','img'],['excerpt','خلاصه کوتاه','area'],['body','متن کامل','body']]},
+ news:{label:'اخبار',one:'خبر',fields:[['title','عنوان خبر','text'],['part','بخش','part'],['date','تاریخ','text'],['url','لینک خبر (اختیاری)','text']]},
+ episodes:{label:'پادکست',one:'قسمت',fields:[['title','عنوان قسمت','text'],['date','تاریخ','text'],['image','تصویر قسمت','img'],['url','لینک شنیدن','text'],['desc','توضیح','area']]}
+ ,products:{label:'فروشگاه',one:'محصول',fields:[['title','نام محصول','text'],['price','قیمت (فقط عدد، مثلاً 1500000)','text'],['image','تصویر محصول','img'],['desc','توضیحات کوتاه','area'],['url','لینک سفارش همین محصول (اختیاری)','text'],['stock','موجودی','stock']]},
+ ads:{label:'آگهی‌ها',one:'آگهی',fields:[['title','عنوان آگهی','text'],['desc','متن کوتاه آگهی','area'],['image','تصویر آگهی (اختیاری)','img'],['url','لینک مقصد (با https://)','text'],['position','جایگاه نمایش','sel:left|ستون کناری,top|بالای صفحه,bottom|پایین صفحه'],['enabled','وضعیت انتشار','sel:yes|فعال,no|غیرفعال'],['order','ترتیب نمایش (عدد کمتر یعنی بالاتر)','text']]},
+ techSections:{label:'محتوای بخش‌های فناوری',one:'محتوای فناوری',fields:[['part','بخش فناوری','part'],['title','عنوان بخش','text'],['lead','متن معرفی کوتاه','area'],['techText','متن نکات فناوری (هر نکته در یک خط؛ عنوان و توضیح را با | جدا کنید)','area'],['image','تصویر بخش (اختیاری)','img'],['order','ترتیب نمایش (عدد کمتر یعنی بالاتر)','text'],['enabled','وضعیت انتشار','sel:yes|منتشر شود,no|پیش‌نویس']]}
+ ,cars:{label:'خودروها',one:'خودرو',fields:[['title','نام خودرو (برند و مدل)','text'],['powertrain','نوع قوای محرکه','sel:BEV|تمام‌برقی (BEV),PHEV|هیبرید شارژی (PHEV),HEV|هیبرید معمولی (HEV),MHEV|هیبرید ملایم (MHEV),FCEV|پیل سوختی هیدروژنی (FCEV),ICE|بنزینی/دیزلی'],['type','نوع بدنه','sel:sedan|سدان,suv|شاسی‌بلند (SUV),crossover|کراس‌اور,hatch|هاچ‌بک,wagon|استیشن,fastback|فست‌بک,coupe|کوپه,convertible|کروک,pickup|پیکاپ,van|ون,minivan|مینی‌ون,other|سایر'],['market','وضعیت در بازار ایران','sel:iran|موجود در بازار ایران,import|وارداتی یا غیررسمی,none|فعلاً در بازار ایران نیست'],['price','قیمت به تومان (عدد کامل، مثلاً 2500000000)','text'],['priceDate','تاریخ قیمت (مثلاً ۱۴۰۵/۰۷/۲۰)','text'],['range','برد تمام‌برقی/ترکیبی (کیلومتر، فقط عدد)','text'],['rangeStd','استاندارد برد (WLTP، EPA، CLTC؛ در توضیحات نوع برد را مشخص کنید)','text'],['electricRange','برد تمام‌برقی در PHEV (کیلومتر، فقط عدد)','text'],['battery','ظرفیت باتری کششی (کیلووات‌ساعت، فقط عدد)','text'],['fuelType','نوع سوخت برای هیبرید/احتراقی','sel:gasoline|بنزین,diesel|گازوئیل,hydrogen|هیدروژن,other|سایر/نامشخص'],['fuelConsumption','مصرف سوخت ترکیبی (لیتر در ۱۰۰ کیلومتر، فقط عدد)','text'],['fuelTank','ظرفیت باک (لیتر، فقط عدد)','text'],['power','توان کل سیستم (اسب‌بخار، فقط عدد)','text'],['accel','شتاب ۰ تا ۱۰۰ (ثانیه، فقط عدد)','text'],['dc','حداکثر شارژ DC (کیلووات؛ برای خودروهای قابل شارژ)','text'],['ac','حداکثر شارژ AC (کیلووات؛ برای خودروهای قابل شارژ)','text'],['seats','تعداد صندلی (فقط عدد)','text'],['drive','سیستم محرک','sel:FWD|جلو‌رو,RWD|عقب‌رو,AWD|چهارچرخ‌محرک,4WD|چهارچرخ‌محرک دو دیفرانسیل'],['connector','نوع کانکتور شارژ (مثلاً CCS2 یا Type 2؛ برای خودروهای قابل شارژ)','text'],['image','تصویر خودرو','img'],['pros','نقاط قوت (هر مورد در یک خط)','area'],['cons','نقاط ضعف (هر مورد در یک خط)','area'],['url','لینک بررسی کامل یا خرید (اختیاری)','text']]}
+ ,serviceCenters:{label:'تعمیرگاه‌های مجاز خودرو برقی',one:'تعمیرگاه',fields:[['title','نام تعمیرگاه','text'],['image','تصویر تعمیرگاه','img'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا صفحه رزرو','text'],['brands','برندهای تحت پوشش (با ویرگول جدا کنید)','text'],['services','خدمات (مثلاً عیب‌یابی، باتری، موتور، اینورتر، نرم‌افزار)','area'],['authorization','مرجع/مدرک مجوز و شماره آن','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری (مثلاً شنبه تا چهارشنبه ۹ تا ۱۸؛ پنجشنبه ۹ تا ۱۳)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (در صورت وجود داده)','text'],['satisfactionCount','تعداد رأی‌های رضایت کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
+ ,partsStores:{label:'فروشگاه‌های قطعات خودرو برقی',one:'فروشگاه قطعات',fields:[['title','نام فروشگاه','text'],['image','تصویر فروشگاه','img'],['address','نشانی کامل','area'],['latitude','عرض جغرافیایی (Latitude)','text'],['longitude','طول جغرافیایی (Longitude)','text'],['phone','شماره تماس','text'],['website','وب‌سایت یا لینک سفارش','text'],['brands','برندها و مدل‌های سازگار (با ویرگول جدا کنید)','text'],['products','دسته‌های قطعات (باتری، شارژر، اینورتر، موتور، کابل و...)','area'],['authorization','مرجع/مدرک نمایندگی یا مجوز','text'],['status','وضعیت بررسی','sel:pending|در انتظار بررسی,verified|تأییدشده,rejected|ردشده'],['openingHours','ساعات کاری فروشگاه (روزها و بازه زمانی)','area'],['deliveryHours','ساعات ارسال/تحویل (اختیاری)','area'],['satisfactionScore','میانگین رضایت کاربران از ۵ (اختیاری)','text'],['satisfactionCount','تعداد امتیازهای ثبت‌شده کاربران','text'],['satisfactionNote','توضیح درباره رضایت کاربران (اختیاری)','area'],['description','توضیحات تکمیلی','area']]}
+};
+const TABS={...Object.fromEntries(Object.entries(TYPES).map(([k,t])=>[k,t.label])),site:'تنظیمات عمومی سایت',stations:'جایگاه‌های شارژ',serviceCenters:'تعمیرگاه‌های مجاز',partsStores:'فروشگاه‌های قطعات',users:'مدیریت کاربران','portal-businesses':'درخواست‌های کسب‌وکار',ratings:'امتیازها و سابقه','station-reports':'گزارش خطای جایگاه‌ها','rating-admin':'مدیریت دستی رضایت',about:'درباره ما',look:'ظاهر سایت',contact:'ارتباط با ما',plans:'پلن‌های درآمدی',engagement:'مانیتورینگ و اعلان‌ها',meetups:'برنامه‌های قرار گروهی',music:'موزیک سفر',set:'تنظیمات'};
+let stationSubmissionsCache=null, stationSubmissionsBusy=false, stationSubmissionsError='', stationSubmissionsMode='pending';
+const SUBMISSION_WORKER='https://rev-status-api.mojtaba-alimi64.workers.dev';
+let portalBusinessesCache=null, portalBusinessesBusy=false, portalBusinessesError='', stationsCache=null, stationEdit=null, stationBusy=false, stationSearchValue='', stationSortValue='name', usersCache=[], usersSearchValue='', usersCategoryValue='all', usersSortValue='created_at', usersOrder='desc', usersPage=1, usersBusy=false, usersAccess={settings:{registration_open:1,max_users:50,allowlist_enabled:1},phones:[],registered_count:0}, usersAccessBusy=false, usersDebounce=null, ratingsCache=null, ratingsBusy=false, stationReportsCache=null, stationReportsBusy=false, stationReportsError='', ratingSearchValue='', ratingSelected=null, ratingOverride=null, ratingSaveBusy=false, listSearchValue='', listSortValue='default', ratingSortValue='name', ratingHistoryFilter='all', ratingOverridesCache=null, ratingOverridesBusy=false;
+const FONTS={modern:'مدرن (وزیرمتن)',classic:'کلاسیک (تاهوما)',serif:'رسمی (سریف)'};
+const THEME0={accent:'#39FF88',dark:'#080B0D',paper:'#F5F7F8',text:'#080B0D',font:'modern',size:17};
+const CONTACT=[['email','ایمیل'],['phone','تلفن'],['telegram','تلگرام (نام کاربری یا لینک)'],['instagram','اینستاگرام (نام کاربری یا لینک)'],['youtube','یوتیوب (لینک کامل)'],['x','ایکس (نام کاربری یا لینک)'],['address','آدرس'],['note','متن کوتاه پایین صفحه‌ی تماس']];
+let tok=sessionStorage.getItem('rev_admin_token')||'', gitTok=sessionStorage.getItem('rev_github_token')||'', c=null, sha='', tab='articles', edit=null, dirty=false, note='', prev={};
+const root=document.getElementById('root'), $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+const H=()=>({Authorization:'Bearer '+tok,Accept:'application/json','Content-Type':'application/json'});
+const api=(m,b)=>fetch(WORKER+'/api/admin/content',{method:m,headers:H(),body:b===undefined?undefined:JSON.stringify(b)});
+const GH=()=>({Authorization:'Bearer '+gitTok,Accept:'application/vnd.github+json'});
+function msg(t){note=t;const e=$('msg');if(e)e.textContent=t}
+
+function makeRevCode(prefix,id){
+  const raw=String(id||'').replace(/[^a-zA-Z0-9]/g,'').toUpperCase();
+  return 'REV-'+prefix+'-'+raw.slice(-8).padStart(8,'0');
+}
+function ensureBusinessIdentifiers(data){
+  let changed=0;
+  ['partsStores','serviceCenters'].forEach(k=>{
+    if(!Array.isArray(data[k]))data[k]=[];
+    const prefix=k==='serviceCenters'?'RP':'ST';
+    data[k].forEach(item=>{
+      if(!item.id){
+        const uuid=(typeof crypto!=='undefined'&&crypto.randomUUID)?crypto.randomUUID():('legacy-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,10));
+        item.id=k+'-'+uuid; changed++;
+      }
+      if(!item.publicCode){item.publicCode=makeRevCode(prefix,item.id);changed++;}
+    });
+    const used=new Set();
+    data[k].forEach(item=>{
+      if(used.has(item.publicCode)){
+        item.publicCode='REV-'+prefix+'-'+String(item.id).replace(/[^a-zA-Z0-9]/g,'').slice(-12).toUpperCase();
+      }
+      used.add(item.publicCode);
+    });
+  });
+  return changed;
+}
+async function load(){
+  msg('در حال بارگذاری اطلاعات...');
+  try{
+    const r=await api('GET');
+    if(r.status===401||r.status===403){tok='';sessionStorage.removeItem('rev_admin_token');note='رمز مدیریتی Cloudflare نادرست است.';return draw()}
+    if(!r.ok) throw new Error('API '+r.status);
+    const j=await r.json();
+    if(j.success && j.data && typeof j.data==='object'){
+      c=j.data;
+      note='اطلاعات از دیتابیس Cloudflare بارگذاری شد.';
+      // Merge business profiles that were published to content.json but have not
+      // yet been migrated into D1. Keep all D1 records and avoid duplicate IDs.
+      try{
+        const live=await fetch(LIVE_CONTENT+'?v='+Date.now(),{cache:'no-store'});
+        if(live.ok){
+          const publicData=await live.json();
+          let imported=0;
+          ['serviceCenters','partsStores'].forEach(k=>{
+            if(!Array.isArray(c[k]))c[k]=[];
+            const ids=new Set(c[k].map(x=>String(x.id||'' )).filter(Boolean));
+            (Array.isArray(publicData[k])?publicData[k]:[]).forEach(item=>{
+              const id=String(item.id||'');
+              if(id&&!ids.has(id)){c[k].push(item);ids.add(id);imported++;}
+            });
+          });
+          if(imported)note+=` ${imported} پروفایل تعمیرگاه/فروشگاه از محتوای منتشرشده بازیابی شد؛ برای ثبت دائمی در دیتابیس روی «انتشار تغییرات» بزنید.`;
+        }
+      }catch(mergeErr){console.warn('Business profile migration skipped',mergeErr)}
+    }else{
+      // First-time migration: seed the editor from the current public content.json.
+      const old=await fetch(LIVE_CONTENT+'?v='+Date.now(),{cache:'no-store'});
+      if(!old.ok) throw new Error('Could not load existing content.json');
+      c=await old.json();
+      note='اطلاعات از نسخه فعلی سایت بارگذاری شد. برای انتقال آن به دیتابیس، پس از بررسی روی «انتشار تغییرات» بزنید.';
+    }
+    c.theme={...THEME0,adminSize:13,tableSize:11,tableDensity:'compact',tableLines:'full',tableStripe:'yes',tableWidth:'scroll',...(c.theme||{})};
+    c.siteSettings={siteName:'REV',tagline:'خودروهای برقی، تکنولوژی و آینده حمل‌ونقل',footerText:'REV؛ رسانه فارسی‌زبان خودروهای برقی و فناوری',accent:c.theme.accent||'#39FF88',dark:c.theme.dark||'#080B0D',paper:c.theme.paper||'#F5F7F8',text:'#142027',fontSize:c.theme.size||17,menuSize:15,font:c.theme.font||'modern',menu:{},textOverrides:{},...(c.siteSettings||{})};c.contact=c.contact||{};c.partImages=c.partImages||{};c.podcast=c.podcast||'REV Podcast';c.shopInfo=c.shopInfo||{};c.carsInfo=c.carsInfo||{};c.about=c.about||'';
+    c.businessPlans={...defaultBusinessPlans(),...(c.businessPlans||{})};
+    Object.keys(defaultBusinessPlans()).forEach(k=>{
+      c.businessPlans[k]={...defaultBusinessPlans()[k],...(c.businessPlans[k]||{})};
+      const defaults=defaultBusinessPlans()[k].options||[], saved=c.businessPlans[k].options||[];
+      const ids=new Set(saved.map(o=>o.id));
+      c.businessPlans[k].options=[...saved,...defaults.filter(o=>!ids.has(o.id))];
+    });
+    ['news','articles','episodes','products','cars','serviceCenters','partsStores','ads','techSections'].forEach(k=>c[k]=c[k]||[]);
+    const assignedCodes=ensureBusinessIdentifiers(c);
+    if(assignedCodes){dirty=true;note+=' برای '+assignedCodes+' موردِ شناسه‌گذاری/کد اختصاصی ایجاد شد؛ برای دائمی‌شدن آن‌ها روی «انتشار تغییرات» بزنید.';}
+    draw();
+  }catch(e){msg('بارگذاری انجام نشد. اتصال Worker و نشانی content.json را بررسی کنید.');}
+}
+async function save(){
+  const overridesInput=root.querySelector('[data-site="textOverrides"]');if(overridesInput){try{c.siteSettings=c.siteSettings||{};c.siteSettings.textOverrides=JSON.parse(overridesInput.value||'{}');overridesInput.setCustomValidity('')}catch(_){overridesInput.setCustomValidity('JSON معتبر نیست');overridesInput.reportValidity();msg('متن‌های ثابت ذخیره نشدند؛ قالب JSON را اصلاح کنید.');return}}
+  msg('در حال ذخیره در دیتابیس Cloudflare...');
+  try{
+    const r=await api('PUT',c);
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.success){
+      dirty=false;
+      if(gitTok){
+        try{
+          msg('داده‌ها ذخیره شد؛ در حال انتشار نسخه عمومی برای نمایش روی نقشه...');
+          const current=await fetch(API+FILE,{headers:GH(),cache:'no-store'});
+          const currentJson=await current.json().catch(()=>({}));
+          if(!current.ok||!currentJson.sha)throw new Error('خواندن نسخه فعلی content.json ناموفق بود');
+          const encoded=btoa(unescape(encodeURIComponent(JSON.stringify(c,null,2)+'\n')));
+          const put=await fetch(API+FILE,{method:'PUT',headers:GH(),body:JSON.stringify({message:'Publish REV content and EV business directories',content:encoded,sha:currentJson.sha})});
+          const putJson=await put.json().catch(()=>({}));
+          if(!put.ok)throw new Error(putJson.message||('GitHub HTTP '+put.status));
+          draw();msg('ذخیره در Cloudflare و انتشار content.json در GitHub انجام شد. داده‌های تأییدشده در فهرست عمومی برای نقشه قابل خواندن هستند.');
+        }catch(pubErr){draw();msg('داده‌ها در Cloudflare ذخیره شد، اما انتشار عمومی content.json انجام نشد: '+(pubErr.message||'خطای GitHub')+'. توکن GitHub با دسترسی Contents را در ورود پنل وارد کنید و دوباره انتشار را انجام دهید.');}
+      }else{draw();msg('داده‌ها در Cloudflare ذخیره شد. برای انتشار فهرست عمومی و نمایش موارد روی نقشه، با توکن GitHub دارای دسترسی Contents وارد شوید و «انتشار تغییرات» را بزنید.');}
+    }
+    else if(r.status===401||r.status===403){tok='';sessionStorage.removeItem('rev_admin_token');c=null;note='رمز مدیریتی پذیرفته نشد؛ دوباره وارد شوید.';draw()}
+    else msg('ذخیره انجام نشد (کد '+r.status+'): '+(j.error||'خطای نامشخص'));
+  }catch(e){
+    console.error('REV content save failed:',e);
+    msg('ذخیره انجام نشد: '+(e&&e.message?e.message:'خطای شبکه یا CORS')+'. نشانی Worker: '+WORKER);
+  }
+}
+/* ---- تصویر: انتخاب، کوچک‌سازی و آپلود ---- */
+const choose=()=>new Promise(r=>{const i=document.createElement('input');i.type='file';i.accept='image/*';i.onchange=()=>r(i.files[0]);i.click()});
+const shrink=f=>new Promise((res,rej)=>{const im=new Image();im.onload=()=>{const s=Math.min(1,1400/im.width),cv=document.createElement('canvas');cv.width=im.width*s;cv.height=im.height*s;const x=cv.getContext('2d');x.fillStyle='#fff';x.fillRect(0,0,cv.width,cv.height);x.drawImage(im,0,0,cv.width,cv.height);res(cv.toDataURL('image/jpeg',.82))};im.onerror=rej;im.src=URL.createObjectURL(f)});
+async function upImage(){
+  const f=await choose(); if(!f) return null;
+  if(!gitTok){msg('برای آپلود تصویر، توکن GitHub را در بخش ورود پنل وارد کنید؛ یا فعلاً نشانی تصویر را دستی وارد کنید.');return null}
+  msg('در حال آپلود تصویر به مخزن GitHub...');
+  try{
+    const d=await shrink(f), p='images/'+Date.now().toString(36)+'.jpg';
+    const r=await fetch(API+p,{method:'PUT',headers:GH(),body:JSON.stringify({message:'آپلود تصویر از پنل REV',content:d.split(',')[1]})});
+    if(!r.ok){msg('آپلود تصویر نشد (کد '+r.status+'). دسترسی توکن GitHub را بررسی کنید.');return null}
+    prev[p]=d;msg('تصویر در GitHub آپلود شد؛ بعد از «انتشار تغییرات» نشانی آن در دیتابیس ذخیره می‌شود.');return p;
+  }catch(e){msg('این فایل به‌عنوان تصویر خوانده نشد.');return null}
+}
+/* Normalize Persian/Arabic letters and digits for all admin searches. */
+function normalizeSearch(v){
+  return String(v??'').toLocaleLowerCase()
+    .replace(/[ي]/g,'ی').replace(/[ك]/g,'ک')
+    .replace(/[٠-٩]/g,d=>String('٠١٢٣٤٥٦٧٨٩'.indexOf(d)))
+    .replace(/[۰-۹]/g,d=>String('۰۱۲۳۴۵۶۷۸۹'.indexOf(d)))
+    .replace(/[\s\-_.،,]/g,'');
+}
+/* ---- صفحه‌ها ---- */
+function login(){
+  root.innerHTML=`<div class="box"><h2>ورود به پنل مدیریت REV</h2><p style="color:var(--muted)">رمز مدیریتی Cloudflare را وارد کنید. این رمز فقط تا پایان نشست همین مرورگر نگه داشته می‌شود.</p>
+  <label for="t">رمز مدیریتی Cloudflare (ADMIN_TOKEN)</label><input type="password" id="t" dir="ltr" autocomplete="current-password">
+  <label for="gt">توکن GitHub برای آپلود تصویر (اختیاری)</label><input type="password" id="gt" dir="ltr" autocomplete="off" placeholder="برای آپلود تصاویر لازم است">
+  <p class="hint">توکن GitHub فعلاً فقط برای آپلود تصویر استفاده می‌شود. آن را در کد سایت ننویسید و از رایانه عمومی استفاده نکنید.</p>
+  <p style="margin-top:12px"><button class="btn main" data-a="login">ورود</button></p><p id="msg">${esc(note)}</p></div>`;
+  if($('t')) $('t').value=tok;
+  if($('gt')) $('gt').value=gitTok;
+}
+function list(){
+  const t=TYPES[tab], items=Array.isArray(c[tab])?c[tab]:[];
+  const searchable=it=>{
+    const generatedCode=it.publicCode||(
+      tab==='serviceCenters'?makeRevCode('RP',it.id):
+      tab==='partsStores'?makeRevCode('ST',it.id):
+      ''
+    );
+    return [it.title,it.name,it.id,it.publicCode,generatedCode,it.registrationId,it.userId,it.phone,it.address,it.date,it.price,it.status,it.part,it.brands,it.products,it.services,it.description,it.url,it.slug]
+      .map(normalizeSearch).join(' ');
+  };
+  let indexed=items.map((it,i)=>({it,i}));
+  const q=normalizeSearch(listSearchValue.trim());
+  if(q)indexed=indexed.filter(x=>searchable(x.it).includes(q));
+  const sort=listSortValue||'default';
+  const value=x=>String(x.it.title||x.it.name||'').toLocaleLowerCase();
+  if(sort==='name-asc')indexed.sort((a,b)=>value(a).localeCompare(value(b),'fa'));
+  else if(sort==='name-desc')indexed.sort((a,b)=>value(b).localeCompare(value(a),'fa'));
+  else if(sort==='newest')indexed.sort((a,b)=>String(b.it.updatedAt||b.it.createdAt||b.it.date||'').localeCompare(String(a.it.updatedAt||a.it.createdAt||a.it.date||'')));
+  else if(sort==='price-asc')indexed.sort((a,b)=>(Number(a.it.price)||0)-(Number(b.it.price)||0));
+  else if(sort==='price-desc')indexed.sort((a,b)=>(Number(b.it.price)||0)-(Number(a.it.price)||0));
+  else if(sort==='rating-desc')indexed.sort((a,b)=>(Number(b.it.satisfactionScore)||0)-(Number(a.it.satisfactionScore)||0));
+  else if(sort==='status')indexed.sort((a,b)=>String(a.it.status||'').localeCompare(String(b.it.status||''),'fa'));
+  const rows=indexed.map(({it,i})=>{
+     const votes=(ratingsCache||[]).filter(v=>v._type==='store'&&String(v.id||'')===String(it.id||''));
+     const avg=votes.length?votes.reduce((sum,v)=>sum+Number(v.rating||0),0)/votes.length:null;
+     const storedScore=it.satisfactionScore!==undefined&&it.satisfactionScore!==''&&it.satisfactionScore!==null?Number(it.satisfactionScore):null;
+     const manual=(ratingOverridesCache||[]).find(o=>o.target_type==='store'&&String(o.target_id)===String(it.id||((it.title||it.name||'فروشگاه')+'|'+(it.address||''))));
+     const score=manual?Number(manual.manual_average):(avg!==null?avg:storedScore), count=manual?Number(manual.manual_count):(avg!==null?votes.length:Number(it.satisfactionCount||0));
+     const ratingBadge=score!==null&&Number.isFinite(score)?`<span style="display:inline-flex;align-items:center;gap:5px;margin:6px 6px 0 0;padding:4px 8px;border-radius:8px;background:#fff7df;color:#765300;font-size:12px;font-weight:700">★ ${score.toLocaleString('fa-IR',{maximumFractionDigits:1})}/۵ · ${count.toLocaleString('fa-IR')} رأی</span>`:`<span style="display:inline-flex;align-items:center;margin:6px 6px 0 0;padding:4px 8px;border-radius:8px;background:#f0f2f3;color:#606b70;font-size:12px">هنوز امتیازی ثبت نشده</span>`;
+     if(tab==='serviceCenters'||tab==='partsStores')return `<tr class="admin-list-row" data-search="${esc(searchable({...it,_kind:tab}))}"><td><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>${esc(it.title||it.name||'بدون نام')}</strong><span style="direction:ltr;font-size:12px;font-weight:900;color:#00806F;white-space:nowrap">${esc(it.publicCode||makeRevCode(tab==='serviceCenters'?'RP':'ST',it.id))}</span></div></td><td dir="ltr">${esc(it.id||'—')}</td><td>${esc(it.phone||'—')}</td><td>${esc(it.address||'—')}</td><td>${ratingBadge}</td><td><label style="display:inline-flex;align-items:center;gap:6px;cursor:pointer"><input type="checkbox" data-a="verify-toggle" data-k="${tab}" data-i="${i}" ${it.status==='verified'?'checked':''} style="width:18px;height:18px;accent-color:#00806f">${it.status==='verified'?'تأییدشده':'در انتظار'}</label></td><td><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></td></tr>`;
+     return `<div class="row admin-list-row" data-search="${esc(searchable({ ...it, _kind:tab }))}"><div style="flex:1;min-width:220px"><b>${esc(it.title||it.name||'بدون نام')}</b><small>${esc(PARTS[it.part]||'')} ${esc(it.date||it.priceDate||it.price||'')}</small></div><div><button class="btn" data-a="edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="del" data-i="${i}">حذف</button></div></div>`;
+   }).join('');
+  const sortOptions=`<option value="default" ${sort==='default'?'selected':''}>ترتیب فعلی</option><option value="name-asc" ${sort==='name-asc'?'selected':''}>نام: الف تا ی</option><option value="name-desc" ${sort==='name-desc'?'selected':''}>نام: ی تا الف</option><option value="newest" ${sort==='newest'?'selected':''}>جدیدترین</option><option value="price-asc" ${sort==='price-asc'?'selected':''}>قیمت: کم به زیاد</option><option value="price-desc" ${sort==='price-desc'?'selected':''}>قیمت: زیاد به کم</option><option value="rating-desc" ${sort==='rating-desc'?'selected':''}>بیشترین رضایت</option><option value="status" ${sort==='status'?'selected':''}>وضعیت</option>`;
+  const isDirectory=tab==='serviceCenters'||tab==='partsStores';
+  const directoryTable=isDirectory?`<div class="box" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:850px"><thead><tr style="background:#eef3f4;text-align:right"><th style="padding:10px">نام و شناسه اختصاصی</th><th style="padding:10px">شناسه داخلی</th><th style="padding:10px">تلفن</th><th style="padding:10px">نشانی</th><th style="padding:10px">رضایت</th><th style="padding:10px">وضعیت</th><th style="padding:10px">عملیات</th></tr></thead><tbody>${rows||`<tr><td colspan="7" style="padding:16px;text-align:center">موردی مطابق جست‌وجو پیدا نشد.</td></tr>`}</tbody></table></div>`:'';
+  return `<div class="box"><p style="margin-bottom:12px"><button class="btn main" data-a="new">افزودن ${t.one} جدید</button></p><div class="grid2"><div><label for="list-search">جست‌وجو در ${t.label}</label><input id="list-search" data-list-search value="${esc(listSearchValue)}" placeholder="نام، شناسه، تلفن، نشانی یا توضیحات"></div><div><label for="list-sort">مرتب‌سازی</label><select id="list-sort" data-list-sort>${sortOptions}</select></div></div><p class="hint" style="margin-top:8px">نمایش <b id="list-count">${indexed.length}</b> مورد از ${items.length} مورد. جست‌وجو به‌صورت زنده انجام می‌شود.</p></div>${isDirectory?directoryTable:(rows||'<div class="box" style="color:var(--muted)">موردی مطابق جست‌وجو پیدا نشد.</div>')}`;
+}
+function imgField(id,v,attr){
+  return `<div class="imgf"><input type="text" id="${id}" ${attr} value="${esc(v)}" dir="ltr" placeholder="تصویری انتخاب نشده" readonly>
+  <button class="btn main" data-a="up" data-id="${id}">آپلود تصویر</button><button class="btn red" data-a="clr" data-id="${id}">حذف</button>
+  <img id="p_${id}" src="${esc(prev[v]||v)}" alt="" ${v?'':'hidden'}></div>`;
+}
+function form(){
+  const t=TYPES[tab], it=edit.item;
+  return `<div class="box">`+t.fields.map(([k,l,ty])=>{
+    const v=it[k]??'', id='f_'+k;
+    let el;
+    if(ty==='part') el=`<select id="${id}" data-f="${k}">${Object.entries(PARTS).map(([pk,pn])=>`<option value="${pk}" ${v===pk?'selected':''}>${pn}</option>`).join('')}</select>`;
+    else if(ty==='area') el=`<textarea id="${id}" data-f="${k}" rows="3">${esc(v)}</textarea>`;
+    else if(ty.startsWith('sel:')) el=`<select id="${id}" data-f="${k}">${ty.slice(4).split(',').map(o=>{const [ov,ol]=o.split('|');return `<option value="${ov}" ${v===ov?'selected':''}>${ol}</option>`}).join('')}</select>`;
+    else if(ty==='stock') el=`<select id="${id}" data-f="${k}"><option value="in" ${v!=='out'?'selected':''}>موجود</option><option value="out" ${v==='out'?'selected':''}>ناموجود</option></select>`;
+    else if(ty==='img') el=imgField(id,v,`data-f="${k}"`);
+    else if(ty==='body') el=`<div class="tb"><button class="btn" data-a="fmt" data-w="b"><b>B</b> پررنگ</button><button class="btn" data-a="fmt" data-w="mark">مهم</button><button class="btn" data-a="fmt" data-w="h">عنوان فرعی</button><button class="btn" data-a="fmt" data-w="link">لینک</button><button class="btn" data-a="fmt" data-w="img">تصویر</button><label style="margin:0;display:flex;gap:6px;align-items:center">رنگ متن <input type="color" id="tc" value="#d93025"></label></div>
+      <textarea id="${id}" data-f="${k}" rows="14">${esc((v||[]).join('\n\n'))}</textarea><p class="hint">برای جدا کردن پاراگراف‌ها یک خط خالی بگذارید. متن را انتخاب کنید و یکی از دکمه‌های بالا را بزنید.</p>`;
+    else el=`<input type="text" id="${id}" data-f="${k}" value="${esc(v)}">`;
+    return `<label for="${id}">${l}</label>${el}`;
+  }).join('')+`<p style="margin-top:16px"><button class="btn main" data-a="ok">ثبت</button> <button class="btn" data-a="cancel">انصراف</button></p></div>`;
+}
+function sitePanel(){
+  c.siteSettings=c.siteSettings||{};
+  const s=c.siteSettings;
+  const menuDefaults={
+    'index.html':{label:'صفحه اصلی',enabled:true},
+    'article-ev.html':{label:'آموزش',enabled:true},
+    'news.html':{label:'اخبار',enabled:true},
+    'trip.html':{label:'برنامه‌ریزی سفر',enabled:true},
+    'businesses.html':{label:'فروشگاه‌ها و تعمیرگاه‌ها',enabled:true},
+    'plans.html':{label:'پلن همکاری',enabled:true},
+    'travel-plans.html':{label:'پلن مسیریابی',enabled:true},
+    'account.html':{label:'حساب کاربری',enabled:true}
+  };
+  s.menu={...menuDefaults,...(s.menu||{})};
+  const menus=Object.entries(s.menu).map(([path,m])=>'<div class="grid2" style="align-items:end;border-bottom:1px solid #dce3e6;padding:8px 0"><div><label>'+path+'</label><input data-menu-label="'+path+'" value="'+esc(m.label||'')+'" placeholder="عنوان منو"></div><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" data-menu-enabled="'+path+'" '+(m.enabled!==false?'checked':'')+'> نمایش این گزینه</label></div>').join('');
+  return `<div class="box"><h3>هویت و متن‌های عمومی سایت</h3>
+  <label>نام سایت</label><input data-site="siteName" value="${esc(s.siteName||'REV')}">
+  <label>شعار زیر نام سایت</label><input data-site="tagline" value="${esc(s.tagline||'خودروهای برقی، تکنولوژی و آینده حمل‌ونقل')}">
+  <label>متن عمومی پایین صفحه</label><input data-site="footerText" value="${esc(s.footerText||'REV؛ رسانه فارسی‌زبان خودروهای برقی و فناوری')}">
+  <label>رنگ اصلی سایت</label><input type="color" data-site="accent" value="${s.accent||c.theme.accent||'#39FF88'}">
+  <label>رنگ زمینه حالت شب</label><input type="color" data-site="dark" value="${s.dark||c.theme.dark||'#080B0D'}">
+  <label>رنگ زمینه حالت روز</label><input type="color" data-site="paper" value="${s.paper||c.theme.paper||'#F5F7F8'}">
+  <label>رنگ متن در حالت روز</label><input type="color" data-site="text" value="${s.text||'#142027'}">
+  <label>اندازه متن عمومی سایت (۱۴ تا ۲۴)</label><input type="number" min="14" max="24" data-site="fontSize" value="${s.fontSize||c.theme.size||17}">
+  <label>اندازه نوشته‌های منو (۱۲ تا ۲۲)</label><input type="number" min="12" max="22" data-site="menuSize" value="${s.menuSize||15}">
+  <label>فونت سایت</label><select data-site="font"><option value="modern" ${(s.font||c.theme.font)==='modern'?'selected':''}>وزیرمتن / فونت فارسی</option><option value="classic" ${(s.font||c.theme.font)==='classic'?'selected':''}>Tahoma</option><option value="system" ${(s.font||c.theme.font)==='system'?'selected':''}>فونت سیستم</option></select>
+  <p class="hint">تغییرات این قسمت بعد از «انتشار تغییرات» به صفحات عمومی منتقل می‌شود. حالت روز/شب انتخابی هر کاربر جداگانه روی همان مرورگر نگه‌داری می‌شود.</p></div>
+  <div class="box"><h3>مدیریت منوهای اصلی</h3><p class="hint">عنوان گزینه‌ها و نمایش یا مخفی‌بودن آن‌ها را تنظیم کنید. این تنظیمات روی پیوندهای شناخته‌شده در صفحات سایت اعمال می‌شوند.</p>${menus}</div>
+  <div class="box"><h3>ویرایش متن‌های ثابت دلخواه</h3><p class="hint">برای تغییر عبارت‌های ثابت، یک JSON با قالب «متن فعلی»: «متن جدید» وارد کنید. فقط تطبیق دقیق متن‌های متنی انجام می‌شود؛ محتوای مقاله‌ها، اخبار، خودروها و محصولات را از تب اختصاصی خودشان ویرایش کنید.</p><textarea data-site="textOverrides" rows="8" style="width:100%;direction:ltr;font-family:monospace" placeholder='{"متن فعلی":"متن جدید"}'>${esc(JSON.stringify(s.textOverrides||{},null,2))}</textarea></div>`;
+}
+function look(){
+  const t=c.theme;
+  const col=(k,l)=>`<label>${l}</label><input type="color" data-t="${k}" value="${t[k]}">`;
+  const selected=(k,v)=>String(t[k]??'')===String(v)?'selected':'';
+  return `<div class="box"><h3>رنگ‌ها و فونت سایت</h3>${col('accent','رنگ اصلی')}${col('dark','زمینه‌ی تیره')}${col('paper','زمینه‌ی روشن')}${col('text','رنگ متن')}
+  <label>فونت سایت</label><select data-t="font">${Object.entries(FONTS).map(([k,n])=>`<option value="${k}" ${t.font===k?'selected':''}>${n}</option>`).join('')}</select>
+  <label>اندازه‌ی متن سایت (۱۴ تا ۲۲)</label><input type="number" data-t="size" min="14" max="22" value="${t.size}">
+  <p class="hint">تنظیمات بعدی فقط ظاهر پنل مدیریت را تغییر می‌دهند.</p><p style="margin-top:12px"><button class="btn" data-a="reset">بازگشت رنگ‌ها به پیش‌فرض</button></p></div>
+  <div class="box"><h3>اندازه و نمایش جدول‌ها در پنل مدیریت</h3>
+  <label>اندازه‌ی نوشته‌های پنل</label><select data-t="adminSize"><option value="12" ${selected('adminSize',12)}>کوچک</option><option value="13" ${selected('adminSize',13)}>معمولی</option><option value="14" ${selected('adminSize',14)}>بزرگ</option><option value="15" ${selected('adminSize',15)}>خیلی بزرگ</option></select>
+  <label>اندازه‌ی نوشته‌های داخل جدول</label><select data-t="tableSize"><option value="10" ${selected('tableSize',10)}>خیلی کوچک</option><option value="11" ${selected('tableSize',11)}>کوچک</option><option value="12" ${selected('tableSize',12)}>معمولی</option><option value="13" ${selected('tableSize',13)}>بزرگ</option><option value="14" ${selected('tableSize',14)}>خیلی بزرگ</option></select>
+  <label>فاصله‌ی ردیف‌های جدول</label><select data-t="tableDensity"><option value="compact" ${selected('tableDensity','compact')}>فشرده</option><option value="normal" ${selected('tableDensity','normal')}>معمولی</option><option value="comfortable" ${selected('tableDensity','comfortable')}>بازتر و خواناتر</option></select>
+  <label>خط‌کشی جدول</label><select data-t="tableLines"><option value="full" ${selected('tableLines','full')}>خط عمودی و افقی</option><option value="row" ${selected('tableLines','row')}>فقط خط افقی بین ردیف‌ها</option><option value="none" ${selected('tableLines','none')}>بدون خط‌کشی</option></select>
+  <label>پس‌زمینه‌ی ردیف‌ها</label><select data-t="tableStripe"><option value="yes" ${selected('tableStripe','yes')}>ردیف‌های یکی‌درمیان رنگی</option><option value="no" ${selected('tableStripe','no')}>پس‌زمینه‌ی یکدست</option></select>
+  <label>جدول‌های عریض</label><select data-t="tableWidth"><option value="scroll" ${selected('tableWidth','scroll')}>حفظ ستون‌ها و اسکرول افقی در صورت نیاز</option><option value="fit" ${selected('tableWidth','fit')}>فشرده‌سازی ستون‌ها برای جا شدن در صفحه</option></select>
+  <p class="hint" style="margin-top:10px">تنظیمات فوراً پیش‌نمایش می‌شوند. برای ذخیره‌ی دائمی، بالای پنل «انتشار تغییرات» را بزنید.</p><p style="margin-top:12px"><button class="btn" data-a="reset-layout">بازگشت اندازه و جدول‌ها به پیش‌فرض</button></p></div>
+  <div class="box"><h3>تصویر بالای صفحه‌ی هر بخش</h3>${Object.entries(PARTS).map(([k,n])=>`<label>${n}</label>${imgField('pi_'+k,c.partImages[k]||'',`data-pi="${k}"`)}`).join('')}</div>`;
+}
+const contactTab=()=>`<div class="box"><h3>راه‌های ارتباطی</h3><p class="hint">فقط موردهایی که پر کنید در سایت نمایش داده می‌شوند.</p>${CONTACT.map(([k,l])=>`<label for="c_${k}">${l}</label><input type="text" id="c_${k}" data-c="${k}" value="${esc(c.contact[k])}" ${k!=='address'&&k!=='note'?'dir="ltr"':''}>`).join('')}</div>`;
+const portalBusinessTypeLabel=t=>({store:'فروشگاه قطعات',repair:'تعمیرگاه و مرکز خدمات',charging:'جایگاه شارژ'})[t]||t;
+const portalBusinessStatusLabel=s=>({pending:'در انتظار بررسی',approved:'تأییدشده',rejected:'ردشده',needs_review:'نیازمند بررسی بیشتر',suspended:'تعلیق‌شده'})[s]||s||'نامشخص';
+const portalBusinessPanel=()=>{
+ if(portalBusinessesBusy)return '<div class="box">در حال دریافت درخواست‌های کسب‌وکار از دیتابیس REV…</div>';
+ if(portalBusinessesError)return '<div class="box"><h3>درخواست‌های کسب‌وکار</h3><p class="hint">'+esc(portalBusinessesError)+'</p><button class="btn" data-a="portal-businesses-refresh">تلاش دوباره</button></div>';
+ const items=portalBusinessesCache||[];
+ return '<div class="box"><h3>درخواست‌های کسب‌وکار و فروشگاه</h3><p class="hint">درخواست‌ها مستقیماً از دیتابیس حساب‌های REV خوانده می‌شوند. تأیید پروفایل به‌تنهایی پلن پولی را فعال نمی‌کند؛ وضعیت پرداخت و دسترسی پلن را نیز جداگانه ثبت کنید.</p><button class="btn" data-a="portal-businesses-refresh">به‌روزرسانی فهرست</button><p class="hint">تعداد موارد: '+items.length+'</p></div>'+
+ (items.length?items.map(x=>{
+ const type=portalBusinessTypeLabel(x.business_type), plan=x.plan_name||'بدون پلن', payment=({paid:'پرداخت‌شده',pending:'در انتظار پرداخت',waived:'رایگان/معاف',failed:'ناموفق',refunded:'مستردشده'})[x.plan_payment_status]||'ثبت نشده';
+ const exp=(x.plan_expires_at||'').slice(0,10)||new Date(Date.now()+365*86400000).toISOString().slice(0,10);
+ const start=(x.plan_starts_at||new Date().toISOString()).slice(0,10);
+ let features={};try{features=JSON.parse(x.plan_features_json||'{}')}catch(_){}
+ const selected=(key,val)=>String(val||'')===String(key)?'selected':'';
+ return '<div class="box portal-business-card" data-id="'+esc(x.id)+'"><h3>'+esc(x.name)+' <span class="hint">· '+esc(type)+'</span></h3><p class="hint">مالک: '+esc(x.owner_name||'—')+' · '+esc(x.owner_email||'—')+' · شهر: '+esc(x.city||'—')+'</p><p>'+esc(x.address||'')+'</p><p>وضعیت پروفایل: <strong>'+esc(portalBusinessStatusLabel(x.status))+'</strong> · پلن: <strong>'+esc(plan)+'</strong> · پرداخت: '+esc(payment)+'</p>'+(x.moderation_note?'<p class="hint">یادداشت بررسی: '+esc(x.moderation_note)+'</p>':'')+
+ '<label>یادداشت مدیر<input type="text" data-field="note" value="'+esc(x.moderation_note||'')+'" maxlength="500"></label><div class="actions"><button class="btn" data-a="portal-review" data-status="approved">تأیید پروفایل</button><button class="btn" data-a="portal-review" data-status="needs_review">نیازمند بررسی</button><button class="btn" data-a="portal-review" data-status="rejected">رد</button><button class="btn" data-a="portal-review" data-status="suspended">تعلیق</button></div>'+
+ '<hr style="margin:14px 0;border:0;border-top:1px solid var(--line)"><h3>پلن و دسترسی‌ها</h3><div class="grid2"><div><label>پلن<select data-field="planCode"><option value="free" '+selected('free',x.plan_code)+'>پایه / رایگان</option><option value="professional" '+selected('professional',x.plan_code)+'>حرفه‌ای</option><option value="featured" '+selected('featured',x.plan_code)+'>ویژه</option><option value="sponsor" '+selected('sponsor',x.plan_code)+'>حامی / تبلیغاتی</option></select></label><label>وضعیت پلن<select data-field="planStatus"><option value="pending_payment" '+selected('pending_payment',x.plan_status||'pending_payment')+'>در انتظار پرداخت/تأیید</option><option value="active" '+selected('active',x.plan_status)+'>فعال</option><option value="expired" '+selected('expired',x.plan_status)+'>منقضی</option><option value="suspended" '+selected('suspended',x.plan_status)+'>تعلیق‌شده</option><option value="cancelled" '+selected('cancelled',x.plan_status)+'>لغوشده</option></select></label><label>وضعیت پرداخت<select data-field="paymentStatus"><option value="pending" '+selected('pending',x.plan_payment_status||'pending')+'>در انتظار پرداخت</option><option value="paid" '+selected('paid',x.plan_payment_status)+'>پرداخت‌شده</option><option value="waived" '+selected('waived',x.plan_payment_status)+'>رایگان / معاف</option><option value="failed" '+selected('failed',x.plan_payment_status)+'>ناموفق</option><option value="refunded" '+selected('refunded',x.plan_payment_status)+'>مستردشده</option></select></label><label>نام نمایشی پلن<input data-field="planName" value="'+esc(x.plan_name||({free:'پایه رایگان',professional:'حرفه‌ای',featured:'ویژه',sponsor:'حامی / تبلیغاتی'}[x.plan_code]||'پلن حرفه‌ای'))+'" maxlength="120"></label><label>تاریخ شروع<input data-field="startsAt" type="date" value="'+esc(start)+'"></label><label>تاریخ انقضا<input data-field="expiresAt" type="date" value="'+esc(exp)+'"></label></div></div><p class="hint">دسترسی‌های قابل اعطا:</p><div class="grid2">'+[['listing','نمایش در فهرست عمومی'],['contact','نمایش اطلاعات تماس'],['edit','اجازه ویرایش پروفایل'],['map_pin','نمایش روی نقشه'],['hours','نمایش ساعات کاری'],['services','نمایش خدمات و برندها'],['links','نمایش لینک وب‌سایت'],['product_catalog','مدیریت محصولات فروشگاه'],['photos','مدیریت تصاویر'],['highlight','برجسته‌سازی'],['stats','آمار بازدید']].map(([k,label])=>'<label><input type="checkbox" data-feature="'+k+'" '+(features[k]===true?'checked':'')+'> '+label+'</label>').join('')+'</div><p style="margin-top:12px"><button class="btn main" data-a="portal-plan">ذخیره پلن و دسترسی‌ها</button></p></div>';
+ }).join(''):'<div class="box">هنوز درخواست کسب‌وکاری در دیتابیس ثبت نشده است.</div>');
+};
+async function loadPortalBusinesses(){
+ if(portalBusinessesBusy)return;portalBusinessesBusy=true;portalBusinessesError='';draw();
+ try{const r=await fetch(AUTH_WORKER+'/api/admin/businesses',{headers:H(),cache:'no-store'});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));portalBusinessesCache=Array.isArray(j.businesses)?j.businesses:[];portalBusinessesError='';}
+ catch(e){portalBusinessesError='دریافت درخواست‌ها ناموفق بود: '+(e.message||'خطای اتصال');}
+ finally{portalBusinessesBusy=false;if(tab==='portal-businesses')draw()}
+}
+const usersPanel=()=>`<div class="box"><h3>کنترل ثبت‌نام آزمایشی</h3><p class="hint">ثبت‌نام کاربران جدید را محدود کنید؛ ورود کاربران قبلی همچنان امکان‌پذیر می‌ماند. سقف پیش‌فرض ۵۰ حساب است و هر زمان قابل تغییر است.</p><div class="grid2"><div><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="registration-open" ${Number(usersAccess.settings?.registration_open)!==0?'checked':''}> اجازه ثبت‌نام کاربران جدید</label><label for="registration-max">حداکثر تعداد حساب‌ها</label><input id="registration-max" type="number" min="1" max="100000" value="${esc(usersAccess.settings?.max_users??50)}"><p class="hint">تعداد فعلی: ${Number(usersAccess.registered_count||0).toLocaleString('fa-IR')} حساب</p><label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="registration-allowlist" ${Number(usersAccess.settings?.allowlist_enabled)!==0?'checked':''}> فقط شماره‌های موجود در فهرست مجاز بتوانند ثبت‌نام کنند</label><button class="btn main" data-a="registration-save" ${usersAccessBusy?'disabled':''}>ذخیره محدودیت‌ها</button><p class="hint" id="registration-status">${usersAccessBusy?'در حال دریافت/ذخیره اطلاعات...':'با خاموش کردن اجازه ثبت‌نام، ثبت‌نام جدید متوقف می‌شود.'}</p></div><div><label for="registration-phone">افزودن شماره مجاز (شماره ایران)</label><div style="display:flex;gap:8px"><input id="registration-phone" inputmode="tel" placeholder="09123456789"><button class="btn" data-a="registration-add" ${usersAccessBusy?'disabled':''}>افزودن شماره</button></div><p class="hint">وقتی گزینه «فقط شماره‌های موجود در فهرست مجاز» روشن باشد، تنها شماره‌های این فهرست می‌توانند کد پیامکی ثبت‌نام بگیرند.</p><div style="max-height:220px;overflow:auto">${(usersAccess.phones||[]).map(p=>'<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;padding:8px;border-bottom:1px solid var(--line)"><span dir="ltr">'+esc(p.phone_e164)+'</span><button class="btn" data-a="registration-remove" data-phone="'+esc(p.phone_e164)+'">حذف</button></div>').join('')||'<p class="hint">هنوز شماره‌ای به فهرست مجاز اضافه نشده است.</p>'}</div></div></div></div><div class="box"><h3>کاربران ثبت‌نام‌شده REV</h3><p class="hint">جست‌وجو با شماره موبایل انجام می‌شود. برای تفکیک کاربران عادی و کسب‌وکارها از دسته‌بندی زیر استفاده کنید.</p><div class="grid2"><div><label for="users-search">جست‌وجو بر اساس شماره موبایل</label><input id="users-search" inputmode="tel" data-users-search value="${esc(usersSearchValue)}" placeholder="مثلاً 09123456789 یا +989123456789"><label for="users-category" style="margin-top:8px">دسته‌بندی حساب‌ها</label><select id="users-category" data-users-category><option value="all" ${usersCategoryValue==='all'?'selected':''}>همه حساب‌ها</option><option value="users" ${usersCategoryValue==='users'?'selected':''}>کاربران عادی</option><option value="store" ${usersCategoryValue==='store'?'selected':''}>فروشگاه‌ها</option><option value="repair" ${usersCategoryValue==='repair'?'selected':''}>تعمیرگاه‌ها</option><option value="charging" ${usersCategoryValue==='charging'?'selected':''}>جایگاه‌های شارژ</option><option value="tow" ${usersCategoryValue==='tow'?'selected':''}>یدک‌کش‌ها</option></select></div><div><label for="users-sort">مرتب‌سازی</label><select id="users-sort" data-users-sort><option value="created_at" ${usersSortValue==='created_at'?'selected':''}>تاریخ ثبت‌نام</option><option value="display_name" ${usersSortValue==='display_name'?'selected':''}>نام</option><option value="email_normalized" ${usersSortValue==='email_normalized'?'selected':''}>ایمیل</option><option value="account_status" ${usersSortValue==='account_status'?'selected':''}>وضعیت حساب</option><option value="last_login_at" ${usersSortValue==='last_login_at'?'selected':''}>آخرین ورود</option></select><select data-users-order style="margin-top:6px"><option value="desc" ${usersOrder==='desc'?'selected':''}>نزولی / جدیدتر ابتدا</option><option value="asc" ${usersOrder==='asc'?'selected':''}>صعودی / قدیمی‌تر ابتدا</option></select></div></div><p class="hint" id="users-status">در حال بارگذاری...</p></div><div class="box" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:1200px"><thead><tr style="background:#eef3f4;text-align:right"><th style="padding:10px">نام و شناسه اختصاصی</th><th style="padding:10px">شناسه داخلی</th><th style="padding:10px">ایمیل</th><th style="padding:10px">شماره همراه</th><th style="padding:10px">وضعیت</th><th style="padding:10px">تأیید ایمیل</th><th style="padding:10px">ثبت‌نام</th><th style="padding:10px">آخرین ورود</th></tr></thead><tbody>${usersCache.map(u=>`<tr><td style="padding:10px"><strong>${esc(u.display_name||'بدون نام')}</strong><div style="direction:ltr;text-align:right;color:#00806F;font-weight:800;font-size:12px">${esc(u.public_code||('REV-US-'+String(u.id||'').replace(/-/g,'').toUpperCase()))}</div></td><td style="padding:10px;direction:ltr;font-size:11px">${esc(u.id||'—')}</td><td style="padding:10px">${esc(u.email_normalized||'—')}</td><td style="padding:10px;direction:ltr;white-space:nowrap">${esc(u.phone_e164||'—')}</td><td style="padding:10px">${esc(u.account_status||'—')} · ${({users:'کاربر عادی',store:'فروشگاه',repair:'تعمیرگاه',charging:'جایگاه شارژ',tow:'یدک‌کش'}[u.user_category]||'کاربر عادی')}</td><td style="padding:10px">${u.email_verified_at?'تأییدشده':'تأییدنشده'}</td><td style="padding:10px;white-space:nowrap">${esc(u.created_at||'—')}</td><td style="padding:10px;white-space:nowrap">${esc(u.last_login_at||'—')}</td></tr>`).join('')||'<tr><td colspan="8" style="padding:16px;text-align:center">کاربری پیدا نشد یا API هنوز راه‌اندازی نشده است.</td></tr>'}</tbody></table></div><div class="box"><button class="btn" data-a="users-prev" ${usersPage<=1?'disabled':''}>صفحه قبل</button> <span>صفحه ${usersPage}</span> <button class="btn" data-a="users-next" ${usersCache.length<50?'disabled':''}>صفحه بعد</button></div>`;
+const settings=()=>`<div class="box"><h3>حساب کاربران REV</h3>
+  <label style="display:flex;gap:10px;align-items:center"><input type="checkbox" id="auth-enabled"> فعال بودن ورود و ثبت‌نام کاربران</label>
+  <p class="hint" id="auth-status">برای دریافت وضعیت، ابتدا Worker احراز هویت REV باید راه‌اندازی شده باشد. تا پیش از تنظیم سرویس ایمیل، فعال‌سازی امکان‌پذیر نیست.</p>
+  <button class="btn main" data-a="auth-save">ذخیره وضعیت ورود و ثبت‌نام</button>
+  <p class="hint">این گزینه از طریق API امن و با رمز مدیریتی ذخیره می‌شود؛ خاموش بودن آن، مسیرهای ثبت‌نام و ورود کاربران عادی را می‌بندد و ورود مدیر سایت را تغییر نمی‌دهد.</p><p><a class="btn main" href="./admin-businesses.html" target="_blank" rel="noopener">مدیریت درخواست‌های فروشگاه، تعمیرگاه، جایگاه شارژ و محصولات ←</a></p><p><a href="./account.html" target="_blank" rel="noopener">مشاهده پنل کاربری و ثبت کسب‌وکار</a></p></div>
+  <div class="box"><label for="pn">نام پادکست</label><input type="text" id="pn" value="${esc(c.podcast)}">
+  <label for="ga">شناسه‌ی گوگل آنالیتیکس (اختیاری، مثل G-XXXXXXXX)</label><input type="text" id="ga" data-g="1" dir="ltr" value="${esc(c.gaId)}"><p class="hint">با این شناسه می‌توانید تعداد بازدید و منبع بازدیدکنندگان را ببینید.</p></div>`;
+const shopBox=()=>{const s=c.shopInfo;return `<div class="box"><h3>تنظیمات فروشگاه</h3>
+ <label style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="sh" ${c.shop?'checked':''}> نمایش فروشگاه در منوی سایت</label>
+ <label for="s_intro">متن معرفی بالای فروشگاه</label><textarea id="s_intro" data-s="intro" rows="2">${esc(s.intro)}</textarea>
+ <label for="s_cur">واحد پول</label><input type="text" id="s_cur" data-s="currency" value="${esc(s.currency||'تومان')}">
+ <label for="s_url">لینک پیش‌فرض سفارش (تلگرام، واتساپ، درگاه پرداخت و...)</label><input type="text" id="s_url" data-s="orderUrl" dir="ltr" value="${esc(s.orderUrl)}" placeholder="https://t.me/...">
+ <label for="s_terms">قوانین فروش، ارسال و بازگشت کالا</label><textarea id="s_terms" data-s="terms" rows="5">${esc(s.terms)}</textarea>
+ <p class="hint">مشتری روی «سفارش و خرید» می‌زند و به لینک سفارش شما (تلگرام، واتساپ یا درگاه پرداخت) می‌رود. پرداخت مستقیم روی خود سایت وجود ندارد.</p></div>
+ <h3 style="margin:16px 0 8px">محصولات</h3>`};
+const carsBox=()=>`<div class="box"><h3>راهنمای بخش مقایسه و پیشنهاد خرید</h3>
+ <p class="hint">با ثبت حداقل دو خودرو، بخش «انتخاب و مقایسه‌ی خودروی برقی» در صفحه‌ی اول سایت ظاهر می‌شود. قیمت را به تومان و به‌صورت عدد کامل بنویسید و برد، باتری، توان، شتاب و شارژ را فقط به‌صورت عدد. تاریخ قیمت را حتماً بنویسید و قیمت‌ها را مرتب به‌روز کنید، چون قیمت خودرو سریع تغییر می‌کند. هرچه اطلاعات کامل‌تر باشد، پیشنهادها دقیق‌تر می‌شوند.</p>
+ <label for="ci_note">توضیح اضافه زیر این بخش (اختیاری)</label><textarea id="ci_note" data-ci="note" rows="2">${esc(c.carsInfo.note)}</textarea></div>
+ <h3 style="margin:16px 0 8px">خودروها</h3>`;
+const aboutTab=()=>`<div class="box"><label for="ab">متن صفحه‌ی «درباره ما»</label><textarea id="ab" rows="14">${esc(c.about)}</textarea><p class="hint">پاراگراف‌ها را با یک خط خالی جدا کنید. «## عنوان» عنوان فرعی می‌سازد و **متن** پررنگ می‌شود.</p></div>`;
+function directoryIntro(){
+ const isService=tab==='serviceCenters';
+ return `<div class="box"><h3>${isService?'فهرست تعمیرگاه‌های مجاز':'فهرست فروشگاه‌های قطعات خودرو برقی'}</h3><p class="hint">هر دسته فهرست مستقل دارد. وضعیت «تأییدشده» را فقط پس از بررسی مجوز انتخاب کنید. برای نمایش روی نقشه، مختصات جغرافیایی لازم است. این بخش فعلاً مدیریت فهرست است و به‌تنهایی ثبت‌نام عمومی و احراز هویت ایجاد نمی‌کند.</p><p class="hint">مدارک هویتی یا اطلاعات حساس را در توضیحات عمومی وارد نکنید.</p></div>`;
+}
+async function loadRatings(){
+  if(ratingsBusy)return;ratingsBusy=true;note='در حال دریافت سابقه فروشگاه‌ها، تعمیرگاه‌ها و ایستگاه‌های شارژ...';draw();
+  try{
+    const base='https://rev-ratings-api.mojtaba-alimi64.workers.dev/api/admin/ratings';
+    const [storesRes,stationsRes]=await Promise.all([
+      fetch(base+'?type=store&limit=1000',{headers:H(),cache:'no-store'}),
+      fetch(base+'?type=station&limit=1000',{headers:H(),cache:'no-store'})
+    ]);
+    const [stores,stations]=await Promise.all([storesRes.json().catch(()=>({})),stationsRes.json().catch(()=>({}))]);
+    if(!storesRes.ok||!stores.success)throw new Error(stores.error||('فروشگاه‌ها: HTTP '+storesRes.status));
+    if(!stationsRes.ok||!stations.success)throw new Error(stations.error||('ایستگاه‌ها: HTTP '+stationsRes.status));
+    ratingsCache=[
+      ...(Array.isArray(stores.items)?stores.items.map(x=>({...x,_type:'store'})):[]),
+      ...(Array.isArray(stations.items)?stations.items.map(x=>({...x,_type:'station'})):[])
+    ];
+    note='سابقه '+ratingsCache.length+' رأی فروشگاه/تعمیرگاه و ایستگاه شارژ دریافت شد.';
+  }catch(e){ratingsCache=[];note='دریافت سابقه امتیازها ناموفق بود: '+(e.message||'خطای اتصال')+'؛ رمز مدیر و انتشار Worker امتیازدهی را بررسی کنید.'}
+  finally{ratingsBusy=false;if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores'||tab==='stations')draw()}
+}
+function ratingsPanel(){
+  if(ratingsCache===null){loadRatings();return '<div class="box">در حال دریافت سابقه امتیازها...</div>'}
+  const businesses=[...(c.partsStores||[]).map(x=>({...x,_kind:'فروشگاه قطعات'})),...(c.serviceCenters||[]).map(x=>({...x,_kind:'تعمیرگاه مجاز'}))];
+  const idFor=x=>String(x.id||((x.title||x.name||'فروشگاه')+'|'+(x.address||''))).slice(0,240);
+  const byId=new Map(businesses.map(x=>[idFor(x),x]));
+  const fmt=n=>Number(n||0).toLocaleString('fa-IR');
+  const chart=(votes)=>{
+    const counts=[1,2,3,4,5].map(n=>votes.filter(v=>Number(v.rating)===n).length);
+    const max=Math.max(1,...counts);
+    const bars=counts.map((n,i)=>'<div style="display:grid;grid-template-columns:42px minmax(50px,1fr) 34px;align-items:center;gap:8px;margin:8px 0"><span style="font-size:12px;white-space:nowrap">'+(i+1)+' از ۵ ★</span><div style="height:12px;background:#e7edf0;border-radius:99px;overflow:hidden"><div style="height:100%;width:'+(n/max*100)+'%;background:'+(i===4?'#168653':i===3?'#39a978':i===2?'#d4a72c':'#e38a63')+';border-radius:99px"></div></div><b style="font-size:12px;text-align:left">'+fmt(n)+'</b></div>').join('');
+    const days=Array.from({length:7},(_,i)=>{const d=new Date();d.setHours(0,0,0,0);d.setDate(d.getDate()-(6-i));return d});
+    const dayCounts=days.map(d=>votes.filter(v=>{const x=new Date(v.created_at);return !Number.isNaN(x.getTime())&&x.toDateString()===d.toDateString()}).length);
+    const dayMax=Math.max(1,...dayCounts);
+    const timeline=days.map((d,i)=>'<div title="'+esc(d.toLocaleDateString('fa-IR'))+': '+fmt(dayCounts[i])+' رأی" style="flex:1;min-width:0;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;gap:5px;height:106px"><b style="font-size:10px">'+fmt(dayCounts[i])+'</b><div style="width:70%;max-width:30px;height:'+Math.max(3,dayCounts[i]/dayMax*64)+'px;background:#168653;border-radius:5px 5px 0 0"></div><small style="font-size:10px;color:#637381">'+esc(d.toLocaleDateString('fa-IR',{day:'numeric',month:'numeric'}))+'</small></div>').join('');
+    return '<div class="grid2" style="margin-top:12px"><div style="border:1px solid #e1e7ea;border-radius:10px;padding:12px"><b>توزیع امتیازها</b><p class="hint">تعداد رأی در هر امتیاز</p>'+bars+'</div><div style="border:1px solid #e1e7ea;border-radius:10px;padding:12px"><b>روند ثبت رأی‌ها</b><p class="hint">۷ روز اخیر · تعداد رأی روزانه</p><div style="display:flex;align-items:flex-end;gap:5px;margin-top:8px">'+timeline+'</div></div></div>';
+  };
+  const renderGroup=(type,title)=>{
+    const votesAll=ratingsCache.filter(v=>v._type===type),groups=new Map();
+    for(const vote of votesAll){const id=String(vote.id||'');if(!groups.has(id))groups.set(id,[]);groups.get(id).push(vote)}
+    const cards=[...groups.entries()].map(([id,votes])=>{
+      const b=type==='store'?byId.get(id):null,rawAvg=votes.reduce((sum,v)=>sum+Number(v.rating||0),0)/votes.length,manual=overrides.find(x=>x.target_type===type&&String(x.target_id)===id),avg=manual?Number(manual.manual_average):rawAvg,shownCount=manual?Number(manual.manual_count):votes.length;
+      const name=manual?.display_name||b?.title||b?.name||(type==='station'?'شناسه ایستگاه: '+id:id);
+      const history=votes.map(v=>'<div class="row" style="border-top:1px solid #e6ebee;padding:8px 0"><div><b>'+esc('★'.repeat(Number(v.rating)||0))+'</b><small>'+esc(new Date(v.created_at).toLocaleString('fa-IR'))+'</small></div><small>'+esc(Number(v.rating)||0)+' از ۵</small></div>').join('');
+      return '<div class="box"><h3>'+esc(name)+'</h3><p class="hint">'+esc(b?b._kind:(type==='station'?'ایستگاه شارژ':'مورد حذف‌شده یا شناسه تغییرکرده'))+' · '+(manual?'امتیاز دستی نهایی':'میانگین رأی‌های ثبت‌شده')+' '+avg.toLocaleString('fa-IR',{maximumFractionDigits:2})+' از ۵ · '+fmt(shownCount)+' رأی'+(manual?' · تنظیم‌شده توسط مدیر':'')+'</p><p class="hint" style="margin:8px 0">شناسه رأی: <code dir="ltr">'+esc(id)+'</code></p>'+chart(votes)+'<details style="margin-top:12px"><summary>مشاهده سوابق دقیق ('+fmt(votes.length)+' رأی)</summary>'+history+'</details></div>';
+    }).join('');
+    const total=votesAll.length,avg=total?votesAll.reduce((sum,v)=>sum+Number(v.rating||0),0)/total:0;
+    return '<div class="box"><h3>'+title+'</h3><p class="hint">تعداد رأی‌ها: <b>'+fmt(total)+'</b> · میانگین کل: <b>'+avg.toLocaleString('fa-IR',{maximumFractionDigits:2})+'/۵</b></p>'+chart(votesAll)+'</div>'+(cards||'<div class="box">هنوز رأیی در این دسته ثبت نشده است.</div>');
+  };
+  const overrides=Array.isArray(ratingOverridesCache)?ratingOverridesCache:[];
+  const relevantOverrides=overrides.filter(x=>ratingHistoryFilter==='all'||x.target_type===ratingHistoryFilter);
+  const manualChart=relevantOverrides.length?'<div class="box"><h3>نمودار امتیازهای نهایی تنظیم‌شده دستی</h3><p class="hint">امتیازهای دستی در این نمودار نمایش داده می‌شوند؛ نمودار توزیع رأی‌های کاربران جدا از امتیاز دستی باقی می‌ماند.</p>'+relevantOverrides.slice(0,30).map(x=>{const avg=Math.max(0,Math.min(5,Number(x.manual_average)||0));return '<div style="display:grid;grid-template-columns:minmax(120px,1.4fr) minmax(70px,2fr) 90px;gap:9px;align-items:center;margin:9px 0"><span style="font-size:12px;overflow-wrap:anywhere">'+esc(x.display_name||x.public_code||x.target_id)+'</span><div style="height:12px;background:#e7edf0;border-radius:99px;overflow:hidden"><div style="height:100%;width:'+(avg/5*100)+'%;background:#168653;border-radius:99px"></div></div><b style="font-size:12px;text-align:left;white-space:nowrap">'+avg.toLocaleString('fa-IR',{maximumFractionDigits:1})+'/۵ · '+fmt(x.manual_count)+' رأی</b></div>'}).join('')+'</div>':'<div class="box"><h3>نمودار امتیازهای نهایی تنظیم‌شده دستی</h3><p class="hint">برای این دسته هنوز امتیاز دستی ثبت نشده است.</p></div>';
+  const filters=[['all','همه'],['store','فروشگاه‌ها و تعمیرگاه‌ها'],['station','ایستگاه‌های شارژ']];
+  return '<div class="box"><h3>امتیازها و سابقه</h3><p class="hint">نمودار توزیع امتیازها و روند ثبت رأی‌ها به تفکیک دسته و هر مورد نمایش داده می‌شود. سابقه رأی‌ها ناشناس است و حداکثر ۱۰۰۰ رأی آخر هر دسته دریافت می‌شود.</p><div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px">'+filters.map(([k,label])=>'<button class="btn '+(ratingHistoryFilter===k?'main':'')+'" data-a="ratings-filter" data-k="'+k+'">'+label+'</button>').join('')+'<button class="btn" data-a="ratings-refresh">تازه‌سازی سابقه</button></div></div>'+manualChart+(ratingHistoryFilter!=='station'?renderGroup('store','فروشگاه‌ها و تعمیرگاه‌ها'):'')+(ratingHistoryFilter!=='store'?renderGroup('station','ایستگاه‌های شارژ'):'');
+}
+function ratingTargets(){
+  const out=[];
+  (c?.partsStores||[]).forEach(x=>out.push({...x,_targetType:'store',_kind:'فروشگاه قطعات'}));
+  (c?.serviceCenters||[]).forEach(x=>out.push({...x,_targetType:'store',_kind:'تعمیرگاه مجاز'}));
+  (Array.isArray(stationsCache)?stationsCache:[]).forEach(x=>out.push({...x,_targetType:'station',_kind:'ایستگاه شارژ',title:x.name||x.title,id:String(x.id),address:x.address||x.location||'',phone:x.phone||''}));
+  return out.map(x=>{
+    const raw=String(x.id||((x.title||x.name||'پروفایل')+'|'+(x.address||''))).slice(0,240);
+    const prefix=x._kind==='تعمیرگاه مجاز'?'RP':x._targetType==='station'?'CH':'ST';
+    const suffix=raw.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(-10).padStart(4,'0');
+    return {...x,_targetId:raw,_publicCode:x.publicCode||('REV-'+prefix+'-'+suffix)};
+  });
+}
+function ratingSearchResults(){
+  const q=ratingSearchValue.trim().toLocaleLowerCase();
+  if(!q)return [];
+  const results=ratingTargets().filter(x=>[x._publicCode,x.id,x.title,x.name,x.address,x.phone,x._kind].some(v=>String(v||'').toLocaleLowerCase().includes(q)));
+  if(ratingSortValue==='name')results.sort((a,b)=>String(a.title||a.name||'').localeCompare(String(b.title||b.name||''),'fa'));
+  else if(ratingSortValue==='type')results.sort((a,b)=>String(a._kind||'').localeCompare(String(b._kind||''),'fa'));
+  else if(ratingSortValue==='rating')results.sort((a,b)=>(Number(b.satisfactionScore)||0)-(Number(a.satisfactionScore)||0));
+  else if(ratingSortValue==='votes')results.sort((a,b)=>(Number(b.satisfactionCount)||0)-(Number(a.satisfactionCount)||0));
+  return results.slice(0,80);
+}
+function ratingsAdminPanel(){
+  const results=ratingSearchResults();
+  const selected=ratingSelected;
+  const resultHtml=results.map((x,i)=>'<button type="button" class="row" style="width:100%;text-align:right;cursor:pointer" data-a="rating-select" data-i="'+i+'"><span><b>'+esc(x.title||x.name||'بدون نام')+'</b><small>'+esc(x._kind)+' · '+esc(x._publicCode)+' · '+esc(x.address||'نشانی ثبت نشده')+'</small></span><small>'+esc(x.phone||'شماره ثبت نشده')+'</small></button>').join('');
+  return '<div class="box"><h3>جست‌وجوی پروفایل</h3><p class="hint">با شناسه اختصاصی، نام، نشانی یا شماره تماس جست‌وجو کنید. نتایج با تایپ عبارت به‌روز می‌شوند.</p><label for="rating-search">شناسه یا مشخصات کسب‌وکار</label><input id="rating-search" data-rating-search value="'+esc(ratingSearchValue)+'" placeholder="مثلاً REV-CH-123456 یا نام فروشگاه"><label for="rating-sort">مرتب‌سازی نتایج</label><select id="rating-sort" data-rating-sort><option value="name" '+(ratingSortValue==='name'?'selected':'')+'>نام: الف تا ی</option><option value="type" '+(ratingSortValue==='type'?'selected':'')+'>نوع کسب‌وکار</option><option value="rating" '+(ratingSortValue==='rating'?'selected':'')+'>بیشترین میانگین رضایت</option><option value="votes" '+(ratingSortValue==='votes'?'selected':'')+'>بیشترین تعداد رأی</option></select><button class="btn" style="margin-top:10px" data-a="rating-clear">پاک‌کردن جست‌وجو</button></div>'+
+  (ratingSearchValue.trim()?'<div class="box"><h3>نتایج جست‌وجو</h3>'+(resultHtml||'<p class="hint">موردی پیدا نشد. عبارت جست‌وجو را کوتاه‌تر کنید.</p>')+'</div>':'')+
+  (selected?'<div class="box"><h3>ویرایش رضایت کاربران</h3><p class="hint">پروفایل انتخاب‌شده: '+esc(selected.title||selected.name||'بدون نام')+' · '+esc(selected._kind)+'</p><label>شناسه اختصاصی</label><input id="rating-code" value="'+esc(ratingOverride?.public_code||selected._publicCode)+'"><label>شناسه داخلی پروفایل</label><input id="rating-id" value="'+esc(selected._targetId)+'" readonly><label>نام پروفایل</label><input id="rating-name" value="'+esc(selected.title||selected.name||'')+'"><label>شماره همراه مالک برای پیامک (در جدول مدیریتی نگهداری می‌شود)</label><input id="rating-phone" value="'+esc(ratingOverride?.owner_phone||selected.ownerPhone||selected.phone||'')+'"><div class="grid2"><div><label>میانگین رضایت (۰ تا ۵)</label><input id="rating-average" type="number" min="0" max="5" step="0.1" value="'+esc(ratingOverride?.manual_average??selected.satisfactionScore??0)+'"></div><div><label>تعداد رأی‌ها</label><input id="rating-count" type="number" min="0" step="1" value="'+esc(ratingOverride?.manual_count??selected.satisfactionCount??0)+'"></div></div><p class="hint" style="margin-top:8px">این مقادیر از طریق سرویس مدیریتی ثبت می‌شوند؛ فقط ادمینِ احراز هویت‌شده می‌تواند آن‌ها را تغییر دهد.</p><button class="btn main" style="margin-top:12px" data-a="rating-save" '+(ratingSaveBusy?'disabled':'')+'>'+(ratingSaveBusy?'در حال ذخیره…':'ذخیره رضایت و تعداد رأی')+'</button> <button class="btn" style="margin-top:12px" data-a="rating-sms">ارسال شناسه با پیامک</button></div>':'');
+}
+async function selectRatingTarget(target){
+  ratingSelected=target;ratingOverride=null;draw();
+  try{
+    const r=await fetch(RATING_WORKER+'/api/admin/overrides?search='+encodeURIComponent(target._targetId),{headers:H(),cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok&&j.success){ratingOverride=(j.items||[]).find(x=>x.target_type===target._targetType&&String(x.target_id)===String(target._targetId))||null;draw();}
+  }catch(e){console.warn('Could not load rating override',e)}
+}
+async function saveManualRating(){
+  if(!ratingSelected)return;
+  const average=Number($('rating-average')?.value),count=Number($('rating-count')?.value);
+  if(!Number.isFinite(average)||average<0||average>5||!Number.isInteger(count)||count<0){msg('میانگین باید بین ۰ تا ۵ و تعداد رأی باید عدد صحیح نامنفی باشد.');return}
+  const body={type:ratingSelected._targetType,id:ratingSelected._targetId,publicCode:$('rating-code')?.value.trim()||ratingSelected._publicCode,displayName:$('rating-name')?.value.trim()||'',ownerPhone:$('rating-phone')?.value.trim()||'',average,count};
+  ratingSaveBusy=true;draw();
+  try{
+    const r=await fetch(RATING_WORKER+'/api/admin/overrides',{method:'PUT',headers:H(),body:JSON.stringify(body)});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    ratingOverride={target_type:body.type,target_id:body.id,public_code:body.publicCode,display_name:body.displayName,owner_phone:body.ownerPhone,manual_average:average,manual_count:count};
+    ratingOverridesCache=null;
+    msg('میانگین رضایت و تعداد رأی‌ها ذخیره شد؛ امتیاز در تب مربوطه به‌روزرسانی می‌شود.');draw();
+  }catch(e){msg('ذخیره انجام نشد: '+(e.message||'سرویس امتیازدهی را بررسی کنید.'))}
+  finally{ratingSaveBusy=false;draw()}
+}
+function applyAdminAppearance(){
+  if(!c)return;
+  const t=c.theme||{};
+  const adminSize=Math.max(12,Math.min(15,Number(t.adminSize)||13));
+  const tableSize=Math.max(10,Math.min(14,Number(t.tableSize)||11));
+  const density=t.tableDensity||'compact', lines=t.tableLines||'full', stripe=t.tableStripe||'yes', width=t.tableWidth||'scroll';
+  const pad=density==='comfortable'?11:density==='normal'?8:5;
+  let style=document.getElementById('rev-admin-appearance');
+  if(!style){style=document.createElement('style');style.id='rev-admin-appearance';document.head.appendChild(style)}
+  style.textContent='body{font-size:'+adminSize+'px!important} .box h3{font-size:'+(adminSize+2)+'px!important} table{font-size:'+tableSize+'px!important;table-layout:'+(width==='fit'?'fixed':'auto')+'!important;width:100%;border-collapse:collapse!important;border:'+(lines==='full'?'1px solid #cbd6da':'0')+'!important} table th,table td{padding:'+pad+'px!important;overflow-wrap:anywhere} table thead th{font-size:'+tableSize+'px!important;border-bottom:2px solid #9eafb4!important;border-left:'+(lines==='full'?'1px solid #d2dcdf':'0')+'!important} table tbody td{border-bottom:'+(lines==='none'?'0':'1px solid #d5dfe2')+'!important;border-left:'+(lines==='full'?'1px solid #e1e7e9':'0')+'!important} table tbody tr:nth-child(even){background:'+(stripe==='yes'?'#f5f8f8':'transparent')+'!important} table tbody tr:hover{background:#eaf6ef!important} '+(width==='fit'?'table{min-width:0!important}table th,table td{white-space:normal!important;word-break:break-word!important}':'');
+}
+function fixDropdownContrast(){
+  root.querySelectorAll('select').forEach(sel=>{
+    sel.style.setProperty('color','#142027','important');
+    sel.style.setProperty('background-color','#ffffff','important');
+    sel.style.setProperty('-webkit-text-fill-color','#142027','important');
+    sel.style.setProperty('color-scheme','light','important');
+    sel.querySelectorAll('option,optgroup').forEach(opt=>{
+      opt.style.setProperty('color','#142027','important');
+      opt.style.setProperty('background-color','#ffffff','important');
+      opt.style.setProperty('-webkit-text-fill-color','#142027','important');
+      opt.style.setProperty('text-shadow','none','important');
+    });
+    /* Native dropdown popups may ignore the selected background color.
+       Never set selected option text to white, as it can become white-on-white. */
+    const selected=sel.selectedOptions&&sel.selectedOptions[0];
+    if(selected){
+      selected.style.setProperty('color','#142027','important');
+      selected.style.setProperty('background-color','#ffffff','important');
+      selected.style.setProperty('-webkit-text-fill-color','#142027','important');
+    }
+  });
+}
+async function loadStationReports(){
+  if(stationReportsBusy)return;stationReportsBusy=true;stationReportsError='';
+  try{const r=await fetch(RATING_WORKER+'/api/admin/station-reports?limit=500',{headers:H(),cache:'no-store'});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationReportsCache=Array.isArray(j.items)?j.items:[];}
+  catch(e){stationReportsCache=[];stationReportsError=e.message||'خطای اتصال به سرویس گزارش‌ها'}
+  finally{stationReportsBusy=false;if(tab==='station-reports')draw()}
+}
+function stationReportsPanel(){
+  if(stationReportsCache===null){loadStationReports();return '<div class="box">در حال دریافت گزارش‌های کاربران...</div>'}
+  const typeNames={not_found:'جایگاه در محل وجود ندارد',not_working:'خراب یا غیرفعال',connector_wrong:'کانکتور اشتباه',power_wrong:'توان اشتباه',location_wrong:'موقعیت یا نشانی اشتباه',duplicate:'جایگاه تکراری',violation:'تخلف، اطلاعات جعلی یا رفتار مشکوک',other:'سایر موارد'};
+  const statusNames={new:'جدید',in_review:'در حال بررسی',published:'هشدار منتشرشده روی نقشه',resolved:'رسیدگی شد',invalid:'ادعا رد شد'},statusColors={new:'#fff0c2',in_review:'#dcecff',published:'#ffd7a8',resolved:'#dff7e8',invalid:'#ffe5e1'};
+  const reports=stationReportsCache.map(r=>{const date=r.created_at?new Date(r.created_at).toLocaleString('fa-IR'):'نامشخص';const currentStatus=r.status||'new';const statusLabel=statusNames[currentStatus]||currentStatus||'نامشخص';const statusStyle=statusColors[currentStatus]||'#e8edf0';const action=(status,label,cls='btn')=>'<button class="'+cls+(currentStatus===status?' current-status-action':'')+'" style="'+(currentStatus===status?'outline:2px solid #39FF88;outline-offset:2px;box-shadow:0 0 0 2px rgba(57,255,136,.16);':'')+'" data-a="station-report-status" data-id="'+esc(r.id)+'" data-status="'+status+'">'+(currentStatus===status?'✓ ':'')+label+(currentStatus===status?' · وضعیت فعلی':'')+'</button>';return '<div class="box" style="margin-top:10px"><div class="row"><div><h3>'+esc(r.station_name||'ایستگاه بدون نام')+'</h3><small>'+esc(typeNames[r.report_type]||r.report_type||'گزارش نامشخص')+'</small></div><span class="pill" style="background:'+statusStyle+';color:#142027">وضعیت فعلی: '+esc(statusLabel)+'</span></div><p class="hint">شناسه جایگاه: <code dir="ltr">'+esc(r.station_id)+'</code> · گزارش #'+esc(r.id)+' · '+esc(date)+'</p><p style="white-space:pre-wrap;margin:8px 0">'+esc(r.details||'بدون توضیح تکمیلی')+'</p>'+(r.admin_note?'<p class="hint">یادداشت مدیر: '+esc(r.admin_note)+'</p>':'')+'<p class="hint" style="margin-bottom:8px">برای تغییر وضعیت، یکی از گزینه‌های زیر را انتخاب کنید. گزینه مشخص‌شده با ✓ وضعیت فعلی گزارش است.</p><div class="row" style="flex-wrap:wrap;gap:8px">'+action('in_review','بررسی')+action('published','انتشار روی نقشه','btn main')+action('invalid','رد ادعا','btn red')+action('new','بازگشایی')+'</div></div>'}).join('');
+  const newCount=stationReportsCache.filter(r=>r.status==='new').length;
+  return '<div class="box"><div class="row"><div><h3>گزارش خطای جایگاه‌ها</h3><p class="hint">گزارش‌های کاربران برنامه‌ریز سفر؛ فقط مدیر می‌تواند جزئیات را ببیند و وضعیت را تغییر دهد.</p></div><button class="btn" data-a="station-reports-refresh">به‌روزرسانی</button></div><p class="hint">کل گزارش‌های دریافت‌شده: <b>'+stationReportsCache.length.toLocaleString('fa-IR')+'</b> · گزارش‌های جدید: <b>'+newCount.toLocaleString('fa-IR')+'</b></p>'+(stationReportsError?'<p class="hint" style="color:#b42318">خطا: '+esc(stationReportsError)+'</p>':'')+'</div>'+(reports||'<div class="box">هنوز گزارشی ثبت نشده است.</div>');
+}
+async function loadRatingOverrides(){
+  if(ratingOverridesBusy)return;
+  ratingOverridesBusy=true;
+  try{
+    const r=await fetch(RATING_WORKER+'/api/admin/overrides',{headers:H(),cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    ratingOverridesCache=Array.isArray(j.items)?j.items:[];
+  }catch(e){ratingOverridesCache=[];console.warn('Could not load manual rating overrides',e)}
+  finally{ratingOverridesBusy=false;if(['stations','serviceCenters','partsStores','rating-admin','ratings'].includes(tab))draw()}
+}
+
+function defaultBusinessPlans(){
+  return {
+    free:{name:'پایه — رایگان',price:0,active:true,annualEnabled:false,summary:'ثبت نام، شهر، آدرس، تلفن و نمایش عادی در فهرست.',options:[{id:'listing',label:'نمایش عادی در فهرست کسب‌وکارها',enabled:true},{id:'contact',label:'نمایش شهر، نشانی و تلفن',enabled:true},{id:'edit',label:'امکان ثبت و ویرایش اطلاعات پایه',enabled:true}]},
+    professional:{name:'حرفه‌ای',price:300000,active:true,annualEnabled:true,summary:'پروفایل کامل‌تر و ابزارهای ارتباطی.',options:[{id:'listing',label:'تمام امکانات پایه',enabled:true},{id:'logo',label:'نمایش لوگوی کسب‌وکار',enabled:true},{id:'photos',label:'گالری تصاویر',enabled:true},{id:'hours',label:'نمایش ساعات کاری',enabled:true},{id:'services',label:'فهرست خدمات و تخصص‌ها',enabled:true},{id:'links',label:'لینک شبکه‌های اجتماعی و وب‌سایت',enabled:true},{id:'stats',label:'آمار بازدید و کلیک تماس',enabled:true},{id:'product_catalog',label:'مدیریت فهرست محصولات فروشگاه',enabled:true}]},
+    featured:{name:'ویژه',price:1200000,active:false,annualEnabled:true,summary:'جایگاه برجسته و قابلیت‌های تبلیغاتی.',options:[{id:'listing',label:'تمام امکانات پایه',enabled:true},{id:'logo',label:'نمایش لوگو و تصاویر',enabled:true},{id:'hours',label:'نمایش ساعات کاری و خدمات',enabled:true},{id:'links',label:'لینک‌های ارتباطی',enabled:true},{id:'highlight',label:'نمایش برجسته در فهرست',enabled:true},{id:'priority',label:'اولویت نمایش در شهر و دسته‌بندی',enabled:true},{id:'map_pin',label:'پین تبلیغاتی روی نقشه، در صورت پشتیبانی',enabled:true},{id:'report',label:'گزارش عملکرد تبلیغات',enabled:true},{id:'product_catalog',label:'مدیریت فهرست محصولات فروشگاه',enabled:true}]},
+    sponsor:{name:'سازمانی و اسپانسری',price:5000000,active:false,annualEnabled:false,summary:'همکاری تبلیغاتی و سازمانی اختصاصی.',options:[{id:'campaign',label:'طراحی کمپین اختصاصی',enabled:true},{id:'banner',label:'بنر تبلیغاتی',enabled:true},{id:'sponsored',label:'محتوای حمایت‌شده با برچسب مشخص',enabled:true},{id:'social',label:'معرفی در رسانه‌ها و شبکه‌های اجتماعی',enabled:true},{id:'report',label:'گزارش عملکرد کمپین',enabled:true},{id:'custom',label:'برنامه همکاری سفارشی',enabled:true},{id:'product_catalog',label:'مدیریت فهرست محصولات فروشگاه',enabled:true}]}
+  };
+}
+function plansPanel(){
+  const plans=c.businessPlans||(c.businessPlans=defaultBusinessPlans());
+  const ids=['free','professional','featured','sponsor'];
+  const rows=ids.map(id=>{
+    const p=plans[id], isFree=id==='free';
+    return `<div class="row" style="display:block;padding:16px;margin-bottom:12px">
+      <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap">
+        <div><strong style="font-size:15px">${esc(p.name)}</strong><small>${esc(p.summary)}</small></div>
+        <label style="display:flex;align-items:center;gap:8px;margin:0;cursor:pointer">
+          <input type="checkbox" data-plan-active="${id}" ${p.active?'checked':''} style="width:20px;height:20px;accent-color:#00806f">
+          <span>${p.active?'فعال':'غیرفعال'}</span>
+        </label>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;margin-top:12px">
+        <div><label>عنوان پلن</label><input type="text" data-plan-name="${id}" value="${esc(p.name||'')}" maxlength="90"></div>
+        <div><label>توضیح و امکانات پلن</label><textarea data-plan-summary="${id}" rows="3" maxlength="500">${esc(p.summary||'')}</textarea></div>
+        <div><label>قیمت ماهانه (تومان)</label><input type="number" min="0" step="50000" data-plan-price="${id}" value="${Number(p.price)||0}" ${isFree?'disabled':''}></div>
+        <div><label style="display:flex;align-items:center;gap:8px"><input type="checkbox" data-plan-annual="${id}" ${p.annualEnabled?'checked':''} style="width:18px;height:18px;accent-color:#00806f"> ارائه تخفیف سالانه (۱۰ ماه به قیمت ۱۲ ماه)</label><p class="hint">در صورت فعال بودن، مبلغ سالانه برابر ۱۰ برابر قیمت ماهانه محاسبه می‌شود.</p></div>
+      </div>
+      <div style="margin-top:16px;padding:14px;border:1px solid #dce9df;border-radius:12px;background:#f7fbf8">
+        <strong>امکانات این پلن — هر مورد را جداگانه فعال یا غیرفعال کن</strong>
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:8px;margin-top:10px">
+          ${(p.options||[]).map(o=>'<label style="display:flex;align-items:flex-start;gap:8px;margin:0;padding:8px;background:#fff;border:1px solid #e2ece5;border-radius:8px"><input type="checkbox" data-plan-option="${id}|'+o.id+'" '+(o.enabled!==false?'checked':'')+' style="margin-top:6px;accent-color:#00806f;width:17px;height:17px"><span>'+esc(o.label)+'</span></label>').join('')}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+  return `<section class="box"><h2>پلن‌های درآمدی REV</h2><p class="hint">عنوان، توضیحات، قیمت و وضعیت هر پلن را تغییر بده. پلن غیرفعال از صفحه عمومی پلن‌ها پنهان می‌شود و درخواست جدید برای آن ثبت نمی‌شود؛ غیرفعال‌سازی به‌تنهایی اشتراک مشتریان قبلی را حذف یا لغو نمی‌کند. برای اعمال تغییرات در سایت، «انتشار تغییرات» را بزن.</p>${rows}<p class="hint">پلن‌های فعال در صفحه عمومی «پلن همکاری» نمایش داده می‌شوند. پرداخت آنلاین هنوز فعال نیست؛ دکمه درخواست، کاربر را به راه ارتباطی REV هدایت می‌کند.</p></section>`;
+}
+
+let engagementCache=null,engagementBusy=false;
+function engagementPanel(){
+ const d=engagementCache||{};
+ const fmt=n=>Number(n||0).toLocaleString('fa-IR');
+ const pages=(d.popular_pages||[]).map(p=>'<div class="row"><div><strong>'+esc(p.page_path)+'</strong><small>کاربران در ۱۵ دقیقه اخیر</small></div><b>'+fmt(p.visitors)+'</b></div>').join('')||'<p class="hint">هنوز داده‌ای ثبت نشده است؛ پس از انتشار Worker و ورود کاربران، این بخش پر می‌شود.</p>';
+ const items=(d.announcements||[]).map(n=>'<div class="row"><div style="min-width:0;flex:1"><strong>'+esc(n.title)+'</strong><small>'+esc(n.body)+' · '+(n.enabled?'فعال':'غیرفعال')+' · '+esc(n.kind)+' · بازدید: '+fmt(n.view_count)+(n.link_url?' · ورود به لینک: '+fmt(n.link_clicks):' · بدون لینک')+'</small></div><button class="btn" data-a="announcement-toggle" data-id="'+esc(n.id)+'" data-enabled="'+(n.enabled?'0':'1')+'">'+(n.enabled?'غیرفعال‌کردن':'فعال‌کردن')+'</button><button class="btn red" data-a="announcement-delete" data-id="'+esc(n.id)+'">حذف</button></div>').join('')||'<p class="hint">هنوز اعلانی ایجاد نشده است.</p>';
+ return '<section class="box"><div style="display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap"><h2>مانیتورینگ کاربران</h2><div style="display:flex;align-items:center;gap:8px;background:#e5f3f8;border:1px solid #cbe6f0;border-radius:12px;padding:7px 12px"><span style="font-size:12px;color:#526a7d">مجموع بازدید اپ</span><strong style="font-size:22px;color:#0866ff">'+(Number(d.total_page_views)||0)+'</strong></div><div style="display:flex;align-items:center;gap:8px;background:#e8f7ef;border:1px solid #c9ead7;border-radius:12px;padding:7px 12px"><span style="font-size:12px;color:#426b56">کل کاربران احراز هویت‌شده</span><strong style="font-size:22px;color:#08745e">'+fmt(d.total_authenticated_users)+'</strong></div></div><p class="hint">کاربر فعال یعنی مرورگری که در ۵ دقیقه اخیر به REV درخواست فرستاده است. شمارش تقریبی است و بازدیدکننده مهمان را هم شامل می‌شود.</p><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:16px 0"><div class="box" style="margin:0;background:#eaf8f0"><small>کاربران فعال اکنون</small><div style="font-size:32px;font-weight:900;color:#08745e">'+fmt(d.active_users)+'</div></div><div class="box" style="margin:0;background:#f7fbf8"><small>از کاربران واردشده</small><div style="font-size:32px;font-weight:900">'+fmt(d.signed_in_users)+'</div></div></div><div class="tb"><button class="btn main" data-a="engagement-refresh">به‌روزرسانی آمار</button></div><h3>صفحه‌های پرتردد (۱۵ دقیقه اخیر)</h3>'+pages+'</section><section class="box"><h2>ارسال اعلان عمومی</h2><p class="hint">اعلان در بالای صفحه کاربران نمایش داده می‌شود؛ عنوان، متن و لینک را کوتاه و روشن بنویسید.</p><label>عنوان اعلان</label><input id="announcement-title" type="text" maxlength="120" placeholder="مثلاً پیشنهاد ویژه خدمات REV"><label>متن اعلان</label><textarea id="announcement-body" maxlength="500" placeholder="پیام برای کاربران..."></textarea><div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px"><div><label>لینک مقصد (اختیاری)</label><input id="announcement-link" type="text" placeholder="./businesses.html یا https://..."></div><div><label>متن لینک</label><input id="announcement-link-label" type="text" maxlength="50" value="مشاهده پیشنهاد"></div><div><label>نوع اعلان</label><select id="announcement-kind"><option value="info">اطلاع‌رسانی</option><option value="offer">پیشنهاد / تبلیغ</option><option value="success">خبر مثبت</option><option value="warning">هشدار</option></select></div></div><div class="tb" style="margin-top:12px"><button class="btn main" data-a="announcement-publish">انتشار اعلان</button></div><p class="hint">فعلاً اعلان به همه بازدیدکنندگان فعال سایت نشان داده می‌شود. ارسال پوش‌نوتیفیکیشن وقتی سایت بسته است، در این نسخه وجود ندارد.</p></section><section class="box"><h2>مدیریت اعلان‌های قبلی</h2>'+items+'</section>';
+}
+async function loadEngagement(){
+ if(engagementBusy)return;engagementBusy=true;note='در حال دریافت آمار و اعلان‌ها…';draw();
+ try{const r=await fetch(AUTH_WORKER+'/api/admin/engagement',{headers:{Authorization:'Bearer '+tok},cache:'no-store'}),j=await r.json();if(!r.ok||!j.success)throw Error(j.error||'دریافت آمار ناموفق بود');engagementCache=j;note='آمار به‌روز شد.'}
+ catch(e){note='خطا در مانیتورینگ: '+(e.message||'اتصال برقرار نشد')}
+ finally{engagementBusy=false;draw()}
+}
+async function adminAnnouncementAction(path,body){
+ const r=await fetch(AUTH_WORKER+path,{method:'POST',headers:{'Content-Type':'application/json',Authorization:'Bearer '+tok},body:JSON.stringify(body||{}),cache:'no-store'}),j=await r.json().catch(()=>({}));
+ if(!r.ok||!j.success)throw Error(j.error||'درخواست ناموفق بود');return j;
+}
+
+
+const REV_MUSIC_API='https://rev-music-api.mojtaba-alimi64.workers.dev';
+let musicAdminToken='',musicTracksCache=[];
+function musicPanel(){
+ return `<section class="box" style="max-width:900px">
+ <h2>مدیریت موزیک سفر REV</h2>
+ <p class="hint">آهنگ‌ها از فضای ذخیره‌سازی R2 پخش می‌شوند؛ فایل صوتی به مخزن GitHub اضافه نمی‌شود. برای فعال‌شدن این بخش، Worker موزیک و اتصال R2 باید یک‌بار در Cloudflare تنظیم شده باشند.</p>
+ <div class="field"><label>آدرس سرویس موزیک</label><input id="rev-music-api" value="${esc(REV_MUSIC_API)}" readonly dir="ltr"></div>
+ <div class="field"><label for="rev-music-token">رمز مدیریتی سرویس موزیک</label><input id="rev-music-token" type="password" autocomplete="off" placeholder="رمز ADMIN_TOKEN که در Cloudflare تنظیم شده است"></div>
+ <p style="display:flex;gap:8px;flex-wrap:wrap;margin:12px 0"><button class="pub" data-a="music-connect">اتصال و دریافت فهرست</button><a class="lnk" href="https://github.com/mojtabaalimi64-cloud/rev/blob/main/cloudflare/REV-MUSIC-R2-SETUP.md" target="_blank" rel="noopener">راهنمای تنظیم یک‌باره Cloudflare</a></p>
+ <p id="rev-music-status" class="hint" role="status">${musicAdminToken?'برای دریافت فهرست، اتصال را بزنید.':'رمز سرویس را وارد کنید؛ در کد سایت ذخیره نمی‌شود.'}</p>
+ </section>
+ <section class="box" style="max-width:900px">
+ <h3>بارگذاری آهنگ</h3><p class="hint">حداکثر ۲۰ مگابایت برای هر فایل. برای شروع سریع، MP3 با کیفیت 96 تا 128 kbps پیشنهاد می‌شود. فقط محتوایی را بارگذاری کنید که مجوز قانونی پخش آن را دارید.</p>
+ <form id="rev-music-upload">
+ <div class="field"><label for="rev-music-title">عنوان آهنگ</label><input id="rev-music-title" maxlength="120" required></div>
+ <div class="field"><label for="rev-music-artist">هنرمند (اختیاری)</label><input id="rev-music-artist" maxlength="120"></div>
+ <div class="field"><label for="rev-music-file">فایل صوتی</label><input id="rev-music-file" type="file" accept="audio/mpeg,audio/mp4,audio/aac,audio/ogg,audio/wav,audio/webm,.mp3,.m4a,.aac,.ogg,.wav,.webm" required></div>
+ <button class="pub" id="rev-music-upload-btn" type="submit">بارگذاری در R2</button>
+ </form></section>
+ <section class="box" style="max-width:900px"><h3>کتابخانه آهنگ‌ها</h3><div id="rev-music-list" class="hint">برای نمایش فهرست، ابتدا اتصال را انجام دهید.</div></section>`;
+}
+async function musicApi(path,options={}){
+ const base=String(REV_MUSIC_API).replace(/\/+$/,'');
+ const headers={...(options.headers||{}),...(musicAdminToken?{Authorization:'Bearer '+musicAdminToken}:{})};
+ const r=await fetch(base+path,{...options,headers});
+ const j=await r.json().catch(()=>({}));
+ if(!r.ok||j.success===false)throw new Error(j.error||('HTTP '+r.status));
+ return j;
+}
+async function loadMusicTracks(){
+ const status=$('rev-music-status'),list=$('rev-music-list');
+ if(status)status.textContent='در حال دریافت فهرست آهنگ‌ها...';
+ const j=await musicApi('/api/music/tracks');
+ musicTracksCache=Array.isArray(j.tracks)?j.tracks:[];
+ if(list){
+  list.innerHTML='';
+  if(!musicTracksCache.length){list.textContent='هنوز آهنگی بارگذاری نشده است.';}
+  musicTracksCache.forEach(t=>{
+   const row=document.createElement('div');row.style.cssText='display:flex;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;padding:12px;border-bottom:1px solid var(--line)';
+   const info=document.createElement('div'),title=document.createElement('b'),artist=document.createElement('div');
+   title.textContent=t.title||'بدون عنوان';artist.textContent=t.artist||'هنرمند نامشخص';artist.className='hint';info.append(title,artist);
+   const actions=document.createElement('div');
+   const play=document.createElement('button');play.type='button';play.className='lnk';play.textContent='پخش آزمایشی';play.onclick=()=>{const a=new Audio(t.src);a.play().catch(()=>{if(status)status.textContent='پخش آزمایشی انجام نشد.';});};
+   const del=document.createElement('button');del.type='button';del.className='lnk';del.textContent='حذف';del.style.color='#b3261e';
+   del.onclick=async()=>{if(!confirm('آهنگ «'+(t.title||'بدون عنوان')+'» حذف شود؟'))return;try{await musicApi('/api/admin/music/'+encodeURIComponent(t.id),{method:'DELETE'});await loadMusicTracks();const s=$('rev-music-status');if(s)s.textContent='آهنگ حذف شد.';}catch(e){const s=$('rev-music-status');if(s)s.textContent='حذف ناموفق بود: '+e.message;}};
+   actions.append(play,del);row.append(info,actions);list.append(row);
+  });
+ }
+ if(status)status.textContent='اتصال برقرار است؛ '+musicTracksCache.length+' آهنگ در کتابخانه وجود دارد.';
+}
+
+function draw(){
+  if(['stations','serviceCenters','partsStores','rating-admin','ratings'].includes(tab)&&ratingOverridesCache===null&&!ratingOverridesBusy)loadRatingOverrides();
+  if(!tok) return login();
+  if(!c){load();return}
+  const tabs=Object.entries(TABS).map(([k,n])=>`<button class="tab ${tab===k?'on':''}" data-a="tab" data-k="${k}">${n}</button>`).join('');
+  const body=tab==='site'?sitePanel():tab==='plans'?plansPanel():tab==='engagement'?engagementPanel():tab==='meetups'?meetupPlansPanel():tab==='users'?usersPanel():tab==='portal-businesses'?portalBusinessPanel():tab==='stations'?stationPanel():tab==='ratings'?ratingsPanel():tab==='station-reports'?stationReportsPanel():tab==='rating-admin'?ratingsAdminPanel():edit?form():tab==='serviceCenters'||tab==='partsStores'?directoryIntro()+list():tab==='products'?shopBox()+list():tab==='cars'?carsBox()+list():tab==='about'?aboutTab():tab==='look'?look():tab==='contact'?contactTab():tab==='music'?musicPanel():tab==='set'?settings():list();
+  root.innerHTML=`<div class="bar2">${tabs}<button class="pub" data-a="pub">انتشار تغییرات${dirty?' ●':''}</button></div><p id="msg">${esc(note)}</p>${body}<p><button class="lnk" data-a="out">خروج</button></p>`;
+  applyAdminAppearance();
+  fixDropdownContrast();
+  if(tab==='meetups')loadMeetupPlans();
+}
+
+function meetupPlansPanel(){
+ return '<section class="box"><div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap"><div><h2>برنامه‌های قرار گروهی</h2><p class="hint">برنامه‌های سه‌نفره ذخیره‌شده از اپ سفر REV؛ مسیر، مسافت و زمان هر نفر و فاصله جاده‌ای بین افراد.</p></div><button class="btn main" data-a="meetups-refresh">بروزرسانی فهرست</button></div><div id="meetup-plans-status" class="hint" style="margin:12px 0">در حال بارگذاری…</div><div id="meetup-plans-list"></div></section>';
+}
+async function loadMeetupPlans(){
+ const status=$('meetup-plans-status'),list=$('meetup-plans-list');if(!status||!list)return;
+ status.textContent='در حال دریافت برنامه‌ها از دیتابیس…';list.innerHTML='';
+ try{
+  const r=await fetch(AUTH_WORKER+'/api/admin/meetup-plans',{headers:H(),cache:'no-store'}),j=await r.json().catch(()=>({}));
+  if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+  const plans=Array.isArray(j.plans)?j.plans:[];
+  status.textContent='تعداد برنامه‌های ثبت‌شده: '+plans.length;
+  if(!plans.length){list.innerHTML='<div class="row">هنوز برنامه قرار گروهی ثبت نشده است.</div>';return;}
+  list.innerHTML=plans.map(p=>{
+   const people=Array.isArray(p.participants)?p.participants:[],pairs=Array.isArray(p.pairs)?p.pairs:[];
+   const peopleHtml=people.map(x=>'<div class="row"><div><b>'+esc(x.name||'همراه')+'</b><small>مبدأ: '+esc(x.origin_label||'—')+'</small><small>مسیر تا مقصد: '+esc(x.distance_km??'—')+' کیلومتر · '+esc(x.duration_minutes??'—')+' دقیقه</small></div></div>').join('');
+   const pairHtml=pairs.map(x=>'<small>'+esc(x.a)+' ↔ '+esc(x.b)+': '+esc(x.km)+' کیلومتر · '+esc(x.minutes)+' دقیقه</small>').join('');
+   return '<article class="box"><h3>'+esc(p.title||'برنامه قرار گروهی')+'</h3><p class="hint">مقصد: '+esc(p.destination_label||'—')+'</p><p class="hint">ثبت‌کننده: '+esc(p.creator_name||'—')+' · '+esc(p.creator_email||'')+' · '+esc(p.created_at||'')+'</p><h4 style="margin-top:12px">مسیر هر نفر</h4>'+peopleHtml+'<h4 style="margin-top:12px">فاصله بین افراد</h4>'+pairHtml+'</article>';
+  }).join('');
+ }catch(e){status.textContent='بارگذاری برنامه‌ها ناموفق بود: '+(e.message||'خطای اتصال');}
+}
+async function loadAuthSettings(){
+  const status=$('auth-status'), toggle=$('auth-enabled');
+  if(status)status.textContent='در حال بررسی وضعیت سرویس احراز هویت...';
+  try{
+    const r=await fetch(AUTH_WORKER+'/api/admin/auth-settings',{headers:H(),cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    if(toggle)toggle.checked=Number(j.data?.enabled)===1;
+    if(status)status.textContent=Number(j.data?.enabled)===1?'وضعیت فعلی: فعال':'وضعیت فعلی: غیرفعال';
+  }catch(e){
+    if(status)status.textContent='سرویس هنوز در دسترس نیست. پس از ساخت Worker با نام rev-auth-api و اتصال آن به دیتابیس rev-db، دوباره بررسی کنید.';
+  }
+}
+async function saveAuthSettings(){
+  const status=$('auth-status'), toggle=$('auth-enabled');
+  if(!toggle)return;
+  if(status)status.textContent='در حال ذخیره وضعیت...';
+  try{
+    const r=await fetch(AUTH_WORKER+'/api/admin/auth-settings',{method:'POST',headers:H(),body:JSON.stringify({enabled:toggle.checked})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    if(status)status.textContent=j.enabled?'ورود و ثبت‌نام فعال شد.':'ورود و ثبت‌نام غیرفعال شد.';
+  }catch(e){
+    if(status)status.textContent='ذخیره نشد: '+(e.message||'سرویس احراز هویت هنوز راه‌اندازی نشده است.');
+  }
+}
+async function loadRegistrationAccess(){
+  try{
+    const r=await fetch(AUTH_WORKER+'/api/admin/registration-access',{headers:H(),cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    usersAccess={settings:j.settings||{registration_open:1,max_users:50,allowlist_enabled:1},phones:Array.isArray(j.phones)?j.phones:[],registered_count:Number(j.registered_count||0)};
+  }catch(e){const status=$('registration-status');if(status)status.textContent='دریافت تنظیمات ثبت‌نام ناموفق بود: '+(e.message||'خطای اتصال');}
+}
+async function saveRegistrationAccess(){
+  const status=$('registration-status');
+  try{
+    if(status)status.textContent='در حال ذخیره محدودیت‌ها...';
+    const maxUsers=Number($('registration-max')?.value);
+    if(!Number.isInteger(maxUsers)||maxUsers<1||maxUsers>100000)throw new Error('سقف حساب‌ها باید عددی بین ۱ تا ۱۰۰٬۰۰۰ باشد.');
+    const r=await fetch(AUTH_WORKER+'/api/admin/registration-access',{method:'POST',headers:H(),body:JSON.stringify({registrationOpen:!!$('registration-open')?.checked,allowlistEnabled:!!$('registration-allowlist')?.checked,maxUsers})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    await loadRegistrationAccess();
+    if(status)status.textContent=j.message||'محدودیت‌ها ذخیره شد.';
+    draw();
+  }catch(e){if(status)status.textContent='ذخیره نشد: '+(e.message||'خطای اتصال');}
+}
+async function changeRegistrationPhone(action,removePhone=''){
+  const input=$('registration-phone');
+  const selected=action==='add_phone'?String(input?.value||'').trim():String(removePhone||'').trim();
+  if(action==='remove_phone'&&!selected)return;
+  if(!selected){if($('registration-status'))$('registration-status').textContent='ابتدا شماره همراه را وارد کنید.';return;}
+  try{
+    const r=await fetch(AUTH_WORKER+'/api/admin/registration-access',{method:'POST',headers:H(),body:JSON.stringify({action,phone:selected})});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+    await loadRegistrationAccess();if(input&&action==='add_phone')input.value='';draw();
+  }catch(e){const s=$('registration-status');if(s)s.textContent='تغییر فهرست شماره‌ها ناموفق بود: '+(e.message||'خطای اتصال');}
+}
+async function loadUsers(){
+  if(usersBusy)return;usersBusy=true;await loadRegistrationAccess();const status=$('users-status');if(status)status.textContent='در حال دریافت کاربران از سرویس احراز هویت...';
+  try{const p=new URLSearchParams({q:usersSearchValue,category:usersCategoryValue,sort:usersSortValue,order:usersOrder,page:String(usersPage),limit:'50'});const r=await fetch(AUTH_WORKER+'/api/admin/users?'+p.toString(),{headers:H(),cache:'no-store'});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));usersCache=Array.isArray(j.data)?j.data:[];if(status)status.textContent='نمایش '+usersCache.length+' کاربر از '+(j.total??usersCache.length)+' کاربر؛ صفحه '+usersPage+'.';}
+  catch(e){usersCache=[];if(status)status.textContent='دریافت کاربران ناموفق بود: '+(e.message||'خطای اتصال')+'. مسیر /api/admin/users باید در Worker نصب شود.'}
+  finally{usersBusy=false;if(tab==='users')draw()}
+}
+function renderStationSubmissions(){
+  if(stationSubmissionsBusy)return '<p class="hint">در حال دریافت درخواست‌ها...</p>';
+  if(!stationSubmissionsCache)return '<p class="hint">هنوز درخواست‌ها بارگذاری نشده‌اند.</p>';
+  if(!stationSubmissionsCache.length)return '<p class="hint">درخواست در انتظار بررسی وجود ندارد.</p>';
+  return stationSubmissionsCache.map((s,i)=>'<div class="row" style="align-items:flex-start"><div style="min-width:220px;flex:1"><strong>'+esc(s.name||'جایگاه بدون نام')+'</strong><small>'+esc(s.city||'شهر نامشخص')+' · '+esc(s.address||'نشانی ثبت نشده')+'</small><small>توان: '+esc(s.power_kw??'—')+' kW · اتصال‌ها: '+esc(s.connectors||'—')+'</small><small>مختصات: '+esc(s.lat??'—')+', '+esc(s.lng??'—')+' · تلفن: '+esc(s.phone||'—')+'</small><small>ثبت: '+esc(s.at?new Date(s.at).toLocaleString('fa-IR'):'—')+'</small></div><div style="display:flex;gap:6px;flex-wrap:wrap">'+(stationSubmissionsMode==='approved'?'<button class="btn main" data-a="station-submission-review" data-id="'+esc(s.id)+'" data-status="recover">انتقال به دیتابیس اصلی</button>':'<button class="btn main" data-a="station-submission-review" data-id="'+esc(s.id)+'" data-status="approve">تأیید</button><button class="btn red" data-a="station-submission-review" data-id="'+esc(s.id)+'" data-status="reject">رد</button>')+'</div></div>').join('');
+}
+async function loadStationSubmissions(mode='pending'){
+  const input=$('station-submission-token');
+  const token=String(input?.value||sessionStorage.getItem('rev_station_review_token')||'').trim();
+  const status=$('station-submissions-status');
+  if(!token){if(status)status.textContent='لطفاً رمز مدیریتی بررسی درخواست‌ها را وارد کنید.';return}
+  sessionStorage.setItem('rev_station_review_token',token);
+  stationSubmissionsBusy=true;stationSubmissionsError='';stationSubmissionsCache=null;
+  if(status)status.textContent='در حال دریافت درخواست‌ها از سرویس REV…';
+  const button=root.querySelector('[data-a="station-submissions-refresh"]');
+  if(button){button.disabled=true;button.textContent='در حال دریافت…';}
+  try{
+    const r=await fetch(SUBMISSION_WORKER+'/submissions?token='+encodeURIComponent(token)+'&status='+encodeURIComponent(mode),{cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok)throw new Error(j.error||('HTTP '+r.status));
+    stationSubmissionsCache=Array.isArray(j.submissions)?j.submissions:[];
+    stationSubmissionsError='';
+  }catch(e){
+    stationSubmissionsCache=[];
+    stationSubmissionsError='دریافت درخواست‌ها ناموفق بود: '+(e.message||'خطای اتصال');
+  }finally{
+    stationSubmissionsBusy=false;
+    draw();
+  }
+}
+async function reviewStationSubmission(id,action){
+  const s=stationSubmissionsCache?.find(x=>String(x.id)===String(id));
+  if(!id||!s?.id||!['approve','reject','recover'].includes(action)){msg('شناسه درخواست پیدا نشد؛ فهرست را دوباره بارگذاری کنید.');return}
+  const token=String($('station-submission-token')?.value||sessionStorage.getItem('rev_station_review_token')||'').trim();
+  if(!token){msg('رمز مدیریتی بررسی درخواست‌ها را وارد کنید.');return}
+  const status=$('station-submissions-status');
+  const buttons=root.querySelectorAll('[data-a="station-submission-review"]');
+  buttons.forEach(x=>x.disabled=true);
+  if(status)status.textContent=(action==='approve'||action==='recover')?'در حال ثبت جایگاه در دیتابیس اصلی و تأیید آن…':'در حال رد درخواست…';
+  try{
+    if(action==='approve'||action==='recover'){
+      const latitude=Number(s.latitude??s.lat), longitude=Number(s.longitude??s.lng??s.lon);
+      if(!Number.isFinite(latitude)||latitude < -90||latitude > 90||!Number.isFinite(longitude)||longitude < -180||longitude > 180){
+        throw new Error('مختصات جغرافیایی درخواست معتبر نیست؛ ابتدا مختصات را اصلاح کنید.');
+      }
+      if(!tok)throw new Error('نشست مدیریتی پنل منقضی شده است؛ دوباره وارد پنل شوید.');
+      const stationId='rev-user-'+String(s.id).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,80);
+      const stationPayload={
+        id:stationId,source:'rev_user',source_id:String(s.id),
+        name:String(s.name||s.title||'جایگاه ثبت‌شده توسط کاربر').trim(),
+        address:[s.address,s.city].filter(Boolean).join('، '),
+        latitude,longitude,
+        connectors:s.connectors||'',
+        power_kw:s.power_kw===''||s.power_kw==null?null:Number(s.power_kw),
+        status:'unknown',source_url:''
+      };
+      const save=await fetch(WORKER+'/api/admin/stations',{method:'POST',headers:H(),body:JSON.stringify(stationPayload),cache:'no-store'});
+      const saved=await save.json().catch(()=>({}));
+      if(!save.ok||!saved.success)throw new Error(saved.error||('ثبت در دیتابیس اصلی ناموفق بود؛ HTTP '+save.status));
+      const approve=await fetch(WORKER+'/api/admin/stations/'+encodeURIComponent(saved.data?.id||stationId)+'/review',{method:'POST',headers:H(),body:JSON.stringify({approval_status:'approved',review_note:'تأیید از طریق درخواست کاربر در پنل REV'}) ,cache:'no-store'});
+      const approved=await approve.json().catch(()=>({}));
+      if(!approve.ok||!approved.success)throw new Error(approved.error||('ثبت جایگاه انجام شد اما تأیید دیتابیس اصلی ناموفق بود؛ HTTP '+approve.status));
+    }
+    const r=await fetch(SUBMISSION_WORKER+'/moderate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,id:String(s.id),action}),cache:'no-store'});
+    const j=await r.json().catch(()=>({}));
+    if(!r.ok||!j.ok)throw new Error(j.error||('HTTP '+r.status));
+    stationSubmissionsCache=stationSubmissionsCache.filter(x=>String(x.id)!==String(s.id));
+    stationSubmissionsError=action==='recover'?'درخواست تأییدشده به دیتابیس اصلی منتقل و منتشر شد.':action==='approve'?'درخواست تأیید شد و جایگاه در دیتابیس اصلی ثبت و تأیید شد.':'درخواست رد شد.';
+    stationsCache=null;
+    draw();
+    if(action==='approve'||action==='recover')loadStations();
+    msg(stationSubmissionsError);
+  }catch(e){
+    const detail=e?.message||'خطای اتصال';
+    stationSubmissionsError='ثبت نتیجه بررسی ناموفق بود: '+detail;
+    if(status)status.textContent=stationSubmissionsError;
+    buttons.forEach(x=>x.disabled=false);
+    msg(stationSubmissionsError);
+  }
+}
+async function loadStations(){
+  if(stationBusy)return; stationBusy=true; note='در حال دریافت جایگاه‌ها از دیتابیس...'; draw();
+  let lastError=null;
+  try{
+    for(const path of ['/api/admin/stations','/api/stations']){
+      let timer=null;
+      try{
+        const controller=new AbortController();
+        timer=setTimeout(()=>controller.abort(),8000);
+        const r=await fetch(WORKER+path,{headers:H(),cache:'no-store',signal:controller.signal});
+        clearTimeout(timer); timer=null;
+        const j=await r.json().catch(()=>({}));
+        if(!r.ok||!j.success)throw new Error((j.error||('HTTP '+r.status))+' ['+path+']');
+        const rows=Array.isArray(j.data)?j.data:(Array.isArray(j.stations)?j.stations:null);
+        if(!rows)throw new Error('پاسخ API فهرست جایگاه‌ها ندارد ['+path+']');
+        stationsCache=rows;
+        note=`${stationsCache.length} جایگاه از دیتابیس دریافت شد.`;
+        lastError=null;
+        break;
+      }catch(err){
+        if(timer!==null)clearTimeout(timer);
+        lastError=err&&err.name==='AbortError'
+          ? new Error('پاسخ سرور پس از ۸ ثانیه نرسید ['+path+']')
+          : err;
+      }
+    }
+    if(lastError)throw lastError;
+  }catch(e){note='دریافت جایگاه‌ها ناموفق بود: '+(e.message||'خطای اتصال')+'؛ مسیر API جایگاه‌ها در Worker باید بررسی شود.';stationsCache=[]}
+  finally{stationBusy=false;if(tab==='stations'||tab==='rating-admin')draw()}
+}
+function stationDate(s){
+  const raw=s?.updated_at||s?.updatedAt||s?.last_updated||'';
+  if(!raw)return {label:'ثبت به‌روزرسانی نشده',time:0,missing:true};
+  const t=Date.parse(raw);
+  if(!Number.isFinite(t))return {label:'تاریخ نامعتبر',time:0,missing:true};
+  return {label:new Date(t).toLocaleString('fa-IR'),time:t,missing:false};
+}
+function stationIsStale(s){
+  const d=stationDate(s);
+  return d.missing || (Date.now()-d.time)>30*24*60*60*1000;
+}
+function stationDistanceKm(a,b){
+  const rad=x=>x*Math.PI/180, dLat=rad(Number(b.latitude)-Number(a.latitude)), dLon=rad(Number(b.longitude)-Number(a.longitude));
+  const x=Math.sin(dLat/2)**2+Math.cos(rad(Number(a.latitude)))*Math.cos(rad(Number(b.latitude)))*Math.sin(dLon/2)**2;
+  return 6371*2*Math.asin(Math.min(1,Math.sqrt(x)));
+}
+function findStationDuplicates(s){
+  if(!Array.isArray(stationsCache))return [];
+  const sid=String(s.source_id||'').trim().toLowerCase(), src=String(s.source||'').trim().toLowerCase();
+  return stationsCache.filter(x=>{
+    if(s.id&&String(x.id)===String(s.id))return false;
+    const xid=String(x.source_id||'').trim().toLowerCase(), xsrc=String(x.source||'').trim().toLowerCase();
+    const sameSourceId=!!sid&&sid===xid&&(!src||!xsrc||src===xsrc);
+    const validCoords=[s.latitude,s.longitude,x.latitude,x.longitude].every(v=>v!==''&&v!==null&&v!==undefined&&Number.isFinite(Number(v)));
+    const closeCoords=validCoords&&Math.abs(Number(s.latitude))<=90&&Math.abs(Number(x.latitude))<=90&&Math.abs(Number(s.longitude))<=180&&Math.abs(Number(x.longitude))<=180&&stationDistanceKm(s,x)<=0.15;
+    return sameSourceId||closeCoords;
+  });
+}
+function stationPanel(){
+  if(stationEdit)return stationForm();
+  if(stationsCache===null){loadStations();return `<div class="box">در حال بارگذاری جایگاه‌ها...</div>`}
+  const unknown=stationsCache.filter(s=>!s.status||s.status==='unknown').length;
+  const pendingReview=stationsCache.filter(s=>(s.approval_status||'pending')==='pending').length;
+  const approvedReview=stationsCache.filter(s=>s.approval_status==='approved').length;
+  const rejectedReview=stationsCache.filter(s=>s.approval_status==='rejected').length;
+  const stale=stationsCache.filter(stationIsStale).length;
+  const q=stationSearchValue.trim().toLocaleLowerCase();
+  const filteredStations=stationsCache.map((s,i)=>({s,i,code:s.publicCode||makeRevCode('CH',s.id||s.source_id||String(s.latitude)+','+String(s.longitude))})).filter(({s,code})=>!normalizeSearch(q)||[code,s.id,s.source_id,s.name,s.address,s.phone,s.status,s.operator,s.city].some(v=>normalizeSearch(v).includes(normalizeSearch(q))));
+  const stationRows=filteredStations.map(({s,i,code})=>({s,i,code}));
+  const stationValue=x=>String(x.s.name||'').toLocaleLowerCase();
+  if(stationSortValue==='name')stationRows.sort((a,b)=>stationValue(a).localeCompare(stationValue(b),'fa'));
+  else if(stationSortValue==='name-desc')stationRows.sort((a,b)=>stationValue(b).localeCompare(stationValue(a),'fa'));
+  else if(stationSortValue==='status')stationRows.sort((a,b)=>String(a.s.status||'').localeCompare(String(b.s.status||''),'fa'));
+  else if(stationSortValue==='power')stationRows.sort((a,b)=>(Number(b.s.power_kw)||0)-(Number(a.s.power_kw)||0));
+  const rows=stationRows.map(({s,i,code})=>{
+    const d=stationDate(s), old=stationIsStale(s), source=s.source||'نامشخص';
+    const statusLabel=({operational:'فعال',offline:'غیرفعال',planned:'در دست احداث',unknown:'نامشخص'})[s.status||'unknown']||s.status;
+    const votes=(ratingsCache||[]).filter(v=>v._type==='station'&&String(v.id||'')===String(s.id||''));
+    const avg=votes.length?votes.reduce((sum,v)=>sum+Number(v.rating||0),0)/votes.length:null;
+    const stored=s.satisfactionScore!==null&&s.satisfactionScore!==undefined&&s.satisfactionScore!==''?Number(s.satisfactionScore):null;
+    const manual=(ratingOverridesCache||[]).find(o=>o.target_type==='station'&&String(o.target_id)===String(s.id||'')); 
+    const score=manual?Number(manual.manual_average):(avg!==null?avg:stored), count=manual?Number(manual.manual_count):(avg!==null?votes.length:Number(s.satisfactionCount||0));
+    const rating=score!==null&&Number.isFinite(score)?`<span style="display:inline-flex;align-items:center;gap:5px;margin:6px 0;padding:4px 8px;border-radius:8px;background:#fff7df;color:#765300;font-size:12px;font-weight:700">★ رضایت کاربران: ${score.toLocaleString('fa-IR',{maximumFractionDigits:1})}/۵ · ${count.toLocaleString('fa-IR')} رأی</span>`:`<span style="display:inline-flex;margin:6px 0;padding:4px 8px;border-radius:8px;background:#f0f2f3;color:#606b70;font-size:12px">هنوز امتیازی ثبت نشده</span>`;
+    const approval=s.approval_status||'pending';
+    const approvalLabel=({pending:'در انتظار بررسی',approved:'تأییدشده',rejected:'ردشده'})[approval]||'در انتظار بررسی';
+    const approvalColor=approval==='approved'?'#dff7e8':approval==='rejected'?'#ffe7e3':'#fff2cf';
+    const reviewButtons=approval==='approved'?`<button class="btn" data-a="station-review" data-i="${i}" data-status="pending">بازگردانی به بررسی</button>`:`<button class="btn main" data-a="station-review" data-i="${i}" data-status="approved">تأیید انتشار</button> <button class="btn red" data-a="station-review" data-i="${i}" data-status="rejected">رد</button>`;
+    return `<tr data-station-row data-search="${esc([code,s.id,s.source_id,s.name,s.address,s.phone,s.status,s.operator,s.city,approvalLabel].join(' '))}"><td style="padding:10px"><div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap"><strong>${esc(s.name||'بدون نام')}</strong><span style="direction:ltr;font-size:12px;font-weight:900;color:#00806F;white-space:nowrap">${esc(code)}</span></div></td><td style="padding:10px" dir="ltr">${esc(s.id||s.source_id||'—')}</td><td style="padding:10px">${esc(s.address||'—')}</td><td style="padding:10px">${esc(s.power_kw??'؟')} kW</td><td style="padding:10px">${esc(statusLabel)}</td><td style="padding:10px"><span style="display:inline-block;background:${approvalColor};padding:4px 8px;border-radius:7px;font-weight:800">${approvalLabel}</span></td><td style="padding:10px">${rating}</td><td style="padding:10px"><small>${esc(d.label)}${old?' · ⚠ قدیمی/بدون تاریخ':''}</small></td><td style="padding:10px;white-space:nowrap">${reviewButtons}<br><button class="btn" data-a="station-edit" data-i="${i}">ویرایش</button> <button class="btn red" data-a="station-delete" data-i="${i}">حذف</button></td></tr>`;
+  }).join('');
+  return `<div class="box"><h3>مدیریت جایگاه‌های شارژ</h3><p class="hint">اطلاعات این بخش مستقیماً در جدول stations ذخیره می‌شود و از مسیر عمومی برنامه‌ریز سفر خوانده می‌شود. جایگاه‌های بدون تاریخ به‌روزرسانی یا قدیمی، نیازمند بازبینی‌اند.</p><div class="box" style="border:1px solid #b8d8f2;background:#f8fbff;margin-top:16px"><h3>درخواست‌های ثبت جایگاه توسط کاربران</h3><p class="hint">درخواست‌های ارسالی از اپ ابتدا اینجا بررسی می‌شوند و پس از تأیید، باید در فهرست اصلی جایگاه‌ها ثبت شوند. برای امنیت، رمز مدیریتی این سرویس در فایل عمومی ذخیره نمی‌شود.</p><label for="station-submission-token">رمز مدیریتی بررسی درخواست‌ها</label><input id="station-submission-token" type="password" autocomplete="off" placeholder="رمز STATUS_ADMIN_TOKEN در Cloudflare" value="${esc(sessionStorage.getItem('rev_station_review_token')||'')}"><p style="display:flex;gap:8px;flex-wrap:wrap;margin:10px 0"><button class="btn main" data-a="station-submissions-refresh">نمایش درخواست‌های در انتظار</button><button class="btn" data-a="station-submissions-approved">بازیابی درخواست‌های تأییدشده قبلی</button></p><p class="hint" id="station-submissions-status">${esc(stationSubmissionsError||'برای مشاهده درخواست‌ها رمز مدیریتی را وارد و دکمه را بزنید.')}</p><div id="station-submissions-list">${renderStationSubmissions()}</div></div><p style="display:flex;flex-wrap:wrap;gap:8px;margin-top:12px"><button class="btn main" data-a="station-new">ثبت جایگاه جدید</button><button class="btn" data-a="station-import">ورود گروهی CSV</button><button class="btn" data-a="station-template">دانلود قالب CSV</button><button class="btn" data-a="station-refresh">به‌روزرسانی فهرست</button><button class="btn" style="background:#fff0c2;color:#684800;border:1px solid #e2c15c;font-weight:800" data-a="tab" data-k="station-reports">گزارش خطای جایگاه‌ها</button></p><div class="hint">تعداد کل: <b>${stationsCache.length}</b> · <span style="color:#8a5b00">در انتظار بررسی: <b>${pendingReview}</b></span> · <span style="color:#087443">تأییدشده: <b>${approvedReview}</b></span> · <span style="color:#a1261d">ردشده: <b>${rejectedReview}</b></span> · وضعیت نامشخص: <b>${unknown}</b> · قدیمی/بدون تاریخ: <b>${stale}</b></div><label for="station-search">جست‌وجوی دستی جایگاه با شناسه اختصاصی، شناسه دیتابیس، نام، شهر، تلفن یا نشانی</label><input id="station-search" data-station-search value="${esc(stationSearchValue)}" placeholder="مثلاً REV-CH-… یا نام جایگاه" style="margin:6px 0 12px"><div class="grid2"><div><label for="station-sort">مرتب‌سازی جدول جایگاه‌ها</label><select id="station-sort" data-station-sort><option value="name" ${stationSortValue==='name'?'selected':''}>نام: الف تا ی</option><option value="name-desc" ${stationSortValue==='name-desc'?'selected':''}>نام: ی تا الف</option><option value="status" ${stationSortValue==='status'?'selected':''}>وضعیت</option><option value="power" ${stationSortValue==='power'?'selected':''}>توان شارژ: زیاد به کم</option></select></div></div><p class="hint">نمایش ${filteredStations.length} جایگاه از ${stationsCache.length} جایگاه.</p><input id="station-csv" type="file" accept=".csv,text/csv" hidden><p class="hint" style="margin-top:8px">ستون‌های CSV: name, address, latitude, longitude, connectors, power_kw, status, openingHours, source_url, source_id. فایل UTF-8 باشد؛ مختصات اعشاری وارد کنید.</p></div><div class="box" style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;min-width:1050px"><thead><tr style="background:#eef3f4;text-align:right"><th style="padding:10px">نام و شناسه اختصاصی</th><th style="padding:10px">شناسه داخلی</th><th style="padding:10px">نشانی</th><th style="padding:10px">توان</th><th style="padding:10px">وضعیت عملیاتی</th><th style="padding:10px">تأیید مدیر</th><th style="padding:10px">رضایت</th><th style="padding:10px">آخرین به‌روزرسانی</th><th style="padding:10px">عملیات</th></tr></thead><tbody>${rows||'<tr><td colspan="9" style="padding:16px;text-align:center">هنوز جایگاهی در دیتابیس ثبت نشده است.</td></tr>'}</tbody></table></div>`;
+}
+function stationForm(){
+  const s=stationEdit.item||{}; const f=(k,l,type='text',ph='')=>`<label for="st_${k}">${l}</label><input id="st_${k}" type="${type}" value="${esc(s[k]??'')}" placeholder="${ph}" ${type==='text'?'':''}>`;
+  return `<div class="box"><h3>${stationEdit.isNew?'ثبت جایگاه جدید':'ویرایش جایگاه'}</h3>${f('name','نام جایگاه')}<label for="st_image">تصویر جایگاه شارژ</label>${imgField('st_image',s.image_url||s.image||'','')}<p class="hint">تصویر در مخزن تصاویر REV ذخیره می‌شود؛ پس از انتخاب، جایگاه را ذخیره کنید.</p>${f('address','آدرس')}${f('latitude','عرض جغرافیایی','number','مثلاً 35.6892')}${f('longitude','طول جغرافیایی','number','مثلاً 51.3890')}${f('power_kw','توان شارژ (kW)','number','مثلاً 60')}<label for="st_satisfactionScore">میانگین رضایت کاربران (از ۵؛ اختیاری)</label><input id="st_satisfactionScore" type="number" min="0" max="5" step="0.1" value="${esc(s.satisfactionScore??'')}" placeholder="مثلاً 4.3"><label for="st_satisfactionCount">تعداد امتیازهای ثبت‌شده کاربران</label><input id="st_satisfactionCount" type="number" min="0" step="1" value="${esc(s.satisfactionCount??'')}" placeholder="مثلاً 28"><label for="st_satisfactionNote">توضیح درباره رضایت کاربران (اختیاری)</label><textarea id="st_satisfactionNote" rows="2">${esc(s.satisfactionNote??'')}</textarea><label for="st_openingHours">ساعات کاری (روزها و ساعت شروع و پایان)</label><textarea id="st_openingHours" rows="3" placeholder="شنبه تا چهارشنبه: ۰۹:۰۰ تا ۱۸:۰۰\nپنجشنبه: ۰۹:۰۰ تا ۱۳:۰۰\nجمعه: تعطیل">${esc(s.openingHours??'')}</textarea><label for="st_connectors">کانکتورها (با ویرگول جدا کنید)</label><input id="st_connectors" value="${esc(Array.isArray(s.connectors)?s.connectors.join(', '):(s.connectors||''))}" placeholder="CCS2, Type 2"><label for="st_status">وضعیت</label><select id="st_status"><option value="unknown" ${(!s.status||s.status==='unknown')?'selected':''}>نامشخص</option><option value="operational" ${s.status==='operational'?'selected':''}>فعال</option><option value="offline" ${s.status==='offline'?'selected':''}>غیرفعال</option><option value="planned" ${s.status==='planned'?'selected':''}>در دست احداث</option></select>${f('source_url','لینک منبع یا صفحه جایگاه')}${f('source_id','شناسه منبع (اختیاری)')}<p class="hint" style="margin-top:8px">شناسه: ${esc(s.id||'پس از ثبت ساخته می‌شود')} · منبع: ${esc(s.source||'rev')}</p><p style="margin-top:16px"><button class="btn main" data-a="station-save">ذخیره جایگاه</button> <button class="btn" data-a="station-cancel">انصراف</button></p></div>`;
+}
+function stationFormValues(){
+  const val=k=>document.getElementById('st_'+k)?.value.trim()||'';
+  const s={name:val('name'),image_url:val('image'),address:val('address'),latitude:Number(val('latitude')),longitude:Number(val('longitude')),power_kw:val('power_kw')===''?null:Number(val('power_kw')),satisfactionScore:val('satisfactionScore')===''?null:Number(val('satisfactionScore')),satisfactionCount:val('satisfactionCount')===''?0:Math.max(0,parseInt(val('satisfactionCount'),10)||0),satisfactionNote:val('satisfactionNote'),connectors:val('connectors').split(/[,،;|]/).map(x=>x.trim()).filter(Boolean),status:val('status')||'unknown',source_url:val('source_url'),source_id:val('source_id'),openingHours:val('openingHours'),source:stationEdit.item?.source||'rev'};
+  if(stationEdit.item?.id)s.id=stationEdit.item.id; return s;
+}
+function parseCSV(text){
+  const rows=[];let row=[],cell='',quoted=false;const firstLine=text.split(/\r?\n/,1)[0]||'';const delimiter=firstLine.includes(',')?',':firstLine.includes(';')?';':'\t';
+  for(let i=0;i<text.length;i++){const ch=text[i];if(ch==='"'&&quoted&&text[i+1]==='"'){cell+='"';i++}else if(ch==='"'){quoted=!quoted}else if(ch===delimiter&&!quoted){row.push(cell.trim());cell=''}else if((ch==='\n'||ch==='\r')&&!quoted){if(ch==='\r'&&text[i+1]==='\n')i++;row.push(cell.trim());if(row.some(Boolean))rows.push(row);row=[];cell=''}else cell+=ch}
+  row.push(cell.trim());if(row.some(Boolean))rows.push(row);if(rows.length<2)throw new Error('فایل باید یک ردیف عنوان و دست‌کم یک ردیف داده داشته باشد.');
+  const keyMap={name:['name','title','station_name','نام','نام جایگاه'],address:['address','آدرس'],latitude:['latitude','lat','عرض جغرافیایی','عرض'],longitude:['longitude','lon','lng','طول جغرافیایی','طول'],connectors:['connectors','connector_types','کانکتورها','کانکتور'],power_kw:['power_kw','power','توان','توان شارژ'],status:['status','وضعیت'],source_url:['source_url','url','لینک','لینک منبع'],source_id:['source_id','شناسه منبع'],id:['id','شناسه'],source:['source','منبع']};
+  const headers=rows[0].map(h=>h.trim().toLowerCase());const idx={};for(const [k,aliases] of Object.entries(keyMap)){idx[k]=headers.findIndex(h=>aliases.includes(h))}
+  if(idx.name<0||idx.latitude<0||idx.longitude<0)throw new Error('ستون‌های name، latitude و longitude الزامی‌اند.');
+  return rows.slice(1).map(r=>{const o={};for(const k of Object.keys(keyMap)){if(idx[k]>=0)o[k]=r[idx[k]]??''}if(o.connectors)o.connectors=o.connectors.split(/[,،;|]/).map(x=>x.trim()).filter(Boolean);if(o.power_kw==='')o.power_kw=null;if(o.latitude!=='')o.latitude=Number(o.latitude);if(o.longitude!=='')o.longitude=Number(o.longitude);if(o.power_kw!==null&&o.power_kw!==undefined)o.power_kw=Number(o.power_kw);o.source=o.source||'rev';o.status=o.status||'unknown';return o}).filter(o=>o.name||o.latitude||o.longitude);
+}
+function downloadStationTemplate(){
+  const csv='name,address,latitude,longitude,connectors,power_kw,status,openingHours,source_url,source_id\n';
+  const blob=new Blob(['\ufeff'+csv],{type:'text/csv;charset=utf-8;'});const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='rev-stations-template.csv';a.click();URL.revokeObjectURL(a.href);
+}
+/* ---- رویدادها ---- */
+function wrap(a,b,ph){const el=$('f_body'),s=el.selectionStart,e=el.selectionEnd;el.setRangeText(a+(el.value.slice(s,e)||ph)+b,s,e,'end');el.focus()}
+function collect(){
+  const it={...edit.item};
+  document.querySelectorAll('[data-f]').forEach(el=>{const f=el.dataset.f;it[f]=f==='body'?el.value.split(/\n\s*\n/).map(x=>x.trim()).filter(Boolean):el.value.trim()});
+  return it;
+}
+root.addEventListener('input',e=>{
+  const t=e.target,d=t.dataset;
+  if('usersSearch' in d){usersSearchValue=t.value;usersPage=1;clearTimeout(usersDebounce);usersDebounce=setTimeout(()=>{usersBusy=false;loadUsers()},300);return}
+  if('stationSearch' in d){stationSearchValue=t.value;const pos=t.selectionStart;draw();const input=$('station-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
+  if('listSearch' in d){listSearchValue=t.value;const q=normalizeSearch(listSearchValue.trim());let n=0;root.querySelectorAll('.admin-list-row').forEach(row=>{const show=!q||normalizeSearch(row.dataset.search||'').includes(q);row.hidden=!show;if(show)n++});const counter=$('list-count');if(counter)counter.textContent=n;return}
+  if('ratingSearch' in d){ratingSearchValue=t.value;ratingSelected=null;ratingOverride=null;const pos=t.selectionStart;draw();const input=$('rating-search');if(input){input.focus();try{input.setSelectionRange(pos,pos)}catch(_){}}return}
+  if(d.planPrice){c.businessPlans[d.planPrice].price=Math.max(0,Number(t.value)||0);dirty=true}
+  if(d.planName){c.businessPlans[d.planName].name=t.value;dirty=true}
+  if(d.planSummary){c.businessPlans[d.planSummary].summary=t.value;dirty=true}
+  if(d.site){c.siteSettings=c.siteSettings||{};if(d.site==='textOverrides'){try{c.siteSettings.textOverrides=JSON.parse(t.value||'{}');t.setCustomValidity('');}catch(_){t.setCustomValidity('JSON معتبر نیست');} }else if(['fontSize','menuSize'].includes(d.site)){c.siteSettings[d.site]=Math.max(d.site==='fontSize'?14:12,Math.min(d.site==='fontSize'?24:22,Number(t.value)||17));}else{c.siteSettings[d.site]=t.value;}dirty=true}
+  if(d.menuLabel){c.siteSettings.menu=c.siteSettings.menu||{};c.siteSettings.menu[d.menuLabel]={...(c.siteSettings.menu[d.menuLabel]||{}),label:t.value};dirty=true}
+
+  if(d.t){c.theme[d.t]=t.type==='number'?+t.value:t.value;dirty=true;if(['adminSize','tableSize','tableDensity','tableLines','tableStripe','tableWidth'].includes(d.t))applyAdminAppearance()}
+  else if(d.c){c.contact[d.c]=t.value.trim();dirty=true}
+  else if(d.s){c.shopInfo[d.s]=t.value;dirty=true}
+  else if(d.ci){c.carsInfo[d.ci]=t.value;dirty=true}
+  else if(t.id==='ab'){c.about=t.value;dirty=true}
+  else if(d.g){c.gaId=t.value.trim();dirty=true}
+  else if(t.id==='pn'){c.podcast=t.value;dirty=true}
+});
+root.addEventListener('change',e=>{
+  const p=e.target.dataset;
+  if(p.planActive){c.businessPlans[p.planActive].active=e.target.checked;dirty=true;draw();return}
+  if(p.menuEnabled){c.siteSettings=c.siteSettings||{};c.siteSettings.menu=c.siteSettings.menu||{};c.siteSettings.menu[p.menuEnabled]={...(c.siteSettings.menu[p.menuEnabled]||{}),enabled:e.target.checked};dirty=true;return}
+
+  if(p.planAnnual){c.businessPlans[p.planAnnual].annualEnabled=e.target.checked;dirty=true;draw();return}
+  if(p.planOption){const [planId,optionId]=p.planOption.split('|');const option=(c.businessPlans[planId]?.options||[]).find(x=>x.id===optionId);if(option){option.enabled=e.target.checked;dirty=true;draw();}return}
+  if(e.target.id==='sh'){c.shop=e.target.checked;dirty=true}
+  if(e.target.id==='tc')wrap('{'+e.target.value+'|','}','متن رنگی');
+  if(e.target.dataset.listSort){listSortValue=e.target.value;draw()}
+  if(e.target.dataset.stationSort){stationSortValue=e.target.value;draw()}
+  if(e.target.dataset.usersCategory){usersCategoryValue=e.target.value;usersPage=1;loadUsers();return}
+  if(e.target.dataset.usersSort){usersSortValue=e.target.value;usersPage=1;loadUsers()}
+  if(e.target.dataset.usersOrder){usersOrder=e.target.value;usersPage=1;loadUsers()}
+  if(e.target.dataset.ratingSort){ratingSortValue=e.target.value;draw()}
+});
+root.addEventListener('submit',async e=>{
+ if(e.target&&e.target.id==='rev-music-upload'){
+  e.preventDefault();
+  if(!musicAdminToken){const s=$('rev-music-status');if(s)s.textContent='ابتدا رمز مدیریتی را وارد و اتصال را برقرار کنید.';return;}
+  const file=$('rev-music-file')?.files?.[0],title=$('rev-music-title')?.value.trim()||'',artist=$('rev-music-artist')?.value.trim()||'';
+  if(!file||!title){const s=$('rev-music-status');if(s)s.textContent='عنوان و فایل صوتی را وارد کنید.';return;}
+  const form=new FormData();form.append('file',file);form.append('title',title);form.append('artist',artist);
+  const btn=$('rev-music-upload-btn');if(btn)btn.disabled=true;
+  try{const j=await musicApi('/api/admin/music',{method:'POST',body:form});await loadMusicTracks();const s=$('rev-music-status');if(s)s.textContent='بارگذاری آهنگ با موفقیت انجام شد.';e.target.reset();}
+  catch(err){const s=$('rev-music-status');if(s)s.textContent='بارگذاری ناموفق بود: '+(err.message||'خطا');}
+  finally{if(btn)btn.disabled=false;}
+ }
+});
+root.addEventListener('change',async e=>{
+  if(e.target.id==='station-csv'&&e.target.files?.[0]){const file=e.target.files[0];try{const text=await file.text();const rows=parseCSV(text);if(!rows.length){msg('هیچ ردیف معتبری در فایل پیدا نشد.');return}if(!confirm(`${rows.length} ردیف برای ورود آماده است. موارد هم‌مختصات/هم‌شناسه به‌روزرسانی می‌شوند. ادامه می‌دهید؟`))return;msg('در حال ورود گروهی...');const r=await fetch(WORKER+'/api/admin/stations/bulk',{method:'POST',headers:H(),body:JSON.stringify({stations:rows})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationsCache=null;note=`ورود گروهی موفق بود؛ ${j.count} ردیف پردازش شد.`;await loadStations()}catch(err){msg('ورود CSV ناموفق بود: '+(err.message||'خطای فایل'))}finally{e.target.value=''}}
+});
+
+document.addEventListener('click',async e=>{
+  const b=e.target.closest('[data-a]'); if(!b) return;
+  if(b.dataset.a==='station-submissions-refresh') e.preventDefault();
+  const a=b.dataset.a, i=+b.dataset.i;
+  if(a==='login'){tok=$('t').value.trim();gitTok=$('gt').value.trim();if(!tok){msg('رمز مدیریتی را وارد کنید.');return}sessionStorage.setItem('rev_admin_token',tok);if(gitTok)sessionStorage.setItem('rev_github_token',gitTok);else sessionStorage.removeItem('rev_github_token');c=null;draw()}
+  else if(a==='out'){sessionStorage.removeItem('rev_admin_token');sessionStorage.removeItem('rev_github_token');tok='';gitTok='';c=null;note='';draw()}
+  else if(a==='tab'){tab=b.dataset.k;edit=null;stationEdit=null;note='';draw();if(tab==='stations'||tab==='rating-admin')loadStations();if(tab==='ratings'||tab==='serviceCenters'||tab==='partsStores'||tab==='stations')loadRatings();if(tab==='station-reports')loadStationReports();if(tab==='set')loadAuthSettings();if(tab==='users')loadUsers();if(tab==='engagement')loadEngagement();if(tab==='portal-businesses')loadPortalBusinesses()}
+  else if(a==='music-connect'){
+    const input=$('rev-music-token');if(input&&input.value.trim())musicAdminToken=input.value.trim();
+    if(!musicAdminToken){msg('رمز مدیریتی موزیک را وارد کنید.');return}
+    try{const h=await fetch(REV_MUSIC_API+'/api/health',{cache:'no-store'});const j=await h.json().catch(()=>({}));if(!h.ok||!j.success||!j.storage)throw new Error('Worker موزیک یا اتصال R2 هنوز آماده نیست.');await loadMusicTracks()}catch(err){const s=$('rev-music-status');if(s)s.textContent='اتصال ناموفق: '+(err.message||'خطای شبکه');}
+  }
+  else if(a==='engagement-refresh'){engagementCache=null;loadEngagement()}
+  else if(a==='announcement-publish'){
+    const title=$('announcement-title')?.value.trim()||'',body=$('announcement-body')?.value.trim()||'',linkUrl=$('announcement-link')?.value.trim()||'',linkLabel=$('announcement-link-label')?.value.trim()||'مشاهده',kind=$('announcement-kind')?.value||'info';
+    if(!title||!body){msg('عنوان و متن اعلان را وارد کنید.');return}
+    try{b.disabled=true;const j=await adminAnnouncementAction('/api/admin/announcements',{title,body,linkUrl,linkLabel,kind});note=j.message||'اعلان منتشر شد.';engagementCache=null;await loadEngagement()}catch(err){msg('انتشار اعلان ناموفق بود: '+err.message);b.disabled=false}
+  }
+  else if(a==='announcement-toggle'){
+    try{await adminAnnouncementAction('/api/admin/announcements/'+b.dataset.id+'/toggle',{enabled:b.dataset.enabled==='1'});note='وضعیت اعلان تغییر کرد.';engagementCache=null;await loadEngagement()}catch(err){msg(err.message)}
+  }
+  else if(a==='announcement-delete'){
+    if(!confirm('این اعلان حذف شود؟'))return;
+    try{await adminAnnouncementAction('/api/admin/announcements/'+b.dataset.id+'/delete',{});note='اعلان حذف شد.';engagementCache=null;await loadEngagement()}catch(err){msg(err.message)}
+  }
+  else if(a==='portal-businesses-refresh'){portalBusinessesCache=null;loadPortalBusinesses()}
+  else if(a==='portal-review'){
+    const card=b.closest('.portal-business-card');if(!card)return;const id=card.dataset.id,status=b.dataset.status,reviewNote=card.querySelector('[data-field="note"]')?.value||'';
+    if(status==='approved'&&!confirm('پروفایل این کسب‌وکار تأیید شود؟ نمایش عمومی همچنان تابع پلن و دسترسی‌های فعال خواهد بود.'))return;
+    try{b.disabled=true;const r=await fetch(AUTH_WORKER+'/api/admin/businesses/'+encodeURIComponent(id)+'/review',{method:'POST',headers:H(),body:JSON.stringify({status,note:reviewNote})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));portalBusinessesCache=null;await loadPortalBusinesses();msg('وضعیت پروفایل به‌روزرسانی شد.')}catch(err){msg('ذخیره وضعیت ناموفق بود: '+(err.message||'خطا'));b.disabled=false}
+  }
+  else if(a==='portal-plan'){
+    const card=b.closest('.portal-business-card');if(!card)return;const val=k=>card.querySelector('[data-field="'+k+'"]')?.value||'';const features={};card.querySelectorAll('[data-feature]').forEach(x=>features[x.dataset.feature]=x.checked);
+    const starts=val('startsAt'),expires=val('expiresAt');if(!starts||!expires){msg('تاریخ شروع و انقضای پلن را وارد کنید.');return}
+    const body={planCode:val('planCode'),planName:val('planName'),planStatus:val('planStatus'),paymentStatus:val('paymentStatus'),startsAt:new Date(starts+'T00:00:00Z').toISOString(),expiresAt:new Date(expires+'T23:59:59Z').toISOString(),features,note:val('note')};
+    try{b.disabled=true;const r=await fetch(AUTH_WORKER+'/api/admin/businesses/'+encodeURIComponent(card.dataset.id)+'/plan',{method:'POST',headers:H(),body:JSON.stringify(body)});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));portalBusinessesCache=null;await loadPortalBusinesses();msg('پلن و دسترسی‌ها ذخیره شد.')}catch(err){msg('ذخیره پلن ناموفق بود: '+(err.message||'خطا'));b.disabled=false}
+  }
+  else if(a==='users-prev'){usersPage=Math.max(1,usersPage-1);loadUsers()}
+  else if(a==='users-next'){usersPage++;loadUsers()}
+  else if(a==='new'){edit={i:-1,item:tab==='products'?{stock:'in'}:tab==='cars'?{}:(tab==='serviceCenters'||tab==='partsStores')?{status:'pending'}:tab==='ads'?{position:'left',enabled:'yes',order:'10'}:tab==='techSections'?{part:'battery',enabled:'yes',order:'10'}:{part:'battery'}};draw()}
+  else if(a==='verify-toggle'){
+    const k=b.dataset.k, idx=Number(b.dataset.i);
+    if(!['serviceCenters','partsStores'].includes(k)||!c[k]?.[idx])return;
+    const checked=b.checked;
+    c[k][idx].status=checked?'verified':'pending';
+    c[k][idx].reviewedAt=checked?new Date().toISOString():'';
+    c[k][idx].reviewedBy='REV admin';
+    dirty=true;
+    draw();
+    await save();
+  }
+  else if(a==='edit'){edit={i,item:{...c[tab][i]}};draw()}
+  else if(a==='del'){if(confirm('این مورد حذف شود؟')){c[tab].splice(i,1);dirty=true;draw()}}
+  else if(a==='cancel'){edit=null;draw()}
+  else if(a==='reset'){c.theme={...THEME0,adminSize:13,tableSize:11,tableDensity:'compact',tableLines:'full',tableStripe:'yes',tableWidth:'scroll'};dirty=true;draw()}
+  else if(a==='reset-layout'){Object.assign(c.theme,{adminSize:13,tableSize:11,tableDensity:'compact',tableLines:'full',tableStripe:'yes',tableWidth:'scroll'});dirty=true;draw()}
+  else if(a==='up'||a==='clr'){
+    const id=b.dataset.id, inp=$(id), im=$('p_'+id);
+    let p=''; if(a==='up'){p=await upImage(); if(!p)return}
+    inp.value=p; im.hidden=!p; if(p)im.src=prev[p];
+    if(inp.dataset.pi){c.partImages[inp.dataset.pi]=p;if(!p)delete c.partImages[inp.dataset.pi];dirty=true}
+  }
+  else if(a==='fmt'){
+    const w=b.dataset.w;
+    if(w==='b')wrap('**','**','متن پررنگ');
+    else if(w==='mark')wrap('==','==','متن مهم');
+    else if(w==='h')wrap('\n\n## ','\n\n','عنوان فرعی');
+    else if(w==='link'){const u=prompt('آدرس لینک (با https:// شروع شود):');if(u)wrap('[','](' +u.trim()+')','متن لینک')}
+    else if(w==='img'){const p=await upImage();if(p)wrap('\n\n![توضیح تصویر](' +p+')\n\n','','')}
+  }
+  else if(a==='ok'){
+    const it=collect();
+    if(!it.title){msg('عنوان لازم است.');return}
+    if(tab==='serviceCenters'||tab==='partsStores'){
+      const lat=Number(it.latitude),lon=Number(it.longitude);
+      if(it.latitude!==''||it.longitude!=='')if(!Number.isFinite(lat)||lat < -90||lat > 90||!Number.isFinite(lon)||lon < -180||lon > 180){msg('مختصات باید معتبر باشد؛ برای نمایش روی نقشه هر دو مختصات را وارد کنید.');return}
+      it.category=tab==='serviceCenters'?'authorized_ev_service':'ev_parts_store';it.latitude=it.latitude===''?'':lat;it.longitude=it.longitude===''?'':lon;it.id=it.id||tab+'-'+Date.now().toString(36);if(!it.publicCode){const prefix=tab==='serviceCenters'?'RP':'ST';const suffix=String(it.id).toUpperCase().replace(/[^A-Z0-9]/g,'').slice(-10).padStart(4,'0');it.publicCode='REV-'+prefix+'-'+suffix;}
+    }
+    if(tab==='articles'&&!it.slug)it.slug='a'+Date.now().toString(36);
+    if(edit.i<0)c[tab].unshift(it);else c[tab][edit.i]=it;
+    edit=null;dirty=true;draw();
+  }
+  else if(a==='ratings-filter'){ratingHistoryFilter=['all','store','station'].includes(b.dataset.k)?b.dataset.k:'all';draw()}
+  else if(a==='ratings-refresh'){ratingsCache=null;loadRatings()}
+  else if(a==='rating-search'){ratingSearchValue=$('rating-search')?.value||ratingSearchValue;ratingSelected=null;ratingOverride=null;draw()}
+  else if(a==='rating-clear'){ratingSearchValue='';ratingSelected=null;ratingOverride=null;draw()}
+  else if(a==='rating-select'){const target=ratingSearchResults()[i];if(target)await selectRatingTarget(target)}
+  else if(a==='rating-save'){await saveManualRating()}
+  else if(a==='rating-sms'){
+    if(!ratingSelected){msg('ابتدا یک پروفایل را انتخاب کنید.');return}
+    const phone=$('rating-phone')?.value.trim()||'';
+    const publicCode=$('rating-code')?.value.trim()||ratingSelected._publicCode;
+    const displayName=$('rating-name')?.value.trim()||ratingSelected.title||ratingSelected.name||'صاحب کسب‌وکار';
+    if(!confirm('شناسه '+publicCode+' به شماره '+phone+' پیامک شود؟'))return;
+    msg('در حال ارسال شناسه با ملی پیامک...');
+    try{
+      const r=await fetch(AUTH_WORKER+'/api/admin/send-owner-code',{method:'POST',headers:H(),body:JSON.stringify({phone,publicCode,displayName})});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));
+      msg('درخواست ارسال پیامک ثبت شد.');
+    }catch(err){msg('ارسال پیامک انجام نشد: '+(err.message||'تنظیمات ملی پیامک را بررسی کنید.'))}
+  }
+  else if(a==='station-reports-refresh'){stationReportsCache=null;loadStationReports()}
+  else if(a==='station-report-status'){
+    const id=Number(b.dataset.id),status=b.dataset.status;
+    if(!Number.isSafeInteger(id)||!['new','in_review','published','resolved','invalid'].includes(status)){msg('شناسه یا وضعیت گزارش نامعتبر است.');return}
+    const report=(stationReportsCache||[]).find(x=>Number(x.id)===id),adminNote=prompt('یادداشت مدیر (اختیاری):',report?.admin_note||'');
+    if(adminNote===null)return;
+    try{const r=await fetch(RATING_WORKER+'/api/admin/station-reports/'+id,{method:'PUT',headers:H(),body:JSON.stringify({status,admin_note:adminNote})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationReportsCache=null;msg(j.message||'وضعیت گزارش ذخیره شد.');await loadStationReports()}
+    catch(err){msg('ذخیره وضعیت گزارش ناموفق بود: '+(err.message||'خطای اتصال'))}
+  }
+  else if(a==='station-submissions-refresh'){await loadStationSubmissions('pending')}
+  else if(a==='station-submissions-approved'){await loadStationSubmissions('approved')}
+  else if(a==='station-submission-review'){await reviewStationSubmission(b.dataset.id,b.dataset.status)}
+  else if(a==='station-refresh'){stationsCache=null;loadStations()}
+  else if(a==='station-new'){stationEdit={isNew:true,item:{source:'rev',status:'unknown'}};draw()}
+  else if(a==='station-review'){
+    const s=stationsCache[i], status=b.dataset.status;
+    if(!s?.id||!['pending','approved','rejected'].includes(status)){msg('شناسه یا وضعیت بررسی معتبر نیست.');return}
+    const actionLabel=status==='approved'?'تأیید و انتشار':status==='rejected'?'رد جایگاه':'بازگردانی به بررسی';
+    if(!confirm(`آیا می‌خواهید جایگاه «${s.name||'بدون نام'}» را ${actionLabel} کنید؟`))return;
+    try{const r=await fetch(WORKER+'/api/admin/stations/'+encodeURIComponent(s.id)+'/review',{method:'POST',headers:H(),body:JSON.stringify({approval_status:status,review_note:status==='rejected'?'ردشده توسط مدیر':''})});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationsCache=null;note=j.message||'وضعیت بررسی ذخیره شد.';await loadStations()}catch(err){msg('ثبت نتیجه بررسی ناموفق بود: '+(err.message||'خطای اتصال'))}
+  }
+  else if(a==='station-edit'){stationEdit={isNew:false,item:{...stationsCache[i]}};draw()}
+  else if(a==='station-cancel'){stationEdit=null;draw()}
+  else if(a==='station-save'){
+    const s=stationFormValues();
+    if(!s.name){msg('نام جایگاه الزامی است.');return}
+    if(!Number.isFinite(s.latitude)||s.latitude < -90||s.latitude > 90||!Number.isFinite(s.longitude)||s.longitude < -180||s.longitude > 180){msg('مختصات جغرافیایی معتبر وارد کنید.');return}
+    if(s.power_kw!==null&&(!Number.isFinite(s.power_kw)||s.power_kw<0)){msg('توان شارژ باید عدد مثبت یا خالی باشد.');return}
+    const duplicates=findStationDuplicates(s);
+    if(duplicates.length){
+      const names=duplicates.slice(0,4).map(x=>x.name||'بدون نام').join('، ');
+      const more=duplicates.length>4?' و '+(duplicates.length-4)+' مورد دیگر':'';
+      if(!confirm('احتمال ثبت تکراری وجود دارد. جایگاه نزدیک یا دارای شناسه منبع یکسان: '+names+more+' .\nفاصله مختصات تا ۱۵۰ متر یا شناسه منبع یکسان است. با وجود این هشدار ادامه می‌دهید؟'))return;
+    }
+    try{const isNew=stationEdit.isNew;const endpoint=isNew?WORKER+'/api/admin/stations':WORKER+'/api/admin/stations/'+encodeURIComponent(s.id);const r=await fetch(endpoint,{method:isNew?'POST':'PUT',headers:H(),body:JSON.stringify(s)});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationEdit=null;stationsCache=null;note=j.message||'ذخیره شد.';await loadStations()}catch(e){msg('ذخیره جایگاه انجام نشد: '+(e.message||'خطای اتصال'))}
+  }
+  else if(a==='station-delete'){const s=stationsCache[i];if(s&&confirm('جایگاه «'+s.name+'» حذف شود؟')){try{const r=await fetch(WORKER+'/api/admin/stations/'+encodeURIComponent(s.id),{method:'DELETE',headers:H()});const j=await r.json().catch(()=>({}));if(!r.ok||!j.success)throw new Error(j.error||('HTTP '+r.status));stationsCache=null;note='جایگاه حذف شد.';await loadStations()}catch(e){msg('حذف انجام نشد: '+(e.message||'خطای اتصال'))}}}
+  else if(a==='station-import')$('station-csv').click()
+  else if(a==='station-template')downloadStationTemplate()
+  else if(a==='meetups-refresh'){loadMeetupPlans()}
+  else if(a==='registration-save')saveRegistrationAccess();
+  else if(a==='registration-add')changeRegistrationPhone('add_phone');
+  else if(a==='registration-remove'){const p=e.target.closest('[data-phone]')?.dataset.phone;if(p&&confirm('شماره '+p+' از فهرست مجاز حذف شود؟'))changeRegistrationPhone('remove_phone',p);}
+  else if(a==='auth-save')saveAuthSettings();
+  else if(a==='pub')save();
+});
+draw();
+</script>
+<script src="./rev-announcements.js?v=2" defer></script>
+</body>
+</html>
