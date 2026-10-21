@@ -921,6 +921,31 @@ function updateVehicleFields(){
 }
 $("vehicleType").addEventListener("change",updateVehicleFields);
 updateVehicleFields();
+async function loadEVVehicleCatalog(){
+  const select=$("vehicleProfile"),note=$("vehicleProfileNote");
+  if(!select||!note)return;
+  try{
+    const response=await fetch("./ev-vehicle-catalog.json",{cache:"no-store",headers:{Accept:"application/json"}});
+    if(!response.ok)throw new Error("HTTP "+response.status);
+    const data=await response.json();
+    if(!data||data.schemaVersion!==1||!Array.isArray(data.vehicles))throw new Error("ساختار بانک مشخصات معتبر نیست");
+    data.vehicles.filter(v=>v&&typeof v.id==="string"&&typeof v.label==="string").forEach(v=>{const option=document.createElement("option");option.value=v.id;option.textContent=v.label;select.appendChild(option);});
+    const records=data.vehicles.filter(v=>v&&typeof v.id==="string");
+    select.addEventListener("change",()=>{
+      const vehicle=records.find(v=>v.id===select.value);
+      if(!vehicle){note.textContent="مشخصات دستی فعال است؛ مقدارها را بر اساس تیپ واقعی خودرو وارد کن.";return;}
+      if(vehicle.drivetrain==="BEV")$("vehicleType").value="bev";
+      if(Number.isFinite(Number(vehicle.batteryKwh))&&Number(vehicle.batteryKwh)>0)$("battery").value=String(vehicle.batteryKwh);
+      if(Number.isFinite(Number(vehicle.maxDcChargeKw))&&Number(vehicle.maxDcChargeKw)>0)$("maxChargePower").value=String(vehicle.maxDcChargeKw);
+      if(Number.isFinite(Number(vehicle.consumptionKwhPer100Km))&&Number(vehicle.consumptionKwhPer100Km)>0)$("consumption").value=String(vehicle.consumptionKwhPer100Km);
+      updateVehicleFields();
+      note.textContent=vehicle.label+" — باتری "+(vehicle.batteryKwh??"نامشخص")+" kWh · حداکثر DC "+(vehicle.maxDcChargeKw??"نامشخص")+" kW. مقدار گزارش‌شده است؛ با تیپ واقعی خودرو تطبیق بده. مصرف برق خودکار تغییر نکرده است.";
+      if(vehicle.sourceUrl){const link=document.createElement("a");link.href=vehicle.sourceUrl;link.target="_blank";link.rel="noopener noreferrer";link.textContent=" مشاهده منبع مشخصات";note.appendChild(link);}
+    });
+    note.textContent="بانک REV: "+records.length+" مدل ثبت شده؛ مشخصات هر تیپ ممکن است متفاوت باشد.";
+  }catch(error){note.textContent="بانک مدل‌ها فعلاً بارگذاری نشد؛ مشخصات را دستی وارد کن. ("+(error?.message||"خطا")+")";}
+}
+loadEVVehicleCatalog();
 // Apply settings intentionally passed from the driver profile.
 (function applyDriverSettings(){const q=new URLSearchParams(location.search);if(!q.has("vehicleType")&&!q.has("battery")&&!q.has("consumption"))return;const allowed=["bev","phev","hev","mhev"],type=q.get("vehicleType");if(allowed.includes(type))$("vehicleType").value=type;const setNumber=(id,key,min,max)=>{const raw=q.get(key);if(raw===null)return;const n=Number(raw);if(Number.isFinite(n)&&n>=min&&n<=max)$(id).value=String(n)};setNumber("battery","battery",10,250);setNumber("soc","soc",5,100);setNumber("consumption","consumption",5,50);if(["auto","off"].includes(q.get("hvac")))$("hvacMode").value=q.get("hvac");updateVehicleFields();const note=document.createElement("div");note.className="weather-summary";note.textContent="تنظیمات خودرو از پروفایل راننده وارد شد"+(q.get("vehicleName")?" · "+q.get("vehicleName"):"")+". مبدأ و مقصد را وارد و مسیر را محاسبه کنید.";const status=$("status");if(status)status.parentNode.insertBefore(note,status);history.replaceState(null,"",location.pathname+location.hash)})();
 function showContinueTrip(){const b=$("continueTripBtn"),hint=$("continueTripHint");if(b)b.style.display="block";if(hint)hint.style.display="block";}
