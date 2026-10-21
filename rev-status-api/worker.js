@@ -113,7 +113,7 @@ export default {
     }
 
     if (url.pathname === "/health") {
-      return json({ ok: true, service: "rev-status-api", v: 5 });
+      return json({ ok: true, service: "rev-status-api", v: 6 });
     }
 
     // ---------- وضعیت لحظه‌ای ----------
@@ -127,6 +127,18 @@ export default {
       const phone = body && typeof body.phone === "string" ? body.phone.trim() : "";
       if (!validKey(key)) return json({ ok: false, error: "invalid_key" }, 400);
       if (!STATUSES.includes(status)) return json({ ok: false, error: "invalid_status" }, 400);
+
+      // گیت حضور: ثبت وضعیت فقط از محل شارژر (شعاع ۱۰۰ متر، با GPS کاربر)
+      const rlat = body && body.lat != null ? Number(body.lat) : null;
+      const rlng = body && body.lng != null ? Number(body.lng) : null;
+      if (rlat == null || rlng == null || !isFinite(rlat) || !isFinite(rlng)) {
+        return json({ ok: false, error: "location_required" }, 403);
+      }
+      const km = key.slice(2).split(",");
+      const dStation = distM(rlat, rlng, Number(km[0]), Number(km[1]));
+      if (!isFinite(dStation) || dStation > 100) {
+        return json({ ok: false, error: "too_far", distance: Math.round(dStation) }, 403);
+      }
 
       const kvKey = "st:" + key;
       let prev = null;
