@@ -21,7 +21,7 @@ const STATUSES = ["free", "busy", "broken"];
 
 // سازگاری با نام Binding فعلی Cloudflare و نام قدیمی.
 function getStatusKV(env) {
-  const kv = getStatusKV(env) || env.REV_STATUS_KV;
+  const kv = env.STATUS_KV || env.REV_STATUS_KV;
   if (!kv) throw new Error("Missing KV binding: STATUS_KV or REV_STATUS_KV");
   return kv;
 }
