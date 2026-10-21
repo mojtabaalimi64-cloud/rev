@@ -14,6 +14,18 @@ assert.ok(loader.includes("return []"), "API failure must not silently display u
 assert.ok(!source.includes("const ONLINE_STATIONS_API"), "unused external charging source should be removed");
 assert.ok(source.includes("ایستگاه تأییدشده از بانک REV"), "route result must identify the approved REV station count");
 assert.ok(source.includes("در بانک تأییدشده REV ایستگاهی در شعاع انتخاب‌شده از مسیر پیدا نشد"), "empty state must explain internal data coverage");
+const vehicleCatalog = JSON.parse(fs.readFileSync("ev-vehicle-catalog.json", "utf8"));
+assert.equal(vehicleCatalog.schemaVersion, 1, "vehicle catalog schema version must be explicit");
+assert.ok(Array.isArray(vehicleCatalog.vehicles) && vehicleCatalog.vehicles.length > 0, "vehicle catalog must contain sourced profiles");
+for (const vehicle of vehicleCatalog.vehicles) {
+  assert.ok(vehicle.id && vehicle.label && vehicle.sourceUrl && vehicle.sourceLabel, "each vehicle must include identity and a source");
+  assert.ok(vehicle.batteryKwh === null || (Number.isFinite(vehicle.batteryKwh) && vehicle.batteryKwh > 0), "battery capacity must be positive or unknown");
+  assert.ok(vehicle.maxDcChargeKw === null || (Number.isFinite(vehicle.maxDcChargeKw) && vehicle.maxDcChargeKw > 0), "DC charge limit must be positive or unknown");
+}
+assert.ok(source.includes("async function loadEVVehicleCatalog()"), "trip planner must load vehicle profiles");
+assert.ok(source.includes("./ev-vehicle-catalog.json"), "trip planner must load the dedicated catalog, not station seed data");
+assert.ok(fs.readFileSync("trip.html", "utf8").includes('id="vehicleProfile"'), "trip planner must expose the vehicle profile selector");
+assert.ok(source.includes("مصرف برق خودکار تغییر نکرده است"), "unknown consumption must not be guessed from a model profile");
 console.log("REV trip planner station-source checks passed.");
 
 const continuation = source.slice(source.indexOf("function continueToDriverProfile()"), source.indexOf("async function planTrip()"));
