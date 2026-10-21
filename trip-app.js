@@ -335,6 +335,24 @@ function stationAlongRouteKm(station,metrics){
   }
   return {routeKm:bestKm,offRouteKm:best};
 }
+function estimateChargingMinutes(batteryKwh,arrivalSoc,targetSoc,stationPowerKw){
+  const battery=Number(batteryKwh),from=Number(arrivalSoc),to=Number(targetSoc),power=Number(stationPowerKw);
+  if(!Number.isFinite(battery)||battery<=0||!Number.isFinite(from)||!Number.isFinite(to)||from<0||to>100||to<=from||!Number.isFinite(power)||power<=0)return null;
+  // Generic DC fast-charge taper. This is an estimate, not a vehicle-specific charging curve.
+  const bands=[{limit:50,factor:0.8},{limit:80,factor:0.6},{limit:100,factor:0.35}];
+  let soc=from,minutes=0;
+  for(const band of bands){
+    const end=Math.min(to,band.limit);
+    if(end<=soc)continue;
+    const energy=battery*(end-soc)/100;
+    minutes+=energy/(power*band.factor)*60;
+    soc=end;
+    if(soc>=to)break;
+  }
+  if(to>from)minutes+=5; // connection / authentication overhead
+  return Math.max(1,Math.ceil(minutes));
+}
+
 function buildChargingPlan(stations,routeCoords,routeKm,params){
   const {battery,soc,consumption,reserve,targetSoc,radius}=params;
   const metrics=routeMetrics(routeCoords);
@@ -378,8 +396,7 @@ function buildChargingPlan(stations,routeCoords,routeKm,params){
     // route geometry causes the calculated arrival SOC to fall below reserve.
     if(arrivalSoc<reserve-0.5) return {status:'alert',message:'به‌دلیل فاصله ایستگاه‌ها یا خطای داده مسیر، رسیدن به ایستگاه بعدی با ذخیره ایمنی قابل تأیید نیست.',stops,candidates};
     const energyToTarget=Math.max(0,(targetSoc-arrivalSoc)/100*battery);
-    const effectivePower=chosen.power>0?chosen.power*0.7:null;
-    const chargeMinutes=effectivePower?Math.round(energyToTarget/effectivePower*60):null;
+    const chargeMinutes=estimateChargingMinutes(battery,arrivalSoc,targetSoc,chosen.power);
     stops.push({...chosen,legKm,arrivalSoc,targetSoc,energyToTarget,chargeMinutes});
     currentKm=chosen.routeKm;
     currentSoc=targetSoc;
