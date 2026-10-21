@@ -69,6 +69,39 @@ body.rev-navigating #revMusicToggle{display:flex}
  background:#fff!important;box-shadow:0 12px 44px rgba(10,30,50,.24)!important;
  border:1px solid #dce7ef!important;opacity:1!important;visibility:visible!important
 }
+
+/* REV navigation cockpit polish — inspired by leading navigation products */
+#navBanner{background:rgba(255,255,255,.97)!important;border:1px solid #dbeafe!important;box-shadow:0 12px 38px rgba(15,55,110,.16)!important}
+#navBanner .nav-maneuver-icon{background:#0866ff!important;color:#fff!important;box-shadow:0 6px 16px rgba(8,102,255,.22)!important}
+#navDist{letter-spacing:.1px!important}
+#navDash{border-color:#dbeafe!important;box-shadow:0 14px 42px rgba(15,55,110,.18)!important}
+.rev-nav-live-pill{background:#eff6ff!important;color:#0756cf!important}
+.rev-nav-live-dot{background:#0866ff!important;box-shadow:0 0 0 3px rgba(8,102,255,.12)!important}
+.nav-stat{background:linear-gradient(180deg,#fff,#f5f9ff)!important;border-color:#dce8fb!important}
+.nav-stat-speed b{color:#0866ff!important}
+.nav-dash-btns button{border-color:#dbeafe!important;color:#0866ff!important;box-shadow:0 3px 10px rgba(8,102,255,.08)!important}
+.nav-dash-btns button.danger{background:#fff1f2!important;border-color:#ffe0e3!important;color:#d92d42!important}
+#revNavEnergy{border-top:1px solid #dbeafe!important}
+#revNavEnergy input,#revNavEnergy select{border-color:#d5e3f7!important;min-height:38px!important}
+#revNavEnergyResult{background:#eff6ff!important;border:1px solid #dbeafe!important;color:#17365f!important}
+.nav-arrive-card{border-color:#dbeafe!important;box-shadow:0 14px 42px rgba(15,55,110,.18)!important}
+@media(min-width:701px){
+ #navBanner{left:24px!important;right:auto!important;top:24px!important;width:min(390px,calc(50vw - 40px))!important;min-height:112px!important}
+ #navDash{left:auto!important;right:24px!important;bottom:24px!important;width:min(410px,calc(50vw - 40px))!important;max-height:55dvh!important;overflow:auto!important;padding:16px!important}
+ #navDash::-webkit-scrollbar{width:5px}
+ #navDash::-webkit-scrollbar-thumb{background:#cbdaf0;border-radius:99px}
+}
+@media(max-width:700px){
+ #navBanner{top:calc(8px + env(safe-area-inset-top))!important;left:10px!important;right:10px!important;min-height:88px!important;padding:11px 13px!important;border-radius:20px!important}
+ #navDash{max-height:43dvh!important;overflow:auto!important}
+ #navDash::-webkit-scrollbar{width:3px}
+ #navDash::-webkit-scrollbar-thumb{background:#cbdaf0;border-radius:99px}
+}
+@media(max-width:380px){
+ #navDash{max-height:40dvh!important}
+ #navBanner .nav-maneuver-icon{background:#0866ff!important}
+}
+
 </style>
 <style>
 /* REV route preferences panel */
