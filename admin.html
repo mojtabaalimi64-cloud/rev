@@ -917,7 +917,7 @@ async function loadUsers(){
   catch(e){usersCache=[];if(status)status.textContent='دریافت کاربران ناموفق بود: '+(e.message||'خطای اتصال')+'. مسیر /api/admin/users باید در Worker نصب شود.'}
   finally{usersBusy=false;if(tab==='users')draw()}
 }
-async function renderStationSubmissions(){
+function renderStationSubmissions(){
   if(stationSubmissionsBusy)return '<p class="hint">در حال دریافت درخواست‌ها...</p>';
   if(!stationSubmissionsCache)return '<p class="hint">هنوز درخواست‌ها بارگذاری نشده‌اند.</p>';
   if(!stationSubmissionsCache.length)return '<p class="hint">درخواست در انتظار بررسی وجود ندارد.</p>';
