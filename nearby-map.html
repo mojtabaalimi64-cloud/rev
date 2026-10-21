@@ -185,11 +185,11 @@ document.addEventListener("click",async function(ev){
   let phone="",loggedIn=false;
   try{
    const meRes=await fetch("https://rev-auth-api.mojtaba-alimi64.workers.dev/api/portal/me",{method:"GET",credentials:"include",cache:"no-store"});
-   if(meRes.ok){const meData=await meRes.json();if(meData&&meData.success&&meData.user){loggedIn=true;const u=meData.user;phone=String(u.phone_e164||u.phone||u.phone_number||u.mobile||u.mobile_number||"").trim().replace(/[\\s()-]/g,"");if(phone.startsWith("+98"))phone="0"+phone.slice(3);else if(phone.startsWith("0098"))phone="0"+phone.slice(4);else if(phone.startsWith("98")&&phone.length===12)phone="0"+phone.slice(2);if(!u.phone_verified_at)throw new Error("برای ثبت وضعیت باید شماره موبایل حساب REV را با کد پیامکی تأیید کنید.");}}
+   if(meRes.ok){const meData=await meRes.json();if(meData&&meData.success&&meData.user){loggedIn=true;const u=meData.user;phone=String(u.phone_e164||u.phone||u.phone_number||u.mobile||u.mobile_number||"").trim().replace(/[\s()-]/g,"");if(phone.startsWith("+98"))phone="0"+phone.slice(3);else if(phone.startsWith("0098"))phone="0"+phone.slice(4);else if(phone.startsWith("98")&&phone.length===12)phone="0"+phone.slice(2);if(!u.phone_verified_at)throw new Error("برای ثبت وضعیت باید شماره موبایل حساب REV را با کد پیامکی تأیید کنید.");}}
   }catch(authErr){if(authErr&&authErr.message&&authErr.message.indexOf("برای ثبت وضعیت")===0){say(authErr.message,false);confirm.disabled=false;confirm.textContent="تأیید و ثبت وضعیت";confirm.style.opacity="1";return;}}
   if(!loggedIn){const entered=prompt("برای ثبت گزارش و دریافت ۲ امتیاز، شماره موبایل خود را وارد کنید (09xxxxxxxxx):");if(!entered){confirm.disabled=false;confirm.textContent="تأیید و ثبت وضعیت";confirm.style.opacity="1";return;}phone=entered.trim();}
   if(loggedIn&&!phone){say("شماره موبایل تأییدشده در حساب REV پیدا نشد؛ پروفایل حساب را بررسی کنید.",false);confirm.disabled=false;confirm.textContent="تأیید و ثبت وضعیت";confirm.style.opacity="1";return;}
-  if(!/^09\\d{9}$/.test(phone)){say("شماره موبایل معتبر نیست؛ شماره ۱۱ رقمی با 09 وارد کنید.",false);confirm.disabled=false;confirm.textContent="تأیید و ثبت وضعیت";confirm.style.opacity="1";return;}
+  if(!/^09\d{9}$/.test(phone)){say("شماره موبایل معتبر نیست؛ شماره ۱۱ رقمی با 09 وارد کنید.",false);confirm.disabled=false;confirm.textContent="تأیید و ثبت وضعیت";confirm.style.opacity="1";return;}
   try{
    const r=await fetch("https://rev-status-api.mojtaba-alimi64.workers.dev/report",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({phone,status,lat,lng,name,user_lat:userLat,user_lng:userLng,accuracy,position_timestamp:pos.timestamp})});
    const j=await r.json();
