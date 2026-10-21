@@ -58,7 +58,7 @@ body.rev-navigating #revMusicToggle{display:flex}
 @media(prefers-reduced-motion:reduce){#revMusicPanel{scroll-behavior:auto}}
 
 /* REV station details: suppress the compact Leaflet popup and center the full details panel */
-.leaflet-popup-pane .leaflet-popup{display:none!important}
+.leaflet-popup-pane .leaflet-popup{display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important}
 #details-panel:not([hidden]){
  display:block!important;visibility:visible!important;opacity:1!important;pointer-events:auto!important;
  position:fixed!important;top:50%!important;left:50%!important;right:auto!important;bottom:auto!important;
