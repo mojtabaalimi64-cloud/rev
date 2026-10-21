@@ -12,7 +12,7 @@
 //   POST /moderate { token, id, action: approve|reject }
 // امتیاز کاربران (کلید: شماره موبایل):
 //   گزارش وضعیت لحظه‌ای: +۲ (سقف روزانه ۱۰ گزارش)
-//   جایگاه جدیدِ تأییدشده: +۵۰
+//   جایگاه جدیدِ تأییدشده: +۵
 //   GET  /points?phone=09xxxxxxxxx
 // سلامت:
 //   GET  /health
@@ -261,7 +261,7 @@ export default {
       await env.STATUS_KV.put(kvKey, JSON.stringify(rec));
       let pts = null;
       if (action === "approve") {
-        pts = await addPoints(env, rec.phone, 50, "stations");
+        pts = await addPoints(env, rec.phone, 5, "stations");
         // پاداش +۵ برای کاربرانی که این جایگاه را تأیید کرده بودند
         const votes = rec.votes || {};
         for (const p in votes) {
