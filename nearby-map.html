@@ -687,5 +687,69 @@ body.rev-navigating #navStartFloat{display:none!important}
 </script>
 
 <script src="./rev-app-mode.js?v=20261018-1"></script>
+
+<style id="rev-navigation-overlap-fix">
+/* Keep map controls out of the active guidance cockpit without changing their behavior. */
+@media (max-width: 699px) {
+  body.rev-navigating .bottom-nav,
+  body.rev-navigating .map-search-bar,
+  body.rev-navigating #navStartFloat,
+  body.rev-navigating #revAddStationBtn { display:none !important; }
+  body.rev-navigating #navDash {
+    left:10px!important; right:10px!important;
+    bottom:calc(10px + env(safe-area-inset-bottom))!important;
+    max-height:min(36dvh,250px)!important; overflow:auto!important;
+    overscroll-behavior:contain!important;
+  }
+  body.rev-navigating #navBanner {
+    top:calc(8px + env(safe-area-inset-top))!important;
+    left:10px!important; right:10px!important;
+    max-height:24dvh!important; overflow:auto!important;
+  }
+  body.rev-navigating .rev-right-buttons {
+    top:calc(118px + env(safe-area-inset-top))!important;
+    right:10px!important; gap:7px!important;
+  }
+  body.rev-navigating #routeSettingsToggle {
+    top:calc(118px + env(safe-area-inset-top))!important;
+    left:10px!important;
+  }
+  body.rev-navigating #revMusicDock {
+    right:10px!important;
+    bottom:auto!important;
+    top:calc(178px + env(safe-area-inset-top))!important;
+    z-index:1700!important;
+  }
+  body.rev-navigating #revMusicPanel {
+    right:10px!important; left:10px!important;
+    bottom:calc(10px + env(safe-area-inset-bottom))!important;
+    top:auto!important; width:auto!important;
+    max-height:42dvh!important; z-index:2200!important;
+  }
+  body.rev-navigating #routeSettingsPanel {
+    top:calc(174px + env(safe-area-inset-top))!important;
+    left:10px!important; right:10px!important; width:auto!important;
+    max-height:calc(100dvh - 190px - env(safe-area-inset-top))!important;
+    z-index:2200!important;
+  }
+  body.rev-navigating #tripLivePanel {
+    bottom:calc(10px + env(safe-area-inset-bottom))!important;
+    max-height:38dvh!important; z-index:2100!important;
+  }
+  body.rev-navigating #navArrive { z-index:2400!important; }
+  body.rev-navigating #routePanel { z-index:2300!important; }
+}
+@media (min-width:700px) {
+  body.rev-navigating .map-search-bar { display:none!important; }
+  body.rev-navigating .bottom-nav { display:none!important; }
+  body.rev-navigating #revAddStationBtn { display:none!important; }
+  body.rev-navigating #navDash { max-height:42dvh!important; overflow:auto!important; }
+  body.rev-navigating #revMusicDock {
+    right:24px!important; bottom:calc(24px + env(safe-area-inset-bottom))!important;
+    transform:translateY(-100%)!important;
+  }
+}
+</style>
+
 </body>
 </html>
