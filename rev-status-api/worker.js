@@ -104,13 +104,34 @@ export default {
       let body;
       try { body = await request.json(); }
       catch { return json({ ok: false, error: "invalid_json" }, 400); }
-      const key = body && body.key;
       const status = body && body.status;
       const name = body && typeof body.name === "string" ? body.name.slice(0, 120) : "";
       const phone = body && typeof body.phone === "string" ? body.phone.trim() : "";
-      if (!validKey(key)) return json({ ok: false, error: "invalid_key" }, 400);
+      const lat = Number(body && body.lat);
+      const lng = Number(body && body.lng);
+      const userLat = Number(body && body.user_lat);
+      const userLng = Number(body && body.user_lng);
+      const accuracy = Number(body && body.accuracy);
+      const positionTimestamp = Number(body && body.position_timestamp);
+      if (!validPhone(phone)) return json({ ok: false, error: "invalid_phone" }, 400);
       if (!STATUSES.includes(status)) return json({ ok: false, error: "invalid_status" }, 400);
+      if (![lat, lng, userLat, userLng, accuracy, positionTimestamp].every(Number.isFinite) ||
+          lat < 24 || lat > 40.5 || lng < 43 || lng > 64 ||
+          userLat < -90 || userLat > 90 || userLng < -180 || userLng > 180) {
+        return json({ ok: false, error: "invalid_coordinates" }, 400);
+      }
+      if (accuracy < 0 || accuracy > 60) return json({ ok: false, error: "location_accuracy" }, 400);
+      if (Math.abs(Date.now() - positionTimestamp) > 120000 || positionTimestamp > Date.now() + 5000) {
+        return json({ ok: false, error: "location_stale" }, 400);
+      }
+      const rad = x => x * Math.PI / 180;
+      const dLat = rad(userLat - lat), dLng = rad(userLng - lng);
+      const aa = Math.sin(dLat / 2) ** 2 + Math.cos(rad(lat)) * Math.cos(rad(userLat)) * Math.sin(dLng / 2) ** 2;
+      const distance = 6371000 * 2 * Math.atan2(Math.sqrt(aa), Math.sqrt(Math.max(0, 1 - aa)));
+      if (distance > 100) return json({ ok: false, error: "too_far", distance_m: Math.round(distance) }, 403);
 
+      // The station key is derived on the server so clients cannot submit an arbitrary/mismatched key.
+      const key = "g:" + lat.toFixed(6) + "," + lng.toFixed(6);
       const kvKey = "st:" + key;
       let prev = null;
       try { prev = await env.STATUS_KV.get(kvKey, "json"); } catch { /* ignore */ }
@@ -119,13 +140,15 @@ export default {
         at: Date.now(),
         n: (prev && typeof prev.n === "number" ? prev.n : 0) + 1,
         name: name || (prev && prev.name) || "",
+        reported_by: phone,
+        distance_m: Math.round(distance),
       };
       await env.STATUS_KV.put(kvKey, JSON.stringify(rec));
       const pts = await reportPoints(env, phone, key);
-      return json({ ok: true, record: rec, points: pts ? pts.total : undefined });
+      return json({ ok: true, record: rec, points: pts ? pts.total : undefined, points_awarded: pts ? 2 : 0, distance_m: Math.round(distance) });
     }
 
-    if (url.pathname === "/status" && request.method === "GET") {
+    if ((url.pathname === "/status" || url.pathname === "/station-status") && request.method === "GET") {
       const out = {};
       let cursor;
       do {
@@ -136,7 +159,10 @@ export default {
         }
         cursor = page.list_complete ? undefined : page.cursor;
       } while (cursor);
-      return json(out);
+      // /status keeps its legacy response shape; /station-status is used by the map UI.
+      return url.pathname === "/station-status"
+        ? json({ ok: true, statuses: out })
+        : json(out);
     }
 
     // ---------- ثبت جایگاه جدید ----------
