@@ -55,16 +55,23 @@ async function addPoints(env, phone, delta, field) {
   return rec;
 }
 
-async function reportPoints(env, phone) {
-  // +۲ امتیاز برای گزارش وضعیت، با سقف ۱۰ گزارش در روز
-  if (!validPhone(phone)) return null;
+async function reportPoints(env, phone, stationKey) {
+  // هر کاربر برای هر ایستگاه در هر روز فقط یک‌بار امتیاز گزارش می‌گیرد.
+  // ثبت دوباره یا تغییر وضعیت همان ایستگاه همچنان وضعیت را به‌روز می‌کند، اما امتیاز تکراری نمی‌دهد.
+  if (!validPhone(phone) || !validKey(stationKey)) return null;
   const day = new Date().toISOString().slice(0, 10);
-  const dk = "pd:" + phone + ":" + day;
+  const dailyKey = "pd:" + phone + ":" + day;
   let cnt = 0;
-  try { cnt = parseInt((await env.STATUS_KV.get(dk)) || "0", 10) || 0; } catch { /* ignore */ }
+  try { cnt = parseInt((await env.STATUS_KV.get(dailyKey)) || "0", 10) || 0; } catch { /* ignore */ }
   if (cnt >= 10) return null;
-  await env.STATUS_KV.put(dk, String(cnt + 1), { expirationTtl: 172800 });
-  return addPoints(env, phone, 2, "reports");
+  const rewardKey = "pr:" + phone + ":" + stationKey + ":" + day;
+  try {
+    if (await env.STATUS_KV.get(rewardKey)) return null;
+    // نشانگر پاداش قبل از افزایش امتیاز ذخیره می‌شود تا کلیک‌های تکراری امتیاز نسازند.
+    await env.STATUS_KV.put(rewardKey, "1", { expirationTtl: 172800 });
+    await env.STATUS_KV.put(dailyKey, String(cnt + 1), { expirationTtl: 172800 });
+    return await addPoints(env, phone, 2, "reports");
+  } catch { return null; }
 }
 
 
@@ -114,7 +121,7 @@ export default {
         name: name || (prev && prev.name) || "",
       };
       await env.STATUS_KV.put(kvKey, JSON.stringify(rec));
-      const pts = await reportPoints(env, phone);
+      const pts = await reportPoints(env, phone, key);
       return json({ ok: true, record: rec, points: pts ? pts.total : undefined });
     }
 
