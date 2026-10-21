@@ -18,6 +18,13 @@
 //   GET  /health
 
 const STATUSES = ["free", "busy", "broken"];
+
+// سازگاری با نام Binding فعلی Cloudflare و نام قدیمی.
+function getStatusKV(env) {
+  const kv = getStatusKV(env) || env.REV_STATUS_KV;
+  if (!kv) throw new Error("Missing KV binding: STATUS_KV or REV_STATUS_KV");
+  return kv;
+}
 const PHONE_RE = /^09\d{9}$/;
 
 const CORS = {
@@ -46,12 +53,12 @@ async function addPoints(env, phone, delta, field) {
   if (!validPhone(phone) || !delta) return null;
   const k = "pts:" + phone;
   let rec = null;
-  try { rec = await env.STATUS_KV.get(k, "json"); } catch { /* ignore */ }
+  try { rec = await getStatusKV(env).get(k, "json"); } catch { /* ignore */ }
   rec = rec && typeof rec === "object" ? rec : { total: 0, reports: 0, stations: 0 };
   rec.total = (rec.total || 0) + delta;
   if (field) rec[field] = (rec[field] || 0) + 1;
   rec.updated = Date.now();
-  await env.STATUS_KV.put(k, JSON.stringify(rec));
+  await getStatusKV(env).put(k, JSON.stringify(rec));
   return rec;
 }
 
@@ -62,14 +69,14 @@ async function reportPoints(env, phone, stationKey) {
   const day = new Date().toISOString().slice(0, 10);
   const dailyKey = "pd:" + phone + ":" + day;
   let cnt = 0;
-  try { cnt = parseInt((await env.STATUS_KV.get(dailyKey)) || "0", 10) || 0; } catch { /* ignore */ }
+  try { cnt = parseInt((await getStatusKV(env).get(dailyKey)) || "0", 10) || 0; } catch { /* ignore */ }
   if (cnt >= 10) return null;
   const rewardKey = "pr:" + phone + ":" + stationKey + ":" + day;
   try {
-    if (await env.STATUS_KV.get(rewardKey)) return null;
+    if (await getStatusKV(env).get(rewardKey)) return null;
     // نشانگر پاداش قبل از افزایش امتیاز ذخیره می‌شود تا کلیک‌های تکراری امتیاز نسازند.
-    await env.STATUS_KV.put(rewardKey, "1", { expirationTtl: 172800 });
-    await env.STATUS_KV.put(dailyKey, String(cnt + 1), { expirationTtl: 172800 });
+    await getStatusKV(env).put(rewardKey, "1", { expirationTtl: 172800 });
+    await getStatusKV(env).put(dailyKey, String(cnt + 1), { expirationTtl: 172800 });
     return await addPoints(env, phone, 2, "reports");
   } catch { return null; }
 }
@@ -81,9 +88,9 @@ async function votePoints(env, phone) {
   const day = new Date().toISOString().slice(0, 10);
   const dk = "vd:" + phone + ":" + day;
   let cnt = 0;
-  try { cnt = parseInt((await env.STATUS_KV.get(dk)) || "0", 10) || 0; } catch { /* ignore */ }
+  try { cnt = parseInt((await getStatusKV(env).get(dk)) || "0", 10) || 0; } catch { /* ignore */ }
   if (cnt >= 10) return null;
-  await env.STATUS_KV.put(dk, String(cnt + 1), { expirationTtl: 172800 });
+  await getStatusKV(env).put(dk, String(cnt + 1), { expirationTtl: 172800 });
   return addPoints(env, phone, 1, "validations");
 }
 
@@ -134,7 +141,7 @@ export default {
       const key = "g:" + lat.toFixed(6) + "," + lng.toFixed(6);
       const kvKey = "st:" + key;
       let prev = null;
-      try { prev = await env.STATUS_KV.get(kvKey, "json"); } catch { /* ignore */ }
+      try { prev = await getStatusKV(env).get(kvKey, "json"); } catch { /* ignore */ }
       const rec = {
         s: status,
         at: Date.now(),
@@ -143,7 +150,7 @@ export default {
         reported_by: phone,
         distance_m: Math.round(distance),
       };
-      await env.STATUS_KV.put(kvKey, JSON.stringify(rec));
+      await getStatusKV(env).put(kvKey, JSON.stringify(rec));
       const pts = await reportPoints(env, phone, key);
       return json({ ok: true, record: rec, points: pts ? pts.total : undefined, points_awarded: pts ? 2 : 0, distance_m: Math.round(distance) });
     }
@@ -152,9 +159,9 @@ export default {
       const out = {};
       let cursor;
       do {
-        const page = await env.STATUS_KV.list({ prefix: "st:", cursor, limit: 1000 });
+        const page = await getStatusKV(env).list({ prefix: "st:", cursor, limit: 1000 });
         for (const k of page.keys) {
-          const rec = await env.STATUS_KV.get(k.name, "json");
+          const rec = await getStatusKV(env).get(k.name, "json");
           if (rec && STATUSES.includes(rec.s)) out[k.name.slice(3)] = rec;
         }
         cursor = page.list_complete ? undefined : page.cursor;
@@ -198,7 +205,7 @@ export default {
         power_kw: power, connectors, notes, phone,
         status: "pending", at: Date.now(),
       };
-      await env.STATUS_KV.put("sub:" + id, JSON.stringify(rec));
+      await getStatusKV(env).put("sub:" + id, JSON.stringify(rec));
       return json({ ok: true, id, status: "pending" });
     }
 
@@ -208,9 +215,9 @@ export default {
       const out = [];
       let cursor;
       do {
-        const page = await env.STATUS_KV.list({ prefix: "sub:", cursor, limit: 1000 });
+        const page = await getStatusKV(env).list({ prefix: "sub:", cursor, limit: 1000 });
         for (const k of page.keys) {
-          const rec = await env.STATUS_KV.get(k.name, "json");
+          const rec = await getStatusKV(env).get(k.name, "json");
           if (rec && rec.status === "pending") {
             const votes = rec.votes || {};
             let confirms = 0, rejects = 0;
@@ -239,14 +246,14 @@ export default {
       if (!id || !["confirm", "reject"].includes(vote)) return json({ ok: false, error: "invalid_request" }, 400);
       if (!validPhone(phone)) return json({ ok: false, error: "invalid_phone" }, 400);
       const kvKey = "sub:" + id;
-      const rec = await env.STATUS_KV.get(kvKey, "json");
+      const rec = await getStatusKV(env).get(kvKey, "json");
       if (!rec) return json({ ok: false, error: "not_found" }, 404);
       if (rec.status !== "pending") return json({ ok: false, error: "already_moderated" }, 409);
       if (rec.phone === phone) return json({ ok: false, error: "own_submission" }, 403);
       rec.votes = rec.votes && typeof rec.votes === "object" ? rec.votes : {};
       const isNew = !rec.votes[phone];
       rec.votes[phone] = vote;
-      await env.STATUS_KV.put(kvKey, JSON.stringify(rec));
+      await getStatusKV(env).put(kvKey, JSON.stringify(rec));
       let confirms = 0, rejects = 0;
       for (const p in rec.votes) { if (rec.votes[p] === "confirm") confirms++; else rejects++; }
       const pts = isNew ? await votePoints(env, phone) : null;
@@ -254,7 +261,7 @@ export default {
     }
 
     // ---------- پنل مدیر ----------
-    const adminToken = env.ADMIN_TOKEN || "";
+    const adminToken = env.ADMIN_TOKEN || env.STATUS_ADMIN_TOKEN || "";
     function isAdmin(tok) { return adminToken && tok && tok === adminToken; }
 
     if (url.pathname === "/submissions" && request.method === "GET") {
@@ -263,9 +270,9 @@ export default {
       const out = [];
       let cursor;
       do {
-        const page = await env.STATUS_KV.list({ prefix: "sub:", cursor, limit: 1000 });
+        const page = await getStatusKV(env).list({ prefix: "sub:", cursor, limit: 1000 });
         for (const k of page.keys) {
-          const rec = await env.STATUS_KV.get(k.name, "json");
+          const rec = await getStatusKV(env).get(k.name, "json");
           if (rec && rec.status === "pending") out.push(rec);
         }
         cursor = page.list_complete ? undefined : page.cursor;
@@ -286,12 +293,12 @@ export default {
         return json({ ok: false, error: "invalid_request" }, 400);
       }
       const kvKey = "sub:" + id;
-      const rec = await env.STATUS_KV.get(kvKey, "json");
+      const rec = await getStatusKV(env).get(kvKey, "json");
       if (!rec) return json({ ok: false, error: "not_found" }, 404);
       if (rec.status !== "pending") return json({ ok: false, error: "already_moderated" }, 409);
       rec.status = action === "approve" ? "approved" : "rejected";
       rec.moderated_at = Date.now();
-      await env.STATUS_KV.put(kvKey, JSON.stringify(rec));
+      await getStatusKV(env).put(kvKey, JSON.stringify(rec));
       let pts = null;
       if (action === "approve") {
         pts = await addPoints(env, rec.phone, 5, "stations");
@@ -308,7 +315,7 @@ export default {
     if (url.pathname === "/points" && request.method === "GET") {
       const phone = (url.searchParams.get("phone") || "").trim();
       if (!validPhone(phone)) return json({ ok: false, error: "invalid_phone" }, 400);
-      const rec = await env.STATUS_KV.get("pts:" + phone, "json");
+      const rec = await getStatusKV(env).get("pts:" + phone, "json");
       return json({ ok: true, phone, total: rec ? rec.total || 0 : 0, reports: rec ? rec.reports || 0 : 0, stations: rec ? rec.stations || 0 : 0 });
     }
 
