@@ -429,6 +429,87 @@ buildTypes();
 })();
 </script>
 
+<style>
+#revAddStationBtn{position:fixed;z-index:880;left:50%;transform:translateX(-50%);bottom:calc(140px + env(safe-area-inset-bottom));border:0;border-radius:999px;background:#1769d2;color:#fff;padding:12px 19px;box-shadow:0 5px 18px #12345a33;font:800 13px Tahoma,sans-serif;white-space:nowrap;cursor:pointer}
+#revAddStationModal{position:fixed;inset:0;z-index:2500;background:#0f172a88;display:none;align-items:center;justify-content:center;padding:14px;font-family:Tahoma,sans-serif;direction:rtl}
+#revAddStationModal.open{display:flex}
+#revAddStationModal .ras-card{width:min(480px,100%);max-height:88dvh;overflow:auto;background:#fff;border-radius:18px;padding:18px;color:#14293b;box-shadow:0 18px 60px #0003}
+#revAddStationModal h3{margin:0 0 6px;font-size:17px}
+#revAddStationModal p{margin:0 0 12px;font-size:12px;color:#64748b;line-height:1.8}
+#revAddStationModal .ras-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+#revAddStationModal label{display:block;font-size:12px;font-weight:700;margin:0 0 4px}
+#revAddStationModal input,#revAddStationModal textarea,#revAddStationModal select{width:100%;border:1px solid #dbe5ee;border-radius:9px;padding:10px;font:13px Tahoma,sans-serif;background:#fff;color:#14293b}
+#revAddStationModal textarea{min-height:60px;resize:vertical}
+#revAddStationModal .ras-field{margin-bottom:10px}
+#revAddStationModal .ras-wide{grid-column:1/-1}
+#revAddStationModal .ras-coords{background:#eff6ff;border:1px solid #bfdbfe;border-radius:9px;padding:9px;font-size:12px;line-height:1.8;margin-bottom:10px}
+#revAddStationModal .ras-btns{display:flex;gap:8px;margin-top:12px}
+#revAddStationModal button{border-radius:9px;padding:11px;border:1px solid #dbe5ee;font:700 13px Tahoma,sans-serif;cursor:pointer}
+#revAddStationModal .ras-primary{flex:1;background:#1769d2;color:white;border-color:#1769d2}
+#revAddStationModal .ras-secondary{background:#f8fafc;color:#334155}
+#revAddStationModal button:disabled{opacity:.55;cursor:default}
+#revAddStationModal [data-ras-message]{font-size:12px;line-height:1.8;margin-top:10px}
+@media(min-width:701px){#revAddStationBtn{bottom:24px;left:24px;transform:none}}
+</style>
+<button type="button" id="revAddStationBtn">＋ ثبت جایگاه جدید</button>
+<div id="revAddStationModal" role="dialog" aria-modal="true" aria-labelledby="rasTitle">
+ <div class="ras-card">
+  <h3 id="rasTitle">ثبت جایگاه شارژ جدید</h3>
+  <p>اطلاعات را وارد کنید و سپس روی نقشه محل دقیق جایگاه را انتخاب کنید. جایگاه پس از بررسی مدیر به فهرست اصلی اضافه می‌شود.</p>
+  <form id="revAddStationForm">
+   <div class="ras-grid">
+    <div class="ras-field ras-wide"><label for="rasName">نام جایگاه *</label><input id="rasName" required minlength="3" maxlength="120" placeholder="مثلاً ایستگاه شارژ ..."></div>
+    <div class="ras-field"><label for="rasCity">شهر</label><input id="rasCity" maxlength="60" placeholder="تهران"></div>
+    <div class="ras-field"><label for="rasPhone">شماره موبایل *</label><input id="rasPhone" required inputmode="tel" pattern="09[0-9]{9}" placeholder="09123456789"></div>
+    <div class="ras-field ras-wide"><label for="rasAddress">نشانی دقیق *</label><input id="rasAddress" required minlength="8" maxlength="300" placeholder="خیابان، کوچه، نشانی یا نشانه نزدیک"></div>
+    <div class="ras-field"><label for="rasPower">توان (کیلووات)</label><input id="rasPower" type="number" min="0" max="1000" step="0.1" placeholder="مثلاً 120"></div>
+    <div class="ras-field"><label for="rasConnectors">نوع کانکتورها</label><input id="rasConnectors" placeholder="CCS2، GB/T، Type2"></div>
+    <div class="ras-field ras-wide"><label for="rasNotes">توضیحات تکمیلی</label><textarea id="rasNotes" maxlength="400" placeholder="ساعات کاری، هزینه یا اطلاعات مفید"></textarea></div>
+   </div>
+   <div class="ras-coords" id="rasCoords">هنوز موقعیت روی نقشه انتخاب نشده است.</div>
+   <button type="button" class="ras-secondary" id="rasPickLocation" style="width:100%">📍 انتخاب محل روی نقشه</button>
+   <div class="ras-btns"><button class="ras-primary" id="rasSubmit" type="submit">ارسال برای بررسی مدیر</button><button class="ras-secondary" id="rasCancel" type="button">انصراف</button></div>
+   <div data-ras-message role="status" aria-live="polite"></div>
+  </form>
+ </div>
+</div>
+<script>
+(function(){
+ const API="https://rev-status-api.mojtaba-alimi64.workers.dev";
+ const $=id=>document.getElementById(id);
+ const modal=$("revAddStationModal"),form=$("revAddStationForm"),coords=$("rasCoords"),msg=modal.querySelector("[data-ras-message"),submit=$("rasSubmit");
+ let selected=null,picking=false;
+ function showMessage(t,ok){msg.textContent=t;msg.style.color=ok?"#166534":"#b91c1c";}
+ function open(){modal.classList.add("open");selected=null;picking=false;coords.textContent="هنوز موقعیت روی نقشه انتخاب نشده است؛ دکمه انتخاب محل را بزنید.";showMessage("",true);}
+ function close(){modal.classList.remove("open");picking=false;document.body.style.cursor="";}
+ $("revAddStationBtn").addEventListener("click",open);
+ $("rasCancel").addEventListener("click",close);
+ modal.addEventListener("click",e=>{if(e.target===modal)close();});
+ $("rasPickLocation").addEventListener("click",()=>{
+   if(!window.revMap||!window.revMap.on){showMessage("نقشه هنوز آماده نیست؛ چند لحظه بعد دوباره تلاش کنید.",false);return;}
+   picking=true;showMessage("حالا روی محل دقیق جایگاه در نقشه کلیک کنید.",true);modal.classList.remove("open");document.body.style.cursor="crosshair";
+ });
+ if(window.revMap&&window.revMap.on){window.revMap.on("click",e=>{
+   if(!picking)return;picking=false;document.body.style.cursor="";
+   selected={lat:Number(e.latlng.lat),lng:Number(e.latlng.lng)};
+   coords.textContent="مختصات انتخاب‌شده: "+selected.lat.toFixed(6)+", "+selected.lng.toFixed(6);
+   modal.classList.add("open");showMessage("موقعیت انتخاب شد. اطلاعات را بررسی و ارسال کنید.",true);
+ });}else{let tries=0;const wait=setInterval(()=>{tries++;if(window.revMap&&window.revMap.on){window.revMap.on("click",e=>{if(!picking)return;picking=false;document.body.style.cursor="";selected={lat:Number(e.latlng.lat),lng:Number(e.latlng.lng)};coords.textContent="مختصات انتخاب‌شده: "+selected.lat.toFixed(6)+", "+selected.lng.toFixed(6);modal.classList.add("open");showMessage("موقعیت انتخاب شد. اطلاعات را بررسی و ارسال کنید.",true);});clearInterval(wait);}if(tries>30)clearInterval(wait);},500);}
+ form.addEventListener("submit",async e=>{
+  e.preventDefault();
+  if(!selected){showMessage("ابتدا «انتخاب محل روی نقشه» را بزنید و نقطه جایگاه را مشخص کنید.",false);return;}
+  if(selected.lat<24||selected.lat>40.5||selected.lng<43||selected.lng>64){showMessage("نقطه انتخاب‌شده خارج از محدوده جغرافیایی ایران است؛ محل جایگاه را دوباره انتخاب کنید.",false);return;}
+  const phone=$("rasPhone").value.trim();
+  if(!/^09\d{9}$/.test(phone)){showMessage("شماره موبایل باید ۱۱ رقم و با 09 شروع شود.",false);return;}
+  const powerText=$("rasPower").value.trim();
+  const payload={name:$("rasName").value.trim(),city:$("rasCity").value.trim(),address:$("rasAddress").value.trim(),phone,lat:selected.lat,lng:selected.lng,power_kw:powerText===""?null:Number(powerText),connectors:$("rasConnectors").value.split(/[,،]/).map(x=>x.trim()).filter(Boolean),notes:$("rasNotes").value.trim()};
+  submit.disabled=true;submit.textContent="در حال ارسال…";showMessage("",true);
+  try{const r=await fetch(API+"/submit-station",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(payload)});const j=await r.json();if(!r.ok||!j.ok)throw new Error(({invalid_name:"نام جایگاه را کامل وارد کنید.",invalid_address:"نشانی باید دقیق‌تر باشد.",invalid_phone:"شماره موبایل معتبر نیست.",invalid_coords:"موقعیت انتخاب‌شده معتبر نیست.",invalid_power:"توان واردشده معتبر نیست."})[j.error]||("ارسال ناموفق بود: "+String(j.error||r.status)));showMessage("درخواست شما ثبت شد و در انتظار بررسی مدیر است. شناسه درخواست: "+j.id,true);form.reset();selected=null;coords.textContent="درخواست ثبت شد؛ برای درخواست بعدی محل را دوباره انتخاب کنید.";}catch(err){showMessage(err.message||"خطای اتصال هنگام ارسال درخواست.",false);}finally{submit.disabled=false;submit.textContent="ارسال برای بررسی مدیر";}
+ });
+ document.addEventListener("keydown",e=>{if(e.key==="Escape"&&modal.classList.contains("open"))close();});
+})();
+</script>
+
 <script src="./rev-app-mode.js?v=20261018-1"></script>
 </body>
 </html>
