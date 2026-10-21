@@ -174,7 +174,7 @@ document.addEventListener("click",async function(ev){
   distance=6371000*2*Math.atan2(Math.sqrt(aa),Math.sqrt(Math.max(0,1-aa)));
   const coords="مختصات شما: "+userLat.toFixed(6)+", "+userLng.toFixed(6)+" | مختصات ایستگاه: "+lat.toFixed(6)+", "+lng.toFixed(6)+" | فاصله: "+Math.round(distance)+" متر | دقت GPS: "+Math.round(accuracy)+" متر";
   panel.setAttribute("data-coords",JSON.stringify({userLat,userLng,accuracy,distance,stamp:pos.timestamp}));
-  if(!Number.isFinite(accuracy)||accuracy>60){say(coords+" — خارج از شرایط ثبت: دقت GPS باید حداکثر ۶۰ متر باشد؛ ثبت غیرفعال است.",false);return;}
+  if(!Number.isFinite(accuracy)||accuracy>100){say(coords+" — خارج از شرایط ثبت: دقت GPS باید حداکثر ۱۰۰ متر باشد؛ ثبت غیرفعال است.",false);return;}
   if(Math.abs(Date.now()-Number(pos.timestamp))>120000){say(coords+" — اطلاعات GPS قدیمی است؛ دوباره تلاش کنید.",false);return;}
   if(distance>100){say(coords+" — شما در محدوده جایگاه نیستید (محدوده مجاز ۱۰۰ متر است)؛ امکان ثبت ندارید.",false);return;}
   say(coords+" — شما در محدوده جایگاه هستید و دقت GPS مناسب است. برای ثبت، دکمه زیر را بزنید.",true);
