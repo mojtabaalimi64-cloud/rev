@@ -6,7 +6,6 @@
  * No private API keys are embedded in this public page.
  */
 const REV_API = "https://rev-api.mojtaba-alimi64.workers.dev";
-const ONLINE_STATIONS_API = "https://rev-online-api.mojtaba-alimi64.workers.dev/api/online-stations";
 const map = L.map("map").setView([32.4, 53.7], 5);
 L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
   maxZoom: 19, attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
@@ -231,76 +230,23 @@ function sampleRouteCoordinates(routeCoords,maxPoints=16){
   }
   return out;
 }
-async function queryOverpass(routeCoords,radiusKm){
-  // Use the dedicated Cloudflare Worker; never query public Overpass servers
-  // directly from the visitor's browser. Fewer evenly spaced points reduce load.
-  const controller=new AbortController();
-  const timer=setTimeout(()=>controller.abort(),90000);
-  try{
-    const response=await fetch(ONLINE_STATIONS_API,{
-      method:"POST", mode:"cors", cache:"no-store", signal:controller.signal,
-      headers:{"Content-Type":"application/json","Accept":"application/json"},
-      body:JSON.stringify({coords:sampleRouteCoordinates(routeCoords,Number(radiusKm)>10?10:16),radiusKm:Math.min(Number(radiusKm)||5,50)})
-    });
-    let payload;
-    try{payload=await response.json();}
-    catch{throw new Error("پاسخ سرویس آنلاین REV قابل خواندن نیست.");}
-    if(!response.ok||payload?.success!==true){
-      throw new Error(payload?.error||`سرویس آنلاین REV با خطای HTTP ${response.status} پاسخ داد.`);
-    }
-    if(!Array.isArray(payload.data)) throw new Error("فهرست ایستگاه‌های سرویس آنلاین معتبر نیست.");
-    // Cached fallback is returned by the Worker when public map providers fail.
-    window.revStationCacheNote = payload.cached
-      ? (payload.stale ? "از نسخه ذخیره‌شده قبلی استفاده شد؛ ممکن است اطلاعات قدیمی باشد." : "از نسخه ذخیره‌شده استفاده شد.")
-      : "";
-    const normalized=payload.data.map(raw=>{
-      const s=normalizeRevStation(raw);
-      if(!s)return null;
-      return {...s,source:raw.source||payload.source||(payload.cached?"کش REV":"OpenStreetMap"),url:raw.source_url||raw.url||s.url,
-        updatedAt:raw.updated_at||raw.updatedAt||payload.cached_at||s.updatedAt};
-    }).filter(Boolean);
-    return routeFilter(normalized,routeCoords,Math.min(Number(radiusKm)||5,50));
-  }catch(e){
-    if(e?.name==="AbortError") throw new Error("پاسخ سرویس آنلاین ایستگاه‌ها بیش از حد طول کشید. دوباره تلاش کنید.");
-    throw e;
-  }finally{clearTimeout(timer);}
-}
 async function getIranStations(routeCoords,radiusKm){
-  let revStations=[];
-  try{revStations=await getRevStations(routeCoords,radiusKm);}catch(e){console.warn("REV station API unavailable:",e);}
-  // Load REV's public seed directory too, so curated records can be tested
-  // without waiting for a separate D1 import. These are sourced listings;
-  // their live availability should still be confirmed before a real trip.
+  // Public route planning intentionally uses only the approved REV station API.
+  // Do not silently merge content.json seeds, public OSM listings, or stale external cache.
   try{
-    const response=await fetch("./content.json?v="+Date.now(),{cache:"no-store"});
-    if(response.ok){
-      const directory=await response.json();
-      const manual=Array.isArray(directory.stations)?directory.stations.map(normalizeRevStation).filter(Boolean):[];
-      for(const s of manual){
-        const duplicate=revStations.some(x=>haversine([x.lat,x.lon],[s.lat,s.lon])<0.15);
-        if(!duplicate)revStations.push(s);
-      }
-    }
-  }catch(e){console.warn("REV public station directory unavailable:",e);}
-  // Use REV-managed data as the primary source. Supplement it with OSM so a small
-  // internal database does not incorrectly imply that no chargers exist.
-  try{
-    const osmStations=await queryOverpass(routeCoords,radiusKm);
-    const combined=[...revStations];
-    for(const s of osmStations){
-      const duplicate=combined.some(x=>haversine([x.lat,x.lon],[s.lat,s.lon])<0.15);
-      if(!duplicate)combined.push(s);
-    }
-    return combined.map(s=>({...s,routeDistance:distanceToRoute([s.lat,s.lon],routeCoords)}))
-      .filter(s=>s.routeDistance<=radiusKm).sort((a,b)=>a.routeDistance-b.routeDistance);
+    const stations=await getRevStations(routeCoords,radiusKm);
+    window.revStationCacheNote="";
+    window.revStationSourceWarning=stations.length
+      ? ""
+      : "در بانک تأییدشده REV ایستگاهی در محدوده انتخاب‌شده پیدا نشد؛ این نتیجه به معنی نبود شارژر واقعی نیست.";
+    return stations.map(s=>({...s,source:"REV"}));
   }catch(e){
-    console.warn("REV online stations source unavailable:",e);
-    window.revStationSourceWarning = e?.message || "منبع آنلاین شارژرها موقتاً در دسترس نیست.";
-    return revStations.map(s=>({...s,routeDistance:distanceToRoute([s.lat,s.lon],routeCoords)}))
-      .filter(s=>s.routeDistance<=radiusKm).sort((a,b)=>a.routeDistance-b.routeDistance);
+    console.warn("REV approved station API unavailable:",e);
+    window.revStationCacheNote="";
+    window.revStationSourceWarning="بانک تأییدشده REV موقتاً در دسترس نیست؛ برای جلوگیری از نمایش داده تأییدنشده، فهرست جایگزین بارگذاری نشد.";
+    return [];
   }
 }
-
 
 async function renderFuelStations(routeCoords,radiusKm){
   // Petrol stations are map markers only; they are not charging stops or a fuel-stop plan.
@@ -839,7 +785,7 @@ async function renderStations(stations,routeCoords,routeKm,params){
   const heading=document.createElement('h2');heading.style.marginTop='18px';heading.textContent=`شارژرهای نزدیک مسیر (${listStations.length})`;el.appendChild(heading);
   if(!listStations.length){
     const empty=document.createElement('div');empty.className='sub';
-    empty.textContent='در بانک REV یا داده‌های عمومی OpenStreetMap ایستگاهی در شعاع انتخاب‌شده پیدا نشد. فاصله را روی ۲۰ یا ۴۰ کیلومتر بگذارید. پوشش داده‌های عمومی ممکن است ناقص باشد؛ این نتیجه به معنی نبود شارژر واقعی نیست.';
+    empty.textContent='در بانک تأییدشده REV ایستگاهی در شعاع انتخاب‌شده از مسیر پیدا نشد. فاصله را افزایش دهید یا بعداً دوباره تلاش کنید؛ این نتیجه به معنی نبود شارژر واقعی نیست.';
     el.appendChild(empty);return;
   }
   const plannedIds=new Set(plan.stops.map(s=>String(s.id)));
@@ -1075,7 +1021,7 @@ async function planTrip(){
       ? `\nهشدار منبع آنلاین: ${window.revStationSourceWarning}\nفهرست ایستگاه‌ها ممکن است ناقص باشد؛ صفر ایستگاه به معنی نبود شارژر واقعی نیست.`
       : (window.revStationCacheNote ? `\n${window.revStationCacheNote}` : "");
     showContinueTrip();
-    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\nزمان حرکت: ${new Date($("departure").value).toLocaleString("fa-IR")} · زمان رسیدن تقریبی: ${new Date(new Date($("departure").value).getTime()+hours*1000).toLocaleString("fa-IR")}.\n${stations.length} ایستگاه از بانک REV و/یا OpenStreetMap در شعاع ${radius} کیلومتری مسیر پیدا شد؛ فهرست بر اساس فاصله از مبدأ مرتب شده است.\nمصرف مبنا: ${baseConsumption.toFixed(1)} · ${weatherAnalysis ? `مصرف تعدیل‌شده با باد و بخاری/کولر: ${consumption.toFixed(1)} kWh/100 km.` : `تحلیل باد اعمال نشد: ${weatherWarning}`}\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
+    setStatus(`مسیر: ${km.toFixed(0)} کیلومتر · زمان رانندگی تخمینی: ${fmtDuration(hours)}.\nزمان حرکت: ${new Date($("departure").value).toLocaleString("fa-IR")} · زمان رسیدن تقریبی: ${new Date(new Date($("departure").value).getTime()+hours*1000).toLocaleString("fa-IR")}.\n${stations.length} ایستگاه تأییدشده از بانک REV در شعاع ${radius} کیلومتری مسیر پیدا شد؛ فهرست بر اساس فاصله از مسیر مرتب شده است.\nمصرف مبنا: ${baseConsumption.toFixed(1)} · ${weatherAnalysis ? `مصرف تعدیل‌شده با باد و بخاری/کولر: ${consumption.toFixed(1)} kWh/100 km.` : `تحلیل باد اعمال نشد: ${weatherWarning}`}\n${plan.message}${sourceNote}\nاطلاعات فعال بودن ایستگاه تضمین نمی‌شود؛ پیش از سفر بررسی کنید.`);
   }catch(e){setStatus("مشکل: "+e.message);console.error(e);}
   finally{$("planBtn").disabled=false;$("planBtn").textContent="محاسبه مسیر و یافتن شارژرها";}
 }
