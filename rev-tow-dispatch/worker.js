@@ -161,9 +161,8 @@ async function sweepOffer(env, reqId) {
   const req = await getReq(env, reqId);
   if (!req || req.status === "لغو شد" || req.status === "انجام شد") return null;
   req.skipped = [...(req.skipped || []), offer.driverId];
+  req.skippedWhy = { ...(req.skippedWhy || {}), [offer.driverId]: "timeout" };
   req.log.push({ t: now(), ev: `راننده ${offer.driverId} در ${ACCEPT_TIMEOUT_MIN} دقیقه پاسخ نداد — ارجاع به نفر بعدی` });
-  const md = await getDriver(env, offer.driverId);
-  if (md) { normStats(md); md.stats.missed++; await saveDriver(env, md); }
   await saveReq(env, req);
   return await dispatchToNext(env, req);
 }
@@ -342,7 +341,6 @@ async function handle(req, env, cors) {
 
     if (b.accept === true) {
       await env.TOW.delete(kOffer(r.id));
-      normStats(d); d.stats.accepted++;
       r.status = "راننده در راه";
       r.assignedDriver = d.id;
       r.serviceCode = String(Math.floor(1000 + Math.random() * 9000));
@@ -353,7 +351,7 @@ async function handle(req, env, cors) {
       return json({ ok: true, status: r.status, serviceCode: r.serviceCode }, 200, cors);
     }
     // reject → same as timeout: move to next driver
-    normStats(d); d.stats.rejected++; await saveDriver(env, d);
+    r.skippedWhy = { ...(r.skippedWhy || {}), [d.id]: "reject" };
     await env.TOW.delete(kOffer(r.id));
     r.skipped = [...(r.skipped || []), d.id];
     r.log.push({ t: now(), ev: `راننده ${d.name} رد کرد — ارجاع به نفر بعدی` });
@@ -373,8 +371,7 @@ async function handle(req, env, cors) {
     r.status = "انجام شد";
     r.completedAt = now();
     r.log.push({ t: now(), ev: `مأموریت توسط راننده ${d.name} انجام شد` });
-    normStats(d); d.stats.completed++;
-    await saveReq(env, r); await saveDriver(env, d);
+    await saveReq(env, r);
     return json({ ok: true, status: r.status }, 200, cors);
   }
 
@@ -382,16 +379,22 @@ async function handle(req, env, cors) {
   if (path === "/api/driver/history" && method === "GET") {
     const d = await driverByToken(env, url.searchParams.get("token"));
     if (!d) return json({ ok: false }, 401, cors);
-    normStats(d);
-    const missions = (await listRequests(env))
-      .filter(r => r.assignedDriver === d.id)
+    const allReqs = await listRequests(env);
+    const mine = allReqs.filter(r => r.assignedDriver === d.id);
+    const stats = {
+      accepted: mine.length,
+      completed: mine.filter(r => r.status === "انجام شد").length,
+      rejected: allReqs.filter(r => r.skippedWhy && r.skippedWhy[d.id] === "reject").length,
+      missed: allReqs.filter(r => r.skippedWhy && r.skippedWhy[d.id] === "timeout").length,
+    };
+    const missions = mine
       .sort((a, b) => b.ts - a.ts)
       .slice(0, 30)
       .map(r => ({ id: r.id, ts: r.ts, status: r.status, problem: r.problem, car: r.car, loc: r.loc, serviceCode: r.serviceCode || null }));
     return json({ ok: true, driver: {
       id: d.id, name: d.name, phone: d.phone, vehicle: d.vehicle || "", city: d.city || "",
       radius: d.radius, score: d.score, active: d.active !== false, approved: d.approved === true,
-      stats: d.stats,
+      stats,
     }, missions }, 200, cors);
   }
 
@@ -401,7 +404,16 @@ async function handle(req, env, cors) {
   if (path.startsWith("/api/admin/")) {
     if (!isAdmin) return json({ ok: false, err: "unauthorized" }, 401, cors);
     if (path === "/api/admin/drivers") {
-      const drivers = (await listDrivers(env)).map(d => ({ ...d, token: undefined }));
+      const allReqs = await listRequests(env);
+      const drivers = (await listDrivers(env)).map(d => ({
+        ...d, token: undefined,
+        stats: {
+          accepted: allReqs.filter(r => r.assignedDriver === d.id).length,
+          completed: allReqs.filter(r => r.assignedDriver === d.id && r.status === "انجام شد").length,
+          rejected: allReqs.filter(r => r.skippedWhy && r.skippedWhy[d.id] === "reject").length,
+          missed: allReqs.filter(r => r.skippedWhy && r.skippedWhy[d.id] === "timeout").length,
+        },
+      }));
       return json({ ok: true, drivers }, 200, cors);
     }
     if (path === "/api/admin/requests") {
