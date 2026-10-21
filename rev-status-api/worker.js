@@ -127,7 +127,7 @@ export default {
           userLat < -90 || userLat > 90 || userLng < -180 || userLng > 180) {
         return json({ ok: false, error: "invalid_coordinates" }, 400);
       }
-      if (accuracy < 0 || accuracy > 60) return json({ ok: false, error: "location_accuracy" }, 400);
+      if (accuracy < 0 || accuracy > 100) return json({ ok: false, error: "location_accuracy" }, 400);
       if (Math.abs(Date.now() - positionTimestamp) > 120000 || positionTimestamp > Date.now() + 5000) {
         return json({ ok: false, error: "location_stale" }, 400);
       }
@@ -150,7 +150,11 @@ export default {
         reported_by: phone,
         distance_m: Math.round(distance),
       };
-      await getStatusKV(env).put(kvKey, JSON.stringify(rec));
+      try {
+        await getStatusKV(env).put(kvKey, JSON.stringify(rec));
+      } catch (err) {
+        return json({ ok: false, error: "storage_write_failed" }, 503);
+      }
       const pts = await reportPoints(env, phone, key);
       return json({ ok: true, record: rec, points: pts ? pts.total : undefined, points_awarded: pts ? 2 : 0, distance_m: Math.round(distance) });
     }
