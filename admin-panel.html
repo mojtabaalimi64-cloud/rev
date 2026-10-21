@@ -981,9 +981,12 @@ async function reviewStationSubmission(id,action){
       const approved=await approve.json().catch(()=>({}));
       if(!approve.ok||!approved.success)throw new Error(approved.error||('ثبت جایگاه انجام شد اما تأیید دیتابیس اصلی ناموفق بود؛ HTTP '+approve.status));
     }
-    const r=await fetch(SUBMISSION_WORKER+'/moderate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,id:String(s.id),action}),cache:'no-store'});
-    const j=await r.json().catch(()=>({}));
-    if(!r.ok||!j.ok)throw new Error(j.error||('HTTP '+r.status));
+    // Already-approved recovery records must not be moderated a second time.
+    if(action!=='recover'){
+      const r=await fetch(SUBMISSION_WORKER+'/moderate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,id:String(s.id),action}),cache:'no-store'});
+      const j=await r.json().catch(()=>({}));
+      if(!r.ok||!j.ok)throw new Error(j.error||('HTTP '+r.status));
+    }
     stationSubmissionsCache=stationSubmissionsCache.filter(x=>String(x.id)!==String(s.id));
     stationSubmissionsError=action==='recover'?'درخواست تأییدشده به دیتابیس اصلی منتقل و منتشر شد.':action==='approve'?'درخواست تأیید شد و جایگاه در دیتابیس اصلی ثبت و تأیید شد.':'درخواست رد شد.';
     stationsCache=null;
