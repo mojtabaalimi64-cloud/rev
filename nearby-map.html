@@ -381,7 +381,7 @@ function revEnsureEnergyPanel(){
  var ids=["revNavCap","revNavSoc","revNavCons","revNavConnector"],saved={};try{saved=JSON.parse(localStorage.getItem("rev-nav-energy-v1")||"{}")||{}}catch(e){}
  var vehicleProfile=null;try{vehicleProfile=JSON.parse(localStorage.getItem("rev_driver_vehicle_profile")||"null")}catch(e){}
  if(vehicleProfile){if(saved.revNavCap==null||saved.revNavCap==="")saved.revNavCap=vehicleProfile.battery_kwh||"";if(saved.revNavCons==null||saved.revNavCons==="")saved.revNavCons=vehicleProfile.consumption||"";}
- ids.forEach(function(id){var el=document.getElementById(id);if(el&&saved[id]!=null)el.value=saved[id];if(el)el.addEventListener("input",revSaveEnergySettings)});
+ ids.forEach(function(id){var el=document.getElementById(id);if(el&&saved[id]!=null)el.value=saved[id];if(el){el.addEventListener("input",revSaveEnergySettings);if(id==="revNavConnector")el.addEventListener("change",function(){if(typeof revRenderRouteChargers==="function")revRenderRouteChargers()})}});
  if(vehicleProfile&&vehicleProfile.vehicle_name){var vehicleNote=document.createElement("div");vehicleNote.id="revNavVehicleProfileNote";vehicleNote.style.cssText="font-size:11px;color:#475569;margin:0 0 7px";vehicleNote.textContent="خودروی پروفایل: "+String(vehicleProfile.vehicle_name)+" · ظرفیت و مصرف از پروفایل خوانده می‌شود؛ کانکتور را در صورت نیاز انتخاب کنید.";panel.insertBefore(vehicleNote,panel.firstChild)}
  function revSaveEnergySettings(){var data={};ids.forEach(function(id){var el=document.getElementById(id);if(el)data[id]=el.value});try{localStorage.setItem("rev-nav-energy-v1",JSON.stringify(data))}catch(e){}revUpdateEnergy()}
  revEnsureEnergyPanel.save=revSaveEnergySettings;revUpdateEnergy();
