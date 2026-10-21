@@ -1,5 +1,6 @@
 import assert from "node:assert/strict";
 import fs from "node:fs";
+import vm from "node:vm";
 
 const source = fs.readFileSync("trip-app.js", "utf8");
 const start = source.indexOf("async function getIranStations(routeCoords,radiusKm){");
@@ -19,3 +20,15 @@ const continuation = source.slice(source.indexOf("function continueToDriverProfi
 assert.ok(continuation.includes('get("from")==="rev-mobile"'), "planner must recognize the mobile-app handoff");
 assert.ok(continuation.includes("stops:(revTimeline.stops||[])"), "saved trip must preserve planned charging stops");
 assert.ok(continuation.includes("/rev-mobile/nearby-map.html?navstart=1"), "mobile handoff must return to the app map for navigation");
+
+const estimatorStart = source.indexOf("function estimateChargingMinutes(");
+const estimatorEnd = source.indexOf("\\nfunction buildChargingPlan", estimatorStart);
+assert.ok(estimatorStart >= 0 && estimatorEnd > estimatorStart, "charge time estimator must exist");
+const estimatorSource = source.slice(estimatorStart, estimatorEnd);
+const estimateChargingMinutes = vm.runInNewContext("(" + estimatorSource + ")");
+assert.equal(estimateChargingMinutes(60, 20, 80, 120), 32);
+assert.equal(estimateChargingMinutes(60, 20, 80, 30), 110);
+assert.equal(estimateChargingMinutes(60, 80, 80, 120), null);
+assert.equal(estimateChargingMinutes(60, 20, 80, 0), null);
+assert.equal(estimateChargingMinutes(0, 20, 80, 120), null);
+console.log("REV charging-time estimate regression checks passed.");
