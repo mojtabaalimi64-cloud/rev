@@ -255,6 +255,26 @@ async function handle(req, env, cors) {
     return json({ ok: true, id: r.id, status: r.status, driver, serviceCode: r.serviceCode || null, log: r.log.slice(-8) }, 200, cors);
   }
 
+  // ---- customer: my requests (profile history by phone) ----
+  if (path === "/api/tow/my-requests" && method === "GET") {
+    const phone = String(url.searchParams.get("phone") || "").trim();
+    if (!validPhone(phone)) return json({ ok: false, err: "شماره معتبر نیست" }, 400, cors);
+    const mine = (await listRequests(env))
+      .filter(r => r.phone === phone)
+      .sort((a, b) => b.ts - a.ts)
+      .slice(0, 30);
+    const out = [];
+    for (const r of mine) {
+      let driver = null;
+      if (r.assignedDriver) {
+        const d = await getDriver(env, r.assignedDriver);
+        if (d) driver = { name: d.name, phone: d.phone };
+      }
+      out.push({ id: r.id, ts: r.ts, status: r.status, problem: r.problem, car: r.car, loc: r.loc, gps: r.gps, note: r.note, serviceCode: r.serviceCode || null, driver });
+    }
+    return json({ ok: true, requests: out }, 200, cors);
+  }
+
   // ---- customer: cancel ----
   if (path === "/api/tow/cancel" && method === "POST") {
     const b = await body(req);
@@ -400,7 +420,8 @@ async function handle(req, env, cors) {
 
   // ---- admin ----
   const adminKey = req.headers.get("x-admin-key");
-  const isAdmin = adminKey && env.ADMIN_KEY && adminKey === env.ADMIN_KEY;
+  const opKeys = String(env.OPERATOR_KEYS || "").split(",").map(s => s.trim()).filter(Boolean);
+  const isAdmin = !!adminKey && ((env.ADMIN_KEY && adminKey === env.ADMIN_KEY) || opKeys.includes(adminKey));
   if (path.startsWith("/api/admin/")) {
     if (!isAdmin) return json({ ok: false, err: "unauthorized" }, 401, cors);
     if (path === "/api/admin/drivers") {

@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<title>پنل مدیریت REV — نقشه کنترل شبکه یدک‌کش</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css">
+<style>
+:root{--ink:#080B0D;--paper:#F5F7F8;--line:#DDE3E6;--muted:#5B666D;--green:#39FF88;--teal:#0887a7;--teal-d:#066d88;--red:#b3261e;--amber:#8a5a00;
+--font:"Vazirmatn","Vazir","IRANSansX","Segoe UI",Tahoma,system-ui,sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%}
+body{font-family:var(--font);background:var(--paper);color:var(--ink);font-size:14px;display:flex;flex-direction:column}
+button,input{font:inherit;color:inherit}
+header{background:var(--ink);color:#fff;padding:10px 16px;display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;z-index:1200}
+header .t{font-weight:900;font-size:16px}header .t b{color:var(--green)}
+header a{color:#C3CBD0;font-size:12.5px;text-decoration:none}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chip{background:#121A1F;border:1px solid #2a343b;color:#dbe4ea;border-radius:999px;padding:3px 11px;font-size:12px;font-weight:700}
+.chip b{color:var(--green)}
+.chip.warn b{color:#ffb020}
+main{flex:1;display:flex;min-height:0}
+#map{flex:1;min-height:0}
+aside{width:320px;max-width:86vw;background:#fff;border-inline-start:1px solid var(--line);overflow-y:auto;padding:12px}
+aside h3{font-size:13.5px;font-weight:900;margin:10px 0 4px}
+.mut{color:var(--muted);font-size:12px}
+.req{border:1px solid var(--line);border-radius:11px;padding:9px 11px;margin-top:7px;cursor:pointer;background:#fff}
+.req:hover{border-color:var(--teal)}
+.req.new{border-color:var(--red);background:#fff7f6}
+.req .meta{color:var(--muted);font-size:11.5px;line-height:1.8}
+.drv{border:1px solid var(--line);border-radius:11px;padding:8px 11px;margin-top:7px;background:#fff;font-size:12.5px}
+.drv .meta{color:var(--muted);font-size:11.5px;line-height:1.8}
+.pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:10.5px;font-weight:800}
+.pill.green{background:#dcf5e3;color:#11703c}.pill.amber{background:#fdf0d7;color:var(--amber)}
+.pill.grey{background:#eef1f3;color:#61707a}.pill.teal{background:#e5f3f8;color:var(--teal-d)}.pill.red{background:#fde8e6;color:var(--red)}
+.pin{display:grid;place-items:center;width:36px;height:36px;border-radius:50% 50% 50% 4px;transform:rotate(-45deg);border:2.5px solid #fff;box-shadow:0 3px 10px rgba(0,0,0,.35);font-size:17px}
+.pin span{transform:rotate(45deg)}
+.pin-req{background:#d92c1f}
+.pin-req-fresh{background:#d92c1f;animation:pl 1.2s infinite}
+@keyframes pl{0%{box-shadow:0 0 0 0 rgba(217,44,31,.5)}70%{box-shadow:0 0 0 13px rgba(217,44,31,0)}100%{box-shadow:0 0 0 0 rgba(217,44,31,0)}}
+.pin-drv{background:#0a7d8c;border-radius:12px;transform:none}
+.pin-drv span{transform:none}
+.pin-drv.stale{background:#8b98a3}
+.leaflet-popup-content{font-family:var(--font);direction:rtl;text-align:right;font-size:13px;line-height:1.9;min-width:230px}
+.leaflet-popup-content .pop-btn{display:inline-block;margin-top:7px;background:var(--teal);color:#fff;border:0;border-radius:9px;padding:7px 12px;font-weight:800;cursor:pointer;font-size:12.5px}
+.leaflet-popup-content .pop-btn.ghost{background:#fff;color:var(--teal-d);border:1.5px solid #cbe6f0}
+#routeInfo{position:absolute;z-index:1100;bottom:14px;inset-inline-start:14px;background:#fff;border:1px solid var(--line);border-radius:12px;padding:10px 13px;box-shadow:0 6px 22px rgba(20,41,59,.16);font-size:13px;display:none;max-width:min(430px,86vw)}
+#keyGate{position:fixed;inset:0;background:rgba(8,11,13,.72);z-index:3000;display:none;place-items:center}
+#keyGate .box{background:#fff;border-radius:16px;padding:22px;width:min(420px,92vw)}
+#keyGate input{width:100%;border:1.5px solid var(--line);border-radius:10px;padding:10px;margin-top:10px}
+#keyGate button{width:100%;margin-top:10px;background:var(--ink);color:#fff;border:0;border-radius:10px;padding:11px;font-weight:900;cursor:pointer}
+@media(max-width:760px){aside{display:none}aside.open{display:block;position:fixed;inset-inline-end:0;top:0;bottom:0;z-index:1500;box-shadow:-6px 0 24px rgba(0,0,0,.2)}}
+</style>
+</head>
+<body>
+<header>
+  <span class="t">نقشه کنترل شبکه <b>REV</b> — امداد و یدک‌کش</span>
+  <span class="chips">
+    <span class="chip">راننده آنلاین: <b id="cDrivers">—</b></span>
+    <span class="chip warn">درخواست باز: <b id="cReqs">—</b></span>
+    <span class="chip">آخرین به‌روزرسانی: <b id="cTime">—</b></span>
+    <a href="./admin-tow.html">مدیریت راننده‌ها</a>
+    <a href="#" id="toggleSide">فهرست</a>
+  </span>
+</header>
+<main>
+  <div id="map"></div>
+  <aside id="side">
+    <h3>🚨 درخواست‌های باز</h3>
+    <div id="reqList"><p class="mut">در حال بارگذاری…</p></div>
+    <h3>🚛 راننده‌ها</h3>
+    <div id="drvList"><p class="mut">در حال بارگذاری…</p></div>
+  </aside>
+</main>
+<div id="routeInfo"></div>
+
+<div id="keyGate"><div class="box">
+  <b>🔑 کلید مدیریت</b>
+  <p class="mut">کلید مدیریت یا کلید اپراتور را وارد کن؛ فقط در همین مرورگر ذخیره می‌شود.</p>
+  <input type="password" id="gateKey" dir="ltr" style="text-align:left" placeholder="ADMIN_KEY / OPERATOR KEY">
+  <button id="gateBtn" type="button">ورود به نقشه کنترل</button>
+</div></div>
+
+<script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js"></script>
+<script>
+(function(){
+  var API='https://rev-tow-dispatch.mojtaba-alimi64.workers.dev';
+  var KEYLS='rev_tow_admin_key';
+  function $(id){return document.getElementById(id)}
+  function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return{'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})}
+  function faN(n){try{return Number(n).toLocaleString('fa-IR')}catch(e){return String(n)}}
+  function faTime(ts){try{return new Date(ts).toLocaleTimeString('fa-IR',{hour:'2-digit',minute:'2-digit'})}catch(e){return '—'}}
+  function ago(ts){var m=Math.max(0,Math.round((Date.now()-ts)/60000));if(m<1)return 'همین حالا';if(m<60)return faN(m)+' دقیقه پیش';var h=Math.floor(m/60);if(h<24)return faN(h)+' ساعت پیش';return faN(Math.floor(h/24))+' روز پیش'}
+  function hav(a,b){var R=6371,dLa=(b.lat-a.lat)*Math.PI/180,dLo=(b.lng-a.lng)*Math.PI/180,la1=a.lat*Math.PI/180,la2=b.lat*Math.PI/180;var h=Math.sin(dLa/2)**2+Math.cos(la1)*Math.cos(la2)*Math.sin(dLo/2)**2;return 2*R*Math.asin(Math.sqrt(h))}
+
+  var key='';try{key=localStorage.getItem(KEYLS)||''}catch(e){}
+  var map=L.map('map',{zoomControl:true}).setView([35.7,51.4],11);
+  L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{maxZoom:19,attribution:'© OpenStreetMap'}).addTo(map);
+  var drvLayer=L.layerGroup().addTo(map), reqLayer=L.layerGroup().addTo(map), routeLayer=L.layerGroup().addTo(map);
+  var drivers=[], requests=[], markers={}, knownReqs=null, audioCtx=null;
+
+  function beep(){try{audioCtx=audioCtx||new (window.AudioContext||window.webkitAudioContext)();var o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.frequency.value=880;g.gain.setValueAtTime(.12,audioCtx.currentTime);o.start();o.stop(audioCtx.currentTime+.35);}catch(e){}}
+  function statusPill(s){if(s==='راننده در راه')return '<span class="pill teal">راننده در راه</span>';if(s==='در انتظار اپراتور')return '<span class="pill amber">در انتظار اپراتور</span>';if(s==='در انتظار پذیرش راننده')return '<span class="pill red">در انتظار پذیرش راننده</span>';return '<span class="pill amber">'+esc(s)+'</span>'}
+
+  function drvById(id){return drivers.find(function(d){return d.id===id})}
+  function fresh(d){return d.lastSeen&&(Date.now()-d.lastSeen)<5*60*1000}
+  function usable(d){return d.approved===true&&d.active!==false&&d.lastSeen&&(Date.now()-d.lastSeen)<30*60*1000&&isFinite(d.lat)&&isFinite(d.lng)}
+
+  function routeTo(req,drv){
+    routeLayer.clearLayers();
+    var a=[req.gps.lat,req.gps.lng],b=[drv.lat,drv.lng];
+    $('routeInfo').style.display='block';
+    $('routeInfo').innerHTML='⏳ در حال محاسبه مسیر از مشتری تا «'+esc(drv.name)+'»…';
+    fetch('https://router.project-osrm.org/route/v1/driving/'+a[1]+','+a[0]+';'+b[1]+','+b[0]+'?overview=full&geometries=geojson')
+    .then(function(r){return r.json()})
+    .then(function(d){
+      if(!d.routes||!d.routes.length)throw 0;
+      var rt=d.routes[0];
+      var line=L.geoJSON(rt.geometry,{style:{color:'#0887a7',weight:6,opacity:.9}}).addTo(routeLayer);
+      map.fitBounds(line.getBounds(),{padding:[45,45]});
+      $('routeInfo').innerHTML='🚗 مسیر مشتری ← راننده <b>'+esc(drv.name)+'</b><br>فاصله جاده‌ای: <b>'+faN((rt.distance/1000).toLocaleString('fa-IR',{maximumFractionDigits:1}))+' کیلومتر</b> · زمان تقریبی: <b>'+faN(Math.round(rt.duration/60))+' دقیقه</b><br><span class="mut">فاصله مستقیم: '+faN(hav(req.gps,drv).toLocaleString('fa-IR',{maximumFractionDigits:1}))+' کیلومتر</span> <button class="pop-btn ghost" style="background:#fff;color:#066d88;border:1.5px solid #cbe6f0;border-radius:8px;padding:4px 10px;cursor:pointer" onclick="document.getElementById(\'routeInfo\').style.display=\'none\';window.__clearRoute&&window.__clearRoute()">✕ بستن مسیر</button>';
+    })
+    .catch(function(){
+      var line=L.polyline([a,b],{color:'#b3261e',weight:4,dashArray:'7 7'}).addTo(routeLayer);
+      map.fitBounds(line.getBounds(),{padding:[45,45]});
+      $('routeInfo').innerHTML='📏 فاصله مستقیم مشتری تا «'+esc(drv.name)+'»: <b>'+faN(hav(req.gps,drv).toLocaleString('fa-IR',{maximumFractionDigits:1}))+' کیلومتر</b> (مسیریابی جاده‌ای در دسترس نبود)';
+    });
+  }
+  window.__clearRoute=function(){routeLayer.clearLayers()};
+
+  function reqPopup(r){
+    var drv=r.assignedDriver?drvById(r.assignedDriver):null;
+    var nearest=null,nd=1e18;
+    if(!drv){drivers.filter(usable).forEach(function(d){var dd=hav(r.gps,d);if(dd<nd){nd=dd;nearest=d}})}
+    var target=drv||nearest;
+    return '<b>🚨 درخواست امداد</b> '+statusPill(r.status)+'<br>'
+      +'👤 <b>'+esc(r.name||'')+'</b> · 📞 <a href="tel:'+esc(r.phone||'')+'" dir="ltr">'+esc(r.phone||'')+'</a><br>'
+      +'🔧 '+esc(r.problem||'')+(r.car?' · 🚗 '+esc(r.car):'')+'<br>'
+      +'📍 '+esc(r.loc||'—')+'<br>'
+      +'🧭 مختصات: <span dir="ltr">'+r.gps.lat.toFixed(5)+', '+r.gps.lng.toFixed(5)+'</span><br>'
+      +'🕐 '+ago(r.ts)+' · کد رهگیری: <span dir="ltr">'+esc(r.id)+'</span>'
+      +(r.note?'<br>📝 '+esc(r.note):'')
+      +(r.serviceCode?'<br>🔐 کد امداد: <b dir="ltr">'+esc(r.serviceCode)+'</b>':'')
+      +(drv?'<br>🚛 راننده: <b>'+esc(drv.name)+'</b> · <span dir="ltr">'+esc(drv.phone)+'</span>'
+           :(nearest?'<br>🚛 نزدیک‌ترین راننده آزاد: <b>'+esc(nearest.name)+'</b> ('+faN(nd.toLocaleString('fa-IR',{maximumFractionDigits:1}))+' km)':'<br>🚛 راننده‌ای تخصیص نیافته'))
+      +'<br><a class="pop-btn ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps?q='+r.gps.lat+','+r.gps.lng+'">باز کردن در گوگل‌مپ</a>'
+      +(target?' <button class="pop-btn" data-route="'+esc(r.id)+'">🚗 مسیر تا راننده</button>':'');
+  }
+
+  function drvPopup(d){
+    var mine=requests.filter(function(r){return r.assignedDriver===d.id&&r.status!=='انجام شد'&&r.status!=='لغو شد'}).length;
+    return '<b>🚛 '+esc(d.name)+'</b> '+(fresh(d)?'<span class="pill green">آنلاین</span>':'<span class="pill grey">آفلاین</span>')+'<br>'
+      +'📞 <a href="tel:'+esc(d.phone)+'" dir="ltr">'+esc(d.phone)+'</a>'
+      +(d.vehicle?'<br>خودروبر: '+esc(d.vehicle):'')+(d.city?'<br>شهر: '+esc(d.city):'')
+      +'<br>شعاع پوشش: '+faN(d.radius)+' km · امتیاز: '+faN(d.score)
+      +'<br>آخرین حضور: '+ago(d.lastSeen)+'<br>مأموریت باز: '+faN(mine);
+  }
+
+  function render(){
+    drvLayer.clearLayers();reqLayer.clearLayers();markers={};
+    var online=0;
+    drivers.forEach(function(d){
+      if(!isFinite(d.lat)||!isFinite(d.lng))return;
+      if(fresh(d))online++;
+      var icon=L.divIcon({className:'',html:'<div class="pin pin-drv'+(fresh(d)?'':' stale')+'"><span>🚛</span></div>',iconSize:[36,36],iconAnchor:[18,18]});
+      var m=L.marker([d.lat,d.lng],{icon:icon}).bindPopup(drvPopup(d));
+      m.addTo(drvLayer);markers['D'+d.id]=m;
+    });
+    var open=requests.filter(function(r){return r.status!=='انجام شد'&&r.status!=='لغو شد'});
+    open.forEach(function(r){
+      if(!r.gps)return;
+      var isNew=Date.now()-r.ts<10*60*1000;
+      var icon=L.divIcon({className:'',html:'<div class="pin '+(isNew?'pin-req-fresh':'pin-req')+'"><span>🚨</span></div>',iconSize:[36,36],iconAnchor:[18,34]});
+      var m=L.marker([r.gps.lat,r.gps.lng],{icon:icon}).bindPopup(reqPopup(r));
+      m.addTo(reqLayer);markers['R'+r.id]=m;
+    });
+    document.querySelectorAll('[data-route]');
+    $('cDrivers').textContent=faN(online);
+    $('cReqs').textContent=faN(open.length);
+    $('cTime').textContent=faTime(Date.now());
+    // فهرست کناری
+    $('reqList').innerHTML=open.length?open.map(function(r){
+      return '<div class="req'+(Date.now()-r.ts<10*60*1000?' new':'')+'" data-open="'+esc(r.id)+'"><b>'+esc(r.problem||'')+'</b> '+statusPill(r.status)
+        +'<div class="meta">'+esc(r.name||'')+' · <span dir="ltr">'+esc(r.phone||'')+'</span><br>'+esc(r.loc||'')+' · '+ago(r.ts)+(r.gps?'':' · <b style="color:#b3261e">بدون GPS</b>')+'</div></div>';
+    }).join(''):'<p class="mut">درخواست بازی نیست. 🎉</p>';
+    $('drvList').innerHTML=drivers.length?drivers.map(function(d){
+      return '<div class="drv" data-open-d="'+esc(d.id)+'"><b>'+esc(d.name)+'</b> '+(d.approved===true?(fresh(d)?'<span class="pill green">آنلاین</span>':'<span class="pill grey">آفلاین</span>'):'<span class="pill amber">تأیید نشده</span>')
+        +'<div class="meta"><span dir="ltr">'+esc(d.phone)+'</span> · امتیاز '+faN(d.score)+' · شعاع '+faN(d.radius)+'km · '+ago(d.lastSeen)+'</div></div>';
+    }).join(''):'<p class="mut">راننده‌ای نیست.</p>';
+    $('reqList').querySelectorAll('[data-open]').forEach(function(el){
+      el.addEventListener('click',function(){
+        var id=el.getAttribute('data-open'),mk=markers['R'+id],r=requests.find(function(x){return x.id===id});
+        if(mk){map.setView(mk.getLatLng(),15);mk.openPopup()}
+        else if(r){alert('این درخواست موقعیت GPS ندارد؛ با مشتری تماس بگیر: '+r.phone)}
+      });
+    });
+    $('drvList').querySelectorAll('[data-open-d]').forEach(function(el){
+      el.addEventListener('click',function(){
+        var mk=markers['D'+el.getAttribute('data-open-d')];
+        if(mk){map.setView(mk.getLatLng(),14);mk.openPopup()}
+      });
+    });
+    document.querySelectorAll('.leaflet-popup-content [data-route]').forEach(function(b){
+      b.addEventListener('click',function(){
+        var r=requests.find(function(x){return x.id===b.getAttribute('data-route')});if(!r||!r.gps)return;
+        var drv=r.assignedDriver?drvById(r.assignedDriver):null;
+        if(!drv){var nd=1e18;drivers.filter(usable).forEach(function(d){var dd=hav(r.gps,d);if(dd<nd){nd=dd;drv=d}})}
+        if(drv)routeTo(r,drv);
+      });
+    });
+  }
+
+  function load(){
+    if(!key)return;
+    Promise.all([
+      fetch(API+'/api/admin/drivers',{headers:{'x-admin-key':key}}).then(function(r){return r.json()}),
+      fetch(API+'/api/admin/requests',{headers:{'x-admin-key':key}}).then(function(r){return r.json()})
+    ]).then(function(res){
+      if(!res[0]||!res[0].ok)throw 0;
+      drivers=res[0].drivers||[];requests=(res[1]&&res[1].requests)||[];
+      var openIds=requests.filter(function(r){return r.status!=='انجام شد'&&r.status!=='لغو شد'}).map(function(r){return r.id});
+      if(knownReqs){var nw=openIds.filter(function(id){return knownReqs.indexOf(id)<0});if(nw.length){beep();document.title='🚨 ('+nw.length+') درخواست تازه — نقشه کنترل REV';setTimeout(function(){document.title='پنل مدیریت REV — نقشه کنترل شبکه یدک‌کش'},6000)}}
+      knownReqs=openIds;
+      render();
+    }).catch(function(){});
+  }
+
+  $('toggleSide').addEventListener('click',function(e){e.preventDefault();$('side').classList.toggle('open')});
+  map.on('popupopen',function(){
+    document.querySelectorAll('.leaflet-popup-content [data-route]').forEach(function(b){
+      if(b.__bound)return;b.__bound=true;
+      b.addEventListener('click',function(){
+        var r=requests.find(function(x){return x.id===b.getAttribute('data-route')});if(!r||!r.gps)return;
+        var drv=r.assignedDriver?drvById(r.assignedDriver):null;
+        if(!drv){var nd=1e18;drivers.filter(usable).forEach(function(d){var dd=hav(r.gps,d);if(dd<nd){nd=dd;drv=d}})}
+        if(drv)routeTo(r,drv);
+      });
+    });
+  });
+
+  function start(){
+    if(!key){$('keyGate').style.display='grid';return}
+    load();setInterval(load,10000);
+  }
+  $('gateBtn').addEventListener('click',function(){
+    var v=$('gateKey').value.trim();if(!v)return;
+    key=v;try{localStorage.setItem(KEYLS,v)}catch(e){}
+    $('keyGate').style.display='none';start();
+  });
+  start();
+})();
+</script>
+</body>
+</html>
