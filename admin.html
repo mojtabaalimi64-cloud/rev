@@ -955,14 +955,39 @@ async function reviewStationSubmission(id,action){
   const status=$('station-submissions-status');
   const buttons=root.querySelectorAll('[data-a="station-submission-review"]');
   buttons.forEach(x=>x.disabled=true);
-  if(status)status.textContent=action==='approve'?'در حال تأیید درخواست و ثبت نتیجه…':'در حال رد درخواست…';
+  if(status)status.textContent=action==='approve'?'در حال ثبت جایگاه در دیتابیس اصلی و تأیید آن…':'در حال رد درخواست…';
   try{
+    if(action==='approve'){
+      const latitude=Number(s.latitude??s.lat), longitude=Number(s.longitude??s.lng??s.lon);
+      if(!Number.isFinite(latitude)||latitude < -90||latitude > 90||!Number.isFinite(longitude)||longitude < -180||longitude > 180){
+        throw new Error('مختصات جغرافیایی درخواست معتبر نیست؛ ابتدا مختصات را اصلاح کنید.');
+      }
+      if(!tok)throw new Error('نشست مدیریتی پنل منقضی شده است؛ دوباره وارد پنل شوید.');
+      const stationId='rev-user-'+String(s.id).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,80);
+      const stationPayload={
+        id:stationId,source:'rev_user',source_id:String(s.id),
+        name:String(s.name||s.title||'جایگاه ثبت‌شده توسط کاربر').trim(),
+        address:[s.address,s.city].filter(Boolean).join('، '),
+        latitude,longitude,
+        connectors:s.connectors||'',
+        power_kw:s.power_kw===''||s.power_kw==null?null:Number(s.power_kw),
+        status:'unknown',source_url:''
+      };
+      const save=await fetch(WORKER+'/api/admin/stations',{method:'POST',headers:H(),body:JSON.stringify(stationPayload),cache:'no-store'});
+      const saved=await save.json().catch(()=>({}));
+      if(!save.ok||!saved.success)throw new Error(saved.error||('ثبت در دیتابیس اصلی ناموفق بود؛ HTTP '+save.status));
+      const approve=await fetch(WORKER+'/api/admin/stations/'+encodeURIComponent(saved.data?.id||stationId)+'/review',{method:'POST',headers:H(),body:JSON.stringify({approval_status:'approved',review_note:'تأیید از طریق درخواست کاربر در پنل REV'}) ,cache:'no-store'});
+      const approved=await approve.json().catch(()=>({}));
+      if(!approve.ok||!approved.success)throw new Error(approved.error||('ثبت جایگاه انجام شد اما تأیید دیتابیس اصلی ناموفق بود؛ HTTP '+approve.status));
+    }
     const r=await fetch(SUBMISSION_WORKER+'/moderate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({token,id:String(s.id),action}),cache:'no-store'});
     const j=await r.json().catch(()=>({}));
     if(!r.ok||!j.ok)throw new Error(j.error||('HTTP '+r.status));
     stationSubmissionsCache=stationSubmissionsCache.filter(x=>String(x.id)!==String(s.id));
-    stationSubmissionsError=action==='approve'?'درخواست تأیید شد. توجه: برای نمایش روی نقشه، باید جایگاه در فهرست اصلی جایگاه‌ها نیز ثبت شود.':'درخواست رد شد.';
+    stationSubmissionsError=action==='approve'?'درخواست تأیید شد و جایگاه در دیتابیس اصلی ثبت و تأیید شد.':'درخواست رد شد.';
+    stationsCache=null;
     draw();
+    if(action==='approve')loadStations();
     msg(stationSubmissionsError);
   }catch(e){
     const detail=e?.message||'خطای اتصال';
