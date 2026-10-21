@@ -103,6 +103,9 @@ function voteSums(rec) {
 
 export default {
   async fetch(request, env) {
+    // سازگاری دوطرفه نام‌ها: داشبورد REV_STATUS_KV / STATUS_ADMIN_TOKEN دارد، ورانگلر STATUS_KV / ADMIN_TOKEN
+    if (!env.STATUS_KV && env.REV_STATUS_KV) env.STATUS_KV = env.REV_STATUS_KV;
+    if (!env.ADMIN_TOKEN && env.STATUS_ADMIN_TOKEN) env.ADMIN_TOKEN = env.STATUS_ADMIN_TOKEN;
     const url = new URL(request.url);
 
     if (request.method === "OPTIONS") {
@@ -110,7 +113,7 @@ export default {
     }
 
     if (url.pathname === "/health") {
-      return json({ ok: true, service: "rev-status-api", v: 4 });
+      return json({ ok: true, service: "rev-status-api", v: 5 });
     }
 
     // ---------- وضعیت لحظه‌ای ----------
