@@ -22,7 +22,7 @@ assert.ok(continuation.includes("stops:(revTimeline.stops||[])"), "saved trip mu
 assert.ok(continuation.includes("/rev-mobile/nearby-map.html?navstart=1"), "mobile handoff must return to the app map for navigation");
 
 const estimatorStart = source.indexOf("function estimateChargingMinutes(");
-const estimatorEnd = source.indexOf("\\nfunction buildChargingPlan", estimatorStart);
+const estimatorEnd = source.indexOf("function buildChargingPlan", estimatorStart);
 assert.ok(estimatorStart >= 0 && estimatorEnd > estimatorStart, "charge time estimator must exist");
 const estimatorSource = source.slice(estimatorStart, estimatorEnd);
 const estimateChargingMinutes = vm.runInNewContext("(" + estimatorSource + ")");
