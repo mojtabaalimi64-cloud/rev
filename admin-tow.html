@@ -102,6 +102,7 @@ button:disabled{opacity:.5;cursor:default}
     return '<span class="pill amber">'+esc(r.status)+'</span>';
   }
 
+  var role='master';
   var driversById={};
   function renderDrivers(drivers){
     driversById={};drivers.forEach(function(d){driversById[d.id]=d});
@@ -116,7 +117,7 @@ button:disabled{opacity:.5;cursor:default}
         +(d.vehicle?'<br>🚛 '+esc(d.vehicle):'')+(d.city?' · '+esc(d.city):'')
         +'<br>شعاع پوشش: '+faN(d.radius)+' km · امتیاز: '+faN(d.score)+' · آخرین حضور: '+ago(d.lastSeen)
         +'<br>📊 قبول: '+faN(st.accepted)+' · انجام‌شده: '+faN(st.completed)+' · رد: '+faN(st.rejected)+' · بی‌پاسخ: '+faN(st.missed)+'</div>'
-        +'<div class="acts">'
+        +(role==='master'?'<div class="acts">'
         +(d.approved===true
           ? '<button class="btn-red" data-act="unapprove" data-id="'+esc(d.id)+'" type="button">لغو تأیید</button>'
           : '<button class="btn-green" data-act="approve" data-id="'+esc(d.id)+'" type="button">✔️ تأیید راننده</button>')
@@ -124,9 +125,10 @@ button:disabled{opacity:.5;cursor:default}
           ? '<button class="btn-ghost" data-act="deactivate" data-id="'+esc(d.id)+'" type="button">غیرفعال</button>'
           : '<button class="btn-ghost" data-act="activate" data-id="'+esc(d.id)+'" type="button">فعال</button>')
         +'<button class="btn-ghost" data-act="token" data-id="'+esc(d.id)+'" type="button">🔑 توکن جدید</button>'
-        +'</div><div class="tokbox hidden" id="tok-'+esc(d.id)+'"></div></div>';
+        +'</div>':'<div class="mut" style="margin-top:6px">حالت فقط‌مشاهده — کارهای مدیریتی با کلید مدیر اصلی انجام می‌شود.</div>')
+        +'<div class="tokbox hidden" id="tok-'+esc(d.id)+'"></div></div>';
     }).join('');
-    $('driverList').querySelectorAll('[data-act]').forEach(function(b){
+    if(role==='master')$('driverList').querySelectorAll('[data-act]').forEach(function(b){
       b.addEventListener('click',function(){driverAction(b)});
     });
   }
@@ -166,12 +168,13 @@ button:disabled{opacity:.5;cursor:default}
   function loadAll(){
     if(!key()){$('connErr').textContent='اول کلید مدیریت را وارد کن.';return}
     $('connErr').textContent='';
-    Promise.all([api('/api/admin/drivers'),api('/api/admin/requests')])
+    Promise.all([api('/api/admin/drivers'),api('/api/admin/requests'),api('/api/admin/whoami')])
     .then(function(res){
-      var dd=res[0],rr=res[1];
+      var dd=res[0],rr=res[1],ww=res[2];
+      if(ww&&ww.ok)role=ww.role||'master';
       if(!dd||!dd.ok){$('connErr').textContent='کلید مدیریت درست نیست یا سرور پاسخ نمی‌دهد.';return}
       try{localStorage.setItem(KEYLS,key())}catch(e){}
-      $('connOk').textContent='✓ متصل شدی — '+faDate(Date.now());
+      $('connOk').textContent='✓ متصل شدی — '+faDate(Date.now())+(role==='operator'?' · نقش: اپراتور (فقط‌مشاهده)':' · نقش: مدیر اصلی');
       $('driversCard').classList.remove('hidden');
       $('requestsCard').classList.remove('hidden');
       renderDrivers(dd.drivers||[]);

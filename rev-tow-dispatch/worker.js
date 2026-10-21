@@ -421,9 +421,18 @@ async function handle(req, env, cors) {
   // ---- admin ----
   const adminKey = req.headers.get("x-admin-key");
   const opKeys = String(env.OPERATOR_KEYS || "").split(",").map(s => s.trim()).filter(Boolean);
-  const isAdmin = !!adminKey && ((env.ADMIN_KEY && adminKey === env.ADMIN_KEY) || opKeys.includes(adminKey));
+  const isMaster = !!adminKey && !!env.ADMIN_KEY && adminKey === env.ADMIN_KEY;
+  const isOperator = !!adminKey && opKeys.includes(adminKey);
+  const isAdmin = isMaster || isOperator;
   if (path.startsWith("/api/admin/")) {
     if (!isAdmin) return json({ ok: false, err: "unauthorized" }, 401, cors);
+    if (path === "/api/admin/whoami") {
+      return json({ ok: true, role: isMaster ? "master" : "operator" }, 200, cors);
+    }
+    // کارهای نوشتنی/حساس فقط برای مدیر اصلی
+    if (method === "POST" && !isMaster) {
+      return json({ ok: false, err: "این کار فقط برای مدیر اصلی REV است؛ کلید اپراتور فقط‌مشاهده است." }, 403, cors);
+    }
     if (path === "/api/admin/drivers") {
       const allReqs = await listRequests(env);
       const drivers = (await listDrivers(env)).map(d => ({
