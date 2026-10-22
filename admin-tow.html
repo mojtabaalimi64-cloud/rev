@@ -178,13 +178,15 @@ button:disabled{opacity:.5;cursor:default}
         +'<div class="meta" dir="rtl">📱 <span dir="ltr">'+esc(d.phone)+'</span> · کد: '+esc(d.id)
         +(d.vehicle?'<br>🚛 '+esc(d.vehicle):'')+(d.city?' · شهر: '+esc(d.city):'')+' · استان: '+esc(d.province||'نامشخص')
         +'<br>شعاع پوشش: '+faN(d.radius)+' km · امتیاز: '+faN(d.score)+' · آخرین حضور: '+ago(d.lastSeen)
-        +'<br>وضعیت دریافت درخواست: '+(d.approved!==true?'در انتظار تأیید':(d.active===false?'حساب غیرفعال':(d.onShift===true?'شیفت فعال':'شیفت پایان‌یافته')))
+        +'<br>وضعیت دریافت درخواست: '+(d.registrationRevoked===true?'لغو تأیید؛ ثبت‌نام مجدد لازم است':(d.approved!==true?'در انتظار تأیید':(d.active===false?'حساب غیرفعال':(d.onShift===true?'شیفت فعال':'شیفت پایان‌یافته'))))
         +'<br>📊 قبول: '+faN(st.accepted)+' · انجام‌شده: '+faN(st.completed)+' · رد: '+faN(st.rejected)+' · بی‌پاسخ: '+faN(st.missed)
         +(d.crm?'<br><b>CRM راننده:</b> '+esc(d.crm.stage||'جدید')+' · اولویت: '+esc(d.crm.priority||'عادی')+(d.crm.owner?' · مسئول: '+esc(d.crm.owner):'')+(d.crm.followUpAt?' · پیگیری: '+esc(d.crm.followUpAt):'')+(d.crm.note?'<br>یادداشت: '+esc(d.crm.note):''):'<br><span class="mut">CRM راننده: ثبت نشده</span>')+'</div>'
         +(role==='master'?'<div class="acts"><button class="btn-ghost" data-act="drivercrm" data-id="'+esc(d.id)+'" type="button">🗂️ پرونده CRM راننده</button>'
-        +(d.approved===true
-          ? '<button class="btn-red" data-act="unapprove" data-id="'+esc(d.id)+'" type="button">لغو تأیید</button>'
-          : '<button class="btn-green" data-act="approve" data-id="'+esc(d.id)+'" type="button">✔️ تأیید راننده</button>')
+        +(d.registrationRevoked===true
+          ? '<span class="pill grey">لغو تأیید؛ ثبت‌نام مجدد راننده لازم است</span>'
+          : (d.approved===true
+            ? '<button class="btn-red" data-act="unapprove" data-id="'+esc(d.id)+'" type="button">لغو تأیید</button>'
+            : '<button class="btn-green" data-act="approve" data-id="'+esc(d.id)+'" type="button">✔️ تأیید راننده</button>'))
         +(d.active!==false
           ? '<button class="btn-ghost" data-act="deactivate" data-id="'+esc(d.id)+'" type="button">غیرفعال</button>'
           : '<button class="btn-ghost" data-act="activate" data-id="'+esc(d.id)+'" type="button">فعال</button>')
