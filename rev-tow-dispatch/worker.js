@@ -107,41 +107,55 @@ async function getDriver(env, id) {
   const raw = await env.TOW.get(kDriver(id));
   return raw ? JSON.parse(raw) : null;
 }
-async function saveDriver(env, d) { await env.TOW.put(kDriver(d.id), JSON.stringify(d)); }
+async function saveDriver(env, d) {
+  const key = kDriver(d.id); await env.TOW.put(key, JSON.stringify(d));
+  await addIndexedName(env, "driver:", key);
+}
 function normStats(d) {
   if (!d.stats || typeof d.stats !== "object") d.stats = { accepted: 0, completed: 0, rejected: 0, missed: 0 };
   for (const k of ["accepted", "completed", "rejected", "missed"]) if (!Number.isFinite(d.stats[k])) d.stats[k] = 0;
   return d;
 }
-async function listRequests(env) {
-  const out = [];
-  let cursor;
+async function indexedNames(env, prefix) {
+  const indexKey = "_index:" + prefix;
+  const saved = await env.TOW.get(indexKey);
+  if (saved) { try { const a = JSON.parse(saved); if (Array.isArray(a)) return a.filter(x => typeof x === "string"); } catch {} }
+  // One-time migration of existing records. After this, normal reads do not call KV.list().
+  const names = []; let cursor;
   do {
-    const page = await env.TOW.list({ prefix: "req:", cursor });
-    for (const k of page.keys) {
-      const raw = await env.TOW.get(k.name);
-      if (raw) out.push(JSON.parse(raw));
-    }
+    const page = await env.TOW.list({ prefix, cursor });
+    for (const item of page.keys) names.push(item.name);
     cursor = page.list_complete ? null : page.cursor;
   } while (cursor);
+  await env.TOW.put(indexKey, JSON.stringify(names));
+  return names;
+}
+async function addIndexedName(env, prefix, name) {
+  const names = await indexedNames(env, prefix);
+  if (!names.includes(name)) { names.push(name); await env.TOW.put("_index:" + prefix, JSON.stringify(names)); }
+}
+async function listRequests(env) {
+  const out = [];
+  for (const name of await indexedNames(env, "req:")) {
+    const raw = await env.TOW.get(name);
+    if (raw) { try { out.push(JSON.parse(raw)); } catch { console.error("[rev-tow-dispatch] invalid request record", { key: name }); } }
+  }
   return out;
 }
 async function getReq(env, id) {
   const raw = await env.TOW.get(kReq(id));
   return raw ? JSON.parse(raw) : null;
 }
-async function saveReq(env, r) { await env.TOW.put(kReq(r.id), JSON.stringify(r)); }
+async function saveReq(env, r) {
+  const key = kReq(r.id); await env.TOW.put(key, JSON.stringify(r));
+  await addIndexedName(env, "req:", key);
+}
 async function listDrivers(env) {
   const out = [];
-  let cursor;
-  do {
-    const page = await env.TOW.list({ prefix: "driver:", cursor });
-    for (const k of page.keys) {
-      const raw = await env.TOW.get(k.name);
-      if (raw) out.push(JSON.parse(raw));
-    }
-    cursor = page.list_complete ? null : page.cursor;
-  } while (cursor);
+  for (const name of await indexedNames(env, "driver:")) {
+    const raw = await env.TOW.get(name);
+    if (raw) { try { out.push(JSON.parse(raw)); } catch { console.error("[rev-tow-dispatch] invalid driver record", { key: name }); } }
+  }
   return out;
 }
 async function driverByToken(env, token) {
@@ -168,8 +182,9 @@ async function sweepOffer(env, reqId) {
 }
 
 async function releasePendingOffersForDriver(env, driver, reason) {
-  const page = await env.TOW.list({ prefix: "offer:" });
-  for (const item of page.keys) {
+  const offerNames = await indexedNames(env, "offer:");
+  for (const itemName of offerNames) {
+    const item = { name: itemName };
     const raw = await env.TOW.get(item.name);
     if (!raw) continue;
     const offer = JSON.parse(raw);
@@ -206,6 +221,7 @@ async function dispatchToNext(env, req) {
     at: now(), expiresAt: now() + ACCEPT_TIMEOUT_MIN * 60 * 1000, state: "pending",
   };
   await env.TOW.put(kOffer(req.id), JSON.stringify(offer));
+  await addIndexedName(env, "offer:", kOffer(req.id));
   req.status = "در انتظار پذیرش راننده";
   req.currentOffer = { driverId: pick.driver.id, distKm: pick.distKm, expiresAt: offer.expiresAt };
   req.log.push({ t: now(), ev: `ارسال به راننده ${pick.driver.name} (${pick.distKm} km)` });
@@ -362,9 +378,10 @@ async function handle(req, env, cors) {
     d.lastSeen = now(); await saveDriver(env, d);
     if (d.approved !== true || d.active === false || d.onShift !== true)
       return json({ ok: true, offer: null, approved: d.approved === true, onShift: d.onShift === true }, 200, cors);
-    const keys = await env.TOW.list({ prefix: "offer:" });
+    const offerNames = await indexedNames(env, "offer:");
     let mine = null;
-    for (const k of keys.keys) {
+    for (const offerName of offerNames) {
+      const k = { name: offerName };
       const raw = await env.TOW.get(k.name);
       if (!raw) continue;
       const o = JSON.parse(raw);
@@ -485,10 +502,9 @@ async function handle(req, env, cors) {
     }
     if (path === "/api/admin/requests") {
       const out = [];
-      const page = await env.TOW.list({ prefix: "req:" });
-      for (const k of page.keys) {
-        const raw = await env.TOW.get(k.name);
-        if (raw) out.push(JSON.parse(raw));
+      for (const k of await indexedNames(env, "req:")) {
+        const raw = await env.TOW.get(k);
+        if (raw) { try { out.push(JSON.parse(raw)); } catch { console.error("[rev-tow-dispatch] invalid request record", { key: k }); } }
       }
       out.sort((a, b) => b.ts - a.ts);
       return json({ ok: true, requests: out.slice(0, 100) }, 200, cors);
@@ -544,9 +560,10 @@ async function handle(req, env, cors) {
       return json({ ok: true, token: d.token }, 200, cors);
     }
     if (path === "/api/admin/sweep" && method === "POST") {
-      const page = await env.TOW.list({ prefix: "offer:" });
+      const offerNames = await indexedNames(env, "offer:");
       let swept = 0;
-      for (const k of page.keys) {
+      for (const offerName of offerNames) {
+        const k = { name: offerName };
         const raw = await env.TOW.get(k.name);
         if (raw && JSON.parse(raw).expiresAt <= now()) {
           await sweepOffer(env, JSON.parse(raw).reqId); swept++;
