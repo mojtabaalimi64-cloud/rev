@@ -237,7 +237,7 @@ button:disabled{opacity:.5;cursor:default}
       +'<div class="crm-box"><b>کل مأموریت‌های تخصیص‌یافته</b>'+faN(s.accepted||requests.length)+'</div><div class="crm-box"><b>انجام‌شده</b>'+faN(s.completed)+'</div>'
       +'<div class="crm-box"><b>ردشده</b>'+faN(s.rejected)+'</div><div class="crm-box"><b>بی‌پاسخ / منقضی</b>'+faN(s.missed)+'</div>'
       +'<div class="crm-box"><b>امتیاز فعلی</b>'+faN(d.score)+'</div><div class="crm-box"><b>نرخ تکمیل</b>'+faN((s.accepted||requests.length)?Math.round((s.completed||0)/(s.accepted||requests.length)*100):0)+'٪</div>'
-      +'</div></div><div class="crm-section"><h3>📎 مستندات ثبت‌شده</h3>'+docHtml+'</div>'
+      +'</div></div><div class="crm-section"><h3>📎 مستندات ثبت‌شده</h3>'+docHtml+(role==='master'?'<div class="row" style="margin-top:8px"><button class="btn-ghost" data-add-driver-doc type="button">＋ افزودن لینک مدرک</button></div>':'')+'</div>'
       +'<div class="crm-section"><h3>🚨 سوابق مأموریت و گزارش رویدادها</h3>'+requestHtml+'</div>'
       +'<div class="crm-section"><h3>🗒️ پیگیری CRM</h3><div class="crm-box"><b>مرحله / اولویت</b>'+esc(crm.stage||'جدید')+' · '+esc(crm.priority||'عادی')+'<br><b>مسئول</b>'+esc(crm.owner||'تعیین نشده')+'<br><b>پیگیری بعدی</b>'+esc(crm.followUpAt||'ثبت نشده')+'<br><b>یادداشت</b>'+esc(crm.note||'یادداشتی ثبت نشده')+'</div></div>';
     $('driverCrmModal').classList.remove('hidden');
@@ -433,6 +433,25 @@ button:disabled{opacity:.5;cursor:default}
   $('closeDriverCrm').addEventListener('click',function(){$('driverCrmModal').classList.add('hidden')});
   $('driverCrmModal').addEventListener('click',function(e){if(e.target===$('driverCrmModal'))$('driverCrmModal').classList.add('hidden')});
   $('editDriverCrm').addEventListener('click',function(){if(openCrmDriverId)editDriverCrm(openCrmDriverId)});
+  $('driverCrmContent').addEventListener('click',function(e){
+    if(!e.target||!e.target.matches('[data-add-driver-doc]'))return;
+    if(role!=='master'||!openCrmDriverId)return;
+    var d=driversById[openCrmDriverId];if(!d)return;
+    var label=prompt('عنوان مدرک (مثلاً گواهینامه یا کارت خودرو):','');
+    if(label===null)return;label=label.trim();
+    if(!label){alert('عنوان مدرک را وارد کن.');return}
+    var url=prompt('لینک HTTPS مدرک (مثلاً لینک امن فایل در فضای ابری):','https://');
+    if(url===null)return;url=url.trim();
+    if(!/^https:\/\//i.test(url)){alert('لینک مدرک باید با https:// شروع شود.');return}
+    var docs=documentItems(d).map(function(doc){return {label:String(doc.label||doc.name||doc.type||'مدرک'),url:String(doc.url||doc.href||doc.link||doc.value||'')} }).filter(function(doc){return doc.label&&/^https:\/\//i.test(doc.url)});
+    if(docs.length>=20){alert('حداکثر ۲۰ مدرک برای هر راننده قابل ثبت است.');return}
+    docs.push({label:label,url:url,addedAt:Date.now()});
+    var crm=d.crm||{};
+    api('/api/admin/driver/crm',{method:'POST',body:JSON.stringify({id:d.id,stage:crm.stage||'جدید',priority:crm.priority||'عادی',owner:crm.owner||'',followUpAt:crm.followUpAt||'',note:crm.note||'',documents:docs})}).then(function(res){
+      if(!res||res.ok!==true)throw new Error(res&&res.err||'ثبت مدرک انجام نشد');
+      d.documents=docs;openDriverCrm(d.id);loadAll();
+    }).catch(function(err){alert('ثبت لینک مدرک ناموفق بود: '+(err.message||'خطای شبکه'))});
+  });
   $('btnConnect').addEventListener('click',loadAll);
   $('btnRefresh').addEventListener('click',loadAll);
   (function init(){
