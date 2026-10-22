@@ -202,6 +202,64 @@ button:disabled{opacity:.5;cursor:default}
     });
   }
 
+  var openCrmDriverId=null;
+  function documentItems(d){
+    var raw=d.documents||d.documentLinks||d.docs||{};
+    var items=[];
+    if(Array.isArray(raw)) items=raw.map(function(v,i){return typeof v==='string'?{label:'مدرک '+(i+1),url:v}:v||{}});
+    else if(raw&&typeof raw==='object') items=Object.keys(raw).map(function(k){var v=raw[k];return typeof v==='string'?{label:k,url:v}:Object.assign({label:k},v||{})});
+    [['کارت ملی',d.identityDocument],['گواهینامه',d.licenseDocument],['مدارک خودرو',d.vehicleDocument],['بیمه‌نامه',d.insuranceDocument]].forEach(function(pair){if(pair[1])items.push({label:pair[0],url:pair[1]})});
+    return items;
+  }
+  function openDriverCrm(id){
+    var d=driversById[id];if(!d){$('connErr').textContent='پرونده راننده در فهرست پیدا نشد؛ فهرست را به‌روزرسانی کن.';return}
+    openCrmDriverId=id;
+    var s=d.stats||{},requests=allRequests.filter(function(r){return r.assignedDriver===id}).sort(function(a,b){return (b.ts||0)-(a.ts||0)});
+    var docs=documentItems(d),crm=d.crm||{};
+    var docHtml=docs.length?docs.map(function(doc,i){
+      var label=doc.label||doc.name||doc.type||('مدرک '+(i+1)),url=String(doc.url||doc.href||doc.link||doc.value||'');
+      var link=/^https?:\\/\\//i.test(url)?'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">باز کردن مدرک ↗</a>':'<span>'+esc(url||'فایل یا پیوند ثبت نشده')+'</span>';
+      return '<div class="crm-doc"><b>'+esc(label)+'</b><div>'+link+'</div></div>';
+    }).join(''):'<p class="crm-muted">در پرونده فعلی پیوست یا لینک مدرکی ذخیره نشده است. اطلاعات موجود در ثبت‌نام، مشخصات راننده و سوابق عملکرد در همین پرونده نمایش داده می‌شود.</p>';
+    var requestHtml=requests.length?requests.slice(0,30).map(function(r){
+      var logs=Array.isArray(r.log)?r.log:[];
+      return '<div class="crm-mission"><div><b>'+esc(r.id)+'</b> · '+statusPill(r)+'</div><div class="crm-muted">'+esc(faDate(r.ts))+' · '+esc(r.problem||'—')+(r.car?' · '+esc(r.car):'')+'</div><div>'+esc(r.loc||'مکان ثبت نشده')+'</div>'+(r.serviceCode?'<div>کد امداد: <b>'+esc(r.serviceCode)+'</b></div>':'')+(logs.length?'<details style="margin-top:5px"><summary>گزارش رویدادها ('+faN(logs.length)+')</summary>'+logs.map(function(l){return '<div class="crm-muted">'+esc(faDate(l.t))+' — '+esc(l.ev)+'</div>'}).join('')+'</details>':'')+'</div>';
+    }).join(''):'<p class="crm-muted">در سوابق فعلی، درخواستی به این راننده تخصیص داده نشده است.</p>';
+    $('driverCrmTitle').textContent='🗂️ پرونده CRM — '+d.name;
+    $('driverCrmContent').innerHTML=
+      '<div class="crm-grid">'
+      +'<div class="crm-box"><b>کد راننده</b>'+esc(d.id)+'</div><div class="crm-box"><b>شماره موبایل</b><span dir="ltr">'+esc(d.phone)+'</span></div>'
+      +'<div class="crm-box"><b>خودرو / پلاک</b>'+esc(d.vehicle||'ثبت نشده')+'</div><div class="crm-box"><b>شهر / استان</b>'+esc([d.city,d.province].filter(Boolean).join('، ')||'ثبت نشده')+'</div>'
+      +'<div class="crm-box"><b>وضعیت پرونده</b>'+esc(d.registrationDeleted?'ثبت‌نام حذف‌شده':d.registrationRevoked?'لغو تأیید؛ ثبت‌نام مجدد لازم است':d.approved?'تأییدشده':'در انتظار تأیید')+'</div>'
+      +'<div class="crm-box"><b>آخرین حضور</b>'+esc(d.lastSeen?faDate(d.lastSeen):'ثبت نشده')+'</div><div class="crm-box"><b>تاریخ ثبت‌نام</b>'+esc(d.created?faDate(d.created):'ثبت نشده')+'</div>'
+      +'<div class="crm-box"><b>موقعیت پایگاه ثبت‌شده</b>'+((Number.isFinite(Number(d.lat))&&Number.isFinite(Number(d.lng)))?'<a target="_blank" rel="noopener noreferrer" href="https://www.google.com/maps?q='+encodeURIComponent(d.lat+','+d.lng)+'">مشاهده روی نقشه ↗</a>':'ثبت نشده')+'</div>'
+      +'</div><div class="crm-section"><h3>📈 گزارش عملکرد راننده</h3><div class="crm-grid">'
+      +'<div class="crm-box"><b>کل مأموریت‌های تخصیص‌یافته</b>'+faN(s.accepted||requests.length)+'</div><div class="crm-box"><b>انجام‌شده</b>'+faN(s.completed)+'</div>'
+      +'<div class="crm-box"><b>ردشده</b>'+faN(s.rejected)+'</div><div class="crm-box"><b>بی‌پاسخ / منقضی</b>'+faN(s.missed)+'</div>'
+      +'<div class="crm-box"><b>امتیاز فعلی</b>'+faN(d.score)+'</div><div class="crm-box"><b>نرخ تکمیل</b>'+faN((s.accepted||requests.length)?Math.round((s.completed||0)/(s.accepted||requests.length)*100):0)+'٪</div>'
+      +'</div></div><div class="crm-section"><h3>📎 مستندات ثبت‌شده</h3>'+docHtml+'</div>'
+      +'<div class="crm-section"><h3>🚨 سوابق مأموریت و گزارش رویدادها</h3>'+requestHtml+'</div>'
+      +'<div class="crm-section"><h3>🗒️ پیگیری CRM</h3><div class="crm-box"><b>مرحله / اولویت</b>'+esc(crm.stage||'جدید')+' · '+esc(crm.priority||'عادی')+'<br><b>مسئول</b>'+esc(crm.owner||'تعیین نشده')+'<br><b>پیگیری بعدی</b>'+esc(crm.followUpAt||'ثبت نشده')+'<br><b>یادداشت</b>'+esc(crm.note||'یادداشتی ثبت نشده')+'</div></div>';
+    $('driverCrmModal').classList.remove('hidden');
+  }
+  function editDriverCrm(id){
+    var drv=driversById[id],crm=drv&&drv.crm||{};if(!drv)return;
+    var stage=prompt('مرحله پرونده راننده:\\nجدید / در حال بررسی / نیازمند تماس / در انتظار مدارک / فعال / محدودشده / بسته‌شده',crm.stage||'جدید');
+    if(stage===null)return;stage=stage.trim();
+    var stages=['جدید','در حال بررسی','نیازمند تماس','در انتظار مدارک','فعال','محدودشده','بسته‌شده'];
+    if(stages.indexOf(stage)<0){$('connErr').textContent='مرحله پرونده معتبر نیست.';return}
+    var priority=prompt('اولویت رسیدگی: عادی / مهم / فوری',crm.priority||'عادی');
+    if(priority===null)return;priority=priority.trim();
+    if(['عادی','مهم','فوری'].indexOf(priority)<0){$('connErr').textContent='اولویت معتبر نیست.';return}
+    var owner=prompt('مسئول رسیدگی / اپراتور',crm.owner||'');if(owner===null)return;
+    var followUpAt=prompt('تاریخ یا زمان پیگیری بعدی (یا خالی)',crm.followUpAt||'');if(followUpAt===null)return;
+    var note=prompt('یادداشت پرونده راننده: تماس‌ها، مدارک، شکایت، ارزیابی و اقدام بعدی',crm.note||'');if(note===null)return;
+    api('/api/admin/driver/crm',{method:'POST',body:JSON.stringify({id:id,stage:stage,priority:priority,owner:owner,followUpAt:followUpAt,note:note})}).then(function(r){
+      if(!r||r.ok!==true)throw new Error(r&&r.err||'ذخیره CRM انجام نشد');
+      $('connErr').textContent='';loadAll();
+    }).catch(function(e){$('connErr').textContent='ذخیره CRM انجام نشد: '+(e.message||'خطای شبکه')});
+  }
+
   function driverAction(b){
     var id=b.getAttribute('data-id'),act=b.getAttribute('data-act');
     b.disabled=true;
@@ -216,19 +274,11 @@ button:disabled{opacity:.5;cursor:default}
       });
     }
     if(act==='drivercrm'){
-      var drv=driversById[id],crm=drv&&drv.crm||{};
-      var stage=prompt('مرحله پرونده راننده:\\nجدید / در حال بررسی / نیازمند تماس / در انتظار مدارک / فعال / محدودشده / بسته‌شده',crm.stage||'جدید');
-      b.disabled=false;if(stage===null)return;stage=stage.trim();
-      var stages=['جدید','در حال بررسی','نیازمند تماس','در انتظار مدارک','فعال','محدودشده','بسته‌شده'];
-      if(stages.indexOf(stage)<0){$('connErr').textContent='مرحله پرونده معتبر نیست.';return}
-      var priority=prompt('اولویت رسیدگی: عادی / مهم / فوری',crm.priority||'عادی');
-      if(priority===null)return;priority=priority.trim();
-      if(['عادی','مهم','فوری'].indexOf(priority)<0){$('connErr').textContent='اولویت معتبر نیست.';return}
-      var owner=prompt('مسئول رسیدگی / اپراتور',crm.owner||'');if(owner===null)return;
-      var followUpAt=prompt('تاریخ یا زمان پیگیری بعدی (یا خالی)',crm.followUpAt||'');if(followUpAt===null)return;
-      var note=prompt('یادداشت پرونده راننده: تماس‌ها، مدارک، شکایت، ارزیابی و اقدام بعدی',crm.note||'');if(note===null)return;
-      b.disabled=true;
-      finishAction(api('/api/admin/driver/crm',{method:'POST',body:JSON.stringify({id:id,stage:stage,priority:priority,owner:owner,followUpAt:followUpAt,note:note})}));
+      b.disabled=false;openDriverCrm(id);return;
+    }else if(act==='deleteRegistration'){
+      var drv=driversById[id];
+      if(!drv||!confirm('ثبت‌نام راننده «'+drv.name+'» حذف شود؟ دسترسی راننده فوراً قطع می‌شود؛ سوابق درخواست‌ها و پرونده CRM برای بایگانی باقی می‌ماند. ثبت‌نام مجدد با همین شماره بعداً امکان‌پذیر خواهد بود.')){b.disabled=false;return}
+      finishAction(api('/api/admin/driver/delete-registration',{method:'POST',body:JSON.stringify({id:id})}));
     }else if(act==='approve'||act==='unapprove'){
       finishAction(api('/api/admin/driver/approve',{method:'POST',body:JSON.stringify({id:id,approved:act==='approve'})}));
     }else if(act==='activate'||act==='deactivate'){
@@ -380,6 +430,9 @@ button:disabled{opacity:.5;cursor:default}
     }).catch(function(e){$('supportSaveMsg').textContent='خطا: '+(e.message||'ذخیره ناموفق')});
   });
   $('exportRequests').addEventListener('click',exportRequestCsv);$('exportDrivers').addEventListener('click',exportDriverCsv);
+  $('closeDriverCrm').addEventListener('click',function(){$('driverCrmModal').classList.add('hidden')});
+  $('driverCrmModal').addEventListener('click',function(e){if(e.target===$('driverCrmModal'))$('driverCrmModal').classList.add('hidden')});
+  $('editDriverCrm').addEventListener('click',function(){if(openCrmDriverId)editDriverCrm(openCrmDriverId)});
   $('btnConnect').addEventListener('click',loadAll);
   $('btnRefresh').addEventListener('click',loadAll);
   (function init(){
