@@ -96,6 +96,26 @@ async function body(req) {
   try { return await req.json(); } catch { return {}; }
 }
 const now = () => Date.now();
+function randomHex(bytes = 16) {
+  const data = new Uint8Array(bytes); crypto.getRandomValues(data);
+  return Array.from(data, x => x.toString(16).padStart(2, "0")).join("");
+}
+async function hashDriverPassword(password, saltHex) {
+  const salt = Uint8Array.from(saltHex.match(/.{2}/g) || [], x => parseInt(x, 16));
+  const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: 120000, hash: "SHA-256" }, key, 256);
+  return Array.from(new Uint8Array(bits), x => x.toString(16).padStart(2, "0")).join("");
+}
+async function setDriverPassword(d, password) {
+  d.passwordSalt = randomHex(16);
+  d.passwordHash = await hashDriverPassword(password, d.passwordSalt);
+  d.passwordUpdatedAt = now();
+}
+function makeTempPassword() {
+  const alphabet = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz23456789!@#$%";
+  const bytes = new Uint8Array(14); crypto.getRandomValues(bytes);
+  return Array.from(bytes, x => alphabet[x % alphabet.length]).join("");
+}
 
 // Primary storage: Cloudflare D1. Routine application operations do not use KV.
 async function storeGet(env, key) {
@@ -382,6 +402,8 @@ async function handle(req, env, cors) {
     const b = await body(req);
     if (!b.name || String(b.name).trim().length < 2) return json({ ok: false, err: "نام معتبر نیست" }, 400, cors);
     if (!validPhone(b.phone)) return json({ ok: false, err: "شماره موبایل معتبر نیست" }, 400, cors);
+    if (typeof b.password !== "string" || b.password.length < 8 || b.password.length > 128)
+      return json({ ok: false, err: "رمز عبور باید حداقل ۸ نویسه داشته باشد" }, 400, cors);
     if (!isFinite(Number(b.lat)) || !isFinite(Number(b.lng)))
       return json({ ok: false, err: "مختصات لازم است" }, 400, cors);
     const phone = String(b.phone).trim();
@@ -397,8 +419,26 @@ async function handle(req, env, cors) {
       active: true, approved: false, created: now(), lastSeen: now(), missed: 0,
       stats: { accepted: 0, completed: 0, rejected: 0, missed: 0 },
     };
+    await setDriverPassword(d, b.password);
     await saveDriver(env, d);
     return json({ ok: true, id, token, radius: d.radius, approved: false }, 200, cors);
+  }
+
+  // ---- driver: password login ----
+  if (path === "/api/driver/login" && method === "POST") {
+    const b = await body(req);
+    if (!validPhone(b.phone) || typeof b.password !== "string" || b.password.length > 128)
+      return json({ ok: false, err: "شماره موبایل یا رمز عبور نادرست است" }, 401, cors);
+    const d = (await listDrivers(env)).find(x => x.phone === String(b.phone).trim());
+    if (!d || !d.passwordSalt || !d.passwordHash)
+      return json({ ok: false, err: "برای این حساب هنوز رمز تعریف نشده؛ از مدیر REV بخواه رمز موقت صادر کند." }, 401, cors);
+    const candidate = await hashDriverPassword(b.password, d.passwordSalt);
+    if (candidate !== d.passwordHash) return json({ ok: false, err: "شماره موبایل یا رمز عبور نادرست است" }, 401, cors);
+    if (d.active === false) return json({ ok: false, err: "حساب راننده توسط مدیریت غیرفعال شده است." }, 403, cors);
+    d.token = crypto.randomUUID().replace(/-/g, "");
+    d.lastSeen = now();
+    await saveDriver(env, d);
+    return json({ ok: true, id: d.id, token: d.token, name: d.name, phone: d.phone, radius: d.radius, approved: d.approved === true }, 200, cors);
   }
 
   // ---- driver: start/end shift ----
@@ -576,7 +616,7 @@ async function handle(req, env, cors) {
     if (path === "/api/admin/drivers") {
       const allReqs = await listRequests(env);
       const drivers = (await listDrivers(env)).map(d => ({
-        ...d, token: undefined,
+        ...d, token: undefined, passwordHash: undefined, passwordSalt: undefined,
         stats: {
           accepted: allReqs.filter(r => r.assignedDriver === d.id).length,
           completed: allReqs.filter(r => r.assignedDriver === d.id && r.status === "انجام شد").length,
@@ -662,6 +702,17 @@ async function handle(req, env, cors) {
       d.token = crypto.randomUUID().replace(/-/g, "");
       await saveDriver(env, d);
       return json({ ok: true, token: d.token }, 200, cors);
+    }
+    if (path === "/api/admin/driver/reset-password" && method === "POST") {
+      if (!isMaster) return json({ ok: false, err: "فقط مدیر اصلی مجاز است" }, 403, cors);
+      const b = await body(req);
+      const d = await getDriver(env, b.id);
+      if (!d) return json({ ok: false, err: "راننده پیدا نشد" }, 404, cors);
+      const temporaryPassword = makeTempPassword();
+      await setDriverPassword(d, temporaryPassword);
+      d.token = crypto.randomUUID().replace(/-/g, "");
+      await saveDriver(env, d);
+      return json({ ok: true, temporaryPassword, phone: d.phone }, 200, cors);
     }
     if (path === "/api/admin/sweep" && method === "POST") {
       const offerNames = await indexedNames(env, "offer:");
