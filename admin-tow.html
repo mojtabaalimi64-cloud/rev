@@ -218,7 +218,7 @@ button:disabled{opacity:.5;cursor:default}
     var docs=documentItems(d),crm=d.crm||{};
     var docHtml=docs.length?docs.map(function(doc,i){
       var label=doc.label||doc.name||doc.type||('مدرک '+(i+1)),url=String(doc.url||doc.href||doc.link||doc.value||'');
-      var link=/^https?:\\/\\//i.test(url)?'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">باز کردن مدرک ↗</a>':'<span>'+esc(url||'فایل یا پیوند ثبت نشده')+'</span>';
+      var link=/^https?:\/\//i.test(url)?'<a href="'+esc(url)+'" target="_blank" rel="noopener noreferrer">باز کردن مدرک ↗</a>':'<span>'+esc(url||'فایل یا پیوند ثبت نشده')+'</span>';
       return '<div class="crm-doc"><b>'+esc(label)+'</b><div>'+link+'</div></div>';
     }).join(''):'<p class="crm-muted">در پرونده فعلی پیوست یا لینک مدرکی ذخیره نشده است. اطلاعات موجود در ثبت‌نام، مشخصات راننده و سوابق عملکرد در همین پرونده نمایش داده می‌شود.</p>';
     var requestHtml=requests.length?requests.slice(0,30).map(function(r){
