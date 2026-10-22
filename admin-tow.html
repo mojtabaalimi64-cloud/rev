@@ -75,6 +75,16 @@ button:disabled{opacity:.5;cursor:default}
     <h2>📊 گزارش مدیریتی شبکه امداد</h2><p class="mut">گزارش‌ها بر اساس سوابق موجود در سامانه محاسبه می‌شوند.</p><div id="reportKpis" class="kpis"></div><div id="provinceReport"></div><div class="row"><button class="btn-ghost" id="exportRequests" type="button">⬇️ خروجی CSV درخواست‌ها</button><button class="btn-ghost" id="exportDrivers" type="button">⬇️ خروجی CSV رانندگان</button></div>
   </section>
 
+  <section class="card hidden" id="supportCard">
+    <h2>☎️ تنظیمات پشتیبانی مشتریان</h2>
+    <p class="mut">شماره‌ای که اینجا ثبت می‌کنی در فرم درخواست یدک‌کش به مشتری نمایش داده می‌شود تا برای تأخیر یا سؤال تماس بگیرد.</p>
+    <div class="row" style="margin-top:10px">
+      <input type="text" id="supportPhone" inputmode="tel" dir="ltr" style="text-align:left" placeholder="مثلاً 02112345678 یا 09121234567">
+      <button class="btn-teal" id="saveSupportPhone" type="button">ذخیره شماره پشتیبانی</button>
+    </div>
+    <div class="mut" id="supportSaveMsg" style="margin-top:6px"></div>
+  </section>
+
   <section class="card hidden" id="driversCard">
     <h2>🚛 راننده‌های یدک‌کش <span class="mut" id="drvCount"></span></h2>
     <div class="filters"><select id="provinceFilter"><option value="">همه استان‌ها</option></select><select id="driverStatusFilter"><option value="">همه وضعیت‌ها</option><option value="approved">تأیید شده</option><option value="pending">در انتظار تأیید</option><option value="shift">در شیفت</option><option value="offshift">خارج از شیفت</option><option value="inactive">غیرفعال</option></select><input id="driverSearch" type="text" placeholder="جست‌وجوی نام، تلفن، کد یا شهر"></div>
@@ -242,8 +252,32 @@ button:disabled{opacity:.5;cursor:default}
         +'<br>مشتری: '+esc(r.name||'')+' · <span dir="ltr">'+esc(r.phone||'')+'</span>'
         +(r.province?'<br>استان: '+esc(r.province):'')+(r.loc?'<br>📍 '+esc(r.loc):'')
         +'<br>راننده: '+esc(drv)+(r.serviceCode?' · 🔐 کد امداد: <b dir="ltr">'+esc(r.serviceCode)+'</b>':'')
-        +'</div></div>';
+        +(r.crm?'<br><b>CRM:</b> '+esc(r.crm.stage||'جدید')+' · اولویت: '+esc(r.crm.priority||'عادی')+(r.crm.owner?' · مسئول: '+esc(r.crm.owner):'')+(r.crm.followUpAt?' · پیگیری: '+esc(r.crm.followUpAt):'')+(r.crm.note?'<br>یادداشت داخلی: '+esc(r.crm.note):''):'<br><span class="mut">CRM: هنوز پیگیری ثبت نشده</span>')
+        +'<div class="acts"><button class="btn-ghost" type="button" data-crm="'+esc(r.id)+'">🗂️ ثبت / ویرایش پیگیری CRM</button>'+(r.phone?'<a href="tel:'+esc(r.phone)+'" style="text-decoration:none"><button class="btn-ghost" type="button">☎️ تماس با مشتری</button></a>':'')+'</div></div>';
     }).join('');
+    $('requestList').querySelectorAll('[data-crm]').forEach(function(b){b.addEventListener('click',function(){editCrm(b.getAttribute('data-crm'),b)})});
+  }
+  function editCrm(id,b){
+    if(role!=='master'){alert('ثبت پیگیری فقط برای مدیر اصلی مجاز است.');return}
+    var r=allRequests.find(function(x){return x.id===id})||{},crm=r.crm||{};
+    var stage=prompt('مرحله CRM:\\nجدید / تماس با مشتری / در انتظار پیگیری / ارجاع به اپراتور / حل‌شده',crm.stage||'جدید');
+    if(stage===null)return;
+    stage=stage.trim();
+    var stages=['جدید','تماس با مشتری','در انتظار پیگیری','ارجاع به اپراتور','حل‌شده'];
+    if(stages.indexOf(stage)<0){alert('مرحله واردشده در فهرست مجاز نیست.');return}
+    var priority=prompt('اولویت: عادی / مهم / فوری',crm.priority||'عادی');
+    if(priority===null)return;priority=priority.trim();
+    if(['عادی','مهم','فوری'].indexOf(priority)<0){alert('اولویت واردشده معتبر نیست.');return}
+    var owner=prompt('مسئول رسیدگی (نام اپراتور یا واحد)',crm.owner||'');
+    if(owner===null)return;
+    var followUpAt=prompt('زمان پیگیری بعدی (مثلاً ۱۴۰۵/۰۸/۰۱ ساعت ۱۴ یا خالی)',crm.followUpAt||'');
+    if(followUpAt===null)return;
+    var note=prompt('یادداشت داخلی / خلاصه تماس / اقدام بعدی',crm.note||'');
+    if(note===null)return;
+    b.disabled=true;
+    api('/api/admin/request/crm',{method:'POST',body:JSON.stringify({id:id,stage:stage,priority:priority,owner:owner,followUpAt:followUpAt,note:note})})
+      .then(function(resp){if(!resp||resp.ok!==true)throw new Error(resp&&resp.err||'ذخیره پیگیری ناموفق بود');return loadAll()})
+      .catch(function(e){b.disabled=false;$('connErr').textContent='ذخیره CRM انجام نشد: '+(e.message||'خطای شبکه')});
   }
   function renderReports(){
     var ds=allDrivers,rs=allRequests,approved=ds.filter(function(d){return d.approved===true}),shift=ds.filter(function(d){return d.approved===true&&d.active!==false&&d.onShift===true});
@@ -288,6 +322,8 @@ button:disabled{opacity:.5;cursor:default}
         $('driversCard').classList.remove('hidden');
         $('requestsCard').classList.remove('hidden');
         $('reportsCard').classList.remove('hidden');
+        $('supportCard').classList.remove('hidden');
+        api('/api/admin/support').then(function(s){if(s&&s.ok)$('supportPhone').value=s.phone||''}).catch(function(){});
         renderDrivers(dd.drivers||[]);
         renderRequests(rr.requests||[]);
         renderReports();
@@ -305,6 +341,14 @@ button:disabled{opacity:.5;cursor:default}
   $('driverSearch').addEventListener('input',function(){renderDrivers(allDrivers)});
   $('requestStatusFilter').addEventListener('change',function(){renderRequests(allRequests)});
   ['requestSearch','dateFrom','dateTo'].forEach(function(id){$(id).addEventListener(id==='requestSearch'?'input':'change',function(){renderRequests(allRequests)})});
+  $('saveSupportPhone').addEventListener('click',function(){
+    var phone=$('supportPhone').value.trim();
+    $('supportSaveMsg').textContent='در حال ذخیره…';
+    api('/api/admin/support',{method:'POST',body:JSON.stringify({phone:phone})}).then(function(r){
+      if(!r||r.ok!==true)throw new Error(r&&r.err||'ذخیره نشد');
+      $('supportSaveMsg').textContent=phone?'✓ شماره پشتیبانی ذخیره شد.':'✓ شماره پشتیبانی پاک شد.';
+    }).catch(function(e){$('supportSaveMsg').textContent='خطا: '+(e.message||'ذخیره ناموفق')});
+  });
   $('exportRequests').addEventListener('click',exportRequestCsv);$('exportDrivers').addEventListener('click',exportDriverCsv);
   $('btnConnect').addEventListener('click',loadAll);
   $('btnRefresh').addEventListener('click',loadAll);
