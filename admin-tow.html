@@ -138,7 +138,7 @@ button:disabled{opacity:.5;cursor:default}
   function dateBound(s,end){if(!s)return null;var p=s.split('-');if(p.length!==3)return null;return new Date(Number(p[0]),Number(p[1])-1,Number(p[2]),end?23:0,end?59:0,end?59:0,end?999:0).getTime()}
   function downloadCsv(name,rows){
     if(!rows.length){alert('داده‌ای برای خروجی وجود ندارد.');return}
-    var keys=Object.keys(rows[0]),csv='\\uFEFF'+[keys.join(',')].concat(rows.map(function(row){return keys.map(function(k){return '"'+String(row[k]==null?'':row[k]).replace(/"/g,'""')+'"'}).join(',')})).join('\\r\\n');
+    var keys=Object.keys(rows[0]),csv='\uFEFF'+[keys.join(',')].concat(rows.map(function(row){return keys.map(function(k){return '"'+String(row[k]==null?'':row[k]).replace(/"/g,'""')+'"'}).join(',')})).join('\r\n');
     var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(url)},1000);
   }
   function renderDrivers(drivers){
