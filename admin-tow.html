@@ -87,7 +87,7 @@ button:disabled{opacity:.5;cursor:default}
 
   <section class="card hidden" id="driversCard">
     <h2>🚛 راننده‌های یدک‌کش <span class="mut" id="drvCount"></span></h2>
-    <div class="filters"><select id="provinceFilter"><option value="">همه استان‌ها</option></select><select id="driverStatusFilter"><option value="">همه وضعیت‌ها</option><option value="approved">تأیید شده</option><option value="pending">در انتظار تأیید</option><option value="shift">در شیفت</option><option value="offshift">خارج از شیفت</option><option value="inactive">غیرفعال</option></select><input id="driverSearch" type="text" placeholder="جست‌وجوی نام، تلفن، کد یا شهر"></div>
+    <div class="filters"><select id="provinceFilter"><option value="">همه استان‌ها</option></select><select id="driverStatusFilter"><option value="">همه وضعیت‌ها</option><option value="approved">تأیید شده</option><option value="pending">در انتظار تأیید</option><option value="shift">در شیفت</option><option value="offshift">خارج از شیفت</option><option value="inactive">غیرفعال</option><option value="deleted">ثبت‌نام حذف‌شده (بایگانی)</option></select><input id="driverSearch" type="text" placeholder="جست‌وجوی نام، تلفن، کد یا شهر"></div>
     <p class="mut">راننده تازه تا وقتی تأییدش نکنی هیچ درخواستی نمی‌گیرد. «توکن جدید» برای وقتی است که راننده دسترسی‌اش را از دست داده؛ توکن را به خودش بده تا در پنل راننده بازیابی کند.</p>
     <div id="driverList"></div>
   </section>
@@ -160,8 +160,10 @@ button:disabled{opacity:.5;cursor:default}
       var p=String(d.province||'').trim();
       if(province==='__unknown'&&p)return false;
       if(province&&province!=='__unknown'&&p!==province)return false;
+      if(status==='deleted'&&d.registrationDeleted!==true)return false;
+      if(status!=='deleted'&&d.registrationDeleted===true)return false;
       if(status==='approved'&&d.approved!==true)return false;
-      if(status==='pending'&&d.approved===true)return false;
+      if(status==='pending'&&(d.approved===true||d.registrationDeleted===true))return false;
       if(status==='shift'&&!(d.approved===true&&d.active!==false&&d.onShift===true))return false;
       if(status==='offshift'&&(d.active===false||d.onShift===true))return false;
       if(status==='inactive'&&d.active!==false)return false;
@@ -172,28 +174,31 @@ button:disabled{opacity:.5;cursor:default}
     $('driverList').innerHTML=filtered.map(function(d){
       var st=d.stats||{accepted:0,completed:0,rejected:0,missed:0};
       return '<div class="drv"><div class="top"><b>'+esc(d.name)+'</b><span>'
-        +(d.approved===true?'<span class="pill green">تأیید شده</span>':'<span class="pill amber">در انتظار تأیید</span>')+' '
+        +(d.registrationDeleted===true?'<span class="pill grey">ثبت‌نام حذف‌شده</span>':(d.approved===true?'<span class="pill green">تأیید شده</span>':'<span class="pill amber">در انتظار تأیید</span>'))+' '
         +(d.active!==false?'<span class="pill teal">فعال</span>':'<span class="pill grey">غیرفعال</span>')+' '
         +(d.onShift===true&&d.approved===true&&d.active!==false?'<span class="pill green">در شیفت</span>':'<span class="pill grey">خارج از شیفت</span>')+'</span></div>'
         +'<div class="meta" dir="rtl">📱 <span dir="ltr">'+esc(d.phone)+'</span> · کد: '+esc(d.id)
         +(d.vehicle?'<br>🚛 '+esc(d.vehicle):'')+(d.city?' · شهر: '+esc(d.city):'')+' · استان: '+esc(d.province||'نامشخص')
         +'<br>شعاع پوشش: '+faN(d.radius)+' km · امتیاز: '+faN(d.score)+' · آخرین حضور: '+ago(d.lastSeen)
-        +'<br>وضعیت دریافت درخواست: '+(d.registrationRevoked===true?'لغو تأیید؛ ثبت‌نام مجدد لازم است':(d.approved!==true?'در انتظار تأیید':(d.active===false?'حساب غیرفعال':(d.onShift===true?'شیفت فعال':'شیفت پایان‌یافته'))))
+        +'<br>وضعیت دریافت درخواست: '+(d.registrationDeleted===true?'ثبت‌نام حذف شده در '+faDate(d.registrationDeletedAt):(d.registrationRevoked===true?'لغو تأیید؛ ثبت‌نام مجدد لازم است':(d.approved!==true?'در انتظار تأیید':(d.active===false?'حساب غیرفعال':(d.onShift===true?'شیفت فعال':'شیفت پایان‌یافته')))))
         +'<br>📊 قبول: '+faN(st.accepted)+' · انجام‌شده: '+faN(st.completed)+' · رد: '+faN(st.rejected)+' · بی‌پاسخ: '+faN(st.missed)
         +(d.crm?'<br><b>CRM راننده:</b> '+esc(d.crm.stage||'جدید')+' · اولویت: '+esc(d.crm.priority||'عادی')+(d.crm.owner?' · مسئول: '+esc(d.crm.owner):'')+(d.crm.followUpAt?' · پیگیری: '+esc(d.crm.followUpAt):'')+(d.crm.note?'<br>یادداشت: '+esc(d.crm.note):''):'<br><span class="mut">CRM راننده: ثبت نشده</span>')+'</div>'
         +(role==='master'?'<div class="acts"><button class="btn-ghost" data-act="drivercrm" data-id="'+esc(d.id)+'" type="button">🗂️ پرونده CRM راننده</button>'
-        +(d.registrationRevoked===true
-          ? '<span class="pill grey">لغو تأیید؛ ثبت‌نام مجدد راننده لازم است</span>'
-          : (d.approved===true
-            ? '<button class="btn-red" data-act="unapprove" data-id="'+esc(d.id)+'" type="button">لغو تأیید</button>'
-            : '<button class="btn-green" data-act="approve" data-id="'+esc(d.id)+'" type="button">✔️ تأیید راننده</button>'))
-        +(d.active!==false
+        +(d.registrationDeleted===true
+          ? '<span class="pill grey">ثبت‌نام حذف‌شده؛ سوابق در بایگانی باقی است</span>'
+          : (d.registrationRevoked===true
+            ? '<span class="pill grey">لغو تأیید؛ ثبت‌نام مجدد راننده لازم است</span>'
+            : (d.approved===true
+              ? '<button class="btn-red" data-act="unapprove" data-id="'+esc(d.id)+'" type="button">لغو تأیید</button>'
+              : '<button class="btn-green" data-act="approve" data-id="'+esc(d.id)+'" type="button">✔️ تأیید راننده</button>')))
+        +(d.registrationDeleted===true?'':(d.active!==false
           ? '<button class="btn-ghost" data-act="deactivate" data-id="'+esc(d.id)+'" type="button">غیرفعال</button>'
-          : '<button class="btn-ghost" data-act="activate" data-id="'+esc(d.id)+'" type="button">فعال</button>')
+          : '<button class="btn-ghost" data-act="activate" data-id="'+esc(d.id)+'" type="button">فعال</button>'))
         +'<button class="btn-ghost" data-act="rename" data-id="'+esc(d.id)+'" type="button">✏️ اصلاح نام</button>'
         +'<button class="btn-ghost" data-act="province" data-id="'+esc(d.id)+'" type="button">📍 تعیین استان</button>'
         +'<button class="btn-ghost" data-act="password" data-id="'+esc(d.id)+'" type="button">🔐 صدور رمز موقت / بازیابی</button>'
-        +'<button class="btn-ghost" data-act="token" data-id="'+esc(d.id)+'" type="button">🔑 توکن جدید (قدیمی)</button>'
+        +(d.registrationDeleted===true?'':'<button class="btn-ghost" data-act="token" data-id="'+esc(d.id)+'" type="button">🔑 توکن جدید (قدیمی)</button>')
+        +(d.registrationDeleted===true?'':'<button class="btn-red" data-act="deleteRegistration" data-id="'+esc(d.id)+'" type="button">🗑️ حذف ثبت‌نام</button>')
         +'</div>':'<div class="mut" style="margin-top:6px">حالت فقط‌مشاهده — کارهای مدیریتی با کلید مدیر اصلی انجام می‌شود.</div>')
         +'<div class="tokbox hidden" id="tok-'+esc(d.id)+'"></div></div>';
     }).join('');
