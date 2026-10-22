@@ -753,8 +753,22 @@ async function handle(req, env, cors) {
       const owner = String(b.owner === undefined ? (prior.owner || "") : b.owner).trim().slice(0, 100);
       const note = String(b.note === undefined ? (prior.note || "") : b.note).trim().slice(0, 2000);
       d.crm = { stage, priority, followUpAt, owner, note, updatedAt: now() };
+      if (b.documents !== undefined) {
+        if (!Array.isArray(b.documents) || b.documents.length > 20)
+          return json({ ok: false, err: "حداکثر ۲۰ مدرک قابل ثبت است" }, 400, cors);
+        const documents = [];
+        for (const item of b.documents) {
+          if (!item || typeof item !== "object") continue;
+          const label = String(item.label || item.name || "").trim().slice(0, 100);
+          const url = String(item.url || "").trim().slice(0, 1000);
+          if (!label || !/^https:\/\//i.test(url))
+            return json({ ok: false, err: "برای هر مدرک عنوان و لینک HTTPS معتبر لازم است" }, 400, cors);
+          documents.push({ label, url, addedAt: Number(item.addedAt) || now() });
+        }
+        d.documents = documents;
+      }
       await saveDriver(env, d);
-      return json({ ok: true, crm: d.crm }, 200, cors);
+      return json({ ok: true, crm: d.crm, documents: d.documents || [] }, 200, cors);
     }
     if (path === "/api/admin/driver/reset-token" && method === "POST") {
       const b = await body(req);
