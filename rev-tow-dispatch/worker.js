@@ -638,6 +638,23 @@ async function handle(req, env, cors) {
       await saveDriver(env, d);
       return json({ ok: true, driver: { id: d.id, name: d.name, vehicle: d.vehicle || "", city: d.city || "", province: d.province || "" } }, 200, cors);
     }
+    if (path === "/api/admin/driver/crm" && method === "POST") {
+      const b = await body(req);
+      const d = await getDriver(env, String(b.id || ""));
+      if (!d) return json({ ok: false, err: "راننده پیدا نشد" }, 404, cors);
+      const prior = d.crm && typeof d.crm === "object" ? d.crm : {};
+      const stage = String(b.stage === undefined ? (prior.stage || "جدید") : b.stage).trim();
+      const allowedStages = ["جدید", "در حال بررسی", "نیازمند تماس", "در انتظار مدارک", "فعال", "محدودشده", "بسته‌شده"];
+      if (!allowedStages.includes(stage)) return json({ ok: false, err: "مرحله CRM راننده معتبر نیست" }, 400, cors);
+      const priority = String(b.priority === undefined ? (prior.priority || "عادی") : b.priority).trim();
+      if (!["عادی", "مهم", "فوری"].includes(priority)) return json({ ok: false, err: "اولویت معتبر نیست" }, 400, cors);
+      const followUpAt = String(b.followUpAt === undefined ? (prior.followUpAt || "") : b.followUpAt).trim().slice(0, 40);
+      const owner = String(b.owner === undefined ? (prior.owner || "") : b.owner).trim().slice(0, 100);
+      const note = String(b.note === undefined ? (prior.note || "") : b.note).trim().slice(0, 2000);
+      d.crm = { stage, priority, followUpAt, owner, note, updatedAt: now() };
+      await saveDriver(env, d);
+      return json({ ok: true, crm: d.crm }, 200, cors);
+    }
     if (path === "/api/admin/driver/reset-token" && method === "POST") {
       const b = await body(req);
       const d = await getDriver(env, b.id);
