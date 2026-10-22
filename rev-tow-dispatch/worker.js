@@ -167,6 +167,23 @@ async function sweepOffer(env, reqId) {
   return await dispatchToNext(env, req);
 }
 
+async function releasePendingOffersForDriver(env, driver, reason) {
+  const page = await env.TOW.list({ prefix: "offer:" });
+  for (const item of page.keys) {
+    const raw = await env.TOW.get(item.name);
+    if (!raw) continue;
+    const offer = JSON.parse(raw);
+    if (offer.driverId !== driver.id) continue;
+    await env.TOW.delete(item.name);
+    const r = await getReq(env, offer.reqId);
+    if (!r || r.status === "لغو شد" || r.status === "انجام شد") continue;
+    r.skipped = [...new Set([...(r.skipped || []), driver.id])];
+    r.log.push({ t: now(), ev: `راننده ${driver.name} ${reason} — درخواست به راننده بعدی ارجاع شد` });
+    await saveReq(env, r);
+    await dispatchToNext(env, r);
+  }
+}
+
 async function dispatchToNext(env, req) {
   if (!req.gps) {
     req.status = "در انتظار اپراتور";
@@ -321,23 +338,8 @@ async function handle(req, env, cors) {
     d.onShift = b.onShift === true;
     d.lastSeen = now();
     await saveDriver(env, d);
-    // When a driver ends the shift, release any unaccepted offer and send it to another eligible driver.
-    if (d.onShift === false) {
-      const page = await env.TOW.list({ prefix: "offer:" });
-      for (const item of page.keys) {
-        const raw = await env.TOW.get(item.name);
-        if (!raw) continue;
-        const offer = JSON.parse(raw);
-        if (offer.driverId !== d.id) continue;
-        await env.TOW.delete(item.name);
-        const r = await getReq(env, offer.reqId);
-        if (!r || r.status === "لغو شد" || r.status === "انجام شد") continue;
-        r.skipped = [...(r.skipped || []), d.id];
-        r.log.push({ t: now(), ev: `راننده ${d.name} شیفت را پایان داد — درخواست به راننده بعدی ارجاع شد` });
-        await saveReq(env, r);
-        await dispatchToNext(env, r);
-      }
-    }
+    // Release outstanding offers when the driver ends their shift.
+    if (d.onShift === false) await releasePendingOffersForDriver(env, d, "شیفت را پایان داد");
     return json({ ok: true, onShift: d.onShift }, 200, cors);
   }
 
@@ -383,6 +385,10 @@ async function handle(req, env, cors) {
     const b = await body(req);
     const d = await driverByToken(env, b.token);
     if (!d) return json({ ok: false }, 401, cors);
+    if (d.approved !== true || d.active === false || d.onShift !== true) {
+      await releasePendingOffersForDriver(env, d, "امکان دریافت درخواست را از دست داد");
+      return json({ ok: false, err: "برای پاسخ به درخواست باید حساب تأییدشده و شیفت فعال داشته باشی" }, 403, cors);
+    }
     const raw = await env.TOW.get(kOffer(b.reqId));
     if (!raw) return json({ ok: false, err: "پیشنهادی فعال نیست" }, 410, cors);
     const offer = JSON.parse(raw);
@@ -500,16 +506,34 @@ async function handle(req, env, cors) {
       const d = await getDriver(env, b.id);
       if (!d) return json({ ok: false }, 404, cors);
       d.active = b.active !== false;
+      if (d.active === false) d.onShift = false;
       await saveDriver(env, d);
-      return json({ ok: true }, 200, cors);
+      if (d.active === false) await releasePendingOffersForDriver(env, d, "توسط مدیریت غیرفعال شد");
+      return json({ ok: true, active: d.active, onShift: d.onShift === true }, 200, cors);
     }
     if (path === "/api/admin/driver/approve" && method === "POST") {
       const b = await body(req);
       const d = await getDriver(env, b.id);
       if (!d) return json({ ok: false }, 404, cors);
       d.approved = b.approved !== false;
+      if (d.approved === false) d.onShift = false;
       await saveDriver(env, d);
-      return json({ ok: true, approved: d.approved }, 200, cors);
+      if (d.approved === false) await releasePendingOffersForDriver(env, d, "تأییدش توسط مدیریت لغو شد");
+      return json({ ok: true, approved: d.approved, onShift: d.onShift === true }, 200, cors);
+    }
+    if (path === "/api/admin/driver/profile" && method === "POST") {
+      const b = await body(req);
+      const d = await getDriver(env, b.id);
+      if (!d) return json({ ok: false, err: "راننده پیدا نشد" }, 404, cors);
+      if (b.name !== undefined) {
+        const name = String(b.name || "").trim();
+        if (name.length < 2 || name.length > 100) return json({ ok: false, err: "نام باید بین ۲ تا ۱۰۰ نویسه باشد" }, 400, cors);
+        d.name = name;
+      }
+      if (b.vehicle !== undefined) d.vehicle = String(b.vehicle || "").trim().slice(0, 120);
+      if (b.city !== undefined) d.city = String(b.city || "").trim().slice(0, 80);
+      await saveDriver(env, d);
+      return json({ ok: true, driver: { id: d.id, name: d.name, vehicle: d.vehicle || "", city: d.city || "" } }, 200, cors);
     }
     if (path === "/api/admin/driver/reset-token" && method === "POST") {
       const b = await body(req);
