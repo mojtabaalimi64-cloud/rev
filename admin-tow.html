@@ -193,7 +193,8 @@ button:disabled{opacity:.5;cursor:default}
     $('reqCount').textContent='('+faN(reqs.length)+')';
     if(!reqs.length){$('requestList').innerHTML='<p class="mut">درخواستی ثبت نشده.</p>';return}
     $('requestList').innerHTML=reqs.map(function(r){
-      var drv=r.assignedDriver&&driversById[r.assignedDriver]?driversById[r.assignedDriver].name:(r.assignedDriver||'—');
+      var dispatchDriverId=r.assignedDriver||(r.currentOffer&&r.currentOffer.driverId);
+      var drv=dispatchDriverId&&driversById[dispatchDriverId]?driversById[dispatchDriverId].name:(dispatchDriverId||'—');
       return '<div class="req"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b dir="ltr" style="font-size:12px">'+esc(r.id)+'</b>'+statusPill(r)+'</div>'
         +'<div class="meta">'+esc(r.problem)+(r.car?' · '+esc(r.car):'')+' · '+esc(faDate(r.ts))
         +'<br>مشتری: '+esc(r.name||'')+' · <span dir="ltr">'+esc(r.phone||'')+'</span>'
