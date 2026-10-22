@@ -232,7 +232,7 @@ async function listDrivers(env) {
 async function driverByToken(env, token) {
   if (!token) return null;
   const drivers = await listDrivers(env);
-  return drivers.find(d => d.token === token) || null;
+  return drivers.find(d => d.token === token && d.registrationRevoked !== true) || null;
 }
 
 // ---------- dispatch core ----------
@@ -408,7 +408,11 @@ async function handle(req, env, cors) {
       return json({ ok: false, err: "مختصات لازم است" }, 400, cors);
     const phone = String(b.phone).trim();
     const dup = (await listDrivers(env)).find(x => x.phone === phone);
-    if (dup) return json({ ok: false, err: "این شماره قبلاً به‌عنوان راننده ثبت شده است؛ برای بازیابی دسترسی با مدیر REV در تماس باش." }, 409, cors);
+    if (dup && dup.registrationRevoked === true) {
+      await storeDelete(env, kDriver(dup.id));
+    } else if (dup) {
+      return json({ ok: false, err: "این شماره قبلاً به‌عنوان راننده ثبت شده است؛ برای بازیابی دسترسی با مدیر REV در تماس باش." }, 409, cors);
+    }
     const id = "DRV-" + Math.random().toString(36).slice(2, 8).toUpperCase();
     const token = crypto.randomUUID().replace(/-/g, "");
     const d = {
@@ -430,6 +434,8 @@ async function handle(req, env, cors) {
     if (!validPhone(b.phone) || typeof b.password !== "string" || b.password.length > 128)
       return json({ ok: false, err: "شماره موبایل یا رمز عبور نادرست است" }, 401, cors);
     const d = (await listDrivers(env)).find(x => x.phone === String(b.phone).trim());
+    if (d && d.registrationRevoked === true)
+      return json({ ok: false, err: "تأیید حساب قبلی لغو شده است؛ لطفاً دوباره ثبت‌نام کن." }, 403, cors);
     if (!d || !d.passwordSalt || !d.passwordHash)
       return json({ ok: false, err: "برای این حساب هنوز رمز تعریف نشده؛ از مدیر REV بخواه رمز موقت صادر کند." }, 401, cors);
     const candidate = await hashDriverPassword(b.password, d.passwordSalt);
@@ -570,8 +576,12 @@ async function handle(req, env, cors) {
 
   // ---- driver: history & stats ----
   if (path === "/api/driver/history" && method === "GET") {
-    const d = await driverByToken(env, url.searchParams.get("token"));
+    const token = url.searchParams.get("token");
+    const d = (await listDrivers(env)).find(x => x.token === token) || null;
     if (!d) return json({ ok: false }, 401, cors);
+    if (d.registrationRevoked === true) {
+      return json({ ok: true, registrationRevoked: true, driver: { id: d.id, name: d.name, phone: d.phone, registrationRevoked: true, approved: false, active: false } }, 200, cors);
+    }
     const allReqs = await listRequests(env);
     const mine = allReqs.filter(r => r.assignedDriver === d.id);
     const stats = {
@@ -587,6 +597,7 @@ async function handle(req, env, cors) {
     return json({ ok: true, driver: {
       id: d.id, name: d.name, phone: d.phone, vehicle: d.vehicle || "", city: d.city || "",
       radius: d.radius, score: d.score, active: d.active !== false, approved: d.approved === true, onShift: d.onShift === true,
+      registrationRevoked: d.registrationRevoked === true,
       stats,
     }, missions }, 200, cors);
   }
@@ -680,10 +691,19 @@ async function handle(req, env, cors) {
       const d = await getDriver(env, b.id);
       if (!d) return json({ ok: false }, 404, cors);
       d.approved = b.approved !== false;
-      if (d.approved === false) d.onShift = false;
+      if (d.approved === false) {
+        d.onShift = false;
+        d.active = false;
+        d.registrationRevoked = true;
+        d.registrationRevokedAt = now();
+      } else {
+        d.registrationRevoked = false;
+        d.active = true;
+        delete d.registrationRevokedAt;
+      }
       await saveDriver(env, d);
       if (d.approved === false) await releasePendingOffersForDriver(env, d, "تأییدش توسط مدیریت لغو شد");
-      return json({ ok: true, approved: d.approved, onShift: d.onShift === true }, 200, cors);
+      return json({ ok: true, approved: d.approved, onShift: d.onShift === true, registrationRevoked: d.registrationRevoked === true }, 200, cors);
     }
     if (path === "/api/admin/driver/profile" && method === "POST") {
       const b = await body(req);
