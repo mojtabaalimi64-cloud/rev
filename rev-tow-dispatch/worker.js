@@ -385,7 +385,7 @@ async function handle(req, env, cors) {
     const token = crypto.randomUUID().replace(/-/g, "");
     const d = {
       id, name: String(b.name).trim(), phone,
-      vehicle: String(b.vehicle || "").trim(), city: String(b.city || "").trim(),
+      vehicle: String(b.vehicle || "").trim(), city: String(b.city || "").trim(), province: String(b.province || "").trim().slice(0, 80),
       lat: Number(b.lat), lng: Number(b.lng),
       radius: clampRadius(b.radius), score: 100, token,
       active: true, approved: false, created: now(), lastSeen: now(), missed: 0,
@@ -558,7 +558,7 @@ async function handle(req, env, cors) {
         if (raw) { try { out.push(JSON.parse(raw)); } catch { console.error("[rev-tow-dispatch] invalid request record", { key: k }); } }
       }
       out.sort((a, b) => b.ts - a.ts);
-      return json({ ok: true, requests: out.slice(0, 100) }, 200, cors);
+      return json({ ok: true, requests: out }, 200, cors);
     }
     if (path === "/api/admin/driver/score" && method === "POST") {
       const b = await body(req);
@@ -599,8 +599,9 @@ async function handle(req, env, cors) {
       }
       if (b.vehicle !== undefined) d.vehicle = String(b.vehicle || "").trim().slice(0, 120);
       if (b.city !== undefined) d.city = String(b.city || "").trim().slice(0, 80);
+      if (b.province !== undefined) d.province = String(b.province || "").trim().slice(0, 80);
       await saveDriver(env, d);
-      return json({ ok: true, driver: { id: d.id, name: d.name, vehicle: d.vehicle || "", city: d.city || "" } }, 200, cors);
+      return json({ ok: true, driver: { id: d.id, name: d.name, vehicle: d.vehicle || "", city: d.city || "", province: d.province || "" } }, 200, cors);
     }
     if (path === "/api/admin/driver/reset-token" && method === "POST") {
       const b = await body(req);
