@@ -15,7 +15,7 @@ button,input,select{font:inherit;color:inherit}
 header{background:var(--ink);color:#fff;padding:14px 20px;font-weight:900;font-size:19px;display:flex;justify-content:space-between;align-items:center}
 header b{color:var(--green)}
 header a{font-size:13px;font-weight:400;color:#C3CBD0;text-decoration:none}
-.wrap{width:min(100% - 28px,880px);margin:22px auto 60px}
+.wrap{width:min(100% - 28px,1180px);margin:22px auto 60px}
 .card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:16px;margin-top:14px}
 .card h2{font-size:16px;font-weight:900;margin-bottom:6px}
 .mut{color:var(--muted);font-size:12.5px}
@@ -42,6 +42,11 @@ button:disabled{opacity:.5;cursor:default}
 .err{color:var(--red);font-size:13px;min-height:18px}
 .tokbox{background:#f7fafc;border:1px dashed var(--teal);border-radius:10px;padding:8px 10px;margin-top:8px;font-size:12px;word-break:break-all}
 .hidden{display:none!important}
+.filters{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.filters select,.filters input{border:1.5px solid var(--line);border-radius:9px;padding:8px 10px;background:#fff;min-width:150px;flex:1}
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:9px;margin:12px 0}
+.kpi{border:1px solid var(--line);border-radius:12px;padding:12px;background:#f9fbfc}
+.kpi b{display:block;font-size:22px;line-height:1.5}.kpi span{font-size:12px;color:var(--muted)}
 </style>
 </head>
 <body>
@@ -66,14 +71,20 @@ button:disabled{opacity:.5;cursor:default}
     <div class="row" style="margin-top:10px"><a href="./admin-tow-map.html" style="text-decoration:none"><button class="btn-teal" type="button">باز کردن نقشه کنترل شبکه</button></a></div>
   </section>
 
+  <section class="card hidden" id="reportsCard">
+    <h2>📊 گزارش مدیریتی شبکه امداد</h2><p class="mut">گزارش‌ها بر اساس سوابق موجود در سامانه محاسبه می‌شوند.</p><div id="reportKpis" class="kpis"></div><div id="provinceReport"></div><div class="row"><button class="btn-ghost" id="exportRequests" type="button">⬇️ خروجی CSV درخواست‌ها</button><button class="btn-ghost" id="exportDrivers" type="button">⬇️ خروجی CSV رانندگان</button></div>
+  </section>
+
   <section class="card hidden" id="driversCard">
     <h2>🚛 راننده‌های یدک‌کش <span class="mut" id="drvCount"></span></h2>
+    <div class="filters"><select id="provinceFilter"><option value="">همه استان‌ها</option></select><select id="driverStatusFilter"><option value="">همه وضعیت‌ها</option><option value="approved">تأیید شده</option><option value="pending">در انتظار تأیید</option><option value="shift">در شیفت</option><option value="offshift">خارج از شیفت</option><option value="inactive">غیرفعال</option></select><input id="driverSearch" type="text" placeholder="جست‌وجوی نام، تلفن، کد یا شهر"></div>
     <p class="mut">راننده تازه تا وقتی تأییدش نکنی هیچ درخواستی نمی‌گیرد. «توکن جدید» برای وقتی است که راننده دسترسی‌اش را از دست داده؛ توکن را به خودش بده تا در پنل راننده بازیابی کند.</p>
     <div id="driverList"></div>
   </section>
 
   <section class="card hidden" id="requestsCard">
     <h2>🚨 درخواست‌های امداد <span class="mut" id="reqCount"></span></h2>
+    <div class="filters"><select id="requestStatusFilter"><option value="">همه وضعیت‌ها</option><option>در انتظار اپراتور</option><option>راننده در راه</option><option>انجام شد</option><option>لغو شد</option></select><input id="requestSearch" type="text" placeholder="جست‌وجوی کد، مشتری، تلفن، مشکل یا مکان"><input id="dateFrom" type="date" aria-label="از تاریخ"><input id="dateTo" type="date" aria-label="تا تاریخ"></div>
     <div id="requestList"></div>
   </section>
 
