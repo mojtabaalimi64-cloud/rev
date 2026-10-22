@@ -190,7 +190,8 @@ button:disabled{opacity:.5;cursor:default}
           : '<button class="btn-ghost" data-act="activate" data-id="'+esc(d.id)+'" type="button">فعال</button>')
         +'<button class="btn-ghost" data-act="rename" data-id="'+esc(d.id)+'" type="button">✏️ اصلاح نام</button>'
         +'<button class="btn-ghost" data-act="province" data-id="'+esc(d.id)+'" type="button">📍 تعیین استان</button>'
-        +'<button class="btn-ghost" data-act="token" data-id="'+esc(d.id)+'" type="button">🔑 توکن جدید</button>'
+        +'<button class="btn-ghost" data-act="password" data-id="'+esc(d.id)+'" type="button">🔐 صدور رمز موقت / بازیابی</button>'
+        +'<button class="btn-ghost" data-act="token" data-id="'+esc(d.id)+'" type="button">🔑 توکن جدید (قدیمی)</button>'
         +'</div>':'<div class="mut" style="margin-top:6px">حالت فقط‌مشاهده — کارهای مدیریتی با کلید مدیر اصلی انجام می‌شود.</div>')
         +'<div class="tokbox hidden" id="tok-'+esc(d.id)+'"></div></div>';
     }).join('');
@@ -243,6 +244,18 @@ button:disabled{opacity:.5;cursor:default}
       b.disabled=false;if(nextProvince===null)return;nextProvince=nextProvince.trim();
       if(provinces.indexOf(nextProvince)<0){$('connErr').textContent='نام استان باید یکی از ۳۱ استان فهرست‌شده باشد.';return}
       finishAction(api('/api/admin/driver/profile',{method:'POST',body:JSON.stringify({id:id,province:nextProvince})}));
+    }else if(act==='password'){
+      if(!confirm('برای این راننده رمز موقت جدید صادر شود؟ رمز قبلی از کار می‌افتد.')){b.disabled=false;return}
+      api('/api/admin/driver/reset-password',{method:'POST',body:JSON.stringify({id:id})})
+      .then(function(resp){
+        b.disabled=false;
+        if(!resp||!resp.ok)throw new Error(resp&&resp.err||'صدور رمز موقت ناموفق بود');
+        var box=$('tok-'+id);
+        box.classList.remove('hidden');
+        box.innerHTML='رمز موقت جدید برای '+esc(resp.phone)+' (فقط همین‌بار نمایش داده می‌شود؛ امن به راننده تحویل بده):<br><b dir="ltr" style="font-size:16px">'+esc(resp.temporaryPassword)+'</b><br><button type="button" class="btn-ghost" data-copy-password="'+esc(id)+'">کپی رمز</button>';
+        var copy=box.querySelector('[data-copy-password]');
+        copy.addEventListener('click',function(){if(navigator.clipboard&&navigator.clipboard.writeText){navigator.clipboard.writeText(resp.temporaryPassword).then(function(){copy.textContent='کپی شد'}).catch(function(){alert('کپی خودکار ممکن نیست؛ رمز را دستی انتخاب و کپی کن.')})}else{alert('رمز را دستی انتخاب و کپی کن.')}});
+      }).catch(function(e){b.disabled=false;$('connErr').textContent='بازیابی رمز انجام نشد: '+(e.message||'خطای سرور')});
     }else if(act==='token'){
       api('/api/admin/driver/reset-token',{method:'POST',body:JSON.stringify({id:id})})
       .then(function(d){
