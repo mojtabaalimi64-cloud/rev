@@ -184,7 +184,12 @@ button:disabled{opacity:.5;cursor:default}
     .then(function(res){
       var dd=res[0],rr=res[1],ww=res[2];
       if(ww&&ww.ok)role=ww.role||'master';
-      if(!dd||!dd.ok){$('connErr').textContent='کلید مدیریت درست نیست یا سرور پاسخ نمی‌دهد.';return}
+      if(!dd||!dd.ok){
+        var detail=(dd&&dd.err)?String(dd.err):'پاسخ نامعتبر از API';
+        var status=(dd&&dd.httpStatus)?' (HTTP '+dd.httpStatus+')':'';
+        $('connErr').textContent='خطای API: '+detail+status+'. اگر unauthorized یا HTTP 401 می‌بینی، کلید واردشده با ADMIN_KEY ورکر یکسان نیست.';
+        return;
+      }
       try{localStorage.setItem(KEYLS,key())}catch(e){}
       $('connOk').textContent='✓ متصل شدی — '+faDate(Date.now())+(role==='operator'?' · نقش: اپراتور (فقط‌مشاهده)':' · نقش: مدیر اصلی');
       $('driversCard').classList.remove('hidden');
