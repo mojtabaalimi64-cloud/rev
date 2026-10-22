@@ -321,6 +321,23 @@ async function handle(req, env, cors) {
     d.onShift = b.onShift === true;
     d.lastSeen = now();
     await saveDriver(env, d);
+    // When a driver ends the shift, release any unaccepted offer and send it to another eligible driver.
+    if (d.onShift === false) {
+      const page = await env.TOW.list({ prefix: "offer:" });
+      for (const item of page.keys) {
+        const raw = await env.TOW.get(item.name);
+        if (!raw) continue;
+        const offer = JSON.parse(raw);
+        if (offer.driverId !== d.id) continue;
+        await env.TOW.delete(item.name);
+        const r = await getReq(env, offer.reqId);
+        if (!r || r.status === "لغو شد" || r.status === "انجام شد") continue;
+        r.skipped = [...(r.skipped || []), d.id];
+        r.log.push({ t: now(), ev: `راننده ${d.name} شیفت را پایان داد — درخواست به راننده بعدی ارجاع شد` });
+        await saveReq(env, r);
+        await dispatchToNext(env, r);
+      }
+    }
     return json({ ok: true, onShift: d.onShift }, 200, cors);
   }
 
