@@ -130,10 +130,12 @@ button:disabled{opacity:.5;cursor:default}
       var st=d.stats||{accepted:0,completed:0,rejected:0,missed:0};
       return '<div class="drv"><div class="top"><b>'+esc(d.name)+'</b><span>'
         +(d.approved===true?'<span class="pill green">تأیید شده</span>':'<span class="pill amber">در انتظار تأیید</span>')+' '
-        +(d.active!==false?'<span class="pill teal">فعال</span>':'<span class="pill grey">غیرفعال</span>')+'</span></div>'
+        +(d.active!==false?'<span class="pill teal">فعال</span>':'<span class="pill grey">غیرفعال</span>')+' '
+        +(d.onShift===true&&d.approved===true&&d.active!==false?'<span class="pill green">در شیفت</span>':'<span class="pill grey">خارج از شیفت</span>')+'</span></div>'
         +'<div class="meta" dir="rtl">📱 <span dir="ltr">'+esc(d.phone)+'</span> · کد: '+esc(d.id)
         +(d.vehicle?'<br>🚛 '+esc(d.vehicle):'')+(d.city?' · '+esc(d.city):'')
         +'<br>شعاع پوشش: '+faN(d.radius)+' km · امتیاز: '+faN(d.score)+' · آخرین حضور: '+ago(d.lastSeen)
+        +'<br>وضعیت دریافت درخواست: '+(d.approved!==true?'در انتظار تأیید':(d.active===false?'حساب غیرفعال':(d.onShift===true?'شیفت فعال':'شیفت پایان‌یافته')))
         +'<br>📊 قبول: '+faN(st.accepted)+' · انجام‌شده: '+faN(st.completed)+' · رد: '+faN(st.rejected)+' · بی‌پاسخ: '+faN(st.missed)+'</div>'
         +(role==='master'?'<div class="acts">'
         +(d.approved===true
