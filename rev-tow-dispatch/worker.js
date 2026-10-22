@@ -407,10 +407,10 @@ async function handle(req, env, cors) {
     if (!isFinite(Number(b.lat)) || !isFinite(Number(b.lng)))
       return json({ ok: false, err: "مختصات لازم است" }, 400, cors);
     const phone = String(b.phone).trim();
-    const dup = (await listDrivers(env)).find(x => x.phone === phone);
-    if (dup && (dup.registrationRevoked === true || dup.registrationDeleted === true)) {
-      await storeDelete(env, kDriver(dup.id));
-    } else if (dup) {
+    // رکوردهای حذف‌شده/لغوشده در بایگانی می‌مانند؛ ثبت‌نام جدید با همان شماره پرونده قبلی را پاک نمی‌کند.
+    const allExistingDrivers = await listDrivers(env);
+    const dup = allExistingDrivers.find(x => x.phone === phone && x.registrationRevoked !== true && x.registrationDeleted !== true);
+    if (dup) {
       return json({ ok: false, err: "این شماره قبلاً به‌عنوان راننده ثبت شده است؛ برای بازیابی دسترسی با مدیر REV در تماس باش." }, 409, cors);
     }
     const id = "DRV-" + Math.random().toString(36).slice(2, 8).toUpperCase();
@@ -433,7 +433,9 @@ async function handle(req, env, cors) {
     const b = await body(req);
     if (!validPhone(b.phone) || typeof b.password !== "string" || b.password.length > 128)
       return json({ ok: false, err: "شماره موبایل یا رمز عبور نادرست است" }, 401, cors);
-    const d = (await listDrivers(env)).find(x => x.phone === String(b.phone).trim());
+    const phone = String(b.phone).trim();
+    const matchingDrivers = (await listDrivers(env)).filter(x => x.phone === phone);
+    const d = matchingDrivers.find(x => x.registrationDeleted !== true && x.registrationRevoked !== true) || matchingDrivers[0] || null;
     if (d && d.registrationDeleted === true)
       return json({ ok: false, err: "ثبت‌نام قبلی حذف شده است؛ لطفاً دوباره ثبت‌نام کن." }, 403, cors);
     if (d && d.registrationRevoked === true)
