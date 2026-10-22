@@ -287,6 +287,7 @@ button:disabled{opacity:.5;cursor:default}
         $('connOk').textContent='✓ متصل شدی — '+faDate(Date.now())+(role==='operator'?' · نقش: اپراتور (فقط‌مشاهده)':' · نقش: مدیر اصلی');
         $('driversCard').classList.remove('hidden');
         $('requestsCard').classList.remove('hidden');
+        $('reportsCard').classList.remove('hidden');
         renderDrivers(dd.drivers||[]);
         renderRequests(rr.requests||[]);
         renderReports();
