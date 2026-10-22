@@ -181,6 +181,10 @@
   <button class="x" data-close aria-label="بستن">✕</button>
   <h3 id="towSheetTitle">🚨 درخواست یدک‌کش مجاز</h3>
   <p class="ssub">فرم را پر کن؛ درخواستت با کد رهگیری ذخیره می‌شود.</p>
+  <div id="towSupportContact" style="margin:10px 0 14px;padding:12px;border:1px solid #d7e7f0;border-radius:12px;background:#f3f9fc">
+    <b>☎️ سؤال یا تأخیر در رسیدگی؟</b>
+    <div id="towSupportContactText" style="font-size:13px;margin-top:4px">در حال دریافت شماره پشتیبانی…</div>
+  </div>
   <div class="field"><label for="towName">نام و نام خانوادگی</label><input id="towName" placeholder="مثلاً علی رضایی"><div class="err" id="e-towName">نام را وارد کن.</div></div>
   <div class="field"><label for="towPhone">شماره موبایل</label><input id="towPhone" inputmode="numeric" placeholder="09123456789" dir="ltr" style="text-align:left"><div class="err" id="e-towPhone">شماره موبایل معتبر وارد کن (مثل 09123456789).</div></div>
   <div class="field"><label for="towCar">مدل خودرو</label><input id="towCar" placeholder="مثلاً نبکا ET5"></div>
@@ -271,6 +275,15 @@ function renderDirectory(){
 
 /* ================= 1) یدک‌کش مجاز ================= */
 var TOW_KEY='rev_tow_requests_v1';
+(function loadTowSupport(){
+  fetch('https://rev-tow-dispatch.mojtaba-alimi64.workers.dev/api/support',{cache:'no-store'})
+    .then(function(r){return r.json()})
+    .then(function(j){
+      var box=$('towSupportContactText');if(!box)return;
+      var phone=String(j&&j.phone||'').trim();
+      box.innerHTML=phone?'برای پیگیری درخواست یا پرسش درباره تأخیر با <a href="tel:'+esc(phone)+'" dir="ltr" style="font-weight:900;color:#066d88;white-space:nowrap">'+esc(phone)+'</a> تماس بگیر.':'شماره پشتیبانی هنوز توسط مدیریت ثبت نشده است.';
+    }).catch(function(){var box=$('towSupportContactText');if(box)box.textContent='شماره پشتیبانی فعلاً در دسترس نیست.'});
+})();
 var gpsPos=null;
 $('towCta').addEventListener('click',function(){gpsPos=null;$('gpsOk').style.display='none';openSheet('towSheet')});
 $('gpsBtn').addEventListener('click',function(){
