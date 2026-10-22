@@ -154,11 +154,20 @@ button:disabled{opacity:.5;cursor:default}
   function driverAction(b){
     var id=b.getAttribute('data-id'),act=b.getAttribute('data-act');
     b.disabled=true;
-    var done=function(){loadAll()};
+    function finishAction(promise){
+      promise.then(function(resp){
+        if(!resp||resp.ok!==true) throw new Error((resp&&resp.err)||'سرور تغییر وضعیت را تأیید نکرد.');
+        $('connErr').textContent='';
+        loadAll();
+      }).catch(function(e){
+        b.disabled=false;
+        $('connErr').textContent='تغییر انجام نشد: '+(e&&e.message?e.message:'خطای شبکه یا مجوز مدیر');
+      });
+    }
     if(act==='approve'||act==='unapprove'){
-      api('/api/admin/driver/approve',{method:'POST',body:JSON.stringify({id:id,approved:act==='approve'})}).then(done).catch(done);
+      finishAction(api('/api/admin/driver/approve',{method:'POST',body:JSON.stringify({id:id,approved:act==='approve'})}));
     }else if(act==='activate'||act==='deactivate'){
-      api('/api/admin/driver/active',{method:'POST',body:JSON.stringify({id:id,active:act==='activate'})}).then(done).catch(done);
+      finishAction(api('/api/admin/driver/active',{method:'POST',body:JSON.stringify({id:id,active:act==='activate'})}));
     }else if(act==='token'){
       api('/api/admin/driver/reset-token',{method:'POST',body:JSON.stringify({id:id})})
       .then(function(d){
