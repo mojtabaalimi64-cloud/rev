@@ -144,6 +144,7 @@ button:disabled{opacity:.5;cursor:default}
         +(d.active!==false
           ? '<button class="btn-ghost" data-act="deactivate" data-id="'+esc(d.id)+'" type="button">غیرفعال</button>'
           : '<button class="btn-ghost" data-act="activate" data-id="'+esc(d.id)+'" type="button">فعال</button>')
+        +'<button class="btn-ghost" data-act="rename" data-id="'+esc(d.id)+'" type="button">✏️ اصلاح نام</button>'
         +'<button class="btn-ghost" data-act="token" data-id="'+esc(d.id)+'" type="button">🔑 توکن جدید</button>'
         +'</div>':'<div class="mut" style="margin-top:6px">حالت فقط‌مشاهده — کارهای مدیریتی با کلید مدیر اصلی انجام می‌شود.</div>')
         +'<div class="tokbox hidden" id="tok-'+esc(d.id)+'"></div></div>';
@@ -170,6 +171,14 @@ button:disabled{opacity:.5;cursor:default}
       finishAction(api('/api/admin/driver/approve',{method:'POST',body:JSON.stringify({id:id,approved:act==='approve'})}));
     }else if(act==='activate'||act==='deactivate'){
       finishAction(api('/api/admin/driver/active',{method:'POST',body:JSON.stringify({id:id,active:act==='activate'})}));
+    }else if(act==='rename'){
+      var drv=driversById[id];
+      var nextName=prompt('نام و نام خانوادگی صحیح راننده را وارد کن:',drv?drv.name:'');
+      b.disabled=false;
+      if(nextName===null)return;
+      nextName=nextName.trim();
+      if(nextName.length<2){$('connErr').textContent='نام باید حداقل ۲ نویسه باشد.';return}
+      finishAction(api('/api/admin/driver/profile',{method:'POST',body:JSON.stringify({id:id,name:nextName})}));
     }else if(act==='token'){
       api('/api/admin/driver/reset-token',{method:'POST',body:JSON.stringify({id:id})})
       .then(function(d){
