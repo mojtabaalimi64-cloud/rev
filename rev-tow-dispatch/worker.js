@@ -296,6 +296,12 @@ async function handle(req, env, cors) {
   if (path === "/driver" && method === "GET")
     return new Response(DRIVER_PAGE, { headers: { "content-type": "text/html; charset=utf-8" } });
 
+  // ---- public support contact ----
+  if (path === "/api/support" && method === "GET") {
+    const phone = String(await storeGet(env, "settings:support_phone") || "").trim();
+    return json({ ok: true, phone }, 200, cors);
+  }
+
   // ---- customer: create tow request ----
   if (path === "/api/tow/request" && method === "POST") {
     const b = await body(req);
@@ -537,6 +543,35 @@ async function handle(req, env, cors) {
     // کارهای نوشتنی/حساس فقط برای مدیر اصلی
     if (method === "POST" && !isMaster) {
       return json({ ok: false, err: "این کار فقط برای مدیر اصلی REV است؛ کلید اپراتور فقط‌مشاهده است." }, 403, cors);
+    }
+    if (path === "/api/admin/support" && method === "GET") {
+      return json({ ok: true, phone: String(await storeGet(env, "settings:support_phone") || "").trim() }, 200, cors);
+    }
+    if (path === "/api/admin/support" && method === "POST") {
+      const b = await body(req);
+      const phone = String(b.phone || "").trim();
+      if (phone && !/^[+()0-9\\s-]{7,24}$/.test(phone)) return json({ ok: false, err: "شماره پشتیبانی معتبر نیست؛ فقط ارقام و + - پرانتز مجاز است." }, 400, cors);
+      await storePut(env, "settings:support_phone", phone);
+      return json({ ok: true, phone }, 200, cors);
+    }
+    if (path === "/api/admin/request/crm" && method === "POST") {
+      const b = await body(req);
+      const r = await getReq(env, String(b.id || ""));
+      if (!r) return json({ ok: false, err: "درخواست پیدا نشد" }, 404, cors);
+      const prior = r.crm && typeof r.crm === "object" ? r.crm : {};
+      const stage = String(b.stage === undefined ? (prior.stage || "جدید") : b.stage).trim();
+      const allowedStages = ["جدید", "تماس با مشتری", "در انتظار پیگیری", "ارجاع به اپراتور", "حل‌شده"];
+      if (!allowedStages.includes(stage)) return json({ ok: false, err: "مرحله CRM معتبر نیست" }, 400, cors);
+      const priority = String(b.priority === undefined ? (prior.priority || "عادی") : b.priority).trim();
+      if (!["عادی", "مهم", "فوری"].includes(priority)) return json({ ok: false, err: "اولویت معتبر نیست" }, 400, cors);
+      const followUpAt = String(b.followUpAt === undefined ? (prior.followUpAt || "") : b.followUpAt).trim().slice(0, 40);
+      const owner = String(b.owner === undefined ? (prior.owner || "") : b.owner).trim().slice(0, 100);
+      const note = String(b.note === undefined ? (prior.note || "") : b.note).trim().slice(0, 2000);
+      r.crm = { stage, priority, followUpAt, owner, note, updatedAt: now() };
+      r.log = Array.isArray(r.log) ? r.log : [];
+      r.log.push({ t: now(), ev: "پیگیری CRM به‌روزرسانی شد: " + stage });
+      await saveReq(env, r);
+      return json({ ok: true, crm: r.crm }, 200, cors);
     }
     if (path === "/api/admin/drivers") {
       const allReqs = await listRequests(env);
