@@ -566,6 +566,15 @@ export default {
     try {
       return await handle(req, env, cors);
     } catch (e) {
+      // Log diagnostic details in Cloudflare Workers Logs; never log request headers,
+      // admin keys, or driver tokens.
+      console.error("[rev-tow-dispatch] unhandled request error", {
+        path: new URL(req.url).pathname,
+        method: req.method,
+        name: e && e.name ? String(e.name) : "Error",
+        message: e && e.message ? String(e.message) : String(e),
+        stack: e && e.stack ? String(e.stack) : null,
+      });
       return json({ ok: false, err: "server error" }, 500, cors);
     }
   },
