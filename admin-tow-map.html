@@ -131,7 +131,8 @@ aside h3{font-size:13.5px;font-weight:900;margin:10px 0 4px}
   window.__clearRoute=function(){routeLayer.clearLayers()};
 
   function reqPopup(r){
-    var drv=r.assignedDriver?drvById(r.assignedDriver):null;
+    var dispatchDriverId=r.assignedDriver||(r.currentOffer&&r.currentOffer.driverId);
+    var drv=dispatchDriverId?drvById(dispatchDriverId):null;
     var nearest=null,nd=1e18;
     if(!drv){drivers.filter(usable).forEach(function(d){var dd=hav(r.gps,d);if(dd<nd){nd=dd;nearest=d}})}
     var target=drv||nearest;
@@ -206,7 +207,7 @@ aside h3{font-size:13.5px;font-weight:900;margin:10px 0 4px}
     document.querySelectorAll('.leaflet-popup-content [data-route]').forEach(function(b){
       b.addEventListener('click',function(){
         var r=requests.find(function(x){return x.id===b.getAttribute('data-route')});if(!r||!r.gps)return;
-        var drv=r.assignedDriver?drvById(r.assignedDriver):null;
+        var dispatchDriverId=r.assignedDriver||(r.currentOffer&&r.currentOffer.driverId);var drv=dispatchDriverId?drvById(dispatchDriverId):null;
         if(!drv){var nd=1e18;drivers.filter(usable).forEach(function(d){var dd=hav(r.gps,d);if(dd<nd){nd=dd;drv=d}})}
         if(drv)routeTo(r,drv);
       });
@@ -234,7 +235,7 @@ aside h3{font-size:13.5px;font-weight:900;margin:10px 0 4px}
       if(b.__bound)return;b.__bound=true;
       b.addEventListener('click',function(){
         var r=requests.find(function(x){return x.id===b.getAttribute('data-route')});if(!r||!r.gps)return;
-        var drv=r.assignedDriver?drvById(r.assignedDriver):null;
+        var dispatchDriverId=r.assignedDriver||(r.currentOffer&&r.currentOffer.driverId);var drv=dispatchDriverId?drvById(dispatchDriverId):null;
         if(!drv){var nd=1e18;drivers.filter(usable).forEach(function(d){var dd=hav(r.gps,d);if(dd<nd){nd=dd;drv=d}})}
         if(drv)routeTo(r,drv);
       });
