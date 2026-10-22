@@ -90,8 +90,20 @@ button:disabled{opacity:.5;cursor:default}
   function ago(ts){if(!ts)return '—';var m=Math.max(0,Math.round((Date.now()-ts)/60000));if(m<1)return 'همین حالا';if(m<60)return faN(m)+' دقیقه پیش';var h=Math.floor(m/60);if(h<24)return faN(h)+' ساعت پیش';return faN(Math.floor(h/24))+' روز پیش'}
 
   function api(path,opts){
-    opts=opts||{};opts.headers=Object.assign({'x-admin-key':key(),'Content-Type':'application/json'},opts.headers||{});
-    return fetch(API+path,opts).then(function(r){return r.json()});
+    opts=opts||{};
+    opts.cache='no-store';
+    opts.headers=Object.assign({'x-admin-key':key()},opts.headers||{});
+    if(opts.body && !opts.headers['Content-Type'] && !opts.headers['content-type']) opts.headers['Content-Type']='application/json';
+    return fetch(API+path,opts).then(function(r){
+      return r.text().then(function(t){
+        var data;
+        try{data=JSON.parse(t)}catch(e){
+          throw new Error('API '+path+' پاسخ JSON نداد (HTTP '+r.status+'): '+t.slice(0,100));
+        }
+        if(!r.ok && !data.ok) data.httpStatus=r.status;
+        return data;
+      });
+    });
   }
 
   function statusPill(r){
@@ -180,7 +192,7 @@ button:disabled{opacity:.5;cursor:default}
       renderDrivers(dd.drivers||[]);
       renderRequests((rr&&rr.requests)||[]);
     })
-    .catch(function(){$('connErr').textContent='اتصال برقرار نشد.';});
+    .catch(function(e){$('connErr').textContent='خطای اتصال: '+(e&&e.message?e.message:'خطای شبکه یا CORS')+'. اگر پیام Failed to fetch است، احتمالاً مرورگر درخواست API را به‌دلیل CORS/شبکه مسدود کرده است.';});
   }
 
   $('btnConnect').addEventListener('click',loadAll);
