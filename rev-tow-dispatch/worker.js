@@ -232,7 +232,7 @@ async function listDrivers(env) {
 async function driverByToken(env, token) {
   if (!token) return null;
   const drivers = await listDrivers(env);
-  return drivers.find(d => d.token === token && d.registrationRevoked !== true) || null;
+  return drivers.find(d => d.token === token && d.registrationRevoked !== true && d.registrationDeleted !== true) || null;
 }
 
 // ---------- dispatch core ----------
@@ -408,7 +408,7 @@ async function handle(req, env, cors) {
       return json({ ok: false, err: "مختصات لازم است" }, 400, cors);
     const phone = String(b.phone).trim();
     const dup = (await listDrivers(env)).find(x => x.phone === phone);
-    if (dup && dup.registrationRevoked === true) {
+    if (dup && (dup.registrationRevoked === true || dup.registrationDeleted === true)) {
       await storeDelete(env, kDriver(dup.id));
     } else if (dup) {
       return json({ ok: false, err: "این شماره قبلاً به‌عنوان راننده ثبت شده است؛ برای بازیابی دسترسی با مدیر REV در تماس باش." }, 409, cors);
@@ -434,6 +434,8 @@ async function handle(req, env, cors) {
     if (!validPhone(b.phone) || typeof b.password !== "string" || b.password.length > 128)
       return json({ ok: false, err: "شماره موبایل یا رمز عبور نادرست است" }, 401, cors);
     const d = (await listDrivers(env)).find(x => x.phone === String(b.phone).trim());
+    if (d && d.registrationDeleted === true)
+      return json({ ok: false, err: "ثبت‌نام قبلی حذف شده است؛ لطفاً دوباره ثبت‌نام کن." }, 403, cors);
     if (d && d.registrationRevoked === true)
       return json({ ok: false, err: "تأیید حساب قبلی لغو شده است؛ لطفاً دوباره ثبت‌نام کن." }, 403, cors);
     if (!d || !d.passwordSalt || !d.passwordHash)
@@ -579,8 +581,8 @@ async function handle(req, env, cors) {
     const token = url.searchParams.get("token");
     const d = (await listDrivers(env)).find(x => x.token === token) || null;
     if (!d) return json({ ok: false }, 401, cors);
-    if (d.registrationRevoked === true) {
-      return json({ ok: true, registrationRevoked: true, driver: { id: d.id, name: d.name, phone: d.phone, registrationRevoked: true, approved: false, active: false } }, 200, cors);
+    if (d.registrationDeleted === true || d.registrationRevoked === true) {
+      return json({ ok: true, registrationRevoked: true, registrationDeleted: d.registrationDeleted === true, driver: { id: d.id, name: d.name, phone: d.phone, registrationRevoked: true, registrationDeleted: d.registrationDeleted === true, approved: false, active: false } }, 200, cors);
     }
     const allReqs = await listRequests(env);
     const mine = allReqs.filter(r => r.assignedDriver === d.id);
@@ -675,6 +677,23 @@ async function handle(req, env, cors) {
       d.score = Number(b.score) || 0;
       await saveDriver(env, d);
       return json({ ok: true }, 200, cors);
+    }
+    if (path === "/api/admin/driver/delete-registration" && method === "POST") {
+      if (!isMaster) return json({ ok: false, err: "فقط مدیر اصلی مجاز است" }, 403, cors);
+      const b = await body(req);
+      const d = await getDriver(env, String(b.id || ""));
+      if (!d) return json({ ok: false, err: "راننده پیدا نشد" }, 404, cors);
+      d.registrationDeleted = true;
+      d.registrationDeletedAt = now();
+      d.registrationRevoked = true;
+      d.registrationRevokedAt = d.registrationRevokedAt || now();
+      d.approved = false;
+      d.active = false;
+      d.onShift = false;
+      d.token = crypto.randomUUID().replace(/-/g, "");
+      await saveDriver(env, d);
+      await releasePendingOffersForDriver(env, d, "ثبت‌نام راننده توسط مدیر حذف شد");
+      return json({ ok: true, registrationDeleted: true, id: d.id }, 200, cors);
     }
     if (path === "/api/admin/driver/active" && method === "POST") {
       const b = await body(req);
