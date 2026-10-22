@@ -175,7 +175,7 @@ async function dispatchToNext(env, req) {
     return null;
   }
   const drivers = (await listDrivers(env)).filter(d =>
-    d.active !== false && d.approved === true && d.lastSeen && now() - d.lastSeen < DRIVER_STALE_MIN * 60 * 1000);
+    d.active !== false && d.onShift !== false && d.approved === true && d.lastSeen && now() - d.lastSeen < DRIVER_STALE_MIN * 60 * 1000);
   const ranked = rankDrivers(drivers, req.gps, req.skipped || []);
   if (!ranked.length) {
     req.status = "در انتظار اپراتور";
@@ -311,6 +311,19 @@ async function handle(req, env, cors) {
     return json({ ok: true, id, token, radius: d.radius, approved: false }, 200, cors);
   }
 
+  // ---- driver: start/end shift ----
+  if (path === "/api/driver/shift" && method === "POST") {
+    const b = await body(req);
+    const d = await driverByToken(env, b.token);
+    if (!d) return json({ ok: false, err: "توکن راننده معتبر نیست" }, 401, cors);
+    if (b.onShift === true && (d.approved !== true || d.active === false))
+      return json({ ok: false, err: "حساب راننده هنوز تأیید نشده یا توسط مدیریت غیرفعال شده است" }, 403, cors);
+    d.onShift = b.onShift === true;
+    d.lastSeen = now();
+    await saveDriver(env, d);
+    return json({ ok: true, onShift: d.onShift }, 200, cors);
+  }
+
   // ---- driver: heartbeat ----
   if (path === "/api/driver/heartbeat" && method === "POST") {
     const b = await body(req);
@@ -328,7 +341,8 @@ async function handle(req, env, cors) {
     const d = await driverByToken(env, url.searchParams.get("token"));
     if (!d) return json({ ok: false }, 401, cors);
     d.lastSeen = now(); await saveDriver(env, d);
-    if (d.approved !== true) return json({ ok: true, offer: null, approved: false }, 200, cors);
+    if (d.approved !== true || d.active === false || d.onShift === false)
+      return json({ ok: true, offer: null, approved: d.approved === true, onShift: d.onShift !== false }, 200, cors);
     const keys = await env.TOW.list({ prefix: "offer:" });
     let mine = null;
     for (const k of keys.keys) {
@@ -413,7 +427,7 @@ async function handle(req, env, cors) {
       .map(r => ({ id: r.id, ts: r.ts, status: r.status, problem: r.problem, car: r.car, loc: r.loc, serviceCode: r.serviceCode || null }));
     return json({ ok: true, driver: {
       id: d.id, name: d.name, phone: d.phone, vehicle: d.vehicle || "", city: d.city || "",
-      radius: d.radius, score: d.score, active: d.active !== false, approved: d.approved === true,
+      radius: d.radius, score: d.score, active: d.active !== false, approved: d.approved === true, onShift: d.onShift !== false,
       stats,
     }, missions }, 200, cors);
   }
@@ -529,18 +543,34 @@ button{padding:12px;border:0;border-radius:8px;font-weight:800;width:100%;margin
 #offer{display:none}</style></head><body>
 <div class="card"><div class="big">🚨 پنل راننده یدک‌کش REV</div>
 <div class="mut">توکنی که هنگام ثبت‌نام گرفتی را وارد کن. صفحه را باز نگه دار؛ پیشنهادها خودکار می‌آیند.</div>
-<input id="tok" placeholder="توکن راننده"><button class="ok" id="login">ورود و شروع شیفت</button></div>
+<input id="tok" placeholder="توکن راننده"><button class="ok" id="login">ورود به پنل راننده</button></div>
+<div class="card" id="shiftCard" style="display:none"><div class="big" id="shiftTitle">وضعیت شیفت</div><div class="mut" id="shiftHint">برای دریافت درخواست باید شیفت را شروع کنی.</div><button class="ok" id="startShift">🟢 آماده فعالیت هستم — شروع شیفت</button><button class="no" id="endShift" style="display:none">⏹️ اتمام شیفت کاری</button></div>
 <div class="card" id="offer"><div class="big">📥 درخواست جدید</div><div id="od"></div>
 <button class="ok" id="acc">✅ قبول می‌کنم</button><button class="no" id="rej">❌ رد</button></div>
 <div class="card"><div class="mut" id="st">وارد نشده‌ای.</div></div>
 <script>
-var T="",REQ=null;
+var T="",REQ=null,ON=false,loopTimer=null,hbTimer=null;
 function api(p,o){o=o||{};o.headers=Object.assign({"content-type":"application/json"},o.headers||{});
-return fetch(p,o).then(function(r){return r.json()})}
-document.getElementById("login").onclick=function(){T=document.getElementById("tok").value.trim();
-if(!T)return;document.getElementById("st").textContent="متصل شدی — در حال گوش دادن…";loop();setInterval(loop,25000);hb();setInterval(hb,60000)};
-function hb(){if(navigator.geolocation){navigator.geolocation.getCurrentPosition(function(p){
-api("/api/driver/heartbeat",{method:"POST",body:JSON.stringify({token:T,lat:p.coords.latitude,lng:p.coords.longitude})})})}}
+return fetch(p,o).then(function(r){return r.json().then(function(j){if(!r.ok||j.ok===false)throw new Error(j.err||"خطای ارتباط با سرور");return j})})}
+function showShift(on){ON=!!on;document.getElementById("shiftCard").style.display="block";
+document.getElementById("shiftTitle").textContent=ON?"🟢 شیفت فعال است":"⏸️ شیفت کاری پایان یافته";
+document.getElementById("shiftHint").textContent=ON?"در این وضعیت درخواست‌های جدید برایت ارسال می‌شود.":"برای دریافت درخواست جدید، شروع شیفت را بزن.";
+document.getElementById("startShift").style.display=ON?"none":"block";
+document.getElementById("endShift").style.display=ON?"block":"none";
+document.getElementById("st").textContent=ON?"آنلاین هستی و آماده دریافت درخواست هستی.":"وارد پنل شدی؛ برای دریافت درخواست شیفت را شروع کن.";
+if(!ON){REQ=null;document.getElementById("offer").style.display="none"}}
+document.getElementById("login").onclick=function(){T=document.getElementById("tok").value.trim();if(!T)return;
+api("/api/driver/history?token="+encodeURIComponent(T)).then(function(j){
+showShift(j.driver.onShift!==false&&j.driver.active!==false);
+loop();if(!loopTimer)loopTimer=setInterval(loop,25000);hb();if(!hbTimer)hbTimer=setInterval(hb,60000);
+}).catch(function(e){document.getElementById("st").textContent="ورود انجام نشد: "+e.message})};
+document.getElementById("startShift").onclick=function(){if(!T)return;
+api("/api/driver/shift",{method:"POST",body:JSON.stringify({token:T,onShift:true})}).then(function(){showShift(true);hb();loop()}).catch(function(e){document.getElementById("st").textContent="شروع شیفت انجام نشد: "+e.message})};
+document.getElementById("endShift").onclick=function(){if(!T)return;
+if(!confirm("از اتمام شیفت کاری مطمئنی؟"))return;
+api("/api/driver/shift",{method:"POST",body:JSON.stringify({token:T,onShift:false})}).then(function(){showShift(false)}).catch(function(e){document.getElementById("st").textContent="اتمام شیفت انجام نشد: "+e.message})};
+function hb(){if(!T||!ON||!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(function(p){
+api("/api/driver/heartbeat",{method:"POST",body:JSON.stringify({token:T,lat:p.coords.latitude,lng:p.coords.longitude})}).catch(function(){})},function(){},{enableHighAccuracy:true,maximumAge:30000,timeout:10000})}
 function loop(){api("/api/driver/offers?token="+encodeURIComponent(T)).then(function(j){
 if(!j.ok)return;var o=j.offer;var box=document.getElementById("offer");
 if(o&&o.request){REQ=o.reqId;box.style.display="block";
