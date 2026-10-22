@@ -441,6 +441,28 @@ async function handle(req, env, cors) {
     return json({ ok: true, id: d.id, token: d.token, name: d.name, phone: d.phone, radius: d.radius, approved: d.approved === true }, 200, cors);
   }
 
+  // ---- driver: change own password ----
+  if (path === "/api/driver/password/change" && method === "POST") {
+    const b = await body(req);
+    const d = await driverByToken(env, b.token);
+    if (!d) return json({ ok: false, err: "نشست ورود معتبر نیست؛ دوباره وارد شو." }, 401, cors);
+    if (typeof b.currentPassword !== "string" || typeof b.newPassword !== "string")
+      return json({ ok: false, err: "رمز فعلی و رمز جدید را وارد کن." }, 400, cors);
+    if (!d.passwordSalt || !d.passwordHash)
+      return json({ ok: false, err: "برای این حساب رمز تعریف نشده؛ با مدیر تماس بگیر." }, 400, cors);
+    if (b.newPassword.length < 8 || b.newPassword.length > 128)
+      return json({ ok: false, err: "رمز جدید باید حداقل ۸ نویسه داشته باشد." }, 400, cors);
+    if (b.currentPassword === b.newPassword)
+      return json({ ok: false, err: "رمز جدید باید با رمز فعلی متفاوت باشد." }, 400, cors);
+    const currentHash = await hashDriverPassword(b.currentPassword, d.passwordSalt);
+    if (currentHash !== d.passwordHash)
+      return json({ ok: false, err: "رمز فعلی درست نیست." }, 401, cors);
+    await setDriverPassword(d, b.newPassword);
+    d.passwordMustChange = false;
+    await saveDriver(env, d);
+    return json({ ok: true, changedAt: d.passwordUpdatedAt }, 200, cors);
+  }
+
   // ---- driver: start/end shift ----
   if (path === "/api/driver/shift" && method === "POST") {
     const b = await body(req);
