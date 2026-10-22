@@ -231,7 +231,11 @@ button:disabled{opacity:.5;cursor:default}
   $('btnRefresh').addEventListener('click',loadAll);
   (function init(){
     var saved='';try{saved=localStorage.getItem(KEYLS)||''}catch(e){}
-    if(saved){$('keyInput').value=saved;loadAll()}
+    // Prefill the saved key, but never call the API automatically on page load.
+    // This avoids showing stale quota/API errors before the administrator asks to connect.
+    if(saved){$('keyInput').value=saved}
+    $('connErr').textContent='';
+    $('connOk').textContent='برای دریافت اطلاعات، «اتصال و بارگذاری» را بزن.';
   })();
 })();
 </script>
