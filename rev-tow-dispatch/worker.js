@@ -175,7 +175,7 @@ async function dispatchToNext(env, req) {
     return null;
   }
   const drivers = (await listDrivers(env)).filter(d =>
-    d.active !== false && d.onShift !== false && d.approved === true && d.lastSeen && now() - d.lastSeen < DRIVER_STALE_MIN * 60 * 1000);
+    d.active !== false && d.onShift === true && d.approved === true && d.lastSeen && now() - d.lastSeen < DRIVER_STALE_MIN * 60 * 1000);
   const ranked = rankDrivers(drivers, req.gps, req.skipped || []);
   if (!ranked.length) {
     req.status = "در انتظار اپراتور";
@@ -341,8 +341,8 @@ async function handle(req, env, cors) {
     const d = await driverByToken(env, url.searchParams.get("token"));
     if (!d) return json({ ok: false }, 401, cors);
     d.lastSeen = now(); await saveDriver(env, d);
-    if (d.approved !== true || d.active === false || d.onShift === false)
-      return json({ ok: true, offer: null, approved: d.approved === true, onShift: d.onShift !== false }, 200, cors);
+    if (d.approved !== true || d.active === false || d.onShift !== true)
+      return json({ ok: true, offer: null, approved: d.approved === true, onShift: d.onShift === true }, 200, cors);
     const keys = await env.TOW.list({ prefix: "offer:" });
     let mine = null;
     for (const k of keys.keys) {
@@ -561,7 +561,7 @@ document.getElementById("st").textContent=ON?"آنلاین هستی و آماد�
 if(!ON){REQ=null;document.getElementById("offer").style.display="none"}}
 document.getElementById("login").onclick=function(){T=document.getElementById("tok").value.trim();if(!T)return;
 api("/api/driver/history?token="+encodeURIComponent(T)).then(function(j){
-showShift(j.driver.onShift!==false&&j.driver.active!==false);
+showShift(j.driver.onShift===true&&j.driver.active!==false);
 loop();if(!loopTimer)loopTimer=setInterval(loop,25000);hb();if(!hbTimer)hbTimer=setInterval(hb,60000);
 }).catch(function(e){document.getElementById("st").textContent="ورود انجام نشد: "+e.message})};
 document.getElementById("startShift").onclick=function(){if(!T)return;
