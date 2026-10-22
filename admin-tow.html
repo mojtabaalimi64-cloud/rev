@@ -47,6 +47,20 @@ button:disabled{opacity:.5;cursor:default}
 .kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(135px,1fr));gap:9px;margin:12px 0}
 .kpi{border:1px solid var(--line);border-radius:12px;padding:12px;background:#f9fbfc}
 .kpi b{display:block;font-size:22px;line-height:1.5}.kpi span{font-size:12px;color:var(--muted)}
+
+#driverCrmModal{position:fixed;inset:0;z-index:9999;background:#07131dcc;display:flex;align-items:center;justify-content:center;padding:14px}
+#driverCrmModal.hidden{display:none!important}
+.crm-dialog{background:#fff;border-radius:16px;width:min(100%,900px);max-height:92vh;overflow:auto;padding:16px}
+.crm-head{display:flex;justify-content:space-between;gap:10px;align-items:center;position:sticky;top:-16px;background:#fff;padding:8px 0;z-index:2;border-bottom:1px solid var(--line)}
+.crm-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:8px;margin:12px 0}
+.crm-box,.crm-doc,.crm-mission{border:1px solid var(--line);border-radius:10px;padding:10px;overflow-wrap:anywhere}
+.crm-box>b{display:block;color:var(--muted);font-size:12px}
+.crm-section{margin-top:16px}
+.crm-section h3{font-size:15px;margin-bottom:8px}
+.crm-doc,.crm-mission{margin:7px 0}
+.crm-muted{font-size:12px;color:var(--muted)}
+.crm-doc a{color:var(--teal-d)}
+
 </style>
 </head>
 <body>
@@ -99,6 +113,20 @@ button:disabled{opacity:.5;cursor:default}
   </section>
 
 </main>
+
+<div id="driverCrmModal" class="hidden" role="dialog" aria-modal="true" aria-labelledby="driverCrmTitle">
+  <section class="crm-dialog">
+    <div class="crm-head">
+      <h2 id="driverCrmTitle">پرونده CRM راننده</h2>
+      <div class="row">
+        <button class="btn-ghost" id="editDriverCrm" type="button">ویرایش پیگیری</button>
+        <button class="btn-red" id="closeDriverCrm" type="button">بستن ✕</button>
+      </div>
+    </div>
+    <div id="driverCrmContent" style="padding-top:10px"></div>
+  </section>
+</div>
+
 <script>
 (function(){
   var API='https://rev-tow-dispatch.mojtaba-alimi64.workers.dev';
