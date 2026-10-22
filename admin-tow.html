@@ -207,24 +207,42 @@ button:disabled{opacity:.5;cursor:default}
   function loadAll(){
     if(!key()){$('connErr').textContent='اول کلید مدیریت را وارد کن.';return}
     $('connErr').textContent='';
-    Promise.all([api('/api/admin/drivers'),api('/api/admin/requests'),api('/api/admin/whoami')])
-    .then(function(res){
-      var dd=res[0],rr=res[1],ww=res[2];
-      if(ww&&ww.ok)role=ww.role||'master';
-      if(!dd||!dd.ok){
-        var detail=(dd&&dd.err)?String(dd.err):'پاسخ نامعتبر از API';
-        var status=(dd&&dd.httpStatus)?' (HTTP '+dd.httpStatus+')':'';
-        $('connErr').textContent='خطای API: '+detail+status+'. اگر unauthorized یا HTTP 401 می‌بینی، کلید واردشده با ADMIN_KEY ورکر یکسان نیست.';
+    $('connOk').textContent='در حال بررسی کلید مدیریت…';
+    api('/api/admin/whoami').then(function(ww){
+      if(!ww||!ww.ok){
+        var detail=(ww&&ww.err)?String(ww.err):'پاسخ نامعتبر از API';
+        var status=(ww&&ww.httpStatus)?' (HTTP '+ww.httpStatus+')':'';
+        $('connOk').textContent='';
+        $('connErr').textContent='تأیید کلید مدیریت ناموفق بود: '+detail+status+'. کلید واردشده را بررسی کن.';
         return;
       }
+      role=ww.role||'master';
       try{localStorage.setItem(KEYLS,key())}catch(e){}
-      $('connOk').textContent='✓ متصل شدی — '+faDate(Date.now())+(role==='operator'?' · نقش: اپراتور (فقط‌مشاهده)':' · نقش: مدیر اصلی');
-      $('driversCard').classList.remove('hidden');
-      $('requestsCard').classList.remove('hidden');
-      renderDrivers(dd.drivers||[]);
-      renderRequests((rr&&rr.requests)||[]);
-    })
-    .catch(function(e){$('connErr').textContent='خطای اتصال: '+(e&&e.message?e.message:'خطای شبکه یا CORS')+'. اگر پیام Failed to fetch است، احتمالاً مرورگر درخواست API را به‌دلیل CORS/شبکه مسدود کرده است.';});
+      $('connErr').textContent='';
+      $('connOk').textContent='✓ کلید مدیریت تأیید شد؛ در حال بارگذاری اطلاعات…';
+      Promise.all([api('/api/admin/drivers'),api('/api/admin/requests')]).then(function(res){
+        var dd=res[0],rr=res[1];
+        if(!dd||!dd.ok||!rr||!rr.ok){
+          var failed=(!dd||!dd.ok)?dd:rr;
+          var detail=(failed&&failed.err)?String(failed.err):'پاسخ نامعتبر از API';
+          var status=(failed&&failed.httpStatus)?' (HTTP '+failed.httpStatus+')':'';
+          $('connErr').textContent='کلید مدیریت معتبر است، اما دریافت اطلاعات ناموفق بود: '+detail+status+'. این خطا به‌تنهایی به معنی اشتباه بودن کلید نیست.';
+          $('connOk').textContent='✓ کلید مدیریت تأیید شد.';
+          return;
+        }
+        $('connOk').textContent='✓ متصل شدی — '+faDate(Date.now())+(role==='operator'?' · نقش: اپراتور (فقط‌مشاهده)':' · نقش: مدیر اصلی');
+        $('driversCard').classList.remove('hidden');
+        $('requestsCard').classList.remove('hidden');
+        renderDrivers(dd.drivers||[]);
+        renderRequests(rr.requests||[]);
+      }).catch(function(e){
+        $('connErr').textContent='کلید مدیریت تأیید شد، اما دریافت اطلاعات با خطا روبه‌رو شد: '+(e&&e.message?e.message:'خطای شبکه یا CORS')+'.';
+        $('connOk').textContent='✓ کلید مدیریت تأیید شد.';
+      });
+    }).catch(function(e){
+      $('connOk').textContent='';
+      $('connErr').textContent='بررسی کلید مدیریت ناموفق بود: '+(e&&e.message?e.message:'خطای شبکه یا CORS')+'.';
+    });
   }
 
   $('btnConnect').addEventListener('click',loadAll);
