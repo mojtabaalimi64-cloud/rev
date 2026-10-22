@@ -16,7 +16,7 @@
  *
  * Setup (no source access needed — create a NEW worker in the dashboard):
  *  - Workers & Pages → Create → paste this file as worker.js → Deploy
- *  - Bindings → KV Namespace → variable name TOW (create namespace "tow")
+ *  - Bindings → D1 database → variable name TOW_DB → database rev-db
  *  - Settings → Variables → Secret: ADMIN_KEY = <random string>
  *  - Note the worker URL, e.g. https://rev-tow-dispatch.<sub>.workers.dev
  *
@@ -97,6 +97,40 @@ async function body(req) {
 }
 const now = () => Date.now();
 
+// Primary storage: Cloudflare D1. Routine application operations do not use KV.
+async function storeGet(env, key) {
+  const row = await env.TOW_DB.prepare(
+    "SELECT value, expires_at FROM rev_tow_kv WHERE key = ?"
+  ).bind(String(key)).first();
+  if (!row) return null;
+  if (row.expires_at != null && Number(row.expires_at) <= now()) {
+    await storeDelete(env, key);
+    return null;
+  }
+  return row.value == null ? null : String(row.value);
+}
+async function storePut(env, key, value, options = {}) {
+  const ttl = Number(options && options.expirationTtl);
+  const expiresAt = Number.isFinite(ttl) && ttl > 0 ? now() + ttl * 1000 : null;
+  await env.TOW_DB.prepare(
+    "INSERT INTO rev_tow_kv (key, value, expires_at) VALUES (?, ?, ?) " +
+    "ON CONFLICT(key) DO UPDATE SET value = excluded.value, expires_at = excluded.expires_at"
+  ).bind(String(key), String(value), expiresAt).run();
+}
+async function storeDelete(env, key) {
+  await env.TOW_DB.prepare("DELETE FROM rev_tow_kv WHERE key = ?").bind(String(key)).run();
+}
+async function storeList(env, options = {}) {
+  const prefix = String(options.prefix || "");
+  const cursor = typeof options.cursor === "string" ? options.cursor : "";
+  const rows = await env.TOW_DB.prepare(
+    "SELECT key FROM rev_tow_kv WHERE key LIKE ? AND key > ? ORDER BY key LIMIT 1000"
+  ).bind(prefix + "%", cursor).all();
+  const keys = (rows.results || []).map(row => ({ name: row.key }));
+  const complete = keys.length < 1000;
+  return { keys, list_complete: complete, cursor: complete ? undefined : keys[keys.length - 1].name };
+}
+
 // ---------- storage ----------
 const kDriver = id => `driver:${id}`;
 const kReq = id => `req:${id}`;
@@ -104,11 +138,11 @@ const kOffer = reqId => `offer:${reqId}`;
 const kRate = phone => `rate:${phone}`;
 
 async function getDriver(env, id) {
-  const raw = await env.TOW.get(kDriver(id));
+  const raw = await storeGet(env, kDriver(id));
   return raw ? JSON.parse(raw) : null;
 }
 async function saveDriver(env, d) {
-  const key = kDriver(d.id); await env.TOW.put(key, JSON.stringify(d));
+  const key = kDriver(d.id); await storePut(env, key, JSON.stringify(d));
   await addIndexedName(env, "driver:", key);
 }
 function normStats(d) {
@@ -119,59 +153,58 @@ function normStats(d) {
 async function indexedNames(env, prefix) {
   const indexKey = "_index:" + prefix;
   const progressKey = "_index-progress:" + prefix;
-  const saved = await env.TOW.get(indexKey);
+  const saved = await storeGet(env, indexKey);
   if (saved) { try { const a = JSON.parse(saved); if (Array.isArray(a)) return a.filter(x => typeof x === "string"); } catch {} }
 
-  // Resumable one-time migration: persist each page so a quota interruption
-  // does not force the migration to restart from the beginning next time.
+  // Build the index from D1 records; storeList paginates without KV.
   let progress = null;
-  const rawProgress = await env.TOW.get(progressKey);
+  const rawProgress = await storeGet(env, progressKey);
   if (rawProgress) { try { progress = JSON.parse(rawProgress); } catch {} }
   const names = progress && Array.isArray(progress.names) ? progress.names.filter(x => typeof x === "string") : [];
   let cursor = progress && typeof progress.cursor === "string" ? progress.cursor : undefined;
   do {
     let page;
     try {
-      page = await env.TOW.list({ prefix, cursor });
+      page = await storeList(env, { prefix, cursor });
     } catch (e) {
-      // Keep the checkpoint for the next attempt and surface the quota cause.
-      await env.TOW.put(progressKey, JSON.stringify({ names, cursor: cursor || null, updatedAt: now() }));
+      // Keep the checkpoint so a transient storage error can resume.
+      await storePut(env, progressKey, JSON.stringify({ names, cursor: cursor || null, updatedAt: now() }));
       throw e;
     }
     for (const item of page.keys || []) if (!names.includes(item.name)) names.push(item.name);
     cursor = page.list_complete ? undefined : page.cursor;
     if (cursor) {
-      await env.TOW.put(progressKey, JSON.stringify({ names, cursor, updatedAt: now() }));
+      await storePut(env, progressKey, JSON.stringify({ names, cursor, updatedAt: now() }));
     }
   } while (cursor);
-  await env.TOW.put(indexKey, JSON.stringify(names));
-  await env.TOW.delete(progressKey);
+  await storePut(env, indexKey, JSON.stringify(names));
+  await storeDelete(env, progressKey);
   return names;
 }
 async function addIndexedName(env, prefix, name) {
   const names = await indexedNames(env, prefix);
-  if (!names.includes(name)) { names.push(name); await env.TOW.put("_index:" + prefix, JSON.stringify(names)); }
+  if (!names.includes(name)) { names.push(name); await storePut(env, "_index:" + prefix, JSON.stringify(names)); }
 }
 async function listRequests(env) {
   const out = [];
   for (const name of await indexedNames(env, "req:")) {
-    const raw = await env.TOW.get(name);
+    const raw = await storeGet(env, name);
     if (raw) { try { out.push(JSON.parse(raw)); } catch { console.error("[rev-tow-dispatch] invalid request record", { key: name }); } }
   }
   return out;
 }
 async function getReq(env, id) {
-  const raw = await env.TOW.get(kReq(id));
+  const raw = await storeGet(env, kReq(id));
   return raw ? JSON.parse(raw) : null;
 }
 async function saveReq(env, r) {
-  const key = kReq(r.id); await env.TOW.put(key, JSON.stringify(r));
+  const key = kReq(r.id); await storePut(env, key, JSON.stringify(r));
   await addIndexedName(env, "req:", key);
 }
 async function listDrivers(env) {
   const out = [];
   for (const name of await indexedNames(env, "driver:")) {
-    const raw = await env.TOW.get(name);
+    const raw = await storeGet(env, name);
     if (raw) { try { out.push(JSON.parse(raw)); } catch { console.error("[rev-tow-dispatch] invalid driver record", { key: name }); } }
   }
   return out;
@@ -185,11 +218,11 @@ async function driverByToken(env, token) {
 // ---------- dispatch core ----------
 async function sweepOffer(env, reqId) {
   // Expire a stale offer and move to the next driver (lazy timeout).
-  const raw = await env.TOW.get(kOffer(reqId));
+  const raw = await storeGet(env, kOffer(reqId));
   if (!raw) return null;
   const offer = JSON.parse(raw);
   if (offer.expiresAt > now()) return offer; // still live
-  await env.TOW.delete(kOffer(reqId));
+  await storeDelete(env, kOffer(reqId));
   const req = await getReq(env, reqId);
   if (!req || req.status === "لغو شد" || req.status === "انجام شد") return null;
   req.skipped = [...(req.skipped || []), offer.driverId];
@@ -203,11 +236,11 @@ async function releasePendingOffersForDriver(env, driver, reason) {
   const offerNames = await indexedNames(env, "offer:");
   for (const itemName of offerNames) {
     const item = { name: itemName };
-    const raw = await env.TOW.get(item.name);
+    const raw = await storeGet(env, item.name);
     if (!raw) continue;
     const offer = JSON.parse(raw);
     if (offer.driverId !== driver.id) continue;
-    await env.TOW.delete(item.name);
+    await storeDelete(env, item.name);
     const r = await getReq(env, offer.reqId);
     if (!r || r.status === "لغو شد" || r.status === "انجام شد") continue;
     r.skipped = [...new Set([...(r.skipped || []), driver.id])];
@@ -238,7 +271,7 @@ async function dispatchToNext(env, req) {
     reqId: req.id, driverId: pick.driver.id,
     at: now(), expiresAt: now() + ACCEPT_TIMEOUT_MIN * 60 * 1000, state: "pending",
   };
-  await env.TOW.put(kOffer(req.id), JSON.stringify(offer));
+  await storePut(env, kOffer(req.id), JSON.stringify(offer));
   await addIndexedName(env, "offer:", kOffer(req.id));
   req.status = "در انتظار پذیرش راننده";
   req.currentOffer = { driverId: pick.driver.id, distKm: pick.distKm, expiresAt: offer.expiresAt };
@@ -270,9 +303,9 @@ async function handle(req, env, cors) {
     if (!validPhone(b.phone)) return json({ ok: false, err: "شماره موبایل معتبر نیست" }, 400, cors);
     // simple rate limit
     const rk = kRate(b.phone.trim());
-    const n = Number(await env.TOW.get(rk) || 0);
+    const n = Number(await storeGet(env, rk) || 0);
     if (n >= REQ_LIMIT_PER_HOUR) return json({ ok: false, err: "محدودیت ثبت درخواست" }, 429, cors);
-    await env.TOW.put(rk, String(n + 1), { expirationTtl: 3600 });
+    await storePut(env, rk, String(n + 1), { expirationTtl: 3600 });
 
     const id = "TW-" + Math.random().toString(36).slice(2, 8).toUpperCase();
     const r = {
@@ -334,7 +367,7 @@ async function handle(req, env, cors) {
     r.status = "لغو شد";
     r.log.push({ t: now(), ev: "توسط مشتری لغو شد" });
     await saveReq(env, r);
-    await env.TOW.delete(kOffer(r.id));
+    await storeDelete(env, kOffer(r.id));
     return json({ ok: true }, 200, cors);
   }
 
@@ -400,7 +433,7 @@ async function handle(req, env, cors) {
     let mine = null;
     for (const offerName of offerNames) {
       const k = { name: offerName };
-      const raw = await env.TOW.get(k.name);
+      const raw = await storeGet(env, k.name);
       if (!raw) continue;
       const o = JSON.parse(raw);
       if (o.expiresAt <= now()) { await sweepOffer(env, o.reqId); continue; }
@@ -424,7 +457,7 @@ async function handle(req, env, cors) {
       await releasePendingOffersForDriver(env, d, "امکان دریافت درخواست را از دست داد");
       return json({ ok: false, err: "برای پاسخ به درخواست باید حساب تأییدشده و شیفت فعال داشته باشی" }, 403, cors);
     }
-    const raw = await env.TOW.get(kOffer(b.reqId));
+    const raw = await storeGet(env, kOffer(b.reqId));
     if (!raw) return json({ ok: false, err: "پیشنهادی فعال نیست" }, 410, cors);
     const offer = JSON.parse(raw);
     if (offer.driverId !== d.id) return json({ ok: false, err: "این پیشنهاد برای شما نیست" }, 403, cors);
@@ -432,7 +465,7 @@ async function handle(req, env, cors) {
     if (!r) return json({ ok: false }, 404, cors);
 
     if (b.accept === true) {
-      await env.TOW.delete(kOffer(r.id));
+      await storeDelete(env, kOffer(r.id));
       r.status = "راننده در راه";
       r.assignedDriver = d.id;
       r.serviceCode = String(Math.floor(1000 + Math.random() * 9000));
@@ -444,7 +477,7 @@ async function handle(req, env, cors) {
     }
     // reject → same as timeout: move to next driver
     r.skippedWhy = { ...(r.skippedWhy || {}), [d.id]: "reject" };
-    await env.TOW.delete(kOffer(r.id));
+    await storeDelete(env, kOffer(r.id));
     r.skipped = [...(r.skipped || []), d.id];
     r.log.push({ t: now(), ev: `راننده ${d.name} رد کرد — ارجاع به نفر بعدی` });
     await saveReq(env, r);
@@ -521,7 +554,7 @@ async function handle(req, env, cors) {
     if (path === "/api/admin/requests") {
       const out = [];
       for (const k of await indexedNames(env, "req:")) {
-        const raw = await env.TOW.get(k);
+        const raw = await storeGet(env, k);
         if (raw) { try { out.push(JSON.parse(raw)); } catch { console.error("[rev-tow-dispatch] invalid request record", { key: k }); } }
       }
       out.sort((a, b) => b.ts - a.ts);
@@ -582,7 +615,7 @@ async function handle(req, env, cors) {
       let swept = 0;
       for (const offerName of offerNames) {
         const k = { name: offerName };
-        const raw = await env.TOW.get(k.name);
+        const raw = await storeGet(env, k.name);
         if (raw && JSON.parse(raw).expiresAt <= now()) {
           await sweepOffer(env, JSON.parse(raw).reqId); swept++;
         }
@@ -611,9 +644,6 @@ export default {
         stack: e && e.stack ? String(e.stack) : null,
       });
       const message = e && e.message ? String(e.message) : String(e);
-      if (/KV list\(\) limit exceeded|usage limit for this operation for today/i.test(message)) {
-        return json({ ok: false, err: "KV_LIST_QUOTA_EXCEEDED", detail: "محدودیت روزانه فهرست‌گیری KV کلادفلر تمام شده است. نقطهٔ بازیابی ذخیره شده و پس از بازنشانی سهمیه، تلاش بعدی از همان مرحله ادامه می‌یابد." }, 503, cors);
-      }
       return json({ ok: false, err: "server error" }, 500, cors);
     }
   },
