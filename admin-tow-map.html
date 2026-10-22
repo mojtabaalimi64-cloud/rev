@@ -105,7 +105,7 @@ aside h3{font-size:13.5px;font-weight:900;margin:10px 0 4px}
   function statusPill(s){if(s==='راننده در راه')return '<span class="pill teal">راننده در راه</span>';if(s==='در انتظار اپراتور')return '<span class="pill amber">در انتظار اپراتور</span>';if(s==='در انتظار پذیرش راننده')return '<span class="pill red">در انتظار پذیرش راننده</span>';return '<span class="pill amber">'+esc(s)+'</span>'}
 
   function drvById(id){return drivers.find(function(d){return d.id===id})}
-  function fresh(d){return d.approved===true&&d.active!==false&&d.onShift!==false&&d.lastSeen&&(Date.now()-d.lastSeen)<5*60*1000}
+  function fresh(d){return d.approved===true&&d.active!==false&&d.onShift===true&&d.lastSeen&&(Date.now()-d.lastSeen)<5*60*1000}
   function usable(d){return d.approved===true&&d.active!==false&&d.lastSeen&&(Date.now()-d.lastSeen)<30*60*1000&&isFinite(d.lat)&&isFinite(d.lng)}
 
   function routeTo(req,drv){
