@@ -93,6 +93,12 @@ button:disabled{opacity:.5;cursor:default}
     opts=opts||{};
     opts.cache='no-store';
     opts.headers=Object.assign({'x-admin-key':key()},opts.headers||{});
+    // Never send Persian/localized text in HTTP headers; headers must be ByteString.
+    Object.keys(opts.headers).forEach(function(h){
+      if(typeof opts.headers[h]==='string' && /[^\x00-\xFF]/.test(opts.headers[h])) {
+        throw new Error('مقدار هدر '+h+' دارای نویسه غیرمجاز است؛ کلید مدیریت را فقط با حروف انگلیسی و اعداد وارد کن.');
+      }
+    });
     if(opts.body && !opts.headers['Content-Type'] && !opts.headers['content-type']) opts.headers['Content-Type']='application/json';
     return fetch(API+path,opts).then(function(r){
       return r.text().then(function(t){
