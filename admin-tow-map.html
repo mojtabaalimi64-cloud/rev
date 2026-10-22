@@ -105,7 +105,7 @@ aside h3{font-size:13.5px;font-weight:900;margin:10px 0 4px}
   function statusPill(s){if(s==='راننده در راه')return '<span class="pill teal">راننده در راه</span>';if(s==='در انتظار اپراتور')return '<span class="pill amber">در انتظار اپراتور</span>';if(s==='در انتظار پذیرش راننده')return '<span class="pill red">در انتظار پذیرش راننده</span>';return '<span class="pill amber">'+esc(s)+'</span>'}
 
   function drvById(id){return drivers.find(function(d){return d.id===id})}
-  function fresh(d){return d.lastSeen&&(Date.now()-d.lastSeen)<5*60*1000}
+  function fresh(d){return d.approved===true&&d.active!==false&&d.lastSeen&&(Date.now()-d.lastSeen)<5*60*1000}
   function usable(d){return d.approved===true&&d.active!==false&&d.lastSeen&&(Date.now()-d.lastSeen)<30*60*1000&&isFinite(d.lat)&&isFinite(d.lng)}
 
   function routeTo(req,drv){
@@ -162,7 +162,8 @@ aside h3{font-size:13.5px;font-weight:900;margin:10px 0 4px}
     drvLayer.clearLayers();reqLayer.clearLayers();markers={};
     var online=0;
     drivers.forEach(function(d){
-      if(!isFinite(d.lat)||!isFinite(d.lng))return;
+      // Only approved drivers belong on the live map; inactive/unapproved drivers stay in the admin list.
+      if(d.approved!==true||!isFinite(d.lat)||!isFinite(d.lng))return;
       if(fresh(d))online++;
       var icon=L.divIcon({className:'',html:'<div class="pin pin-drv'+(fresh(d)?'':' stale')+'"><span>🚛</span></div>',iconSize:[36,36],iconAnchor:[18,18]});
       var m=L.marker([d.lat,d.lng],{icon:icon}).bindPopup(drvPopup(d));
@@ -186,7 +187,7 @@ aside h3{font-size:13.5px;font-weight:900;margin:10px 0 4px}
         +'<div class="meta">'+esc(r.name||'')+' · <span dir="ltr">'+esc(r.phone||'')+'</span><br>'+esc(r.loc||'')+' · '+ago(r.ts)+(r.gps?'':' · <b style="color:#b3261e">بدون GPS</b>')+'</div></div>';
     }).join(''):'<p class="mut">درخواست بازی نیست. 🎉</p>';
     $('drvList').innerHTML=drivers.length?drivers.map(function(d){
-      return '<div class="drv" data-open-d="'+esc(d.id)+'"><b>'+esc(d.name)+'</b> '+(d.approved===true?(fresh(d)?'<span class="pill green">آنلاین</span>':'<span class="pill grey">آفلاین</span>'):'<span class="pill amber">تأیید نشده</span>')
+      return '<div class="drv" data-open-d="'+esc(d.id)+'"><b>'+esc(d.name)+'</b> '+(d.approved!==true?'<span class="pill amber">تأیید نشده</span>':(d.active===false?'<span class="pill grey">غیرفعال</span>':(fresh(d)?'<span class="pill green">آنلاین</span>':'<span class="pill grey">آفلاین</span>')))
         +'<div class="meta"><span dir="ltr">'+esc(d.phone)+'</span> · امتیاز '+faN(d.score)+' · شعاع '+faN(d.radius)+'km · '+ago(d.lastSeen)+'</div></div>';
     }).join(''):'<p class="mut">راننده‌ای نیست.</p>';
     $('reqList').querySelectorAll('[data-open]').forEach(function(el){
