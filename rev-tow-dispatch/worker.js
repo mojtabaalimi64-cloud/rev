@@ -118,16 +118,34 @@ function normStats(d) {
 }
 async function indexedNames(env, prefix) {
   const indexKey = "_index:" + prefix;
+  const progressKey = "_index-progress:" + prefix;
   const saved = await env.TOW.get(indexKey);
   if (saved) { try { const a = JSON.parse(saved); if (Array.isArray(a)) return a.filter(x => typeof x === "string"); } catch {} }
-  // One-time migration of existing records. After this, normal reads do not call KV.list().
-  const names = []; let cursor;
+
+  // Resumable one-time migration: persist each page so a quota interruption
+  // does not force the migration to restart from the beginning next time.
+  let progress = null;
+  const rawProgress = await env.TOW.get(progressKey);
+  if (rawProgress) { try { progress = JSON.parse(rawProgress); } catch {} }
+  const names = progress && Array.isArray(progress.names) ? progress.names.filter(x => typeof x === "string") : [];
+  let cursor = progress && typeof progress.cursor === "string" ? progress.cursor : undefined;
   do {
-    const page = await env.TOW.list({ prefix, cursor });
-    for (const item of page.keys) names.push(item.name);
-    cursor = page.list_complete ? null : page.cursor;
+    let page;
+    try {
+      page = await env.TOW.list({ prefix, cursor });
+    } catch (e) {
+      // Keep the checkpoint for the next attempt and surface the quota cause.
+      await env.TOW.put(progressKey, JSON.stringify({ names, cursor: cursor || null, updatedAt: now() }));
+      throw e;
+    }
+    for (const item of page.keys || []) if (!names.includes(item.name)) names.push(item.name);
+    cursor = page.list_complete ? undefined : page.cursor;
+    if (cursor) {
+      await env.TOW.put(progressKey, JSON.stringify({ names, cursor, updatedAt: now() }));
+    }
   } while (cursor);
   await env.TOW.put(indexKey, JSON.stringify(names));
+  await env.TOW.delete(progressKey);
   return names;
 }
 async function addIndexedName(env, prefix, name) {
@@ -592,6 +610,10 @@ export default {
         message: e && e.message ? String(e.message) : String(e),
         stack: e && e.stack ? String(e.stack) : null,
       });
+      const message = e && e.message ? String(e.message) : String(e);
+      if (/KV list\(\) limit exceeded|usage limit for this operation for today/i.test(message)) {
+        return json({ ok: false, err: "KV_LIST_QUOTA_EXCEEDED", detail: "محدودیت روزانه فهرست‌گیری KV کلادفلر تمام شده است. نقطهٔ بازیابی ذخیره شده و پس از بازنشانی سهمیه، تلاش بعدی از همان مرحله ادامه می‌یابد." }, 503, cors);
+      }
       return json({ ok: false, err: "server error" }, 500, cors);
     }
   },
