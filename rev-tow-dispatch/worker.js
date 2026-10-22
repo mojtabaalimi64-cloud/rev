@@ -444,7 +444,7 @@ async function handle(req, env, cors) {
       .map(r => ({ id: r.id, ts: r.ts, status: r.status, problem: r.problem, car: r.car, loc: r.loc, serviceCode: r.serviceCode || null }));
     return json({ ok: true, driver: {
       id: d.id, name: d.name, phone: d.phone, vehicle: d.vehicle || "", city: d.city || "",
-      radius: d.radius, score: d.score, active: d.active !== false, approved: d.approved === true, onShift: d.onShift !== false,
+      radius: d.radius, score: d.score, active: d.active !== false, approved: d.approved === true, onShift: d.onShift === true,
       stats,
     }, missions }, 200, cors);
   }
