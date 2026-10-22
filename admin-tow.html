@@ -121,19 +121,41 @@ button:disabled{opacity:.5;cursor:default}
   }
 
   var role='master';
-  var driversById={};
+  var driversById={},allDrivers=[],allRequests=[];
+  var provinces=['آذربایجان شرقی','آذربایجان غربی','اردبیل','اصفهان','البرز','ایلام','بوشهر','تهران','چهارمحال و بختیاری','خراسان جنوبی','خراسان رضوی','خراسان شمالی','خوزستان','زنجان','سمنان','سیستان و بلوچستان','فارس','قزوین','قم','کردستان','کرمان','کرمانشاه','کهگیلویه و بویراحمد','گلستان','گیلان','لرستان','مازندران','مرکزی','هرمزگان','همدان','یزد'];
+  function norm(s){return String(s||'').trim().toLocaleLowerCase('fa')}
+  function dateBound(s,end){if(!s)return null;var p=s.split('-');if(p.length!==3)return null;return new Date(Number(p[0]),Number(p[1])-1,Number(p[2]),end?23:0,end?59:0,end?59:0,end?999:0).getTime()}
+  function downloadCsv(name,rows){
+    if(!rows.length){alert('داده‌ای برای خروجی وجود ندارد.');return}
+    var keys=Object.keys(rows[0]),csv='\\uFEFF'+[keys.join(',')].concat(rows.map(function(row){return keys.map(function(k){return '"'+String(row[k]==null?'':row[k]).replace(/"/g,'""')+'"'}).join(',')})).join('\\r\\n');
+    var blob=new Blob([csv],{type:'text/csv;charset=utf-8;'}),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(function(){URL.revokeObjectURL(url)},1000);
+  }
   function renderDrivers(drivers){
-    driversById={};drivers.forEach(function(d){driversById[d.id]=d});
-    $('drvCount').textContent='('+faN(drivers.length)+')';
-    if(!drivers.length){$('driverList').innerHTML='<p class="mut">هنوز راننده‌ای ثبت‌نام نکرده.</p>';return}
-    $('driverList').innerHTML=drivers.map(function(d){
+    allDrivers=drivers||[];driversById={};allDrivers.forEach(function(d){driversById[d.id]=d});
+    var sel=$('provinceFilter'),current=sel.value;
+    sel.innerHTML='<option value="">همه استان‌ها</option><option value="__unknown">استان نامشخص</option>'+provinces.map(function(p){return '<option value="'+esc(p)+'">'+esc(p)+'</option>'}).join('');sel.value=current;
+    var province=sel.value,status=$('driverStatusFilter').value,search=norm($('driverSearch').value);
+    var filtered=allDrivers.filter(function(d){
+      var p=String(d.province||'').trim();
+      if(province==='__unknown'&&p)return false;
+      if(province&&province!=='__unknown'&&p!==province)return false;
+      if(status==='approved'&&d.approved!==true)return false;
+      if(status==='pending'&&d.approved===true)return false;
+      if(status==='shift'&&!(d.approved===true&&d.active!==false&&d.onShift===true))return false;
+      if(status==='offshift'&&(d.active===false||d.onShift===true))return false;
+      if(status==='inactive'&&d.active!==false)return false;
+      return !search||norm([d.name,d.phone,d.id,d.city,p,d.vehicle].join(' ')).indexOf(search)>=0;
+    });
+    $('drvCount').textContent='('+faN(filtered.length)+' از '+faN(allDrivers.length)+')';
+    if(!filtered.length){$('driverList').innerHTML='<p class="mut">با فیلترهای انتخاب‌شده راننده‌ای پیدا نشد.</p>';return}
+    $('driverList').innerHTML=filtered.map(function(d){
       var st=d.stats||{accepted:0,completed:0,rejected:0,missed:0};
       return '<div class="drv"><div class="top"><b>'+esc(d.name)+'</b><span>'
         +(d.approved===true?'<span class="pill green">تأیید شده</span>':'<span class="pill amber">در انتظار تأیید</span>')+' '
         +(d.active!==false?'<span class="pill teal">فعال</span>':'<span class="pill grey">غیرفعال</span>')+' '
         +(d.onShift===true&&d.approved===true&&d.active!==false?'<span class="pill green">در شیفت</span>':'<span class="pill grey">خارج از شیفت</span>')+'</span></div>'
         +'<div class="meta" dir="rtl">📱 <span dir="ltr">'+esc(d.phone)+'</span> · کد: '+esc(d.id)
-        +(d.vehicle?'<br>🚛 '+esc(d.vehicle):'')+(d.city?' · '+esc(d.city):'')
+        +(d.vehicle?'<br>🚛 '+esc(d.vehicle):'')+(d.city?' · شهر: '+esc(d.city):'')+' · استان: '+esc(d.province||'نامشخص')
         +'<br>شعاع پوشش: '+faN(d.radius)+' km · امتیاز: '+faN(d.score)+' · آخرین حضور: '+ago(d.lastSeen)
         +'<br>وضعیت دریافت درخواست: '+(d.approved!==true?'در انتظار تأیید':(d.active===false?'حساب غیرفعال':(d.onShift===true?'شیفت فعال':'شیفت پایان‌یافته')))
         +'<br>📊 قبول: '+faN(st.accepted)+' · انجام‌شده: '+faN(st.completed)+' · رد: '+faN(st.rejected)+' · بی‌پاسخ: '+faN(st.missed)+'</div>'
@@ -145,6 +167,7 @@ button:disabled{opacity:.5;cursor:default}
           ? '<button class="btn-ghost" data-act="deactivate" data-id="'+esc(d.id)+'" type="button">غیرفعال</button>'
           : '<button class="btn-ghost" data-act="activate" data-id="'+esc(d.id)+'" type="button">فعال</button>')
         +'<button class="btn-ghost" data-act="rename" data-id="'+esc(d.id)+'" type="button">✏️ اصلاح نام</button>'
+        +'<button class="btn-ghost" data-act="province" data-id="'+esc(d.id)+'" type="button">📍 تعیین استان</button>'
         +'<button class="btn-ghost" data-act="token" data-id="'+esc(d.id)+'" type="button">🔑 توکن جدید</button>'
         +'</div>':'<div class="mut" style="margin-top:6px">حالت فقط‌مشاهده — کارهای مدیریتی با کلید مدیر اصلی انجام می‌شود.</div>')
         +'<div class="tokbox hidden" id="tok-'+esc(d.id)+'"></div></div>';
@@ -179,6 +202,11 @@ button:disabled{opacity:.5;cursor:default}
       nextName=nextName.trim();
       if(nextName.length<2){$('connErr').textContent='نام باید حداقل ۲ نویسه باشد.';return}
       finishAction(api('/api/admin/driver/profile',{method:'POST',body:JSON.stringify({id:id,name:nextName})}));
+    }else if(act==='province'){
+      var drv=driversById[id],nextProvince=prompt('استان محل فعالیت راننده را دقیقاً وارد کن:\\n'+provinces.join('، '),drv?(drv.province||''):'');
+      b.disabled=false;if(nextProvince===null)return;nextProvince=nextProvince.trim();
+      if(provinces.indexOf(nextProvince)<0){$('connErr').textContent='نام استان باید یکی از ۳۱ استان فهرست‌شده باشد.';return}
+      finishAction(api('/api/admin/driver/profile',{method:'POST',body:JSON.stringify({id:id,province:nextProvince})}));
     }else if(act==='token'){
       api('/api/admin/driver/reset-token',{method:'POST',body:JSON.stringify({id:id})})
       .then(function(d){
@@ -190,19 +218,34 @@ button:disabled{opacity:.5;cursor:default}
   }
 
   function renderRequests(reqs){
-    $('reqCount').textContent='('+faN(reqs.length)+')';
-    if(!reqs.length){$('requestList').innerHTML='<p class="mut">درخواستی ثبت نشده.</p>';return}
-    $('requestList').innerHTML=reqs.map(function(r){
+    allRequests=reqs||[];
+    var status=$('requestStatusFilter').value,search=norm($('requestSearch').value),from=dateBound($('dateFrom').value,false),to=dateBound($('dateTo').value,true);
+    var filtered=allRequests.filter(function(r){var ts=Number(r.ts)||0;if(status&&r.status!==status)return false;if(from!==null&&ts<from)return false;if(to!==null&&ts>to)return false;return !search||norm([r.id,r.name,r.phone,r.problem,r.car,r.loc,r.status,r.province].join(' ')).indexOf(search)>=0});
+    $('reqCount').textContent='('+faN(filtered.length)+' از '+faN(allRequests.length)+')';
+    if(!filtered.length){$('requestList').innerHTML='<p class="mut">با فیلترهای انتخاب‌شده درخواستی پیدا نشد.</p>';return}
+    $('requestList').innerHTML=filtered.map(function(r){
       var dispatchDriverId=r.assignedDriver||(r.currentOffer&&r.currentOffer.driverId);
       var drv=dispatchDriverId&&driversById[dispatchDriverId]?driversById[dispatchDriverId].name:(dispatchDriverId||'—');
       return '<div class="req"><div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap"><b dir="ltr" style="font-size:12px">'+esc(r.id)+'</b>'+statusPill(r)+'</div>'
         +'<div class="meta">'+esc(r.problem)+(r.car?' · '+esc(r.car):'')+' · '+esc(faDate(r.ts))
         +'<br>مشتری: '+esc(r.name||'')+' · <span dir="ltr">'+esc(r.phone||'')+'</span>'
-        +(r.loc?'<br>📍 '+esc(r.loc):'')
+        +(r.province?'<br>استان: '+esc(r.province):'')+(r.loc?'<br>📍 '+esc(r.loc):'')
         +'<br>راننده: '+esc(drv)+(r.serviceCode?' · 🔐 کد امداد: <b dir="ltr">'+esc(r.serviceCode)+'</b>':'')
         +'</div></div>';
     }).join('');
   }
+  function renderReports(){
+    var ds=allDrivers,rs=allRequests,approved=ds.filter(function(d){return d.approved===true}),shift=ds.filter(function(d){return d.approved===true&&d.active!==false&&d.onShift===true});
+    var done=rs.filter(function(r){return r.status==='انجام شد'}),cancel=rs.filter(function(r){return r.status==='لغو شد'}),pending=rs.filter(function(r){return r.status==='در انتظار اپراتور'}),road=rs.filter(function(r){return r.status==='راننده در راه'});
+    var midnight=new Date();midnight.setHours(0,0,0,0);var today=rs.filter(function(r){return Number(r.ts)>=midnight.getTime()}).length,week=rs.filter(function(r){return Number(r.ts)>=Date.now()-7*86400000}).length;
+    var cards=[['کل رانندگان',ds.length],['رانندگان تأییدشده',approved.length],['رانندگان در شیفت',shift.length],['حساب غیرفعال',ds.filter(function(d){return d.active===false}).length],['کل درخواست‌ها',rs.length],['امروز',today],['۷ روز اخیر',week],['در انتظار اپراتور',pending.length],['راننده در راه',road.length],['انجام‌شده',done.length],['لغوشده',cancel.length],['نرخ تکمیل',rs.length?Math.round(done.length/rs.length*100)+'%':'—']];
+    $('reportKpis').innerHTML=cards.map(function(c){return '<div class="kpi"><span>'+esc(c[0])+'</span><b>'+esc(c[1])+'</b></div>'}).join('');
+    var by={};ds.forEach(function(d){var p=d.province||'استان نامشخص';by[p]=by[p]||{all:0,approved:0,shift:0};by[p].all++;if(d.approved===true)by[p].approved++;if(d.approved===true&&d.active!==false&&d.onShift===true)by[p].shift++});
+    var rows=Object.keys(by).sort().map(function(p){return '<tr><td>'+esc(p)+'</td><td>'+faN(by[p].all)+'</td><td>'+faN(by[p].approved)+'</td><td>'+faN(by[p].shift)+'</td></tr>'}).join('');
+    $('provinceReport').innerHTML='<h3 style="font-size:14px;margin:12px 0 6px">توزیع رانندگان بر اساس استان</h3><div style="overflow:auto"><table style="width:100%;border-collapse:collapse;font-size:13px"><thead><tr><th style="text-align:right;padding:8px;border-bottom:1px solid var(--line)">استان</th><th style="padding:8px;border-bottom:1px solid var(--line)">کل</th><th style="padding:8px;border-bottom:1px solid var(--line)">تأییدشده</th><th style="padding:8px;border-bottom:1px solid var(--line)">در شیفت</th></tr></thead><tbody>'+rows+'</tbody></table></div><p class="mut" style="margin-top:8px">رانندگان قدیمی بدون استان در «استان نامشخص» می‌آیند؛ برای ثبت استان از دکمه «تعیین استان» استفاده کن.</p>';
+  }
+  function exportRequestCsv(){downloadCsv('rev-tow-requests.csv',allRequests.map(function(r){return {کد:r.id,زمان:faDate(r.ts),وضعیت:r.status,مشکل:r.problem,خودرو:r.car,مشتری:r.name,تلفن:r.phone,استان:r.province,مکان:r.loc,راننده:r.assignedDriver,کد_امداد:r.serviceCode}}))}
+  function exportDriverCsv(){downloadCsv('rev-tow-drivers.csv',allDrivers.map(function(d){var s=d.stats||{};return {کد:d.id,نام:d.name,تلفن:d.phone,استان:d.province,شهر:d.city,خودرو:d.vehicle,تأیید:d.approved,فعال:d.active!==false,در_شیفت:d.onShift===true,امتیاز:d.score,قبول:s.accepted,انجام_شده:s.completed,رد:s.rejected,بی_پاسخ:s.missed,آخرین_حضور:faDate(d.lastSeen)}}))}
 
   function loadAll(){
     if(!key()){$('connErr').textContent='اول کلید مدیریت را وارد کن.';return}
@@ -235,6 +278,7 @@ button:disabled{opacity:.5;cursor:default}
         $('requestsCard').classList.remove('hidden');
         renderDrivers(dd.drivers||[]);
         renderRequests(rr.requests||[]);
+        renderReports();
       }).catch(function(e){
         $('connErr').textContent='کلید مدیریت تأیید شد، اما دریافت اطلاعات با خطا روبه‌رو شد: '+(e&&e.message?e.message:'خطای شبکه یا CORS')+'.';
         $('connOk').textContent='✓ کلید مدیریت تأیید شد.';
@@ -245,6 +289,11 @@ button:disabled{opacity:.5;cursor:default}
     });
   }
 
+  ['provinceFilter','driverStatusFilter'].forEach(function(id){$(id).addEventListener('change',function(){renderDrivers(allDrivers)})});
+  $('driverSearch').addEventListener('input',function(){renderDrivers(allDrivers)});
+  $('requestStatusFilter').addEventListener('change',function(){renderRequests(allRequests)});
+  ['requestSearch','dateFrom','dateTo'].forEach(function(id){$(id).addEventListener(id==='requestSearch'?'input':'change',function(){renderRequests(allRequests)})});
+  $('exportRequests').addEventListener('click',exportRequestCsv);$('exportDrivers').addEventListener('click',exportDriverCsv);
   $('btnConnect').addEventListener('click',loadAll);
   $('btnRefresh').addEventListener('click',loadAll);
   (function init(){
