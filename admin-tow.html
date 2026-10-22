@@ -179,8 +179,9 @@ button:disabled{opacity:.5;cursor:default}
         +(d.vehicle?'<br>🚛 '+esc(d.vehicle):'')+(d.city?' · شهر: '+esc(d.city):'')+' · استان: '+esc(d.province||'نامشخص')
         +'<br>شعاع پوشش: '+faN(d.radius)+' km · امتیاز: '+faN(d.score)+' · آخرین حضور: '+ago(d.lastSeen)
         +'<br>وضعیت دریافت درخواست: '+(d.approved!==true?'در انتظار تأیید':(d.active===false?'حساب غیرفعال':(d.onShift===true?'شیفت فعال':'شیفت پایان‌یافته')))
-        +'<br>📊 قبول: '+faN(st.accepted)+' · انجام‌شده: '+faN(st.completed)+' · رد: '+faN(st.rejected)+' · بی‌پاسخ: '+faN(st.missed)+'</div>'
-        +(role==='master'?'<div class="acts">'
+        +'<br>📊 قبول: '+faN(st.accepted)+' · انجام‌شده: '+faN(st.completed)+' · رد: '+faN(st.rejected)+' · بی‌پاسخ: '+faN(st.missed)
+        +(d.crm?'<br><b>CRM راننده:</b> '+esc(d.crm.stage||'جدید')+' · اولویت: '+esc(d.crm.priority||'عادی')+(d.crm.owner?' · مسئول: '+esc(d.crm.owner):'')+(d.crm.followUpAt?' · پیگیری: '+esc(d.crm.followUpAt):'')+(d.crm.note?'<br>یادداشت: '+esc(d.crm.note):''):'<br><span class="mut">CRM راننده: ثبت نشده</span>')+'</div>'
+        +(role==='master'?'<div class="acts"><button class="btn-ghost" data-act="drivercrm" data-id="'+esc(d.id)+'" type="button">🗂️ پرونده CRM راننده</button>'
         +(d.approved===true
           ? '<button class="btn-red" data-act="unapprove" data-id="'+esc(d.id)+'" type="button">لغو تأیید</button>'
           : '<button class="btn-green" data-act="approve" data-id="'+esc(d.id)+'" type="button">✔️ تأیید راننده</button>')
@@ -211,7 +212,21 @@ button:disabled{opacity:.5;cursor:default}
         $('connErr').textContent='تغییر انجام نشد: '+(e&&e.message?e.message:'خطای شبکه یا مجوز مدیر');
       });
     }
-    if(act==='approve'||act==='unapprove'){
+    if(act==='drivercrm'){
+      var drv=driversById[id],crm=drv&&drv.crm||{};
+      var stage=prompt('مرحله پرونده راننده:\\nجدید / در حال بررسی / نیازمند تماس / در انتظار مدارک / فعال / محدودشده / بسته‌شده',crm.stage||'جدید');
+      b.disabled=false;if(stage===null)return;stage=stage.trim();
+      var stages=['جدید','در حال بررسی','نیازمند تماس','در انتظار مدارک','فعال','محدودشده','بسته‌شده'];
+      if(stages.indexOf(stage)<0){$('connErr').textContent='مرحله پرونده معتبر نیست.';return}
+      var priority=prompt('اولویت رسیدگی: عادی / مهم / فوری',crm.priority||'عادی');
+      if(priority===null)return;priority=priority.trim();
+      if(['عادی','مهم','فوری'].indexOf(priority)<0){$('connErr').textContent='اولویت معتبر نیست.';return}
+      var owner=prompt('مسئول رسیدگی / اپراتور',crm.owner||'');if(owner===null)return;
+      var followUpAt=prompt('تاریخ یا زمان پیگیری بعدی (یا خالی)',crm.followUpAt||'');if(followUpAt===null)return;
+      var note=prompt('یادداشت پرونده راننده: تماس‌ها، مدارک، شکایت، ارزیابی و اقدام بعدی',crm.note||'');if(note===null)return;
+      b.disabled=true;
+      finishAction(api('/api/admin/driver/crm',{method:'POST',body:JSON.stringify({id:id,stage:stage,priority:priority,owner:owner,followUpAt:followUpAt,note:note})}));
+    }else if(act==='approve'||act==='unapprove'){
       finishAction(api('/api/admin/driver/approve',{method:'POST',body:JSON.stringify({id:id,approved:act==='approve'})}));
     }else if(act==='activate'||act==='deactivate'){
       finishAction(api('/api/admin/driver/active',{method:'POST',body:JSON.stringify({id:id,active:act==='activate'})}));
