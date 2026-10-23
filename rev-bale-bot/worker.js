@@ -302,6 +302,16 @@ async function askLocation(env, chatId, flow) {
 async function handleLocation(env, chatId, loc) {
   const ses = await getSession(env, chatId);
   const flow = ses && ses.flow ? ses.flow : "nearby";
+  if (flow === "tow_location") {
+    if (!ses.name || !validPhone(ses.phone) || !Number.isFinite(Number(loc.latitude)) || !Number.isFinite(Number(loc.longitude))) {
+      await clearSession(env, chatId);
+      await send(env, chatId, "اطلاعات درخواست یا موقعیت معتبر نیست؛ دوباره درخواست امداد رو شروع کن.", { reply_markup: kbFor(env, chatId) });
+      return;
+    }
+    await send(env, chatId, "موقعیت دریافت شد؛ دارم درخواست امداد رو ثبت می‌کنم…");
+    await submitTowRequest(env, chatId, loc, ses);
+    return;
+  }
   if (flow === "route_origin") {
     await setSession(env, chatId, { flow: "route_destination", origin: [Number(loc.longitude), Number(loc.latitude)], at: Date.now() });
     await send(env, chatId, "مبدأ دریافت شد 📍\nحالا مقصد را بنویس؛ مثلاً «تهران، میدان آزادی» یا «اصفهان، سی‌وسه‌پل».", { reply_markup: { keyboard: [[{ text: "🔙 بازگشت" }]], resize_keyboard: true } });
@@ -469,10 +479,53 @@ async function handleTowInfo(env, chatId) {
   const { j } = await jfetch(`${TOW_API}/api/support`);
   const phone = j && j.phone ? j.phone : (j && j.data && j.data.phone) || "";
   await send(env, chatId,
-    "درخواست امداد از داخل آپ REV ثبت می‌شه تا نزدیک‌ترین راننده فعال پیدات کنه و موقعیتش رو زنده ببینی.\n" +
-    (phone ? `شماره پشتیبانی امداد: ${phone}\n` : "") +
-    "اگه راننده یدک‌کشی، از دکمه «بخش راننده» حسابت رو وصل کن.",
-    { reply_markup: kbFor(env, chatId) });
+    "🚨 درخواست امداد رانش\n\nمی‌تونی درخواست یدک‌کش/امداد رو همین‌جا ثبت کنی. نام، شماره تماس، نوع مشکل و موقعیت مکانی لازم است. بعد از ثبت، درخواست برای رانندگان فعال ارسال می‌شود." +
+    (phone ? `\nشماره پشتیبانی: ${phone}` : ""),
+    { reply_markup: { inline_keyboard: [[{ text: "🚨 ثبت درخواست امداد", callback_data: "tow:start" }], [{ text: "🌐 باز کردن اپ REV", url: "https://mojtabaalimi64-cloud.github.io/rev-mobile/?app=1" }]] } });
+}
+
+async function handleTowStart(env, cb) {
+  const chatId = cb.message.chat.id;
+  const usr = await getUser(env, chatId);
+  await answerCb(env, cb.id);
+  if (usr && validPhone(usr.phone)) {
+    await setSession(env, chatId, { flow: "tow_name", phone: usr.phone, at: Date.now() });
+    await send(env, chatId, "نام و نام خانوادگی رو برای درخواست امداد بفرست:");
+  } else {
+    await setSession(env, chatId, { flow: "tow_phone", at: Date.now() });
+    await send(env, chatId, "برای ثبت درخواست، شماره تماس ۱۱ رقمی با فرمت 09 بفرست:");
+  }
+}
+
+async function handleTowProblem(env, cb) {
+  const chatId = cb.message.chat.id;
+  const ses = await getSession(env, chatId);
+  if (!ses || ses.flow !== "tow_problem") { await answerCb(env, cb.id, "این مرحله منقضی شده؛ دوباره درخواست امداد رو شروع کن."); return; }
+  const problemMap = { breakdown: "خرابی خودرو", battery: "مشکل باتری", tire: "پنچری", accident: "تصادف", other: "سایر" };
+  const problem = problemMap[(cb.data || "").slice("tow:problem:".length)];
+  if (!problem) { await answerCb(env, cb.id, "نوع مشکل معتبر نیست."); return; }
+  await setSession(env, chatId, { ...ses, flow: "tow_location", problem, at: Date.now() });
+  await answerCb(env, cb.id);
+  await send(env, chatId, "حالا موقعیت دقیق خودرو رو با دکمه زیر بفرست تا درخواست برای رانندگان نزدیک ارسال بشه:", { reply_markup: KB_LOCATION });
+}
+
+async function submitTowRequest(env, chatId, loc, ses) {
+  const payload = {
+    name: ses.name, phone: ses.phone, car: ses.car || "", problem: ses.problem || "سایر",
+    loc: Number(loc.latitude).toFixed(6) + ", " + Number(loc.longitude).toFixed(6),
+    gps: { lat: Number(loc.latitude), lng: Number(loc.longitude) }, note: "درخواست از بازوی بله REV",
+  };
+  const { status, j } = await jfetch(`${TOW_API}/api/tow/request`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+  });
+  await clearSession(env, chatId);
+  if (status === 200 && j && j.ok && j.id) {
+    await send(env, chatId, "درخواست امداد ثبت شد ✅\nکد پیگیری: " + j.id + "\nوضعیت: " + (j.status || "ثبت شد") + "\nدرخواست برای رانندگان فعال ارسال شده است. برای مشاهده جزئیات و پیگیری زنده، اپ REV رو باز کن.", {
+      reply_markup: { inline_keyboard: [[{ text: "🌐 باز کردن اپ REV", url: "https://mojtabaalimi64-cloud.github.io/rev-mobile/?app=1" }]] },
+    });
+  } else {
+    await send(env, chatId, "ثبت درخواست انجام نشد: " + String(j && (j.err || j.error) || "خطای اتصال (" + status + ")") + "\nاطلاعاتت پاک شد؛ کمی بعد دوباره تلاش کن.", { reply_markup: kbFor(env, chatId) });
+  }
 }
 
 // ---------- بخش راننده ----------
@@ -741,6 +794,27 @@ async function handleMessage(env, msg) {
     return;
   }
   if (ses && ses.flow === "feedback") { await handleFeedbackSubmit(env, msg, text); return; }
+  if (ses && ses.flow === "tow_phone") {
+    if (!validPhone(text)) { await send(env, chatId, "شماره معتبر نیست؛ با فرمت 09 و ۱۱ رقم بفرست:"); return; }
+    await setSession(env, chatId, { ...ses, flow: "tow_name", phone: text, at: Date.now() });
+    await send(env, chatId, "نام و نام خانوادگی رو بفرست:");
+    return;
+  }
+  if (ses && ses.flow === "tow_name") {
+    if (text.length < 2 || text.length > 100) { await send(env, chatId, "لطفاً نام معتبر بفرست:"); return; }
+    await setSession(env, chatId, { ...ses, flow: "tow_car", name: text.slice(0,100), at: Date.now() });
+    await send(env, chatId, "مدل خودرو رو بنویس (اگر نمی‌دونی، «نامشخص» بفرست):");
+    return;
+  }
+  if (ses && ses.flow === "tow_car") {
+    await setSession(env, chatId, { ...ses, flow: "tow_problem", car: text.slice(0,100), at: Date.now() });
+    await send(env, chatId, "نوع مشکل رو انتخاب کن:", { reply_markup: { inline_keyboard: [
+      [{ text: "خرابی خودرو", callback_data: "tow:problem:breakdown" }, { text: "مشکل باتری", callback_data: "tow:problem:battery" }],
+      [{ text: "پنچری", callback_data: "tow:problem:tire" }, { text: "تصادف", callback_data: "tow:problem:accident" }],
+      [{ text: "سایر", callback_data: "tow:problem:other" }],
+    ] } });
+    return;
+  }
   if (ses && ses.flow === "phone") { await handlePhoneInput(env, chatId, text); return; }
   if (ses && ses.flow === "route_destination") { await handleRouteDestination(env, chatId, text, ses); return; }
   if (ses && ses.flow === "driver_token") { await handleDriverToken(env, chatId, text); return; }
@@ -788,6 +862,8 @@ async function handleMessage(env, msg) {
 async function handleCallback(env, cb) {
   const data = cb.data || "";
   try {
+    if (data === "tow:start") return await handleTowStart(env, cb);
+    if (data.startsWith("tow:problem:")) return await handleTowProblem(env, cb);
     if (data.startsWith("pick:")) return await handlePick(env, cb);
     if (data.startsWith("rep:")) return await handleReport(env, cb);
     if (data.startsWith("mod:")) return await handleModerate(env, cb);
