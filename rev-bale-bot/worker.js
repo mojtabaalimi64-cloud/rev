@@ -602,6 +602,11 @@ async function handleMessage(env, msg) {
   }
 
   const ses = await getSession(env, chatId);
+  if (text === "🔙 بازگشت") {
+    await clearSession(env, chatId);
+    await send(env, chatId, "منوی اصلی", { reply_markup: kbFor(env, chatId) });
+    return;
+  }
   if (ses && ses.flow === "phone") { await handlePhoneInput(env, chatId, text); return; }
   if (ses && ses.flow === "route_destination") { await handleRouteDestination(env, chatId, text, ses); return; }
   if (ses && ses.flow === "driver_token") { await handleDriverToken(env, chatId, text); return; }
