@@ -428,6 +428,39 @@ async function handle(req, env, cors) {
     return json({ ok: true, id, token, radius: d.radius, approved: false }, 200, cors);
   }
 
+  // ---- driver: issue a one-time Bale pairing code (requires authenticated driver token) ----
+  if (path === "/api/driver/bale-pair-code" && method === "POST") {
+    const b = await body(req);
+    const d = await driverByToken(env, b.token);
+    if (!d) return json({ ok: false, err: "توکن راننده معتبر نیست" }, 401, cors);
+    if (d.registrationRevoked === true || d.registrationDeleted === true || d.active === false)
+      return json({ ok: false, err: "حساب راننده فعال نیست" }, 403, cors);
+    const code = randomHex(16);
+    await storePut(env, "bale-pair:" + code, JSON.stringify({ driverId: d.id, createdAt: now() }), { expirationTtl: 300 });
+    return json({ ok: true, code, expiresIn: 300 }, 200, cors);
+  }
+
+  // ---- Bale bot: redeem a one-time pairing code; code is consumed before token is returned ----
+  if (path === "/api/driver/bale-link" && method === "POST") {
+    const b = await body(req);
+    const code = String(b.code || "").trim().toLowerCase();
+    const chatId = String(b.chatId || "").trim();
+    if (!/^[a-f0-9]{32}$/.test(code) || !/^\d{1,24}$/.test(chatId))
+      return json({ ok: false, err: "کد اتصال معتبر نیست" }, 400, cors);
+    const key = "bale-pair:" + code;
+    const raw = await storeGet(env, key);
+    if (!raw) return json({ ok: false, err: "کد اتصال منقضی یا قبلاً استفاده شده است" }, 410, cors);
+    const pair = JSON.parse(raw);
+    const d = await getDriver(env, pair.driverId);
+    if (!d || d.registrationRevoked === true || d.registrationDeleted === true || d.active === false)
+      { await storeDelete(env, key); return json({ ok: false, err: "حساب راننده فعال نیست" }, 403, cors); }
+    await storeDelete(env, key);
+    d.baleChatId = chatId;
+    d.baleLinkedAt = now();
+    await saveDriver(env, d);
+    return json({ ok: true, token: d.token, driverId: d.id, name: d.name }, 200, cors);
+  }
+
   // ---- driver: password login ----
   if (path === "/api/driver/login" && method === "POST") {
     const b = await body(req);
@@ -844,6 +877,7 @@ button{padding:12px;border:0;border-radius:8px;font-weight:800;width:100%;margin
 <div class="card"><div class="big">🚨 پنل راننده یدک‌کش REV</div>
 <div class="mut">توکنی که هنگام ثبت‌نام گرفتی را وارد کن. صفحه را باز نگه دار؛ پیشنهادها خودکار می‌آیند.</div>
 <input id="tok" placeholder="توکن راننده"><button class="ok" id="login">ورود به پنل راننده</button></div>
+<div class="card" id="pairCard" style="display:none"><div class="big">🔗 اتصال به بازوی بله</div><div class="mut">کد موقت اتصال بساز و آن را فقط داخل گفت‌وگوی بازوی REV در بله وارد کن. کد ۵ دقیقه اعتبار دارد و یک‌بار مصرف است.</div><button class="ok" id="makePair">ساخت کد اتصال بله</button><div class="big" id="pairCode" style="word-break:break-all"></div><div class="mut" id="pairHint"></div></div>
 <div class="card" id="shiftCard" style="display:none"><div class="big" id="shiftTitle">وضعیت شیفت</div><div class="mut" id="shiftHint">برای دریافت درخواست باید شیفت را شروع کنی.</div><button class="ok" id="startShift">🟢 آماده فعالیت هستم — شروع شیفت</button><button class="no" id="endShift" style="display:none">⏹️ اتمام شیفت کاری</button></div>
 <div class="card" id="offer"><div class="big">📥 درخواست جدید</div><div id="od"></div>
 <button class="ok" id="acc">✅ قبول می‌کنم</button><button class="no" id="rej">❌ رد</button></div>
@@ -861,9 +895,15 @@ document.getElementById("st").textContent=ON?"آنلاین هستی و آماد�
 if(!ON){REQ=null;document.getElementById("offer").style.display="none"}}
 document.getElementById("login").onclick=function(){T=document.getElementById("tok").value.trim();if(!T)return;
 api("/api/driver/history?token="+encodeURIComponent(T)).then(function(j){
-showShift(j.driver.onShift===true&&j.driver.active!==false);
+document.getElementById("pairCard").style.display="block";\nshowShift(j.driver.onShift===true&&j.driver.active!==false);
 loop();if(!loopTimer)loopTimer=setInterval(loop,25000);hb();if(!hbTimer)hbTimer=setInterval(hb,60000);
 }).catch(function(e){document.getElementById("st").textContent="ورود انجام نشد: "+e.message})};
+document.getElementById("makePair").onclick=function(){if(!T)return;
+document.getElementById("pairCode").textContent="در حال ساخت کد…";
+api("/api/driver/bale-pair-code",{method:"POST",body:JSON.stringify({token:T})}).then(function(j){
+document.getElementById("pairCode").textContent=j.code;
+document.getElementById("pairHint").textContent="این کد را در گفت‌وگوی بازوی بله بفرست. اعتبار: ۵ دقیقه.";
+}).catch(function(e){document.getElementById("pairCode").textContent="";document.getElementById("pairHint").textContent="کد ساخته نشد: "+e.message})};
 document.getElementById("startShift").onclick=function(){if(!T)return;
 api("/api/driver/shift",{method:"POST",body:JSON.stringify({token:T,onShift:true})}).then(function(){showShift(true);hb();loop()}).catch(function(e){document.getElementById("st").textContent="شروع شیفت انجام نشد: "+e.message})};
 document.getElementById("endShift").onclick=function(){if(!T)return;
