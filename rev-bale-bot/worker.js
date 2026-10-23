@@ -132,11 +132,22 @@ const clearSession = (env, chatId) => env.BOT_KV.delete(`ses:${chatId}`);
 async function fetchStations(env) {
   const cached = await kvGet(env, "cache:stations");
   if (cached && Array.isArray(cached.list)) return cached.list;
-  const res = await fetch(`${REV_API}/api/stations`);
-  const j = await res.json();
-  const list = Array.isArray(j.data) ? j.data : [];
-  await kvPut(env, "cache:stations", { list }, STATION_CACHE_TTL);
-  return list;
+  try {
+    const res = await fetch(`${REV_API}/api/stations`, {
+      headers: { Accept: "application/json", "User-Agent": "REV-BaleBot/1.0 (+https://www.revyab.ir)" },
+      signal: AbortSignal.timeout(7000),
+    });
+    if (!res.ok) return [];
+    const raw = await res.text();
+    let j;
+    try { j = JSON.parse(raw); }
+    catch { return []; }
+    const list = Array.isArray(j.data) ? j.data : [];
+    if (list.length) await kvPut(env, "cache:stations", { list }, STATION_CACHE_TTL);
+    return list;
+  } catch {
+    return [];
+  }
 }
 
 async function fetchLiveStatus() {
