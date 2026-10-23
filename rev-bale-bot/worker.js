@@ -156,46 +156,55 @@ async function jfetch(url, opts = {}) {
 // ---------- Conversational route planning ----------
 async function geocodeRoutePlace(place) {
   const errors = [];
-  // Try Nominatim first, but don't let a stalled public geocoder freeze the chat.
   try {
     const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ir&q=' + encodeURIComponent(place);
     const response = await fetch(url, {
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', 'User-Agent': 'REV-BaleBot/1.0 (+https://www.revyab.ir)' },
       signal: AbortSignal.timeout(7000),
     });
-    if (!response.ok) {
-      errors.push('Nominatim HTTP ' + response.status);
-    } else {
+    if (!response.ok) errors.push('Nominatim HTTP ' + response.status);
+    else {
       const rows = await response.json();
-      if (Array.isArray(rows) && rows.length && Number.isFinite(Number(rows[0].lon)) && Number.isFinite(Number(rows[0].lat))) {
-        return [Number(rows[0].lon), Number(rows[0].lat)];
-      }
+      if (Array.isArray(rows) && rows.length && Number.isFinite(Number(rows[0].lon)) && Number.isFinite(Number(rows[0].lat))) return [Number(rows[0].lon), Number(rows[0].lat)];
+      errors.push('Nominatim: مقصد پیدا نشد');
     }
-  } catch (e) {
-    errors.push('Nominatim: ' + String(e && e.message || 'خطای اتصال'));
-  }
+  } catch (e) { errors.push('Nominatim: ' + String(e && e.message || 'خطای اتصال')); }
 
-  // Fallback geocoder: Photon / Komoot. It often succeeds when Nominatim is rate-limited.
+  // Open-Meteo geocoder fallback. Only accept locations explicitly identified as Iran.
   try {
-    const url = 'https://photon.komoot.io/api/?limit=1&lang=fa&q=' + encodeURIComponent(place + ', Iran');
-    const response = await fetch(url, {
-      headers: { Accept: 'application/geo+json' },
-      signal: AbortSignal.timeout(7000),
-    });
-    if (!response.ok) {
-      errors.push('Photon HTTP ' + response.status);
-    } else {
+    const url = 'https://geocoding-api.open-meteo.com/v1/search?count=10&language=fa&format=json&name=' + encodeURIComponent(place);
+    const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(7000) });
+    if (!response.ok) errors.push('Open-Meteo HTTP ' + response.status);
+    else {
       const data = await response.json();
-      const feature = data && Array.isArray(data.features) ? data.features[0] : null;
-      const coords = feature && feature.geometry && feature.geometry.coordinates;
-      if (Array.isArray(coords) && Number.isFinite(Number(coords[0])) && Number.isFinite(Number(coords[1]))) {
-        return [Number(coords[0]), Number(coords[1])];
-      }
+      const results = Array.isArray(data.results) ? data.results : [];
+      const match = results.find(x => String(x.country_code || '').toUpperCase() === 'IR' && Number.isFinite(Number(x.longitude)) && Number.isFinite(Number(x.latitude)));
+      if (match) return [Number(match.longitude), Number(match.latitude)];
+      errors.push('Open-Meteo: مقصدی در ایران پیدا نشد');
+    }
+  } catch (e) { errors.push('Open-Meteo: ' + String(e && e.message || 'خطای اتصال')); }
+
+  // Photon fallback without the optional language parameter.
+  try {
+    const url = 'https://photon.komoot.io/api/?limit=5&q=' + encodeURIComponent(place + ', Iran');
+    const response = await fetch(url, { headers: { Accept: 'application/geo+json' }, signal: AbortSignal.timeout(7000) });
+    if (!response.ok) errors.push('Photon HTTP ' + response.status);
+    else {
+      const data = await response.json();
+      const features = data && Array.isArray(data.features) ? data.features : [];
+      const match = features.find(feature => {
+        const props = feature && feature.properties || {};
+        const country = String(props.countrycode || props.country_code || '').toUpperCase();
+        const coords = feature && feature.geometry && feature.geometry.coordinates;
+        return country === 'IR' && Array.isArray(coords) && Number.isFinite(Number(coords[0])) && Number.isFinite(Number(coords[1]));
+      }) || features.find(feature => {
+        const coords = feature && feature.geometry && feature.geometry.coordinates;
+        return Array.isArray(coords) && Number.isFinite(Number(coords[0])) && Number.isFinite(Number(coords[1]));
+      });
+      if (match) return [Number(match.geometry.coordinates[0]), Number(match.geometry.coordinates[1])];
       errors.push('Photon: مقصد پیدا نشد');
     }
-  } catch (e) {
-    errors.push('Photon: ' + String(e && e.message || 'خطای اتصال'));
-  }
+  } catch (e) { errors.push('Photon: ' + String(e && e.message || 'خطای اتصال')); }
   throw new Error('سرویس‌های مکان‌یابی مقصد پاسخ معتبر ندادند. (' + errors.join('; ') + ') مقصد را با نام شهر و نشانی دقیق‌تر بفرست.');
 }
 function routeDistanceKm(a, b) {
