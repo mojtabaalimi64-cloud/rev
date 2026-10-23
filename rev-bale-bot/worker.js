@@ -89,8 +89,10 @@ const editText = (env, chatId, messageId, text, extra = {}) =>
 const KB_USER = {
   keyboard: [
     [{ text: "📍 گزارش وضعیت شارژر" }, { text: "🔌 شارژر نزدیک" }],
-    [{ text: "🚨 درخواست امداد" }, { text: "🚕 بخش راننده" }],
-    [{ text: "👤 حساب من" }],
+    [{ text: "🧭 مسیریابی" }, { text: "🚨 درخواست امداد" }],
+    [{ text: "🚕 بخش راننده" }, { text: "👤 حساب من" }],
+    [{ text: "💬 پشتیبانی و پیشنهاد" }, { text: "🌐 ورود به اپ REV" }],
+    [{ text: "📖 راهنمای استفاده" }],
   ],
   resize_keyboard: true,
 };
@@ -99,8 +101,11 @@ const KB_OWNER = {
   keyboard: [
     [{ text: "📥 صف بررسی ایستگاه‌ها" }, { text: "📊 گزارش امروز" }],
     [{ text: "📣 پست در کانال" }, { text: "📍 گزارش وضعیت شارژر" }],
-    [{ text: "🔌 شارژر نزدیک" }, { text: "🚨 درخواست امداد" }],
-    [{ text: "🚕 بخش راننده" }, { text: "👤 حساب من" }],
+    [{ text: "🧭 مسیریابی" }, { text: "🔌 شارژر نزدیک" }],
+    [{ text: "🚨 درخواست امداد" }, { text: "🚕 بخش راننده" }],
+    [{ text: "👤 حساب من" }],
+    [{ text: "💬 پشتیبانی و پیشنهاد" }, { text: "🌐 ورود به اپ REV" }],
+    [{ text: "📖 راهنمای استفاده" }],
   ],
   resize_keyboard: true,
 };
@@ -130,11 +135,22 @@ const clearSession = (env, chatId) => env.BOT_KV.delete(`ses:${chatId}`);
 async function fetchStations(env) {
   const cached = await kvGet(env, "cache:stations");
   if (cached && Array.isArray(cached.list)) return cached.list;
-  const res = await fetch(`${REV_API}/api/stations`);
-  const j = await res.json();
-  const list = Array.isArray(j.data) ? j.data : [];
-  await kvPut(env, "cache:stations", { list }, STATION_CACHE_TTL);
-  return list;
+  try {
+    const res = await fetch(`${REV_API}/api/stations`, {
+      headers: { Accept: "application/json", "User-Agent": "REV-BaleBot/1.0 (+https://www.revyab.ir)" },
+      signal: AbortSignal.timeout(7000),
+    });
+    if (!res.ok) return [];
+    const raw = await res.text();
+    let j;
+    try { j = JSON.parse(raw); }
+    catch { return []; }
+    const list = Array.isArray(j.data) ? j.data : [];
+    if (list.length) await kvPut(env, "cache:stations", { list }, STATION_CACHE_TTL);
+    return list;
+  } catch {
+    return [];
+  }
 }
 
 async function fetchLiveStatus() {
@@ -151,6 +167,128 @@ async function jfetch(url, opts = {}) {
   return { status: res.status, j };
 }
 
+// ---------- Conversational route planning ----------
+async function geocodeRoutePlace(place) {
+  const errors = [];
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ir&q=' + encodeURIComponent(place);
+    const response = await fetch(url, {
+      headers: { Accept: 'application/json', 'User-Agent': 'REV-BaleBot/1.0 (+https://www.revyab.ir)' },
+      signal: AbortSignal.timeout(7000),
+    });
+    if (!response.ok) errors.push('Nominatim HTTP ' + response.status);
+    else {
+      const rows = await response.json();
+      if (Array.isArray(rows) && rows.length && Number.isFinite(Number(rows[0].lon)) && Number.isFinite(Number(rows[0].lat))) return [Number(rows[0].lon), Number(rows[0].lat)];
+      errors.push('Nominatim: مقصد پیدا نشد');
+    }
+  } catch (e) { errors.push('Nominatim: ' + String(e && e.message || 'خطای اتصال')); }
+
+  // Open-Meteo geocoder fallback. Only accept locations explicitly identified as Iran.
+  try {
+    const url = 'https://geocoding-api.open-meteo.com/v1/search?count=10&language=fa&format=json&name=' + encodeURIComponent(place);
+    const response = await fetch(url, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(7000) });
+    if (!response.ok) errors.push('Open-Meteo HTTP ' + response.status);
+    else {
+      const data = await response.json();
+      const results = Array.isArray(data.results) ? data.results : [];
+      const match = results.find(x => String(x.country_code || '').toUpperCase() === 'IR' && Number.isFinite(Number(x.longitude)) && Number.isFinite(Number(x.latitude)));
+      if (match) return [Number(match.longitude), Number(match.latitude)];
+      errors.push('Open-Meteo: مقصدی در ایران پیدا نشد');
+    }
+  } catch (e) { errors.push('Open-Meteo: ' + String(e && e.message || 'خطای اتصال')); }
+
+  // Photon fallback without the optional language parameter.
+  try {
+    const url = 'https://photon.komoot.io/api/?limit=5&q=' + encodeURIComponent(place + ', Iran');
+    const response = await fetch(url, { headers: { Accept: 'application/geo+json' }, signal: AbortSignal.timeout(7000) });
+    if (!response.ok) errors.push('Photon HTTP ' + response.status);
+    else {
+      const data = await response.json();
+      const features = data && Array.isArray(data.features) ? data.features : [];
+      const match = features.find(feature => {
+        const props = feature && feature.properties || {};
+        const country = String(props.countrycode || props.country_code || '').toUpperCase();
+        const coords = feature && feature.geometry && feature.geometry.coordinates;
+        return country === 'IR' && Array.isArray(coords) && Number.isFinite(Number(coords[0])) && Number.isFinite(Number(coords[1]));
+      }) || features.find(feature => {
+        const coords = feature && feature.geometry && feature.geometry.coordinates;
+        return Array.isArray(coords) && Number.isFinite(Number(coords[0])) && Number.isFinite(Number(coords[1]));
+      });
+      if (match) return [Number(match.geometry.coordinates[0]), Number(match.geometry.coordinates[1])];
+      errors.push('Photon: مقصد پیدا نشد');
+    }
+  } catch (e) { errors.push('Photon: ' + String(e && e.message || 'خطای اتصال')); }
+  throw new Error('سرویس‌های مکان‌یابی مقصد پاسخ معتبر ندادند. (' + errors.join('; ') + ') مقصد را با نام شهر و نشانی دقیق‌تر بفرست.');
+}
+function routeDistanceKm(a, b) {
+  const rad = n => n * Math.PI / 180;
+  const dLat = rad(b[1] - a[1]), dLon = rad(b[0] - a[0]);
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[1])) * Math.cos(rad(b[1])) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.min(1, Math.sqrt(x)));
+}
+async function handleRouteDestination(env, chatId, place, ses) {
+  await send(env, chatId, 'دارم مسیر و شارژرهای بین راه را بررسی می‌کنم…');
+  try {
+    const destination = await geocodeRoutePlace(place);
+    const origin = ses.origin;
+    const routePath = origin[0] + ',' + origin[1] + ';' + destination[0] + ',' + destination[1];
+    const routeQuery = '?overview=full&geometries=geojson&steps=false';
+    // دو سرویس عمومی به‌صورت پشتیبان؛ اگر یکی در دسترس نبود، دومی امتحان می‌شود.
+    const routeEndpoints = [
+      'https://router.project-osrm.org/route/v1/driving/' + routePath + routeQuery,
+      'https://routing.openstreetmap.de/routed-car/route/v1/driving/' + routePath + routeQuery,
+    ];
+    let payload = null;
+    const routeErrors = [];
+    for (let i = 0; i < routeEndpoints.length; i++) {
+      const endpoint = routeEndpoints[i];
+      const providerName = i === 0 ? 'OSRM عمومی' : 'OSM routing جایگزین';
+      try {
+        const response = await fetch(endpoint, {
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'REV-BaleBot/1.0 (+https://www.revyab.ir)',
+            Referer: 'https://www.revyab.ir/',
+          },
+          signal: AbortSignal.timeout(12000),
+        });
+        if (!response.ok) {
+          routeErrors.push(providerName + ': HTTP ' + response.status);
+          continue;
+        }
+        const candidate = await response.json();
+        if (candidate.code === 'Ok' && Array.isArray(candidate.routes) && candidate.routes.length) {
+          payload = candidate;
+          break;
+        }
+        routeErrors.push(providerName + ': ' + (candidate.message || candidate.code || 'پاسخ نامعتبر'));
+      } catch (e) {
+        routeErrors.push(providerName + ': ' + String(e && e.message || 'خطای اتصال'));
+      }
+    }
+    if (!payload) throw new Error('سرویس‌های مسیر پاسخ ندادند (' + routeErrors.join('؛ ') + '). ممکن است دسترسی از سمت سرویس‌دهنده محدود شده باشد؛ کمی بعد دوباره تلاش کن.');
+    const route = payload.routes[0], coords = route.geometry && route.geometry.coordinates || [];
+    const stations = await fetchStations(env);
+    const along = stations.map(st => {
+      const point = [Number(st.longitude), Number(st.latitude)]; let distance = Infinity;
+      const stride = Math.max(1, Math.floor(coords.length / 80));
+      for (let i = 0; i < coords.length; i += stride) distance = Math.min(distance, routeDistanceKm(point, coords[i]));
+      return { st, distance };
+    }).filter(x => Number.isFinite(x.distance) && x.distance <= 8).sort((a, b) => a.distance - b.distance).slice(0, 5);
+    const km = (route.distance / 1000).toFixed(1), mins = Math.round(route.duration / 60);
+    const timeText = mins >= 60 ? Math.floor(mins / 60) + ' ساعت و ' + (mins % 60) + ' دقیقه' : mins + ' دقیقه';
+    const mapUrl = 'https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=' + origin[1] + '%2C' + origin[0] + '%3B' + destination[1] + '%2C' + destination[0];
+    const revUrl = 'https://mojtabaalimi64-cloud.github.io/rev-mobile/nearby-map.html?app=1&navstart=1&olat=' + encodeURIComponent(origin[1]) + '&olng=' + encodeURIComponent(origin[0]) + '&dlat=' + encodeURIComponent(destination[1]) + '&dlng=' + encodeURIComponent(destination[0]) + '&oname=' + encodeURIComponent('مبدأ ارسالی از بله') + '&dname=' + encodeURIComponent(place);
+    const chargerText = along.length ? along.map((x, i) => (i + 1) + '. ' + (x.st.name || 'ایستگاه شارژ') + ' — حدود ' + x.distance.toFixed(1) + ' کیلومتر از نقاط نمونه مسیر').join('\n') : 'در داده فعلی REV، شارژری در فاصله تقریبی ۸ کیلومتری نقاط بررسی‌شده مسیر پیدا نشد.';
+    await clearSession(env, chatId);
+    await send(env, chatId, '🧭 خلاصه مسیر به ' + place + '\n\n📏 مسافت جاده‌ای: ' + km + ' کیلومتر\n⏱ زمان تخمینی: ' + timeText + '\n\n🔌 شارژرهای احتمالی نزدیک مسیر:\n' + chargerText + '\n\n⚠️ زمان و مسیر تخمینی‌اند؛ وضعیت و سازگاری شارژرها را پیش از حرکت بررسی کن. برای هدایت زنده و محاسبه مجدد مسیر از اپ REV استفاده کن.', { reply_markup: { inline_keyboard: [[{ text: '🧭 باز کردن مسیر در مسیریاب REV', url: revUrl }], [{ text: '🗺️ نمایش در نقشه جایگزین', url: mapUrl }]] }, disable_web_page_preview: true });
+  } catch (error) {
+    await clearSession(env, chatId);
+    await send(env, chatId, 'مسیریابی انجام نشد: ' + String(error && error.message || 'خطای نامشخص') + '\nلطفاً مقصد را دقیق‌تر بنویس یا دوباره تلاش کن.', { reply_markup: kbFor(env, chatId) });
+  }
+}
+
 // ---------- جریان کاربر: گزارش وضعیت و شارژر نزدیک ----------
 async function askLocation(env, chatId, flow) {
   await setSession(env, chatId, { flow, at: Date.now() });
@@ -164,6 +302,21 @@ async function askLocation(env, chatId, flow) {
 async function handleLocation(env, chatId, loc) {
   const ses = await getSession(env, chatId);
   const flow = ses && ses.flow ? ses.flow : "nearby";
+  if (flow === "tow_location") {
+    if (!ses.name || !validPhone(ses.phone) || !Number.isFinite(Number(loc.latitude)) || !Number.isFinite(Number(loc.longitude))) {
+      await clearSession(env, chatId);
+      await send(env, chatId, "اطلاعات درخواست یا موقعیت معتبر نیست؛ دوباره درخواست امداد رو شروع کن.", { reply_markup: kbFor(env, chatId) });
+      return;
+    }
+    await send(env, chatId, "موقعیت دریافت شد؛ دارم درخواست امداد رو ثبت می‌کنم…");
+    await submitTowRequest(env, chatId, loc, ses);
+    return;
+  }
+  if (flow === "route_origin") {
+    await setSession(env, chatId, { flow: "route_destination", origin: [Number(loc.longitude), Number(loc.latitude)], at: Date.now() });
+    await send(env, chatId, "مبدأ دریافت شد 📍\nحالا مقصد را بنویس؛ مثلاً «تهران، میدان آزادی» یا «اصفهان، سی‌وسه‌پل».", { reply_markup: { keyboard: [[{ text: "🔙 بازگشت" }]], resize_keyboard: true } });
+    return;
+  }
   const stations = await fetchStations(env);
   const near = nearestStations(stations, loc.latitude, loc.longitude);
 
@@ -280,14 +433,99 @@ async function handlePhoneInput(env, chatId, text) {
 }
 
 // ---------- امداد (سمت کاربر) ----------
+async function handleFeedbackStart(env, chatId) {
+  await setSession(env, chatId, { flow: "feedback", at: Date.now() });
+  await send(env, chatId, "پیام، پیشنهاد یا گزارش خطا رو در یک پیام بنویس. لطفاً رمز، توکن یا اطلاعات حساس نفرست. پیام برای بررسی به مدیر REV ارسال می‌شه. برای لغو، «🔙 بازگشت» رو بزن.");
+}
+
+async function handleFeedbackSubmit(env, msg, text) {
+  const chatId = msg.chat.id;
+  const body = String(text || "").trim().slice(0, 2500);
+  if (body.length < 3) {
+    await send(env, chatId, "پیامت خیلی کوتاهه؛ لطفاً کمی بیشتر توضیح بده.");
+    return;
+  }
+  const id = String(Date.now()) + "-" + String(chatId).slice(-5);
+  const record = { id, chatId, text: body, at: Date.now(), username: msg.from && msg.from.username || "", name: [msg.from && msg.from.first_name, msg.from && msg.from.last_name].filter(Boolean).join(" ") };
+  await kvPut(env, "feedback:" + id, record, 2592000);
+  const sender = record.name || "کاربر بله";
+  const ownerText = "💬 پیام جدید برای پشتیبانی REV\nشناسه: " + id + "\nنام: " + sender + (record.username ? " (@" + record.username + ")" : "") + "\nشناسه چت: " + chatId + "\n\n" + body;
+  await send(env, ownerId(env), ownerText.slice(0, 3500));
+  await clearSession(env, chatId);
+  await send(env, chatId, "پیامت برای مدیر REV ارسال شد ✅\nممنون که به بهترشدن رانش کمک می‌کنی.", { reply_markup: kbFor(env, chatId) });
+}
+
+async function handleRevLink(env, chatId) {
+  await send(env, chatId, "برای استفاده از مسیریاب، نقشه و خدمات رانش، اپ REV رو باز کن:", {
+    reply_markup: { inline_keyboard: [[{ text: "🌐 باز کردن اپ REV", url: "https://mojtabaalimi64-cloud.github.io/rev-mobile/nearby-map.html?app=1" }], [{ text: "🏠 وب‌سایت REV", url: "https://www.revyab.ir" }]] },
+    disable_web_page_preview: true,
+  });
+}
+
+async function handleBotHelp(env, chatId) {
+  await send(env, chatId,
+    "📖 راهنمای بازوی REV\n\n" +
+    "🔌 شارژر نزدیک: موقعیتت رو بفرست تا ایستگاه‌های ثبت‌شده و آخرین وضعیت گزارش‌شده نمایش داده بشه.\n" +
+    "📍 گزارش وضعیت: نزدیک شارژر باش؛ گزارش فقط در شعاع مجاز ثبت می‌شه.\n" +
+    "🧭 مسیریابی: مبدأ رو با موقعیت مکانی بفرست و مقصد رو به‌صورت نام شهر/نشانی وارد کن؛ برای هدایت زنده، مسیر رو در اپ REV باز کن.\n" +
+    "🚨 درخواست امداد: ثبت درخواست امداد از اپ REV انجام می‌شه.\n" +
+    "🚕 بخش راننده: توکن پنل راننده رو وارد کن تا پیشنهادهای امداد رو ببینی.\n" +
+    "👤 حساب من: شماره موبایل رو ثبت کن تا امتیاز مشارکت نمایش داده بشه.\n" +
+    "💬 پشتیبانی: پیام یا پیشنهادت رو مستقیم برای مدیر بفرست.\n\n" +
+    "برای بازگشت به منو، «شروع» رو بزن.", { reply_markup: kbFor(env, chatId) });
+}
+
 async function handleTowInfo(env, chatId) {
   const { j } = await jfetch(`${TOW_API}/api/support`);
   const phone = j && j.phone ? j.phone : (j && j.data && j.data.phone) || "";
   await send(env, chatId,
-    "درخواست امداد از داخل آپ REV ثبت می‌شه تا نزدیک‌ترین راننده فعال پیدات کنه و موقعیتش رو زنده ببینی.\n" +
-    (phone ? `شماره پشتیبانی امداد: ${phone}\n` : "") +
-    "اگه راننده یدک‌کشی، از دکمه «بخش راننده» حسابت رو وصل کن.",
-    { reply_markup: kbFor(env, chatId) });
+    "🚨 درخواست امداد رانش\n\nمی‌تونی درخواست یدک‌کش/امداد رو همین‌جا ثبت کنی. نام، شماره تماس، نوع مشکل و موقعیت مکانی لازم است. بعد از ثبت، درخواست برای رانندگان فعال ارسال می‌شود." +
+    (phone ? `\nشماره پشتیبانی: ${phone}` : ""),
+    { reply_markup: { inline_keyboard: [[{ text: "🚨 ثبت درخواست امداد", callback_data: "tow:start" }], [{ text: "🌐 باز کردن اپ REV", url: "https://mojtabaalimi64-cloud.github.io/rev-mobile/?app=1" }]] } });
+}
+
+async function handleTowStart(env, cb) {
+  const chatId = cb.message.chat.id;
+  const usr = await getUser(env, chatId);
+  await answerCb(env, cb.id);
+  if (usr && validPhone(usr.phone)) {
+    await setSession(env, chatId, { flow: "tow_name", phone: usr.phone, at: Date.now() });
+    await send(env, chatId, "نام و نام خانوادگی رو برای درخواست امداد بفرست:");
+  } else {
+    await setSession(env, chatId, { flow: "tow_phone", at: Date.now() });
+    await send(env, chatId, "برای ثبت درخواست، شماره تماس ۱۱ رقمی با فرمت 09 بفرست:");
+  }
+}
+
+async function handleTowProblem(env, cb) {
+  const chatId = cb.message.chat.id;
+  const ses = await getSession(env, chatId);
+  if (!ses || ses.flow !== "tow_problem") { await answerCb(env, cb.id, "این مرحله منقضی شده؛ دوباره درخواست امداد رو شروع کن."); return; }
+  const problemMap = { breakdown: "خرابی خودرو", battery: "مشکل باتری", tire: "پنچری", accident: "تصادف", other: "سایر" };
+  const problem = problemMap[(cb.data || "").slice("tow:problem:".length)];
+  if (!problem) { await answerCb(env, cb.id, "نوع مشکل معتبر نیست."); return; }
+  await setSession(env, chatId, { ...ses, flow: "tow_location", problem, at: Date.now() });
+  await answerCb(env, cb.id);
+  await send(env, chatId, "حالا موقعیت دقیق خودرو رو با دکمه زیر بفرست تا درخواست برای رانندگان نزدیک ارسال بشه:", { reply_markup: KB_LOCATION });
+}
+
+async function submitTowRequest(env, chatId, loc, ses) {
+  const payload = {
+    name: ses.name, phone: ses.phone, car: ses.car || "", problem: ses.problem || "سایر",
+    loc: Number(loc.latitude).toFixed(6) + ", " + Number(loc.longitude).toFixed(6),
+    gps: { lat: Number(loc.latitude), lng: Number(loc.longitude) }, note: "درخواست از بازوی بله REV",
+  };
+  const { status, j } = await jfetch(`${TOW_API}/api/tow/request`, {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload),
+  });
+  await clearSession(env, chatId);
+  if (status === 200 && j && j.ok && j.id) {
+    await send(env, chatId, "درخواست امداد ثبت شد ✅\nکد پیگیری: " + j.id + "\nوضعیت: " + (j.status || "ثبت شد") + "\nدرخواست برای رانندگان فعال ارسال شده است. برای مشاهده جزئیات و پیگیری زنده، اپ REV رو باز کن.", {
+      reply_markup: { inline_keyboard: [[{ text: "🌐 باز کردن اپ REV", url: "https://mojtabaalimi64-cloud.github.io/rev-mobile/?app=1" }]] },
+    });
+  } else {
+    await send(env, chatId, "ثبت درخواست انجام نشد: " + String(j && (j.err || j.error) || "خطای اتصال (" + status + ")") + "\nاطلاعاتت پاک شد؛ کمی بعد دوباره تلاش کن.", { reply_markup: kbFor(env, chatId) });
+  }
 }
 
 // ---------- بخش راننده ----------
@@ -537,7 +775,7 @@ async function handleMessage(env, msg) {
   }
   if (!text) return;
 
-  if (text === "/start") {
+  if (text === "/start" || text === "/help" || text === "شروع" || text === "منوی اصلی") {
     await clearSession(env, chatId);
     const isOwner = chatId === ownerId(env);
     await send(env, chatId,
@@ -550,7 +788,35 @@ async function handleMessage(env, msg) {
   }
 
   const ses = await getSession(env, chatId);
+  if (text === "🔙 بازگشت") {
+    await clearSession(env, chatId);
+    await send(env, chatId, "منوی اصلی", { reply_markup: kbFor(env, chatId) });
+    return;
+  }
+  if (ses && ses.flow === "feedback") { await handleFeedbackSubmit(env, msg, text); return; }
+  if (ses && ses.flow === "tow_phone") {
+    if (!validPhone(text)) { await send(env, chatId, "شماره معتبر نیست؛ با فرمت 09 و ۱۱ رقم بفرست:"); return; }
+    await setSession(env, chatId, { ...ses, flow: "tow_name", phone: text, at: Date.now() });
+    await send(env, chatId, "نام و نام خانوادگی رو بفرست:");
+    return;
+  }
+  if (ses && ses.flow === "tow_name") {
+    if (text.length < 2 || text.length > 100) { await send(env, chatId, "لطفاً نام معتبر بفرست:"); return; }
+    await setSession(env, chatId, { ...ses, flow: "tow_car", name: text.slice(0,100), at: Date.now() });
+    await send(env, chatId, "مدل خودرو رو بنویس (اگر نمی‌دونی، «نامشخص» بفرست):");
+    return;
+  }
+  if (ses && ses.flow === "tow_car") {
+    await setSession(env, chatId, { ...ses, flow: "tow_problem", car: text.slice(0,100), at: Date.now() });
+    await send(env, chatId, "نوع مشکل رو انتخاب کن:", { reply_markup: { inline_keyboard: [
+      [{ text: "خرابی خودرو", callback_data: "tow:problem:breakdown" }, { text: "مشکل باتری", callback_data: "tow:problem:battery" }],
+      [{ text: "پنچری", callback_data: "tow:problem:tire" }, { text: "تصادف", callback_data: "tow:problem:accident" }],
+      [{ text: "سایر", callback_data: "tow:problem:other" }],
+    ] } });
+    return;
+  }
   if (ses && ses.flow === "phone") { await handlePhoneInput(env, chatId, text); return; }
+  if (ses && ses.flow === "route_destination") { await handleRouteDestination(env, chatId, text, ses); return; }
   if (ses && ses.flow === "driver_token") { await handleDriverToken(env, chatId, text); return; }
   if (ses && ses.flow === "chanpost") {
     await clearSession(env, chatId);
@@ -561,9 +827,16 @@ async function handleMessage(env, msg) {
   switch (text) {
     case "📍 گزارش وضعیت شارژر": await askLocation(env, chatId, "report"); return;
     case "🔌 شارژر نزدیک": await askLocation(env, chatId, "nearby"); return;
+    case "🧭 مسیریابی":
+      await setSession(env, chatId, { flow: "route_origin", at: Date.now() });
+      await send(env, chatId, "برای محاسبه مسیر، مبدأ را با دکمه زیر به‌صورت موقعیت مکانی بفرست. بعد مقصد را می‌پرسم.", { reply_markup: KB_LOCATION });
+      return;
     case "🚨 درخواست امداد": await handleTowInfo(env, chatId); return;
     case "🚕 بخش راننده": await handleDriverHome(env, chatId); return;
     case "👤 حساب من": await handleAccount(env, chatId); return;
+    case "💬 پشتیبانی و پیشنهاد": await handleFeedbackStart(env, chatId); return;
+    case "🌐 ورود به اپ REV": await handleRevLink(env, chatId); return;
+    case "📖 راهنمای استفاده": await handleBotHelp(env, chatId); return;
     case "🔙 بازگشت":
       await clearSession(env, chatId);
       await send(env, chatId, "منوی اصلی", { reply_markup: kbFor(env, chatId) });
@@ -589,6 +862,8 @@ async function handleMessage(env, msg) {
 async function handleCallback(env, cb) {
   const data = cb.data || "";
   try {
+    if (data === "tow:start") return await handleTowStart(env, cb);
+    if (data.startsWith("tow:problem:")) return await handleTowProblem(env, cb);
     if (data.startsWith("pick:")) return await handlePick(env, cb);
     if (data.startsWith("rep:")) return await handleReport(env, cb);
     if (data.startsWith("mod:")) return await handleModerate(env, cb);
