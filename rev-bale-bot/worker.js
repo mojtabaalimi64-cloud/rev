@@ -313,13 +313,18 @@ async function handleDriverHome(env, chatId) {
 async function handleDriverToken(env, chatId, text) {
   const token = text.trim();
   const { status, j } = await jfetch(`${TOW_API}/api/driver/offers?token=${encodeURIComponent(token)}`);
-  if (status === 200 && j) {
+  if (status === 200 && j && j.ok !== false) {
     await kvPut(env, `drv:${chatId}`, { token, linkedAt: Date.now() });
     await clearSession(env, chatId);
     await send(env, chatId, "حسابت وصل شد ✅ از این به بعد پیشنهادهای امداد همین‌جا هم میاد.", { reply_markup: kbFor(env, chatId) });
     await handleDriverHome(env, chatId);
   } else {
-    await send(env, chatId, "این توکن قبول نشد. از پنل راننده آپ دوباره کپی کن و بفرست:");
+    // مهم: نشست توکن را باز بگذار نماند؛ وگرنه همه پیام‌های بعدی
+    // (حتی دکمه‌های منوی کاربر) اشتباهاً به‌عنوان توکن پردازش می‌شوند.
+    await clearSession(env, chatId);
+    await send(env, chatId,
+      "اتصال راننده انجام نشد؛ توکن در سامانه راننده تأیید نشد. برای تلاش دوباره «🚕 بخش راننده» را بزن و توکن فعلی پنل را ارسال کن. منوی کاربر هم دوباره فعال است.",
+      { reply_markup: kbFor(env, chatId) });
   }
 }
 
