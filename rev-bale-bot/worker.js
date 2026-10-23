@@ -637,24 +637,6 @@ export default {
     const url = new URL(request.url);
 
 
-    if (url.pathname === "/__setup-webhook/d8J9xSdJPFnrYT_BqULgOgE6hUHZ3Mv4D4HmSGgzzfpUhMhz" && request.method === "GET") {
-      if (!env.BALE_TOKEN || !env.WEBHOOK_SECRET) {
-        return Response.json({ ok: false, error: "missing_bot_secret" }, { status: 500 });
-      }
-      const webhookUrl = `${url.origin}/webhook/${env.WEBHOOK_SECRET}`;
-      const r = await fetch(`${BALE_API}/bot${env.BALE_TOKEN}/setWebhook`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: webhookUrl }),
-      });
-      let result;
-      try { result = await r.json(); } catch { result = { ok: false, error: "invalid_bale_response", status: r.status }; }
-      if (result && result.ok === true) {
-        return Response.json({ ok: true, webhook_registered: true, service: "rev-bale-bot" });
-      }
-      return Response.json({ ok: false, webhook_registered: false, bale_status: r.status, bale_error: result && (result.description || result.error_code) || "registration_failed" }, { status: 502 });
-    }
-
     if (url.pathname === "/health") {
       return Response.json({ ok: true, service: "rev-bale-bot", v: 1 });
     }
