@@ -155,12 +155,48 @@ async function jfetch(url, opts = {}) {
 
 // ---------- Conversational route planning ----------
 async function geocodeRoutePlace(place) {
-  const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ir&q=' + encodeURIComponent(place);
-  const response = await fetch(url, { headers: { Accept: 'application/json' } });
-  if (!response.ok) throw new Error('سرویس پیدا کردن مقصد فعلاً پاسخ نمی‌دهد.');
-  const rows = await response.json();
-  if (!rows.length) throw new Error('مقصد پیدا نشد؛ لطفاً نام شهر یا نشانی دقیق‌تری بفرست.');
-  return [Number(rows[0].lon), Number(rows[0].lat)];
+  const errors = [];
+  // Try Nominatim first, but don't let a stalled public geocoder freeze the chat.
+  try {
+    const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ir&q=' + encodeURIComponent(place);
+    const response = await fetch(url, {
+      headers: { Accept: 'application/json' },
+      signal: AbortSignal.timeout(7000),
+    });
+    if (!response.ok) {
+      errors.push('Nominatim HTTP ' + response.status);
+    } else {
+      const rows = await response.json();
+      if (Array.isArray(rows) && rows.length && Number.isFinite(Number(rows[0].lon)) && Number.isFinite(Number(rows[0].lat))) {
+        return [Number(rows[0].lon), Number(rows[0].lat)];
+      }
+    }
+  } catch (e) {
+    errors.push('Nominatim: ' + String(e && e.message || 'خطای اتصال'));
+  }
+
+  // Fallback geocoder: Photon / Komoot. It often succeeds when Nominatim is rate-limited.
+  try {
+    const url = 'https://photon.komoot.io/api/?limit=1&lang=fa&q=' + encodeURIComponent(place + ', Iran');
+    const response = await fetch(url, {
+      headers: { Accept: 'application/geo+json' },
+      signal: AbortSignal.timeout(7000),
+    });
+    if (!response.ok) {
+      errors.push('Photon HTTP ' + response.status);
+    } else {
+      const data = await response.json();
+      const feature = data && Array.isArray(data.features) ? data.features[0] : null;
+      const coords = feature && feature.geometry && feature.geometry.coordinates;
+      if (Array.isArray(coords) && Number.isFinite(Number(coords[0])) && Number.isFinite(Number(coords[1]))) {
+        return [Number(coords[0]), Number(coords[1])];
+      }
+      errors.push('Photon: مقصد پیدا نشد');
+    }
+  } catch (e) {
+    errors.push('Photon: ' + String(e && e.message || 'خطای اتصال'));
+  }
+  throw new Error('سرویس‌های مکان‌یابی مقصد پاسخ معتبر ندادند. (' + errors.join('; ') + ') مقصد را با نام شهر و نشانی دقیق‌تر بفرست.');
 }
 function routeDistanceKm(a, b) {
   const rad = n => n * Math.PI / 180;
