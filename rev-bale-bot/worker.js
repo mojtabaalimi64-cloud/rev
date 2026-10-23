@@ -225,22 +225,35 @@ async function handleRouteDestination(env, chatId, place, ses) {
       'https://router.project-osrm.org/route/v1/driving/' + routePath + routeQuery,
       'https://routing.openstreetmap.de/routed-car/route/v1/driving/' + routePath + routeQuery,
     ];
-    let payload = null, lastRouteError = '';
-    for (const endpoint of routeEndpoints) {
+    let payload = null;
+    const routeErrors = [];
+    for (let i = 0; i < routeEndpoints.length; i++) {
+      const endpoint = routeEndpoints[i];
+      const providerName = i === 0 ? 'OSRM عمومی' : 'OSM routing جایگزین';
       try {
-        const response = await fetch(endpoint, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10000) });
-        if (!response.ok) { lastRouteError = 'HTTP ' + response.status; continue; }
+        const response = await fetch(endpoint, {
+          headers: {
+            Accept: 'application/json',
+            'User-Agent': 'REV-BaleBot/1.0 (+https://www.revyab.ir)',
+            Referer: 'https://www.revyab.ir/',
+          },
+          signal: AbortSignal.timeout(12000),
+        });
+        if (!response.ok) {
+          routeErrors.push(providerName + ': HTTP ' + response.status);
+          continue;
+        }
         const candidate = await response.json();
         if (candidate.code === 'Ok' && Array.isArray(candidate.routes) && candidate.routes.length) {
           payload = candidate;
           break;
         }
-        lastRouteError = candidate.message || candidate.code || 'پاسخ نامعتبر';
+        routeErrors.push(providerName + ': ' + (candidate.message || candidate.code || 'پاسخ نامعتبر'));
       } catch (e) {
-        lastRouteError = String(e && e.message || 'خطای اتصال');
+        routeErrors.push(providerName + ': ' + String(e && e.message || 'خطای اتصال'));
       }
     }
-    if (!payload) throw new Error('هر دو سرویس مسیر در دسترس نبودند (' + lastRouteError + '). کمی بعد دوباره تلاش کن.');
+    if (!payload) throw new Error('سرویس‌های مسیر پاسخ ندادند (' + routeErrors.join('؛ ') + '). ممکن است دسترسی از سمت سرویس‌دهنده محدود شده باشد؛ کمی بعد دوباره تلاش کن.');
     const route = payload.routes[0], coords = route.geometry && route.geometry.coordinates || [];
     const stations = await fetchStations(env);
     const along = stations.map(st => {
