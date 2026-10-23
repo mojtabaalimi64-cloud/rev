@@ -3,7 +3,7 @@
  *
  * نقش‌ها:
  *  - کاربر: گزارش وضعیت شارژر با ۳ لمس، شارژر نزدیک، حساب و امتیاز
- *  - راننده یدک‌کش: اتصال حساب با توکن پنل، دیدن پیشنهادهای فعال و قبول/رد، ارسال موقعیت (heartbeat)
+ *  - راننده یدک‌کش: اتصال با کد موقت یک‌بارمصرف، دیدن پیشنهادهای فعال و قبول/رد، ارسال موقعیت (heartbeat)
  *  - مدیر (فقط OWNER_ID): صف بررسی ایستگاه‌های ارسالی، گزارش امروز، انتشار در کانال با تأیید
  *
  * اتصال‌ها:
@@ -294,9 +294,9 @@ async function handleTowInfo(env, chatId) {
 async function handleDriverHome(env, chatId) {
   const drv = await getDriver(env, chatId);
   if (!drv || !drv.token) {
-    await setSession(env, chatId, { flow: "driver_token", at: Date.now() });
+    await setSession(env, chatId, { flow: "driver_pair_code", at: Date.now() });
     await send(env, chatId,
-      "برای وصل‌کردن حساب راننده‌ت، «توکن راننده» رو بفرست.\nتوکن رو از پنل راننده داخل آپ REV (بخش خدمات ← پنل راننده) می‌گیری. این توکن فقط برای اتصال این چت به حساب توئه و پیش خودت می‌مونه.");
+      "برای اتصال خودکار حساب راننده:\n۱) پنل راننده REV را باز کن و وارد شو.\n۲) گزینه «ساخت کد اتصال بله» را بزن.\n۳) کد موقت را همین‌جا بفرست.\n\nکد ۵ دقیقه اعتبار دارد؛ توکن اصلی را ارسال نکن.");
     return;
   }
   await send(env, chatId, "بخش راننده", {
@@ -310,16 +310,24 @@ async function handleDriverHome(env, chatId) {
   });
 }
 
-async function handleDriverToken(env, chatId, text) {
-  const token = text.trim();
-  const { status, j } = await jfetch(`${TOW_API}/api/driver/offers?token=${encodeURIComponent(token)}`);
-  if (status === 200 && j) {
-    await kvPut(env, `drv:${chatId}`, { token, linkedAt: Date.now() });
+async function handleDriverPairCode(env, chatId, text) {
+  const code = text.trim().toLowerCase();
+  if (!/^[a-f0-9]{32}$/.test(code)) {
+    await send(env, chatId, "کد اتصال معتبر نیست. از پنل راننده یک کد تازه بساز و همان کد را بفرست.");
+    return;
+  }
+  const { status, j } = await jfetch(`${TOW_API}/api/driver/bale-link`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ code, chatId: String(chatId) }),
+  });
+  if (status === 200 && j && j.ok && j.token) {
+    await kvPut(env, `drv:${chatId}`, { token: j.token, linkedAt: Date.now(), driverId: j.driverId || null, name: j.name || null });
     await clearSession(env, chatId);
-    await send(env, chatId, "حسابت وصل شد ✅ از این به بعد پیشنهادهای امداد همین‌جا هم میاد.", { reply_markup: kbFor(env, chatId) });
+    await send(env, chatId, `حساب راننده ${j.name ? "«" + j.name + "» " : ""}با موفقیت و بدون ارسال توکن اصلی وصل شد ✅`, { reply_markup: kbFor(env, chatId) });
     await handleDriverHome(env, chatId);
   } else {
-    await send(env, chatId, "این توکن قبول نشد. از پنل راننده آپ دوباره کپی کن و بفرست:");
+    await send(env, chatId, "اتصال انجام نشد؛ کد ممکن است منقضی یا قبلاً مصرف شده باشد. از پنل راننده کد تازه بساز.");
   }
 }
 
@@ -551,7 +559,7 @@ async function handleMessage(env, msg) {
 
   const ses = await getSession(env, chatId);
   if (ses && ses.flow === "phone") { await handlePhoneInput(env, chatId, text); return; }
-  if (ses && ses.flow === "driver_token") { await handleDriverToken(env, chatId, text); return; }
+  if (ses && ses.flow === "driver_pair_code") { await handleDriverPairCode(env, chatId, text); return; }
   if (ses && ses.flow === "chanpost") {
     await clearSession(env, chatId);
     await makeChannelDraft(env, chatId, text);
