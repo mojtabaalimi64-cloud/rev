@@ -439,10 +439,10 @@ async function handleFeedbackSubmit(env, msg, text) {
   const record = { id, chatId, text: body, at: Date.now(), username: msg.from && msg.from.username || "", name: [msg.from && msg.from.first_name, msg.from && msg.from.last_name].filter(Boolean).join(" ") };
   await kvPut(env, "feedback:" + id, record, 2592000);
   const sender = record.name || "کاربر بله";
-  const ownerText = "💬 پیام جدید برای پشتیبانی REV\\nشناسه: " + id + "\\nنام: " + sender + (record.username ? " (@" + record.username + ")" : "") + "\\nشناسه چت: " + chatId + "\\n\\n" + body;
+  const ownerText = "💬 پیام جدید برای پشتیبانی REV\nشناسه: " + id + "\nنام: " + sender + (record.username ? " (@" + record.username + ")" : "") + "\nشناسه چت: " + chatId + "\n\n" + body;
   await send(env, ownerId(env), ownerText.slice(0, 3500));
   await clearSession(env, chatId);
-  await send(env, chatId, "پیامت برای مدیر REV ارسال شد ✅\\nممنون که به بهترشدن رانش کمک می‌کنی.", { reply_markup: kbFor(env, chatId) });
+  await send(env, chatId, "پیامت برای مدیر REV ارسال شد ✅\nممنون که به بهترشدن رانش کمک می‌کنی.", { reply_markup: kbFor(env, chatId) });
 }
 
 async function handleRevLink(env, chatId) {
@@ -454,14 +454,14 @@ async function handleRevLink(env, chatId) {
 
 async function handleBotHelp(env, chatId) {
   await send(env, chatId,
-    "📖 راهنمای بازوی REV\\n\\n" +
-    "🔌 شارژر نزدیک: موقعیتت رو بفرست تا ایستگاه‌های ثبت‌شده و آخرین وضعیت گزارش‌شده نمایش داده بشه.\\n" +
-    "📍 گزارش وضعیت: نزدیک شارژر باش؛ گزارش فقط در شعاع مجاز ثبت می‌شه.\\n" +
-    "🧭 مسیریابی: مبدأ رو با موقعیت مکانی بفرست و مقصد رو به‌صورت نام شهر/نشانی وارد کن؛ برای هدایت زنده، مسیر رو در اپ REV باز کن.\\n" +
-    "🚨 درخواست امداد: ثبت درخواست امداد از اپ REV انجام می‌شه.\\n" +
-    "🚕 بخش راننده: توکن پنل راننده رو وارد کن تا پیشنهادهای امداد رو ببینی.\\n" +
-    "👤 حساب من: شماره موبایل رو ثبت کن تا امتیاز مشارکت نمایش داده بشه.\\n" +
-    "💬 پشتیبانی: پیام یا پیشنهادت رو مستقیم برای مدیر بفرست.\\n\\n" +
+    "📖 راهنمای بازوی REV\n\n" +
+    "🔌 شارژر نزدیک: موقعیتت رو بفرست تا ایستگاه‌های ثبت‌شده و آخرین وضعیت گزارش‌شده نمایش داده بشه.\n" +
+    "📍 گزارش وضعیت: نزدیک شارژر باش؛ گزارش فقط در شعاع مجاز ثبت می‌شه.\n" +
+    "🧭 مسیریابی: مبدأ رو با موقعیت مکانی بفرست و مقصد رو به‌صورت نام شهر/نشانی وارد کن؛ برای هدایت زنده، مسیر رو در اپ REV باز کن.\n" +
+    "🚨 درخواست امداد: ثبت درخواست امداد از اپ REV انجام می‌شه.\n" +
+    "🚕 بخش راننده: توکن پنل راننده رو وارد کن تا پیشنهادهای امداد رو ببینی.\n" +
+    "👤 حساب من: شماره موبایل رو ثبت کن تا امتیاز مشارکت نمایش داده بشه.\n" +
+    "💬 پشتیبانی: پیام یا پیشنهادت رو مستقیم برای مدیر بفرست.\n\n" +
     "برای بازگشت به منو، «شروع» رو بزن.", { reply_markup: kbFor(env, chatId) });
 }
 
