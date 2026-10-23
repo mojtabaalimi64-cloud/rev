@@ -1,0 +1,19 @@
+name = "rev-bale-bot"
+main = "worker.js"
+compatibility_date = "2025-01-01"
+
+# ساخت KV از داشبورد یا با wrangler و گذاشتن id در خط زیر
+[[kv_namespaces]]
+binding = "BOT_KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+OWNER_ID = "1068481085"
+# بعد از ساخت کانال: نام کاربری کانال (مثل "@raneshev") یا آی‌دی عددی آن
+CHANNEL_ID = ""
+
+# سکرت‌ها با wrangler secret put یا از داشبورد (هرگز این‌جا نوشته نمی‌شوند):
+#   BALE_TOKEN          توکن بازوی بله (@raneshevbot)
+#   STATUS_ADMIN_TOKEN  همان توکن مدیریت rev-status-api
+#   WEBHOOK_SECRET      رشته تصادفی برای مسیر وب‌هوک
+#   INTERNAL_KEY        کلید مشترک فراخوانی /internal/notify از ورکر دیسپچ
