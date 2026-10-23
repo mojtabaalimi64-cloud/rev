@@ -89,9 +89,8 @@ const editText = (env, chatId, messageId, text, extra = {}) =>
 const KB_USER = {
   keyboard: [
     [{ text: "📍 گزارش وضعیت شارژر" }, { text: "🔌 شارژر نزدیک" }],
-    [{ text: "🧭 مسیریابی" }, { text: "🔌 شارژر نزدیک" }],
-    [{ text: "🚨 درخواست امداد" }, { text: "🚕 بخش راننده" }],
-    [{ text: "👤 حساب من" }],
+    [{ text: "🧭 مسیریابی" }, { text: "🚨 درخواست امداد" }],
+    [{ text: "🚕 بخش راننده" }, { text: "👤 حساب من" }],
   ],
   resize_keyboard: true,
 };
@@ -677,7 +676,7 @@ async function handleMessage(env, msg) {
   }
   if (!text) return;
 
-  if (text === "/start") {
+  if (text === "/start" || text === "/help" || text === "شروع" || text === "منوی اصلی") {
     await clearSession(env, chatId);
     const isOwner = chatId === ownerId(env);
     await send(env, chatId,
