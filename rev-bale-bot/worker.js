@@ -276,9 +276,10 @@ async function handleRouteDestination(env, chatId, place, ses) {
     const km = (route.distance / 1000).toFixed(1), mins = Math.round(route.duration / 60);
     const timeText = mins >= 60 ? Math.floor(mins / 60) + ' ساعت و ' + (mins % 60) + ' دقیقه' : mins + ' دقیقه';
     const mapUrl = 'https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=' + origin[1] + '%2C' + origin[0] + '%3B' + destination[1] + '%2C' + destination[0];
+    const revUrl = 'https://mojtabaalimi64-cloud.github.io/rev-mobile/nearby-map.html?app=1&navstart=1&olat=' + encodeURIComponent(origin[1]) + '&olng=' + encodeURIComponent(origin[0]) + '&dlat=' + encodeURIComponent(destination[1]) + '&dlng=' + encodeURIComponent(destination[0]) + '&oname=' + encodeURIComponent('مبدأ ارسالی از بله') + '&dname=' + encodeURIComponent(place);
     const chargerText = along.length ? along.map((x, i) => (i + 1) + '. ' + (x.st.name || 'ایستگاه شارژ') + ' — حدود ' + x.distance.toFixed(1) + ' کیلومتر از نقاط نمونه مسیر').join('\n') : 'در داده فعلی REV، شارژری در فاصله تقریبی ۸ کیلومتری نقاط بررسی‌شده مسیر پیدا نشد.';
     await clearSession(env, chatId);
-    await send(env, chatId, '🧭 خلاصه مسیر به ' + place + '\n\n📏 مسافت جاده‌ای: ' + km + ' کیلومتر\n⏱ زمان تخمینی: ' + timeText + '\n\n🔌 شارژرهای احتمالی نزدیک مسیر:\n' + chargerText + '\n\n⚠️ زمان و مسیر تخمینی‌اند؛ وضعیت و سازگاری شارژرها را پیش از حرکت بررسی کن. برای هدایت زنده و محاسبه مجدد مسیر از اپ REV استفاده کن.\n\n🗺️ نقشه و مسیر: ' + mapUrl, { reply_markup: kbFor(env, chatId), disable_web_page_preview: true });
+    await send(env, chatId, '🧭 خلاصه مسیر به ' + place + '\n\n📏 مسافت جاده‌ای: ' + km + ' کیلومتر\n⏱ زمان تخمینی: ' + timeText + '\n\n🔌 شارژرهای احتمالی نزدیک مسیر:\n' + chargerText + '\n\n⚠️ زمان و مسیر تخمینی‌اند؛ وضعیت و سازگاری شارژرها را پیش از حرکت بررسی کن. برای هدایت زنده و محاسبه مجدد مسیر از اپ REV استفاده کن.', { reply_markup: { inline_keyboard: [[{ text: '🧭 باز کردن مسیر در مسیریاب REV', url: revUrl }], [{ text: '🗺️ نمایش در نقشه جایگزین', url: mapUrl }]] }, disable_web_page_preview: true });
   } catch (error) {
     await clearSession(env, chatId);
     await send(env, chatId, 'مسیریابی انجام نشد: ' + String(error && error.message || 'خطای نامشخص') + '\nلطفاً مقصد را دقیق‌تر بنویس یا دوباره تلاش کن.', { reply_markup: kbFor(env, chatId) });
