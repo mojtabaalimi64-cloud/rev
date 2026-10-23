@@ -912,39 +912,6 @@ export default {
     const url = new URL(request.url);
 
 
-    if (url.pathname === "/__diag_3d15da4673513571f0d595b54107a99e97bf9c3c" && request.method === "GET") {
-      const safeCall = async (method, params = {}) => {
-        try { return await Promise.race([bale(env, method, params), new Promise(resolve => setTimeout(() => resolve({ ok: false, description: "timeout" }), 8000))]); }
-        catch (e) { return { ok: false, description: String(e && e.message || "request failed") }; }
-      };
-      const [me, wh, stations, status, support, chat, route] = await Promise.all([
-        safeCall("getMe"), safeCall("getWebhookInfo"),
-        fetch(`${REV_API}/api/stations`, { signal: AbortSignal.timeout(7000) }).then(async r => ({http:r.status, json: await r.json().catch(()=>null)})).catch(e => ({error:String(e && e.message || "failed")})),
-        fetch(`${STATUS_API}/status`, { signal: AbortSignal.timeout(7000) }).then(async r => ({http:r.status, json: await r.json().catch(()=>null)})).catch(e => ({error:String(e && e.message || "failed")})),
-        fetch(`${TOW_API}/api/support`, { signal: AbortSignal.timeout(7000) }).then(async r => ({http:r.status, json: await r.json().catch(()=>null)})).catch(e => ({error:String(e && e.message || "failed")})),
-        safeCall("getChat", {chat_id: env.CHANNEL_ID}),
-        fetch("https://router.project-osrm.org/route/v1/driving/51.3890,35.6892;50.8764,34.6401?overview=false", {headers:{Accept:"application/json","User-Agent":"REV-BaleBot/1.0 (+https://www.revyab.ir)"},signal:AbortSignal.timeout(10000)}).then(async r=>{const j=await r.json().catch(()=>null);return {http:r.status,routeOk:r.ok&&j&&j.code==="Ok"&&Array.isArray(j.routes)&&j.routes.length>0}}).catch(e=>({error:String(e&&e.message||"failed")})),
-      ]);
-      const member = me && me.result && me.result.id ? await safeCall("getChatMember", { chat_id: env.CHANNEL_ID, user_id: me.result.id }) : { ok: false, description: "bot id unavailable" };
-      let geocoder = { ok: false };
-      try { const coords = await geocodeRoutePlace("قم"); geocoder = { ok: true, coordinatesReturned: Array.isArray(coords) && coords.length === 2 }; }
-      catch (e) { geocoder = { ok: false, error: String(e && e.message || "failed").slice(0, 220) }; }
-      let whUrl = "";
-      try { whUrl = String(wh && wh.result && wh.result.url || ""); } catch {}
-      let whPathOk = false, whHost = "";
-      try { const u = new URL(whUrl); whHost = u.host; whPathOk = u.pathname === "/webhook/" + String(env.WEBHOOK_SECRET || ""); } catch {}
-      return Response.json({
-        botApi: { ok: !!(me && me.ok), username: me && me.result && me.result.username || null, error: me && !me.ok ? (me.description || "API error") : null },
-        webhook: { apiOk: !!(wh && wh.ok), configured: !!whUrl, host: whHost || null, expectedPath: whPathOk, pending: wh && wh.result && wh.result.pending_update_count, lastErrorDate: wh && wh.result && wh.result.last_error_date || null, lastError: wh && wh.result && wh.result.last_error_message || null },
-        stations: { http: stations.http || null, apiOk: !!(stations.json && (stations.json.success || stations.json.ok)), count: Array.isArray(stations.json && stations.json.data) ? stations.json.data.length : null, error: stations.error || null },
-        statusApi: { http: status.http || null, apiOk: status.http === 200 && !!status.json && typeof status.json === "object", count: status.json && typeof status.json === "object" ? Object.keys(status.json).length : null, error: status.error || null },
-        towApi: { http: support.http || null, apiOk: support.http === 200 && !!(support.json && support.json.ok), error: support.error || null },
-        channel: { configured: !!env.CHANNEL_ID, apiOk: !!(chat && chat.ok), type: chat && chat.result && chat.result.type || null, title: chat && chat.result && chat.result.title || null, botMemberApiOk: !!(member && member.ok), botStatus: member && member.result && member.result.status || null, canPost: member && member.result ? (member.result.status === "creator" || member.result.status === "administrator" && member.result.can_post_messages !== false) : false, error: chat && !chat.ok ? (chat.description || "API error") : member && !member.ok ? (member.description || "membership check failed") : null },
-        geocoder,
-        routeService: route,
-        config: { baleTokenPresent: !!env.BALE_TOKEN, kvBound: !!env.BOT_KV, ownerPresent: !!env.OWNER_ID, webhookSecretPresent: !!env.WEBHOOK_SECRET, internalKeyPresent: !!env.INTERNAL_KEY, statusAdminTokenPresent: !!env.STATUS_ADMIN_TOKEN, channelPresent: !!env.CHANNEL_ID }
-      });
-    }
     if (url.pathname === "/health") {
       return Response.json({ ok: true, service: "rev-bale-bot", v: 1 });
     }
