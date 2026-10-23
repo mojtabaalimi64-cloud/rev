@@ -445,7 +445,7 @@ async function handle(req, env, cors) {
     const b = await body(req);
     const code = String(b.code || "").trim().toLowerCase();
     const chatId = String(b.chatId || "").trim();
-    if (!/^[a-f0-9]{32}$/.test(code) || !/^\\d{1,24}$/.test(chatId))
+    if (!/^[a-f0-9]{32}$/.test(code) || !/^\d{1,24}$/.test(chatId))
       return json({ ok: false, err: "کد اتصال معتبر نیست" }, 400, cors);
     const key = "bale-pair:" + code;
     const raw = await storeGet(env, key);
