@@ -7,6 +7,10 @@ compatibility_date = "2025-01-01"
 binding = "BOT_KV"
 id = "REPLACE_WITH_KV_NAMESPACE_ID"
 
+# کرون خلاصه صبحگاهی: ۰۳:۳۰ UTC = ۰۷:۰۰ تهران
+[triggers]
+crons = ["30 3 * * *"]
+
 [vars]
 OWNER_ID = "1068481085"
 # بعد از ساخت کانال: نام کاربری کانال (مثل "@raneshev") یا آی‌دی عددی آن

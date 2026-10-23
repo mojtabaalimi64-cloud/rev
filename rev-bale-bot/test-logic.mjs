@@ -1,4 +1,4 @@
-import { haversineM, stationKey, nearestStations, validPhone } from "./worker.mjs";
+import { haversineM, stationKey, nearestStations, validPhone, parsePorts, stationCompatible, consumptionKwh100, portLabel } from "./worker.mjs";
 let fail = 0;
 const eq = (name, cond) => { console.log((cond ? "PASS" : "FAIL") + " " + name); if (!cond) fail++; };
 // تهران تا قم حدود ۱۲۷ کیلومتر
@@ -20,4 +20,15 @@ eq("nearest dist sane", near[0].distM < 100);
 // شماره موبایل
 eq("phone ok", validPhone("09123456789"));
 eq("phone bad", !validPhone("9123456789") && !validPhone("0912345678"));
+// فاز ۲: پورت و سازگاری
+eq("parsePorts ccs", parsePorts("CCS2").join() === "ccs2");
+eq("parsePorts gbt both", parsePorts("GB/T").sort().join() === "gbt_ac,gbt_dc");
+eq("parsePorts messy array", parsePorts(["Type 2", { x: "CHAdeMO" }]).sort().join() === "chademo,type2");
+eq("compat true", stationCompatible({ connectors: "CCS2, Type 2" }, "ccs2"));
+eq("compat false", !stationCompatible({ connectors: "GB/T DC" }, "ccs2"));
+eq("compat unknown ok", stationCompatible({ connectors: "" }, "ccs2") && stationCompatible({}, null));
+eq("portLabel", portLabel("gbt_dc").includes("GB/T"));
+// فاز ۲: ماشین‌حساب (فرمول رانش: ظرفیت ÷ برد × ۱۰۰)
+eq("consumption 50.3/400", consumptionKwh100(50.3, 400) === 12.6);
+eq("consumption bad", consumptionKwh100(0, 400) === null && consumptionKwh100(50, 0) === null);
 process.exit(fail ? 1 : 0);
