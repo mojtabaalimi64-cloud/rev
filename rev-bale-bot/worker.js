@@ -89,6 +89,7 @@ const editText = (env, chatId, messageId, text, extra = {}) =>
 const KB_USER = {
   keyboard: [
     [{ text: "📍 گزارش وضعیت شارژر" }, { text: "🔌 شارژر نزدیک" }],
+    [{ text: "🧭 مسیریابی" }, { text: "🔌 شارژر نزدیک" }],
     [{ text: "🚨 درخواست امداد" }, { text: "🚕 بخش راننده" }],
     [{ text: "👤 حساب من" }],
   ],
@@ -99,8 +100,9 @@ const KB_OWNER = {
   keyboard: [
     [{ text: "📥 صف بررسی ایستگاه‌ها" }, { text: "📊 گزارش امروز" }],
     [{ text: "📣 پست در کانال" }, { text: "📍 گزارش وضعیت شارژر" }],
-    [{ text: "🔌 شارژر نزدیک" }, { text: "🚨 درخواست امداد" }],
-    [{ text: "🚕 بخش راننده" }, { text: "👤 حساب من" }],
+    [{ text: "🧭 مسیریابی" }, { text: "🔌 شارژر نزدیک" }],
+    [{ text: "🚨 درخواست امداد" }, { text: "🚕 بخش راننده" }],
+    [{ text: "👤 حساب من" }],
   ],
   resize_keyboard: true,
 };
@@ -151,6 +153,51 @@ async function jfetch(url, opts = {}) {
   return { status: res.status, j };
 }
 
+// ---------- Conversational route planning ----------
+async function geocodeRoutePlace(place) {
+  const url = 'https://nominatim.openstreetmap.org/search?format=jsonv2&limit=1&countrycodes=ir&q=' + encodeURIComponent(place);
+  const response = await fetch(url, { headers: { Accept: 'application/json' } });
+  if (!response.ok) throw new Error('سرویس پیدا کردن مقصد فعلاً پاسخ نمی‌دهد.');
+  const rows = await response.json();
+  if (!rows.length) throw new Error('مقصد پیدا نشد؛ لطفاً نام شهر یا نشانی دقیق‌تری بفرست.');
+  return [Number(rows[0].lon), Number(rows[0].lat)];
+}
+function routeDistanceKm(a, b) {
+  const rad = n => n * Math.PI / 180;
+  const dLat = rad(b[1] - a[1]), dLon = rad(b[0] - a[0]);
+  const x = Math.sin(dLat / 2) ** 2 + Math.cos(rad(a[1])) * Math.cos(rad(b[1])) * Math.sin(dLon / 2) ** 2;
+  return 6371 * 2 * Math.asin(Math.min(1, Math.sqrt(x)));
+}
+async function handleRouteDestination(env, chatId, place, ses) {
+  await send(env, chatId, 'دارم مسیر و شارژرهای بین راه را بررسی می‌کنم…');
+  try {
+    const destination = await geocodeRoutePlace(place);
+    const origin = ses.origin;
+    const url = 'https://router.project-osrm.org/route/v1/driving/' + origin[0] + ',' + origin[1] + ';' + destination[0] + ',' + destination[1] + '?overview=full&geometries=geojson&steps=false';
+    const response = await fetch(url);
+    if (!response.ok) throw new Error('سرویس مسیر پاسخ نداد؛ کمی بعد دوباره تلاش کن.');
+    const payload = await response.json();
+    if (payload.code !== 'Ok' || !payload.routes || !payload.routes.length) throw new Error('برای این مبدأ و مقصد مسیر جاده‌ای پیدا نشد.');
+    const route = payload.routes[0], coords = route.geometry && route.geometry.coordinates || [];
+    const stations = await fetchStations(env);
+    const along = stations.map(st => {
+      const point = [Number(st.longitude), Number(st.latitude)]; let distance = Infinity;
+      const stride = Math.max(1, Math.floor(coords.length / 80));
+      for (let i = 0; i < coords.length; i += stride) distance = Math.min(distance, routeDistanceKm(point, coords[i]));
+      return { st, distance };
+    }).filter(x => Number.isFinite(x.distance) && x.distance <= 8).sort((a, b) => a.distance - b.distance).slice(0, 5);
+    const km = (route.distance / 1000).toFixed(1), mins = Math.round(route.duration / 60);
+    const timeText = mins >= 60 ? Math.floor(mins / 60) + ' ساعت و ' + (mins % 60) + ' دقیقه' : mins + ' دقیقه';
+    const mapUrl = 'https://www.openstreetmap.org/directions?engine=fossgis_osrm_car&route=' + origin[1] + '%2C' + origin[0] + '%3B' + destination[1] + '%2C' + destination[0];
+    const chargerText = along.length ? along.map((x, i) => (i + 1) + '. ' + (x.st.name || 'ایستگاه شارژ') + ' — حدود ' + x.distance.toFixed(1) + ' کیلومتر از نقاط نمونه مسیر').join('\n') : 'در داده فعلی REV، شارژری در فاصله تقریبی ۸ کیلومتری نقاط بررسی‌شده مسیر پیدا نشد.';
+    await clearSession(env, chatId);
+    await send(env, chatId, '🧭 خلاصه مسیر به ' + place + '\n\n📏 مسافت جاده‌ای: ' + km + ' کیلومتر\n⏱ زمان تخمینی: ' + timeText + '\n\n🔌 شارژرهای احتمالی نزدیک مسیر:\n' + chargerText + '\n\n⚠️ زمان و مسیر تخمینی‌اند؛ وضعیت و سازگاری شارژرها را پیش از حرکت بررسی کن. برای هدایت زنده و محاسبه مجدد مسیر از اپ REV استفاده کن.\n\n🗺️ نقشه و مسیر: ' + mapUrl, { reply_markup: kbFor(env, chatId), disable_web_page_preview: true });
+  } catch (error) {
+    await clearSession(env, chatId);
+    await send(env, chatId, 'مسیریابی انجام نشد: ' + String(error && error.message || 'خطای نامشخص') + '\nلطفاً مقصد را دقیق‌تر بنویس یا دوباره تلاش کن.', { reply_markup: kbFor(env, chatId) });
+  }
+}
+
 // ---------- جریان کاربر: گزارش وضعیت و شارژر نزدیک ----------
 async function askLocation(env, chatId, flow) {
   await setSession(env, chatId, { flow, at: Date.now() });
@@ -164,6 +211,11 @@ async function askLocation(env, chatId, flow) {
 async function handleLocation(env, chatId, loc) {
   const ses = await getSession(env, chatId);
   const flow = ses && ses.flow ? ses.flow : "nearby";
+  if (flow === "route_origin") {
+    await setSession(env, chatId, { flow: "route_destination", origin: [Number(loc.longitude), Number(loc.latitude)], at: Date.now() });
+    await send(env, chatId, "مبدأ دریافت شد 📍\nحالا مقصد را بنویس؛ مثلاً «تهران، میدان آزادی» یا «اصفهان، سی‌وسه‌پل».", { reply_markup: { keyboard: [[{ text: "🔙 بازگشت" }]], resize_keyboard: true } });
+    return;
+  }
   const stations = await fetchStations(env);
   const near = nearestStations(stations, loc.latitude, loc.longitude);
 
@@ -551,6 +603,7 @@ async function handleMessage(env, msg) {
 
   const ses = await getSession(env, chatId);
   if (ses && ses.flow === "phone") { await handlePhoneInput(env, chatId, text); return; }
+  if (ses && ses.flow === "route_destination") { await handleRouteDestination(env, chatId, text, ses); return; }
   if (ses && ses.flow === "driver_token") { await handleDriverToken(env, chatId, text); return; }
   if (ses && ses.flow === "chanpost") {
     await clearSession(env, chatId);
@@ -561,6 +614,10 @@ async function handleMessage(env, msg) {
   switch (text) {
     case "📍 گزارش وضعیت شارژر": await askLocation(env, chatId, "report"); return;
     case "🔌 شارژر نزدیک": await askLocation(env, chatId, "nearby"); return;
+    case "🧭 مسیریابی":
+      await setSession(env, chatId, { flow: "route_origin", at: Date.now() });
+      await send(env, chatId, "برای محاسبه مسیر، مبدأ را با دکمه زیر به‌صورت موقعیت مکانی بفرست. بعد مقصد را می‌پرسم.", { reply_markup: KB_LOCATION });
+      return;
     case "🚨 درخواست امداد": await handleTowInfo(env, chatId); return;
     case "🚕 بخش راننده": await handleDriverHome(env, chatId); return;
     case "👤 حساب من": await handleAccount(env, chatId); return;
