@@ -91,6 +91,8 @@ const KB_USER = {
     [{ text: "📍 گزارش وضعیت شارژر" }, { text: "🔌 شارژر نزدیک" }],
     [{ text: "🧭 مسیریابی" }, { text: "🚨 درخواست امداد" }],
     [{ text: "🚕 بخش راننده" }, { text: "👤 حساب من" }],
+    [{ text: "💬 پشتیبانی و پیشنهاد" }, { text: "🌐 ورود به اپ REV" }],
+    [{ text: "📖 راهنمای استفاده" }],
   ],
   resize_keyboard: true,
 };
@@ -102,6 +104,8 @@ const KB_OWNER = {
     [{ text: "🧭 مسیریابی" }, { text: "🔌 شارژر نزدیک" }],
     [{ text: "🚨 درخواست امداد" }, { text: "🚕 بخش راننده" }],
     [{ text: "👤 حساب من" }],
+    [{ text: "💬 پشتیبانی و پیشنهاد" }, { text: "🌐 ورود به اپ REV" }],
+    [{ text: "📖 راهنمای استفاده" }],
   ],
   resize_keyboard: true,
 };
@@ -419,6 +423,48 @@ async function handlePhoneInput(env, chatId, text) {
 }
 
 // ---------- امداد (سمت کاربر) ----------
+async function handleFeedbackStart(env, chatId) {
+  await setSession(env, chatId, { flow: "feedback", at: Date.now() });
+  await send(env, chatId, "پیام، پیشنهاد یا گزارش خطا رو در یک پیام بنویس. لطفاً رمز، توکن یا اطلاعات حساس نفرست. پیام برای بررسی به مدیر REV ارسال می‌شه. برای لغو، «🔙 بازگشت» رو بزن.");
+}
+
+async function handleFeedbackSubmit(env, msg, text) {
+  const chatId = msg.chat.id;
+  const body = String(text || "").trim().slice(0, 2500);
+  if (body.length < 3) {
+    await send(env, chatId, "پیامت خیلی کوتاهه؛ لطفاً کمی بیشتر توضیح بده.");
+    return;
+  }
+  const id = String(Date.now()) + "-" + String(chatId).slice(-5);
+  const record = { id, chatId, text: body, at: Date.now(), username: msg.from && msg.from.username || "", name: [msg.from && msg.from.first_name, msg.from && msg.from.last_name].filter(Boolean).join(" ") };
+  await kvPut(env, "feedback:" + id, record, 2592000);
+  const sender = record.name || "کاربر بله";
+  const ownerText = "💬 پیام جدید برای پشتیبانی REV\\nشناسه: " + id + "\\nنام: " + sender + (record.username ? " (@" + record.username + ")" : "") + "\\nشناسه چت: " + chatId + "\\n\\n" + body;
+  await send(env, ownerId(env), ownerText.slice(0, 3500));
+  await clearSession(env, chatId);
+  await send(env, chatId, "پیامت برای مدیر REV ارسال شد ✅\\nممنون که به بهترشدن رانش کمک می‌کنی.", { reply_markup: kbFor(env, chatId) });
+}
+
+async function handleRevLink(env, chatId) {
+  await send(env, chatId, "برای استفاده از مسیریاب، نقشه و خدمات رانش، اپ REV رو باز کن:", {
+    reply_markup: { inline_keyboard: [[{ text: "🌐 باز کردن اپ REV", url: "https://mojtabaalimi64-cloud.github.io/rev-mobile/nearby-map.html?app=1" }], [{ text: "🏠 وب‌سایت REV", url: "https://www.revyab.ir" }]] },
+    disable_web_page_preview: true,
+  });
+}
+
+async function handleBotHelp(env, chatId) {
+  await send(env, chatId,
+    "📖 راهنمای بازوی REV\\n\\n" +
+    "🔌 شارژر نزدیک: موقعیتت رو بفرست تا ایستگاه‌های ثبت‌شده و آخرین وضعیت گزارش‌شده نمایش داده بشه.\\n" +
+    "📍 گزارش وضعیت: نزدیک شارژر باش؛ گزارش فقط در شعاع مجاز ثبت می‌شه.\\n" +
+    "🧭 مسیریابی: مبدأ رو با موقعیت مکانی بفرست و مقصد رو به‌صورت نام شهر/نشانی وارد کن؛ برای هدایت زنده، مسیر رو در اپ REV باز کن.\\n" +
+    "🚨 درخواست امداد: ثبت درخواست امداد از اپ REV انجام می‌شه.\\n" +
+    "🚕 بخش راننده: توکن پنل راننده رو وارد کن تا پیشنهادهای امداد رو ببینی.\\n" +
+    "👤 حساب من: شماره موبایل رو ثبت کن تا امتیاز مشارکت نمایش داده بشه.\\n" +
+    "💬 پشتیبانی: پیام یا پیشنهادت رو مستقیم برای مدیر بفرست.\\n\\n" +
+    "برای بازگشت به منو، «شروع» رو بزن.", { reply_markup: kbFor(env, chatId) });
+}
+
 async function handleTowInfo(env, chatId) {
   const { j } = await jfetch(`${TOW_API}/api/support`);
   const phone = j && j.phone ? j.phone : (j && j.data && j.data.phone) || "";
@@ -694,6 +740,7 @@ async function handleMessage(env, msg) {
     await send(env, chatId, "منوی اصلی", { reply_markup: kbFor(env, chatId) });
     return;
   }
+  if (ses && ses.flow === "feedback") { await handleFeedbackSubmit(env, msg, text); return; }
   if (ses && ses.flow === "phone") { await handlePhoneInput(env, chatId, text); return; }
   if (ses && ses.flow === "route_destination") { await handleRouteDestination(env, chatId, text, ses); return; }
   if (ses && ses.flow === "driver_token") { await handleDriverToken(env, chatId, text); return; }
@@ -713,6 +760,9 @@ async function handleMessage(env, msg) {
     case "🚨 درخواست امداد": await handleTowInfo(env, chatId); return;
     case "🚕 بخش راننده": await handleDriverHome(env, chatId); return;
     case "👤 حساب من": await handleAccount(env, chatId); return;
+    case "💬 پشتیبانی و پیشنهاد": await handleFeedbackStart(env, chatId); return;
+    case "🌐 ورود به اپ REV": await handleRevLink(env, chatId); return;
+    case "📖 راهنمای استفاده": await handleBotHelp(env, chatId); return;
     case "🔙 بازگشت":
       await clearSession(env, chatId);
       await send(env, chatId, "منوی اصلی", { reply_markup: kbFor(env, chatId) });
