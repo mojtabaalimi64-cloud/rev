@@ -173,11 +173,29 @@ async function handleRouteDestination(env, chatId, place, ses) {
   try {
     const destination = await geocodeRoutePlace(place);
     const origin = ses.origin;
-    const url = 'https://router.project-osrm.org/route/v1/driving/' + origin[0] + ',' + origin[1] + ';' + destination[0] + ',' + destination[1] + '?overview=full&geometries=geojson&steps=false';
-    const response = await fetch(url);
-    if (!response.ok) throw new Error('سرویس مسیر پاسخ نداد؛ کمی بعد دوباره تلاش کن.');
-    const payload = await response.json();
-    if (payload.code !== 'Ok' || !payload.routes || !payload.routes.length) throw new Error('برای این مبدأ و مقصد مسیر جاده‌ای پیدا نشد.');
+    const routePath = origin[0] + ',' + origin[1] + ';' + destination[0] + ',' + destination[1];
+    const routeQuery = '?overview=full&geometries=geojson&steps=false';
+    // دو سرویس عمومی به‌صورت پشتیبان؛ اگر یکی در دسترس نبود، دومی امتحان می‌شود.
+    const routeEndpoints = [
+      'https://router.project-osrm.org/route/v1/driving/' + routePath + routeQuery,
+      'https://routing.openstreetmap.de/routed-car/route/v1/driving/' + routePath + routeQuery,
+    ];
+    let payload = null, lastRouteError = '';
+    for (const endpoint of routeEndpoints) {
+      try {
+        const response = await fetch(endpoint, { headers: { Accept: 'application/json' }, signal: AbortSignal.timeout(10000) });
+        if (!response.ok) { lastRouteError = 'HTTP ' + response.status; continue; }
+        const candidate = await response.json();
+        if (candidate.code === 'Ok' && Array.isArray(candidate.routes) && candidate.routes.length) {
+          payload = candidate;
+          break;
+        }
+        lastRouteError = candidate.message || candidate.code || 'پاسخ نامعتبر';
+      } catch (e) {
+        lastRouteError = String(e && e.message || 'خطای اتصال');
+      }
+    }
+    if (!payload) throw new Error('هر دو سرویس مسیر در دسترس نبودند (' + lastRouteError + '). کمی بعد دوباره تلاش کن.');
     const route = payload.routes[0], coords = route.geometry && route.geometry.coordinates || [];
     const stations = await fetchStations(env);
     const along = stations.map(st => {
