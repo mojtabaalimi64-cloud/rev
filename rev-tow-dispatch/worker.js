@@ -549,6 +549,10 @@ async function handle(req, env, cors) {
     const r = await getReq(env, b.reqId);
     if (!r) return json({ ok: false }, 404, cors);
 
+    if (r.status === "لغو شد" || r.status === "انجام شد") {
+      await storeDelete(env, kOffer(r.id));
+      return json({ ok: false, err: "این درخواست دیگر فعال نیست" }, 409, cors);
+    }
     if (b.accept === true) {
       await storeDelete(env, kOffer(r.id));
       r.status = "راننده در راه";
