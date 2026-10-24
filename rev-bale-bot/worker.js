@@ -14,7 +14,13 @@
  *  - دیسپچ یدک‌کش: rev-tow-dispatch (GET /api/driver/offers, POST /api/driver/respond, POST /api/driver/heartbeat, GET /api/support)
  *
  * سکرت‌ها (در داشبورد کلادفلر ست می‌شوند، هرگز در کد نیستند):
- *  BALE_TOKEN, STATUS_ADMIN_TOKEN, WEBHOOK_SECRET, INTERNAL_KEY
+ *  BALE_TOKEN, STATUS_ADMIN_TOKEN, WEBHOOK_SECRET, INTERNAL_KEY,
+ *  REV_API_ADMIN_TOKEN (توکن مدیریت rev-api برای ثبت خودکار جایگاه از فوروارد)
+ *
+ * ثبت خودکار جایگاه از فوروارد: پیام فورواردشده در چت خصوصی که لوکیشن بله یا
+ * لینک نقشه داشته باشد، بدون هیچ تأیید انسانی استخراج و در rev-api ثبت می‌شود
+ * (همان مسیر پنل مدیر: POST /api/admin/stations و سپس review با approved) و
+ * گزارشش با دکمه حذف یک‌لمسی برای مدیر می‌رود.
  * متغیرها: OWNER_ID (پیش‌فرض 1068481085), CHANNEL_ID (مثل @raneshev یا آی‌دی عددی کانال)
  * بایندینگ: KV با نام BOT_KV
  */
@@ -203,6 +209,292 @@ async function jfetch(url, opts = {}) {
   try { t = await res.text(); } catch { /* ignore */ }
   try { j = JSON.parse(t); } catch { /* ignore */ }
   return { status: res.status, j, t };
+}
+
+
+// ---------- ثبت خودکار جایگاه از فوروارد (کانال ۱۵۰۰ نفره؛ بدون نیاز به ادمین) ----------
+// فوروارد = پیام دارای یکی از فیلدهای forward بله (مشابه Bot API تلگرام).
+export function isForwardedMessage(msg) {
+  if (!msg || typeof msg !== "object") return false;
+  return !!(
+    msg.forward_from || msg.forward_from_chat || msg.forward_date ||
+    msg.forward_sender_name || msg.forward_from_message_id ||
+    msg.forward_signature || msg.forward_origin
+  );
+}
+
+// ارقام فارسی/عربی به لاتین + یکسان‌سازی ی/ک عربی، برای تطبیق الگوها.
+export function faDigits(s) {
+  return String(s ?? "")
+    .replace(/[۰-۹]/g, (d) => "۰۱۲۳۴۵۶۷۸۹".indexOf(d))
+    .replace(/[٠-٩]/g, (d) => "٠١٢٣٤٥٦٧٨٩".indexOf(d))
+    .replace(/ي/g, "ی").replace(/ك/g, "ک");
+}
+export function toFaDigits(s) {
+  return String(s ?? "").replace(/\d/g, (d) => "۰۱۲۳۴۵۶۷۸۹"[Number(d)]);
+}
+
+function validCoords(lat, lng) {
+  if (!isFinite(lat) || !isFinite(lng)) return false;
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) return false;
+  if (lat === 0 && lng === 0) return false; // Null Island = داده بی‌معنا
+  return true;
+}
+
+// استخراج مختصات از یک URL (پس از decode). الگوها: @lat,lng ، ?q=/ll=/center=lat,lng ، ?lat=&lng=.
+export function extractCoordsFromUrl(raw) {
+  if (!raw || typeof raw !== "string") return null;
+  let u = raw;
+  try { u = decodeURIComponent(raw); } catch { /* همان خام */ }
+  let m = u.match(/@(-?\d{1,3}\.\d+)\s*,\s*(-?\d{1,3}\.\d+)/);
+  if (m && validCoords(+m[1], +m[2])) return { lat: +m[1], lng: +m[2] };
+  m = u.match(/[?&](?:ll|q|center|destination|origin|latlng)=(-?\d{1,3}\.\d+)\s*[,\s]\s*(-?\d{1,3}\.\d+)/);
+  if (m && validCoords(+m[1], +m[2])) return { lat: +m[1], lng: +m[2] };
+  const la = u.match(/[?&]lat=(-?\d{1,3}\.\d+)/);
+  const lo = u.match(/[?&](?:lng|lon)=(-?\d{1,3}\.\d+)/);
+  if (la && lo && validCoords(+la[1], +lo[1])) return { lat: +la[1], lng: +lo[1] };
+  return null;
+}
+
+const MAP_HOSTS = [
+  "google.com", "maps.google.com", "maps.app.goo.gl", "goo.gl",
+  "neshan.org", "n.sh", "balad.ir", "waze.com", "www.waze.com",
+  "openstreetmap.org", "www.openstreetmap.org",
+];
+const SHORT_HOSTS = ["maps.app.goo.gl", "goo.gl", "n.sh"];
+function urlsInText(text) {
+  return String(text || "").match(/https?:\/\/[^\s<>"')]+/gi) || [];
+}
+function hostOf(u) {
+  try { return new URL(u).hostname.toLowerCase().replace(/^www\./, ""); }
+  catch { return ""; }
+}
+export function hasMapLink(text) {
+  return urlsInText(text).some((u) => {
+    const h = hostOf(u);
+    return MAP_HOSTS.some((mh) => h === mh.replace(/^www\./, "") || h.endsWith("." + mh.replace(/^www\./, "")));
+  });
+}
+export function extractCoordsFromText(text) {
+  for (const u of urlsInText(text)) {
+    const c = extractCoordsFromUrl(u);
+    if (c) return c;
+  }
+  return null;
+}
+// لینک کوتاه نقشه را با دنبال‌کردن ریدایرکت به URL نهایی می‌رساند (فقط دامنه‌های کوتاه نقشه).
+async function resolveShortLink(u) {
+  try {
+    const ctrl = new AbortController();
+    const t = setTimeout(() => ctrl.abort(), 5000);
+    let res;
+    try { res = await fetch(u, { method: "GET", redirect: "follow", signal: ctrl.signal }); }
+    finally { clearTimeout(t); }
+    return res && res.url ? res.url : null;
+  } catch { return null; }
+}
+
+const PORT_LABELS = {
+  ccs2: "CCS2", gbt_dc: "GB/T DC", gbt_ac: "GB/T AC",
+  type2: "Type 2", chademo: "CHAdeMO", type1: "Type 1",
+};
+// استخراج پورت از متن (لاتین + فارسی رایج). نبودِ پورت هرگز مانع ثبت نیست.
+export function extractPortsFromText(text) {
+  const raw = String(text || "");
+  const t = faDigits(raw).toLowerCase();
+  const compact = t.replace(/[\s\u200c\-_]/g, "");
+  const out = [];
+  if (t.includes("ccs")) out.push("ccs2");
+  if (t.includes("chademo") || raw.includes("چادمو") || raw.includes("شادمو")) out.push("chademo");
+  const gb = t.includes("gb/t") || compact.includes("gbt") || compact.includes("جیبیتی");
+  if (gb) {
+    const dc = t.includes("dc") || raw.includes("سریع");
+    const ac = t.includes("ac") || raw.includes("عادی") || raw.includes("کند");
+    if (dc && !ac) out.push("gbt_dc");
+    else if (ac && !dc) out.push("gbt_ac");
+    else { out.push("gbt_dc"); out.push("gbt_ac"); }
+  }
+  if (compact.includes("type2") || compact.includes("تایپ2") || t.includes("mennekes")) out.push("type2");
+  if (compact.includes("type1") || compact.includes("تایپ1") || t.includes("j1772")) out.push("type1");
+  return out.map((k) => PORT_LABELS[k]);
+}
+
+// ساعت کاری: «۲۴ ساعته»/«شبانه‌روزی» یا بازه «۸ تا ۲۲» (فقط وقتی واژه ساعت/کاری نزدیک باشد).
+export function extractHoursFromText(text) {
+  const raw = String(text || "");
+  const t = faDigits(raw);
+  if (/(24[\s\u200c]*ساعته|شبانه[\s\u200c]*روزی|24\s*\/\s*7|24h)/i.test(t)) return "۲۴ ساعته";
+  const re = /(\d{1,2})\s*(تا|الی|–|—|-)\s*(\d{1,2})/g;
+  let m;
+  while ((m = re.exec(t)) !== null) {
+    const a = Number(m[1]), b = Number(m[3]);
+    if (a > 24 || b > 24) continue;
+    const ctx = t.slice(Math.max(0, m.index - 25), m.index + m[0].length + 25);
+    if (/ساعت|کاری|باز|فعال/.test(ctx)) return `${toFaDigits(m[1])} تا ${toFaDigits(m[3])}`;
+  }
+  return "";
+}
+
+// نام جایگاه: اولین خط معنادار (نه فقط لینک)، بدون هشتگ/منشن ابتدای خط، سقف ۸۰ نویسه.
+export function extractStationName(text) {
+  const lines = String(text || "").split(/\n+/).map((l) => l.trim()).filter(Boolean);
+  for (const line of lines) {
+    const noUrls = line.replace(/https?:\/\/[^\s]+/g, "").trim();
+    if (!noUrls) continue;
+    const cleaned = noUrls.replace(/^(?:#[^\s]+\s*|@[^\s]+\s*)+/, "").trim();
+    if (cleaned) return cleaned.slice(0, 80);
+  }
+  return "ایستگاه شارژ";
+}
+
+export function findDuplicateStation(stations, lat, lng, radiusM = 150) {
+  let best = null;
+  for (const s of stations || []) {
+    if (!isFinite(s.latitude) || !isFinite(s.longitude)) continue;
+    const d = haversineM(lat, lng, s.latitude, s.longitude);
+    if (d <= radiusM && (!best || d < best.distM)) best = { ...s, distM: Math.round(d) };
+  }
+  return best;
+}
+
+async function fetchStationsFresh(env) {
+  try {
+    const res = await fetch(`${REV_API}/api/stations`);
+    const j = await res.json();
+    return Array.isArray(j.data) ? j.data : [];
+  } catch { return null; } // null = بررسی تکراری ممکن نشد (ثبت متوقف نمی‌شود)
+}
+
+const FWD_RATE_LIMIT = 5, FWD_RATE_WINDOW_MS = 3600000;
+async function fwdRateState(env, chatId) {
+  const r = (await kvGet(env, `fwdrl:${chatId}`)) || { count: 0, start: Date.now() };
+  if (Date.now() - r.start > FWD_RATE_WINDOW_MS) return { count: 0, start: Date.now() };
+  return r;
+}
+
+// جریان اصلی: فوروارد → استخراج → ثبت خودکار در rev-api (همان مسیر پنل مدیر).
+async function handleForwardedStation(env, msg) {
+  const chatId = msg.chat.id;
+  const text = (typeof msg.text === "string" ? msg.text : "") || (typeof msg.caption === "string" ? msg.caption : "");
+  const rl = await fwdRateState(env, chatId);
+  if (rl.count >= FWD_RATE_LIMIT) {
+    await send(env, chatId, "سقف ثبت ساعتی (۵ جایگاه در ساعت) برای شما پر شده؛ یک ساعت دیگر دوباره فوروارد کنید.");
+    return;
+  }
+
+  // ۱) مختصات: اول لوکیشن بله، بعد لینک نقشه، بعد حل لینک کوتاه.
+  let coords = null;
+  if (msg.location && isFinite(msg.location.latitude) && isFinite(msg.location.longitude) &&
+      validCoords(msg.location.latitude, msg.location.longitude)) {
+    coords = { lat: msg.location.latitude, lng: msg.location.longitude };
+  } else {
+    coords = extractCoordsFromText(text);
+    if (!coords) {
+      for (const u of urlsInText(text)) {
+        if (!SHORT_HOSTS.includes(hostOf(u))) continue;
+        const final = await resolveShortLink(u);
+        coords = final ? extractCoordsFromUrl(final) : null;
+        if (coords) break;
+      }
+    }
+  }
+  if (!coords) {
+    await send(env, chatId, "مختصات این جایگاه پیدا نشد؛ لطفاً لوکیشن بله را هم بفرست 📍");
+    return;
+  }
+
+  // ۲) استخراج متن (بهترین تلاش؛ نبودشان مانع ثبت نیست).
+  const ports = extractPortsFromText(text);
+  const hours = extractHoursFromText(text);
+  const name = extractStationName(text);
+  const meaningful = String(text || "").split(/\n+/).map((l) => l.trim()).filter(Boolean)
+    .map((l) => l.replace(/https?:\/\/[^\s]+/g, "").trim()).filter(Boolean);
+  let address = meaningful.length > 1 ? meaningful[1].slice(0, 200) : name;
+  if (hours && !address.includes(hours)) address = `${address} — ساعت کاری: ${hours}`;
+
+  // ۳) ضدتکراری در شعاع ۱۵۰ متر (فهرست تازه، نه کش).
+  const stations = await fetchStationsFresh(env);
+  if (stations) {
+    const dup = findDuplicateStation(stations, coords.lat, coords.lng, 150);
+    if (dup) {
+      await send(env, chatId, `این جایگاه از قبل روی نقشه هست: ${dup.name}`);
+      return;
+    }
+  }
+
+  // ۴) ثبت در rev-api با همان مسیر پنل مدیر (نیاز به توکن مدیریت rev-api).
+  if (!env.REV_API_ADMIN_TOKEN) {
+    await send(env, chatId, "ثبت انجام نشد: توکن مدیریت rev-api روی ورکر بات ست نشده (REV_API_ADMIN_TOKEN).");
+    return;
+  }
+  const stationId = "rev-bot-" + Math.random().toString(36).slice(2, 14);
+  const payload = {
+    id: stationId, source: "rev_bot", source_id: `bale:${chatId}:${msg.message_id || ""}`,
+    name, address, latitude: coords.lat, longitude: coords.lng,
+    connectors: ports, power_kw: null, status: "unknown", source_url: "",
+  };
+  const headers = { "Content-Type": "application/json", Authorization: `Bearer ${env.REV_API_ADMIN_TOKEN}` };
+  const { status, j } = await jfetch(`${REV_API}/api/admin/stations`, {
+    method: "POST", headers, body: JSON.stringify(payload),
+  });
+  if (status >= 400 || !j || j.success === false) {
+    await send(env, chatId, "ثبت جایگاه در دیتابیس ناموفق بود؛ لطفاً دوباره فوروارد کنید.");
+    return;
+  }
+  const realId = (j.data && j.data.id) || stationId;
+  // انتشار: همان review تاییدیه پنل مدیر (بدون این قدم، جایگاه منتشر نمی‌شود).
+  let reviewOk = true;
+  try {
+    const rv = await jfetch(`${REV_API}/api/admin/stations/${encodeURIComponent(realId)}/review`, {
+      method: "POST", headers,
+      body: JSON.stringify({ approval_status: "approved", review_note: "ثبت خودکار از فوروارد بله" }),
+    });
+    reviewOk = rv.status < 400 && rv.j && rv.j.success !== false;
+  } catch { reviewOk = false; }
+
+  // ۵) سقف نرخ فقط با ثبت موفق پر می‌شود + پاک‌کردن کش ایستگاه‌ها.
+  await kvPut(env, `fwdrl:${chatId}`, { count: rl.count + 1, start: rl.start }, 3600);
+  try { await env.BOT_KV.delete("cache:stations"); } catch { /* ignore */ }
+
+  const portsLine = ports.length ? ports.join("، ") : "نامشخص";
+  if (reviewOk) {
+    await send(env, chatId,
+      `✅ جایگاه ثبت شد:\n${name}\nپورت: ${portsLine}` + (hours ? `\nساعت کاری: ${hours}` : ""));
+  } else {
+    await send(env, chatId,
+      `⚠️ جایگاه ثبت شد ولی انتشار نهایی ناموفق بود؛ مدیر بررسی می‌کند.\n${name}\nپورت: ${portsLine}`);
+  }
+
+  // ۶) گزارش پس از ثبت برای مدیر (best-effort؛ ثبت هرگز منتظرش نمی‌ماند).
+  try {
+    await send(env, ownerId(env),
+      `📍 جایگاه تازه از فوروارد بله ثبت شد${reviewOk ? "" : " (انتشار نهایی ناموفق بود)"}\n` +
+      `نام: ${name}\nپورت: ${portsLine}\nساعت کاری: ${hours || "—"}\n` +
+      `مختصات: ${coords.lat}، ${coords.lng}\nفرستنده: ${chatId}\nشناسه: ${realId}`,
+      { reply_markup: { inline_keyboard: [[{ text: "🗑 حذف این جایگاه", callback_data: `delst:${realId}` }]] } });
+  } catch { /* ignore */ }
+}
+
+async function handleDeleteStationCb(env, cb) {
+  const chatId = cb.message.chat.id;
+  const stationId = (cb.data || "").slice("delst:".length);
+  if (chatId !== ownerId(env)) { await answerCb(env, cb.id, "فقط مدیر."); return; }
+  if (!env.REV_API_ADMIN_TOKEN) { await answerCb(env, cb.id, "توکن مدیریت rev-api ست نشده."); return; }
+  if (!stationId) { await answerCb(env, cb.id, "شناسه نامعتبر."); return; }
+  try {
+    const res = await fetch(`${REV_API}/api/admin/stations/${encodeURIComponent(stationId)}`, {
+      method: "DELETE", headers: { Authorization: `Bearer ${env.REV_API_ADMIN_TOKEN}` },
+    });
+    const j = await res.json().catch(() => ({}));
+    if (res.ok && j.success !== false) {
+      await answerCb(env, cb.id, "حذف شد.");
+      await editText(env, chatId, cb.message.message_id, `🗑 جایگاه ${stationId} حذف شد.`);
+    } else {
+      await answerCb(env, cb.id, "حذف ناموفق بود.");
+    }
+  } catch {
+    await answerCb(env, cb.id, "حذف ناموفق بود.");
+  }
 }
 
 // ---------- جریان کاربر: گزارش وضعیت و شارژر نزدیک ----------
@@ -1088,6 +1380,19 @@ async function handleMessage(env, msg) {
   const chatId = msg.chat.id;
   const text = typeof msg.text === "string" ? msg.text.trim() : "";
 
+  // فوروارد در چت خصوصی: کاندید ثبت جایگاه (قبل از همه جریان‌های عادی).
+  if (msg.chat && msg.chat.type === "private" && isForwardedMessage(msg)) {
+    const fwdText = text || (typeof msg.caption === "string" ? msg.caption.trim() : "");
+    const stationSignal = !!msg.location || hasMapLink(fwdText);
+    if (stationSignal) { await handleForwardedStation(env, msg); return; }
+    const ses0 = await getSession(env, chatId);
+    if (!ses0 || !ses0.flow) {
+      await send(env, chatId, "این فوروارد، جایگاه شارژ به نظر نمی‌رسد. برای ثبت جایگاه، پستی را فوروارد کن که لوکیشن یا لینک نقشه داشته باشد.");
+      return;
+    }
+    // در جریان فعالی هستیم (مثلاً انتظار عکس): رفتار قدیمی حفظ می‌شود.
+  }
+
   if (msg.location) {
     const ses = await getSession(env, chatId);
     if (ses && ses.flow === "driver_loc") { await handleDriverLocation(env, chatId, msg.location); return; }
@@ -1255,6 +1560,7 @@ async function handleCallback(env, cb) {
     if (data.startsWith("shop:") || data.startsWith("ord:")) return await handleShopCb(env, cb);
     if (data.startsWith("mod:")) return await handleModerate(env, cb);
     if (data.startsWith("pub:")) return await handleChannelPublish(env, cb);
+    if (data.startsWith("delst:")) return await handleDeleteStationCb(env, cb);
     if (data.startsWith("drv:")) return await handleDriverCb(env, cb);
     await answerCb(env, cb.id);
   } catch {
@@ -1262,7 +1568,7 @@ async function handleCallback(env, cb) {
   }
 }
 
-async function handleUpdate(env, update) {
+export async function handleUpdate(env, update) {
   if (update.message) await handleMessage(env, update.message);
   else if (update.callback_query) await handleCallback(env, update.callback_query);
 }
