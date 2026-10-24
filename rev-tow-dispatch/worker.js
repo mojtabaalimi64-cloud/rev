@@ -317,6 +317,10 @@ async function handle(req, env, cors) {
   if (path === "/driver" && method === "GET")
     return new Response(DRIVER_PAGE, { headers: { "content-type": "text/html; charset=utf-8" } });
 
+  // customer cancellation/status page
+  if (path === "/tow/customer" && method === "GET")
+    return new Response(CUSTOMER_CANCEL_PAGE, { headers: { "content-type": "text/html; charset=utf-8", ...cors } });
+
   // ---- public support contact ----
   if (path === "/api/support" && method === "GET") {
     const phone = String(await storeGet(env, "settings:support_phone") || "").trim();
@@ -912,4 +916,14 @@ document.getElementById("od").innerHTML="<div class='big'>"+o.request.problem+"<
 else{REQ=null;box.style.display="none"}})}
 document.getElementById("acc").onclick=function(){if(REQ)api("/api/driver/respond",{method:"POST",body:JSON.stringify({token:T,reqId:REQ,accept:true})}).then(loop)};
 document.getElementById("rej").onclick=function(){if(REQ)api("/api/driver/respond",{method:"POST",body:JSON.stringify({token:T,reqId:REQ,accept:false})}).then(loop)};
+</script></body></html>`;
+
+const CUSTOMER_CANCEL_PAGE = `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>پیگیری یدک‌کشی REV</title><style>body{font-family:Tahoma,sans-serif;background:#f5f8fc;color:#18283b;margin:0;padding:20px}.card{max-width:450px;margin:20px auto;background:white;border-radius:16px;padding:22px;box-shadow:0 4px 22px #152d5015}input,select,button{box-sizing:border-box;width:100%;padding:12px;margin:8px 0;border-radius:9px;border:1px solid #cbd5e1;font:inherit}button{background:#1766c1;color:white;border:0;cursor:pointer}button.danger{background:#bd3030}button:disabled{opacity:.5}#cancelArea{display:none}#message{white-space:pre-wrap}</style></head><body><div class="card"><h2>پیگیری مأموریت یدک‌کشی REV</h2><label>شناسه درخواست<input id="id" placeholder="TW-XXXXXX"></label><label>شماره موبایل ثبت‌شده<input id="phone" inputmode="tel" placeholder="09xxxxxxxxx"></label><button id="check">بررسی وضعیت</button><p id="message" role="status"></p><section id="cancelArea"><label>دلیل لغو<select id="reason"><option value="مشکل خودرو برطرف شد">مشکل خودرو برطرف شد</option><option value="تأخیر یدک‌کش">تأخیر یدک‌کش</option><option value="انصراف از درخواست">انصراف از درخواست</option><option value="سایر دلایل">سایر دلایل</option></select></label><button class="danger" id="cancel">لغو مأموریت</button></section></div><script>
+const id=document.getElementById("id"),phone=document.getElementById("phone"),message=document.getElementById("message"),area=document.getElementById("cancelArea");
+const params=new URLSearchParams(location.search);id.value=params.get("id")||"";phone.value=params.get("phone")||"";
+async function call(path,options){const r=await fetch(path,options);const j=await r.json();if(!r.ok||!j.ok)throw Error(j.err||"خطای سرور");return j}
+async function check(){area.style.display="none";try{if(!/^09\\d{9}$/.test(phone.value.trim()))throw Error("شماره موبایل معتبر نیست");const j=await call("/api/tow/my-requests?phone="+encodeURIComponent(phone.value.trim()));const r=(j.requests||[]).find(x=>x.id===id.value.trim());if(!r)throw Error("درخواستی با این شناسه و شماره یافت نشد");message.textContent="وضعیت: "+r.status;area.style.display=["لغو شد","انجام شد"].includes(r.status)?"none":"block"}catch(e){message.textContent=e.message}}
+document.getElementById("check").onclick=check;
+document.getElementById("cancel").onclick=async function(){if(!confirm("آیا از لغو مأموریت مطمئن هستید؟"))return;this.disabled=true;try{await call("/api/tow/cancel",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:id.value.trim(),phone:phone.value.trim(),reason:document.getElementById("reason").value})});message.textContent="مأموریت لغو شد";area.style.display="none"}catch(e){message.textContent=e.message}finally{this.disabled=false}};
+if(id.value&&phone.value)check();
 </script></body></html>`;
