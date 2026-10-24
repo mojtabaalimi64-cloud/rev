@@ -199,9 +199,10 @@ async function fetchLiveStatus() {
 
 async function jfetch(url, opts = {}) {
   const res = await fetch(url, opts);
-  let j = null;
-  try { j = await res.json(); } catch { /* ignore */ }
-  return { status: res.status, j };
+  let j = null, t = "";
+  try { t = await res.text(); } catch { /* ignore */ }
+  try { j = JSON.parse(t); } catch { /* ignore */ }
+  return { status: res.status, j, t };
 }
 
 // ---------- جریان کاربر: گزارش وضعیت و شارژر نزدیک ----------
@@ -668,7 +669,7 @@ async function handleTowHome(env, chatId) {
 
 async function createTowRequest(env, chatId, ses, loc) {
   const usr = await getUser(env, chatId);
-  const { status, j } = await jfetch(`${TOW_API}/api/tow/request`, {
+  const { status, j, t } = await jfetch(`${TOW_API}/api/tow/request`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -677,6 +678,7 @@ async function createTowRequest(env, chatId, ses, loc) {
       problem: ses.problem || "سایر",
       loc: "ثبت‌شده از بازوی بله",
       gps: { lat: loc.latitude, lng: loc.longitude },
+      baleChatId: chatId,
     }),
   });
   await clearSession(env, chatId);
@@ -687,7 +689,14 @@ async function createTowRequest(env, chatId, ses, loc) {
       { reply_markup: kbFor(env, chatId) });
     await send(env, ownerId(env), `🚨 درخواست امداد تازه از بله: ${j.id} — ${usr.name || ""} (${usr.phone})`);
   } else {
-    await send(env, chatId, `ثبت درخواست انجام نشد (${j && j.err ? j.err : status}). چند دقیقه دیگه دوباره تلاش کن.`, { reply_markup: kbFor(env, chatId) });
+    // پیام تشخیصی: بدنه خام پاسخ (حداکثر ۱۲۰ نویسه) تا ماهیت واقعی خطا
+    // (مثلاً صفحه خطای HTML کلادفلر در برابر JSON ورکر) معلوم شود.
+    // cancelToken هرگز در پیام خطا نمی‌آید.
+    const raw = (typeof t === "string" ? t : "")
+      .replace(/\s+/g, " ")
+      .replace(/"cancelToken"\s*:\s*"[^"]*"/g, '"cancelToken":"…"')
+      .slice(0, 120);
+    await send(env, chatId, `ثبت درخواست انجام نشد (${j && j.err ? j.err : status})${raw ? `\nپاسخ سرور: ${raw}` : ""}. چند دقیقه دیگه دوباره تلاش کن.`, { reply_markup: kbFor(env, chatId) });
   }
 }
 
@@ -850,6 +859,14 @@ async function handleDriverToken(env, chatId, text) {
   if (status === 200 && j) {
     await kvPut(env, `drv:${chatId}`, { token, linkedAt: Date.now() });
     await clearSession(env, chatId);
+    // نگاشت راننده↔چت بله برای اعلان پیشنهاد (best-effort؛ خرابی‌اش اتصال را خراب نمی‌کند).
+    try {
+      await jfetch(`${TOW_API}/api/driver/link-chat`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token, chatId }),
+      });
+    } catch { /* ignore: offer polling still works */ }
     await send(env, chatId, "حسابت وصل شد ✅ از این به بعد پیشنهادهای امداد همین‌جا هم میاد.", { reply_markup: kbFor(env, chatId) });
     await handleDriverHome(env, chatId);
   } else {
@@ -1271,6 +1288,10 @@ async function handleInternal(env, request) {
     if (!drv || !drv.token) return Response.json({ ok: false, error: "driver_not_linked" }, 404);
     const { text, kb } = await driverOffersText(env, drv);
     await send(env, Number(body.chatId), "🚨 پیشنهاد امداد جدید\n\n" + text, kb ? { reply_markup: kb } : {});
+    return Response.json({ ok: true });
+  }
+  if (body.type === "tow_status" && body.chatId && body.text) {
+    await send(env, Number(body.chatId), String(body.text).slice(0, 3500));
     return Response.json({ ok: true });
   }
   return Response.json({ ok: false, error: "unknown_type" }, 400);

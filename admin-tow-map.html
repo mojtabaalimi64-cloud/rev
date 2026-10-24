@@ -147,7 +147,9 @@ aside h3{font-size:13.5px;font-weight:900;margin:10px 0 4px}
       +(drv?'<br>🚛 راننده: <b>'+esc(drv.name)+'</b> · <span dir="ltr">'+esc(drv.phone)+'</span>'
            :(nearest?'<br>🚛 نزدیک‌ترین راننده آزاد: <b>'+esc(nearest.name)+'</b> ('+faN(nd.toLocaleString('fa-IR',{maximumFractionDigits:1}))+' km)':'<br>🚛 راننده‌ای تخصیص نیافته'))
       +'<br><a class="pop-btn ghost" style="text-decoration:none" target="_blank" rel="noopener" href="https://www.google.com/maps?q='+r.gps.lat+','+r.gps.lng+'">باز کردن در گوگل‌مپ</a>'
-      +(target?' <button class="pop-btn" data-route="'+esc(r.id)+'">🚗 مسیر تا راننده</button>':'');
+      +(target?' <button class="pop-btn" data-route="'+esc(r.id)+'">🚗 مسیر تا راننده</button>':'')
+      +(r.status==='در انتظار اپراتور'?' <button class="pop-btn" data-redispatch="'+esc(r.id)+'">🔄 ارجاع مجدد</button>':'')
+      +((r.status!=='لغو شد'&&r.status!=='انجام شد')?' <button class="pop-btn" data-admcancel="'+esc(r.id)+'">❌ لغو درخواست</button>':'');
   }
 
   function drvPopup(d){
@@ -238,6 +240,21 @@ aside h3{font-size:13.5px;font-weight:900;margin:10px 0 4px}
         var dispatchDriverId=r.assignedDriver||(r.currentOffer&&r.currentOffer.driverId);var drv=dispatchDriverId?drvById(dispatchDriverId):null;
         if(!drv){var nd=1e18;drivers.filter(usable).forEach(function(d){var dd=hav(r.gps,d);if(dd<nd){nd=dd;drv=d}})}
         if(drv)routeTo(r,drv);
+      });
+    });
+    document.querySelectorAll('.leaflet-popup-content [data-redispatch]').forEach(function(b){
+      if(b.__bound)return;b.__bound=true;
+      b.addEventListener('click',function(){
+        if(!confirm('این درخواست دوباره به راننده‌های واجد شرایط ارجاع شود؟'))return;
+        fetch(API+'/api/admin/request/redispatch',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':key},body:JSON.stringify({id:b.getAttribute('data-redispatch')})}).then(function(r){return r.json()}).then(function(j){if(!j.ok)throw new Error(j.err||'خطا');load()}).catch(function(e){alert('ارجاع مجدد انجام نشد: '+e.message)});
+      });
+    });
+    document.querySelectorAll('.leaflet-popup-content [data-admcancel]').forEach(function(b){
+      if(b.__bound)return;b.__bound=true;
+      b.addEventListener('click',function(){
+        var reason=prompt('دلیل لغو درخواست:','لغو توسط اپراتور');if(reason===null)return;
+        if(!confirm('این درخواست لغو شود؟'))return;
+        fetch(API+'/api/admin/request/cancel',{method:'POST',headers:{'Content-Type':'application/json','x-admin-key':key},body:JSON.stringify({id:b.getAttribute('data-admcancel'),reason:reason})}).then(function(r){return r.json()}).then(function(j){if(!j.ok)throw new Error(j.err||'خطا');load()}).catch(function(e){alert('لغو انجام نشد: '+e.message)});
       });
     });
   });
