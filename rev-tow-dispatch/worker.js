@@ -100,15 +100,16 @@ function randomHex(bytes = 16) {
   const data = new Uint8Array(bytes); crypto.getRandomValues(data);
   return Array.from(data, x => x.toString(16).padStart(2, "0")).join("");
 }
-async function hashDriverPassword(password, saltHex) {
+async function hashDriverPassword(password, saltHex, iterations = 100000) {
   const salt = Uint8Array.from(saltHex.match(/.{2}/g) || [], x => parseInt(x, 16));
   const key = await crypto.subtle.importKey("raw", new TextEncoder().encode(password), "PBKDF2", false, ["deriveBits"]);
-  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations: 120000, hash: "SHA-256" }, key, 256);
+  const bits = await crypto.subtle.deriveBits({ name: "PBKDF2", salt, iterations, hash: "SHA-256" }, key, 256);
   return Array.from(new Uint8Array(bits), x => x.toString(16).padStart(2, "0")).join("");
 }
 async function setDriverPassword(d, password) {
   d.passwordSalt = randomHex(16);
-  d.passwordHash = await hashDriverPassword(password, d.passwordSalt);
+  d.passwordIterations = 100000;
+  d.passwordHash = await hashDriverPassword(password, d.passwordSalt, d.passwordIterations);
   d.passwordUpdatedAt = now();
 }
 function makeTempPassword() {
@@ -442,7 +443,7 @@ async function handle(req, env, cors) {
       return json({ ok: false, err: "تأیید حساب قبلی لغو شده است؛ لطفاً دوباره ثبت‌نام کن." }, 403, cors);
     if (!d || !d.passwordSalt || !d.passwordHash)
       return json({ ok: false, err: "برای این حساب هنوز رمز تعریف نشده؛ از مدیر REV بخواه رمز موقت صادر کند." }, 401, cors);
-    const candidate = await hashDriverPassword(b.password, d.passwordSalt);
+    const candidate = await hashDriverPassword(b.password, d.passwordSalt, d.passwordIterations || 120000);
     if (candidate !== d.passwordHash) return json({ ok: false, err: "شماره موبایل یا رمز عبور نادرست است" }, 401, cors);
     if (d.active === false) return json({ ok: false, err: "حساب راننده توسط مدیریت غیرفعال شده است." }, 403, cors);
     d.token = crypto.randomUUID().replace(/-/g, "");
@@ -464,7 +465,7 @@ async function handle(req, env, cors) {
       return json({ ok: false, err: "رمز جدید باید حداقل ۸ نویسه داشته باشد." }, 400, cors);
     if (b.currentPassword === b.newPassword)
       return json({ ok: false, err: "رمز جدید باید با رمز فعلی متفاوت باشد." }, 400, cors);
-    const currentHash = await hashDriverPassword(b.currentPassword, d.passwordSalt);
+    const currentHash = await hashDriverPassword(b.currentPassword, d.passwordSalt, d.passwordIterations || 120000);
     if (currentHash !== d.passwordHash)
       return json({ ok: false, err: "رمز فعلی درست نیست." }, 401, cors);
     await setDriverPassword(d, b.newPassword);
