@@ -218,6 +218,12 @@ async function getReq(env, id) {
   const raw = await storeGet(env, kReq(id));
   return raw ? JSON.parse(raw) : null;
 }
+// Atomic compare-and-swap prevents a cancellation from overwriting a concurrent completion.
+async function casReq(env, before, after) {
+  const result = await env.TOW_DB.prepare("UPDATE rev_tow_kv SET value = ? WHERE key = ? AND value = ?")
+    .bind(JSON.stringify(after), kReq(before.id), JSON.stringify(before)).run();
+  return Number(result.meta?.changes || 0) === 1;
+}
 async function saveReq(env, r) {
   const key = kReq(r.id); await storePut(env, key, JSON.stringify(r));
   await addIndexedName(env, "req:", key);
@@ -353,7 +359,7 @@ async function handle(req, env, cors) {
     await saveReq(env, r);
     await dispatchToNext(env, r);
     const fresh = await getReq(env, id);
-    return json({ ok: true, id, status: fresh.status, cancelToken }, 200, cors);
+    return json({ ok: true, id, status: fresh.status, cancelToken, customerUrl: new URL("/tow/customer?id=" + encodeURIComponent(id) + "&phone=" + encodeURIComponent(r.phone) + "&cancelToken=" + encodeURIComponent(cancelToken), url.origin).toString() }, 200, cors);
   }
 
   // ---- customer: status ----
@@ -391,12 +397,13 @@ async function handle(req, env, cors) {
     if (r.status === "لغو شد") return json({ ok: true, status: r.status }, 200, cors);
     if (r.status === "انجام شد") return json({ ok: false, err: "مأموریت انجام شده قابل لغو نیست" }, 409, cors);
     const reason = String(b.reason || "بدون ذکر دلیل").trim().slice(0, 200);
+    const before = structuredClone(r);
     r.status = "لغو شد";
     r.cancelledAt = now();
     r.cancelledBy = "customer";
     r.cancelReason = reason;
     r.log.push({ t: now(), ev: "توسط درخواست‌کننده لغو شد: " + reason });
-    await saveReq(env, r);
+    if (!await casReq(env, before, r)) return json({ ok: false, err: "وضعیت مأموریت تغییر کرده؛ دوباره بررسی کنید" }, 409, cors);
     await storeDelete(env, kOffer(r.id));
     return json({ ok: true }, 200, cors);
   }
@@ -551,14 +558,16 @@ async function handle(req, env, cors) {
       return json({ ok: false, err: "این درخواست دیگر فعال نیست" }, 409, cors);
     }
     if (b.accept === true) {
-      await storeDelete(env, kOffer(r.id));
+      if (r.status !== "در انتظار پذیرش راننده" || r.currentOffer?.driverId !== d.id) return json({ ok: false, err: "پیشنهاد دیگر معتبر نیست" }, 409, cors);
+      const before = structuredClone(r);
       r.status = "راننده در راه";
       r.assignedDriver = d.id;
       r.serviceCode = String(Math.floor(1000 + Math.random() * 9000));
       r.log.push({ t: now(), ev: `راننده ${d.name} پذیرفت` });
       r.log.push({ t: now(), ev: "کد اختصاصی امداد صادر شد" });
       d.score = Math.min(200, (d.score || 100) + 1);
-      await saveReq(env, r); await saveDriver(env, d);
+      if (!await casReq(env, before, r)) return json({ ok: false, err: "پیشنهاد هم‌زمان تغییر کرده" }, 409, cors);
+      await storeDelete(env, kOffer(r.id)); await saveDriver(env, d);
       return json({ ok: true, status: r.status, serviceCode: r.serviceCode }, 200, cors);
     }
     // reject → same as timeout: move to next driver
@@ -582,6 +591,7 @@ async function handle(req, env, cors) {
     if (r.status !== "راننده در راه") return json({ ok: false, err: "این مأموریت قابل لغو نیست" }, 409, cors);
     const reason = String(b.reason || "").trim().slice(0, 200);
     if (!reason) return json({ ok: false, err: "دلیل لغو الزامی است" }, 400, cors);
+    const before = structuredClone(r);
     r.assignedDriver = null;
     r.skipped = [...new Set([...(r.skipped || []), d.id])];
     r.currentOffer = null;
@@ -590,7 +600,7 @@ async function handle(req, env, cors) {
     r.cancelledBy = "driver";
     r.cancelReason = reason;
     r.log.push({ t: now(), ev: "توسط راننده " + d.name + " لغو شد: " + reason });
-    await saveReq(env, r);
+    if (!await casReq(env, before, r)) return json({ ok: false, err: "وضعیت مأموریت تغییر کرده" }, 409, cors);
     await storeDelete(env, kOffer(r.id));
     await dispatchToNext(env, r);
     const fresh = await getReq(env, r.id);
@@ -605,10 +615,11 @@ async function handle(req, env, cors) {
     const r = await getReq(env, b.reqId);
     if (!r || r.assignedDriver !== d.id) return json({ ok: false, err: "این مأموریت برای شما نیست" }, 403, cors);
     if (r.status !== "راننده در راه") return json({ ok: false, err: "مأموریت در وضعیت پایان نیست" }, 409, cors);
+    const before = structuredClone(r);
     r.status = "انجام شد";
     r.completedAt = now();
     r.log.push({ t: now(), ev: `مأموریت توسط راننده ${d.name} انجام شد` });
-    await saveReq(env, r);
+    if (!await casReq(env, before, r)) return json({ ok: false, err: "وضعیت مأموریت تغییر کرده" }, 409, cors);
     return json({ ok: true, status: r.status }, 200, cors);
   }
 
