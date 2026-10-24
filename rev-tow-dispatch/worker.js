@@ -371,24 +371,15 @@ async function handle(req, env, cors) {
     return json({ ok: true, id: r.id, status: r.status, driver, serviceCode: r.serviceCode || null, log: r.log.slice(-8) }, 200, cors);
   }
 
-  // ---- customer: my requests (profile history by phone) ----
+  // ---- customer: my requests (authenticated per-request only) ----
+  // Do not enumerate a customer's entire history based on a phone number.
   if (path === "/api/tow/my-requests" && method === "GET") {
-    const phone = String(url.searchParams.get("phone") || "").trim();
-    if (!validPhone(phone)) return json({ ok: false, err: "شماره معتبر نیست" }, 400, cors);
-    const mine = (await listRequests(env))
-      .filter(r => r.phone === phone)
-      .sort((a, b) => b.ts - a.ts)
-      .slice(0, 30);
-    const out = [];
-    for (const r of mine) {
-      let driver = null;
-      if (r.assignedDriver) {
-        const d = await getDriver(env, r.assignedDriver);
-        if (d) driver = { name: d.name, phone: d.phone };
-      }
-      out.push({ id: r.id, ts: r.ts, status: r.status, problem: r.problem, car: r.car, loc: r.loc, gps: r.gps, note: r.note, serviceCode: r.serviceCode || null, driver });
-    }
-    return json({ ok: true, requests: out }, 200, cors);
+    const id = String(url.searchParams.get("id") || "").trim();
+    const cancelToken = String(url.searchParams.get("cancelToken") || "");
+    const r = id ? await getReq(env, id) : null;
+    if (!r || !r.cancelToken || !cancelToken || cancelToken !== r.cancelToken)
+      return json({ ok: false, err: "مجوز دسترسی معتبر نیست" }, 403, cors);
+    return json({ ok: true, requests: [{ id: r.id, ts: r.ts, status: r.status, problem: r.problem, car: r.car, loc: r.loc, serviceCode: r.serviceCode || null }] }, 200, cors);
   }
 
   // ---- customer: cancel ----
@@ -396,7 +387,7 @@ async function handle(req, env, cors) {
     const b = await body(req);
     const r = await getReq(env, b.id);
     if (!r || r.phone !== String(b.phone || "").trim()) return json({ ok: false, err: "یافت نشد" }, 404, cors);
-    if (r.cancelToken && b.cancelToken !== r.cancelToken) return json({ ok: false, err: "مجوز لغو معتبر نیست" }, 403, cors);
+    if (!r.cancelToken || !b.cancelToken || b.cancelToken !== r.cancelToken) return json({ ok: false, err: "برای درخواست‌های قدیمی یا فاقد مجوز، لغو فقط از طریق اپراتور امکان‌پذیر است" }, 403, cors);
     if (r.status === "لغو شد") return json({ ok: true, status: r.status }, 200, cors);
     if (r.status === "انجام شد") return json({ ok: false, err: "مأموریت انجام شده قابل لغو نیست" }, 409, cors);
     const reason = String(b.reason || "بدون ذکر دلیل").trim().slice(0, 200);
@@ -929,7 +920,7 @@ const CUSTOMER_CANCEL_PAGE = `<!doctype html><html lang="fa" dir="rtl"><head><me
 const id=document.getElementById("id"),phone=document.getElementById("phone"),message=document.getElementById("message"),area=document.getElementById("cancelArea");
 const params=new URLSearchParams(location.search);id.value=params.get("id")||"";phone.value=params.get("phone")||"";const cancelToken=params.get("cancelToken")||"";
 async function call(path,options){const r=await fetch(path,options);const j=await r.json();if(!r.ok||!j.ok)throw Error(j.err||"خطای سرور");return j}
-async function check(){area.style.display="none";try{if(!/^09\\d{9}$/.test(phone.value.trim()))throw Error("شماره موبایل معتبر نیست");const r=await call("/api/tow/status?id="+encodeURIComponent(id.value.trim()));message.textContent="وضعیت: "+r.status;area.style.display=["لغو شد","انجام شد"].includes(r.status)?"none":"block"}catch(e){message.textContent=e.message}}
+async function check(){area.style.display="none";try{if(!/^09\\d{9}$/.test(phone.value.trim()))throw Error("شماره موبایل معتبر نیست");const r=await call("/api/tow/status?id="+encodeURIComponent(id.value.trim()));message.textContent="وضعیت: "+r.status;area.style.display=(!cancelToken||["لغو شد","انجام شد"].includes(r.status))?"none":"block";if(!cancelToken)message.textContent+=" — برای لغو درخواست قدیمی با پشتیبانی تماس بگیرید"}catch(e){message.textContent=e.message}}
 document.getElementById("check").onclick=check;
 document.getElementById("cancel").onclick=async function(){if(!confirm("آیا از لغو مأموریت مطمئن هستید؟"))return;this.disabled=true;try{await call("/api/tow/cancel",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:id.value.trim(),phone:phone.value.trim(),cancelToken,reason:document.getElementById("reason").value})});message.textContent="مأموریت لغو شد";area.style.display="none"}catch(e){message.textContent=e.message}finally{this.disabled=false}};
 if(id.value&&phone.value)check();
