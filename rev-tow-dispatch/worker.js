@@ -21,8 +21,19 @@
  *  - Note the worker URL, e.g. https://rev-tow-dispatch.<sub>.workers.dev
  *
  * Limits of this MVP (honest): no push notifications — drivers poll every
- * ~25 s from the /driver page; customer status via polling too; no D1, KV
- * only (fine for the expected volume).
+ * ~25 s from the /driver page; customer status via polling too.
+ *
+ * Two-sided cancellation guarantees (feature/tow-two-sided-cancellation):
+ *  - Customer cancel needs the per-request cancelToken (legacy requests
+ *    without one can only be cancelled by an operator via
+ *    POST /api/admin/request/cancel); private status fields (driver phone,
+ *    pickup service code) need the same token.
+ *  - Driver cancel records a reason, skips that driver permanently for the
+ *    mission, and re-dispatches to the next driver (or "در انتظار اپراتور").
+ *  - Every mutation of a live request record goes through CAS (casReq /
+ *    mutateReq with retry); expired offers can never be accepted afterwards;
+ *    duplicate cancels/completions are idempotent; duplicate request posts
+ *    with the same idempotencyKey replay the original request.
  */
 
 // ---------- tunables ----------
@@ -224,6 +235,22 @@ async function casReq(env, before, after) {
     .bind(JSON.stringify(after), kReq(before.id), JSON.stringify(before)).run();
   return Number(result.meta?.changes || 0) === 1;
 }
+// CAS-retry mutation: re-reads the request, applies fn to a fresh copy, and
+// retries on conflict. Blind saveReq calls in sweep/dispatch paths used to be
+// able to resurrect a concurrently cancelled mission; every mutation of a
+// live request record must go through here (or an explicit casReq).
+// fn(after) returns false to abort without writing.
+async function mutateReq(env, reqId, fn, attempts = 6) {
+  for (let i = 0; i < attempts; i++) {
+    const cur = await getReq(env, reqId);
+    if (!cur) return { ok: false, missing: true };
+    const before = structuredClone(cur);
+    const after = structuredClone(cur);
+    if (fn(after) === false) return { ok: false, aborted: true, req: cur };
+    if (await casReq(env, before, after)) return { ok: true, req: after };
+  }
+  return { ok: false, conflict: true };
+}
 async function saveReq(env, r) {
   const key = kReq(r.id); await storePut(env, key, JSON.stringify(r));
   await addIndexedName(env, "req:", key);
@@ -243,20 +270,33 @@ async function driverByToken(env, token) {
 }
 
 // ---------- dispatch core ----------
+// Shared expired-offer handling: delete the offer, record the timeout skip
+// with a CAS-retry mutation, then re-dispatch. Used by both the lazy sweep
+// and the accept path, so an offer that expired while a driver was tapping
+// "accept" can never be accepted afterwards.
+async function handleExpiredOffer(env, reqId, offer) {
+  await storeDelete(env, kOffer(reqId));
+  const res = await mutateReq(env, reqId, (r) => {
+    if (r.status === "لغو شد" || r.status === "انجام شد") return false;
+    // Already processed by a concurrent sweep: do not log/dispatch twice.
+    if ((r.skipped || []).includes(offer.driverId) && (!r.currentOffer || r.currentOffer.driverId !== offer.driverId)) return false;
+    r.skipped = [...new Set([...(r.skipped || []), offer.driverId])];
+    r.skippedWhy = { ...(r.skippedWhy || {}), [offer.driverId]: "timeout" };
+    if (r.currentOffer && r.currentOffer.driverId === offer.driverId) r.currentOffer = null;
+    r.log.push({ t: now(), ev: `راننده ${offer.driverId} در ${ACCEPT_TIMEOUT_MIN} دقیقه پاسخ نداد — ارجاع به نفر بعدی` });
+    return true;
+  });
+  if (!res.ok) return null;
+  return await dispatchToNext(env, { id: reqId });
+}
+
 async function sweepOffer(env, reqId) {
   // Expire a stale offer and move to the next driver (lazy timeout).
   const raw = await storeGet(env, kOffer(reqId));
   if (!raw) return null;
   const offer = JSON.parse(raw);
   if (offer.expiresAt > now()) return offer; // still live
-  await storeDelete(env, kOffer(reqId));
-  const req = await getReq(env, reqId);
-  if (!req || req.status === "لغو شد" || req.status === "انجام شد") return null;
-  req.skipped = [...(req.skipped || []), offer.driverId];
-  req.skippedWhy = { ...(req.skippedWhy || {}), [offer.driverId]: "timeout" };
-  req.log.push({ t: now(), ev: `راننده ${offer.driverId} در ${ACCEPT_TIMEOUT_MIN} دقیقه پاسخ نداد — ارجاع به نفر بعدی` });
-  await saveReq(env, req);
-  return await dispatchToNext(env, req);
+  return await handleExpiredOffer(env, reqId, offer);
 }
 
 async function releasePendingOffersForDriver(env, driver, reason) {
@@ -268,43 +308,71 @@ async function releasePendingOffersForDriver(env, driver, reason) {
     const offer = JSON.parse(raw);
     if (offer.driverId !== driver.id) continue;
     await storeDelete(env, item.name);
-    const r = await getReq(env, offer.reqId);
-    if (!r || r.status === "لغو شد" || r.status === "انجام شد") continue;
-    r.skipped = [...new Set([...(r.skipped || []), driver.id])];
-    r.log.push({ t: now(), ev: `راننده ${driver.name} ${reason} — درخواست به راننده بعدی ارجاع شد` });
-    await saveReq(env, r);
-    await dispatchToNext(env, r);
+    const res = await mutateReq(env, offer.reqId, (r) => {
+      if (r.status === "لغو شد" || r.status === "انجام شد") return false;
+      r.skipped = [...new Set([...(r.skipped || []), driver.id])];
+      if (r.currentOffer && r.currentOffer.driverId === driver.id) r.currentOffer = null;
+      r.log.push({ t: now(), ev: `راننده ${driver.name} ${reason} — درخواست به راننده بعدی ارجاع شد` });
+      return true;
+    });
+    if (res.ok) await dispatchToNext(env, { id: offer.reqId });
   }
 }
 
+// Re-dispatch a request to the next eligible driver. Always re-reads the
+// request and commits the assignment with CAS (retrying on conflict), so two
+// concurrent dispatches can never create two live offers, and a dispatch
+// racing a customer cancellation aborts instead of resurrecting the mission.
+// Reassigning also clears stale cancellation/service fields left by a driver
+// cancellation; the log keeps the full history.
 async function dispatchToNext(env, req) {
-  if (!req.gps) {
-    req.status = "در انتظار اپراتور";
-    req.log.push({ t: now(), ev: "بدون مختصات GPS — ارجاع به اپراتور" });
-    await saveReq(env, req);
-    return null;
+  const reqId = req.id;
+  for (let attempt = 0; attempt < 6; attempt++) {
+    const fresh = await getReq(env, reqId);
+    if (!fresh) return null;
+    if (fresh.status === "لغو شد" || fresh.status === "انجام شد") return null;
+    // Idempotent re-dispatch: a live offer for the current driver already exists.
+    if (fresh.currentOffer) {
+      const existingRaw = await storeGet(env, kOffer(reqId));
+      if (existingRaw) {
+        const existing = JSON.parse(existingRaw);
+        if (existing.expiresAt > now() && existing.driverId === fresh.currentOffer.driverId) return existing;
+      }
+    }
+    const before = structuredClone(fresh);
+    const after = structuredClone(fresh);
+    if (!after.gps) {
+      after.status = "در انتظار اپراتور";
+      after.currentOffer = null;
+      after.log.push({ t: now(), ev: "بدون مختصات GPS — ارجاع به اپراتور" });
+      if (await casReq(env, before, after)) return null;
+      continue;
+    }
+    const drivers = (await listDrivers(env)).filter(d =>
+      d.active !== false && d.onShift === true && d.approved === true && d.lastSeen && now() - d.lastSeen < DRIVER_STALE_MIN * 60 * 1000);
+    const ranked = rankDrivers(drivers, after.gps, after.skipped || []);
+    if (!ranked.length) {
+      after.status = "در انتظار اپراتور";
+      after.currentOffer = null;
+      after.log.push({ t: now(), ev: "راننده‌ای در شعاع پوشش یافت نشد — ارجاع به اپراتور" });
+      if (await casReq(env, before, after)) return null;
+      continue;
+    }
+    const pick = ranked[0];
+    const offer = {
+      reqId, driverId: pick.driver.id,
+      at: now(), expiresAt: now() + ACCEPT_TIMEOUT_MIN * 60 * 1000, state: "pending",
+    };
+    after.status = "در انتظار پذیرش راننده";
+    after.currentOffer = { driverId: pick.driver.id, distKm: pick.distKm, expiresAt: offer.expiresAt };
+    delete after.cancelledAt; delete after.cancelledBy; delete after.cancelReason; delete after.serviceCode;
+    after.log.push({ t: now(), ev: `ارسال به راننده ${pick.driver.name} (${pick.distKm} km)` });
+    if (!await casReq(env, before, after)) continue; // lost race: re-read and retry
+    await storePut(env, kOffer(reqId), JSON.stringify(offer));
+    await addIndexedName(env, "offer:", kOffer(reqId));
+    return offer;
   }
-  const drivers = (await listDrivers(env)).filter(d =>
-    d.active !== false && d.onShift === true && d.approved === true && d.lastSeen && now() - d.lastSeen < DRIVER_STALE_MIN * 60 * 1000);
-  const ranked = rankDrivers(drivers, req.gps, req.skipped || []);
-  if (!ranked.length) {
-    req.status = "در انتظار اپراتور";
-    req.log.push({ t: now(), ev: "راننده‌ای در شعاع پوشش یافت نشد — ارجاع به اپراتور" });
-    await saveReq(env, req);
-    return null;
-  }
-  const pick = ranked[0];
-  const offer = {
-    reqId: req.id, driverId: pick.driver.id,
-    at: now(), expiresAt: now() + ACCEPT_TIMEOUT_MIN * 60 * 1000, state: "pending",
-  };
-  await storePut(env, kOffer(req.id), JSON.stringify(offer));
-  await addIndexedName(env, "offer:", kOffer(req.id));
-  req.status = "در انتظار پذیرش راننده";
-  req.currentOffer = { driverId: pick.driver.id, distKm: pick.distKm, expiresAt: offer.expiresAt };
-  req.log.push({ t: now(), ev: `ارسال به راننده ${pick.driver.name} (${pick.distKm} km)` });
-  await saveReq(env, req);
-  return offer;
+  return null;
 }
 
 // ---------- routes ----------
@@ -338,6 +406,20 @@ async function handle(req, env, cors) {
     const b = await body(req);
     if (!b.name || String(b.name).trim().length < 2) return json({ ok: false, err: "نام معتبر نیست" }, 400, cors);
     if (!validPhone(b.phone)) return json({ ok: false, err: "شماره موبایل معتبر نیست" }, 400, cors);
+    // Idempotency: a client retry with the same key returns the original
+    // request instead of creating a duplicate mission (scoped per phone).
+    const idemKey = typeof b.idempotencyKey === "string" ? b.idempotencyKey.trim().slice(0, 128) : "";
+    if (idemKey) {
+      const hit = await storeGet(env, `idem:${String(b.phone).trim()}:${idemKey}`);
+      if (hit) {
+        const old = await getReq(env, hit);
+        if (old) {
+          return json({ ok: true, id: old.id, status: old.status, cancelToken: old.cancelToken || null,
+            customerUrl: new URL("/tow/customer?id=" + encodeURIComponent(old.id) + "&phone=" + encodeURIComponent(old.phone) + (old.cancelToken ? "&cancelToken=" + encodeURIComponent(old.cancelToken) : ""), url.origin).toString(),
+            idempotentReplay: true }, 200, cors);
+        }
+      }
+    }
     // simple rate limit
     const rk = kRate(b.phone.trim());
     const n = Number(await storeGet(env, rk) || 0);
@@ -357,6 +439,7 @@ async function handle(req, env, cors) {
       skipped: [], log: [{ t: now(), ev: "درخواست ثبت شد" }],
     };
     await saveReq(env, r);
+    if (idemKey) await storePut(env, `idem:${r.phone}:${idemKey}`, id, { expirationTtl: 86400 });
     await dispatchToNext(env, r);
     const fresh = await getReq(env, id);
     return json({ ok: true, id, status: fresh.status, cancelToken, customerUrl: new URL("/tow/customer?id=" + encodeURIComponent(id) + "&phone=" + encodeURIComponent(r.phone) + "&cancelToken=" + encodeURIComponent(cancelToken), url.origin).toString() }, 200, cors);
@@ -369,12 +452,17 @@ async function handle(req, env, cors) {
     await sweepOffer(env, id); // lazy timeout
     const r = await getReq(env, id);
     if (!r) return json({ ok: false, err: "یافت نشد" }, 404, cors);
+    // Private fields (driver phone, pickup service code) are only shown to
+    // the owning customer presenting the per-request cancelToken. A bare id
+    // still returns status, driver name and log so public tracking keeps
+    // working for clients that have not adopted the token yet.
+    const full = !!(r.cancelToken && url.searchParams.get("cancelToken") && url.searchParams.get("cancelToken") === r.cancelToken);
     let driver = null;
     if (r.assignedDriver) {
       const d = await getDriver(env, r.assignedDriver);
-      if (d) driver = { name: d.name, phone: d.phone };
+      if (d) driver = { name: d.name, phone: full ? d.phone : undefined };
     }
-    return json({ ok: true, id: r.id, status: r.status, driver, serviceCode: r.serviceCode || null, log: r.log.slice(-8) }, 200, cors);
+    return json({ ok: true, id: r.id, status: r.status, driver, serviceCode: full ? (r.serviceCode || null) : null, log: r.log.slice(-8) }, 200, cors);
   }
 
   // ---- customer: my requests (authenticated per-request only) ----
@@ -550,6 +638,12 @@ async function handle(req, env, cors) {
     if (!raw) return json({ ok: false, err: "پیشنهادی فعال نیست" }, 410, cors);
     const offer = JSON.parse(raw);
     if (offer.driverId !== d.id) return json({ ok: false, err: "این پیشنهاد برای شما نیست" }, 403, cors);
+    // An offer that expired while the driver was responding is dead: it is
+    // never accepted afterwards, it times out and moves to the next driver.
+    if (offer.expiresAt <= now()) {
+      await handleExpiredOffer(env, b.reqId, offer);
+      return json({ ok: false, err: "مهلت پاسخ به این پیشنهاد تمام شد" }, 410, cors);
+    }
     const r = await getReq(env, b.reqId);
     if (!r) return json({ ok: false }, 404, cors);
 
@@ -570,13 +664,18 @@ async function handle(req, env, cors) {
       await storeDelete(env, kOffer(r.id)); await saveDriver(env, d);
       return json({ ok: true, status: r.status, serviceCode: r.serviceCode }, 200, cors);
     }
-    // reject → same as timeout: move to next driver
-    r.skippedWhy = { ...(r.skippedWhy || {}), [d.id]: "reject" };
+    // reject → same as timeout: move to next driver (CAS, not blind save)
     await storeDelete(env, kOffer(r.id));
-    r.skipped = [...(r.skipped || []), d.id];
-    r.log.push({ t: now(), ev: `راننده ${d.name} رد کرد — ارجاع به نفر بعدی` });
-    await saveReq(env, r);
-    await dispatchToNext(env, r);
+    const rej = await mutateReq(env, r.id, (x) => {
+      if (x.status === "لغو شد" || x.status === "انجام شد") return false;
+      x.skippedWhy = { ...(x.skippedWhy || {}), [d.id]: "reject" };
+      x.skipped = [...new Set([...(x.skipped || []), d.id])];
+      if (x.currentOffer && x.currentOffer.driverId === d.id) x.currentOffer = null;
+      x.log.push({ t: now(), ev: `راننده ${d.name} رد کرد — ارجاع به نفر بعدی` });
+      return true;
+    });
+    if (!rej.ok) return json({ ok: false, err: "این درخواست دیگر فعال نیست" }, 409, cors);
+    await dispatchToNext(env, { id: r.id });
     return json({ ok: true, moved: true }, 200, cors);
   }
 
@@ -614,6 +713,9 @@ async function handle(req, env, cors) {
     if (!d) return json({ ok: false }, 401, cors);
     const r = await getReq(env, b.reqId);
     if (!r || r.assignedDriver !== d.id) return json({ ok: false, err: "این مأموریت برای شما نیست" }, 403, cors);
+    // Idempotent completion: a retried completion after a dropped response
+    // returns success without a second side effect.
+    if (r.status === "انجام شد") return json({ ok: true, status: r.status }, 200, cors);
     if (r.status !== "راننده در راه") return json({ ok: false, err: "مأموریت در وضعیت پایان نیست" }, 409, cors);
     const before = structuredClone(r);
     r.status = "انجام شد";
@@ -678,9 +780,9 @@ async function handle(req, env, cors) {
     }
     if (path === "/api/admin/request/crm" && method === "POST") {
       const b = await body(req);
-      const r = await getReq(env, String(b.id || ""));
-      if (!r) return json({ ok: false, err: "درخواست پیدا نشد" }, 404, cors);
-      const prior = r.crm && typeof r.crm === "object" ? r.crm : {};
+      const existing = await getReq(env, String(b.id || ""));
+      if (!existing) return json({ ok: false, err: "درخواست پیدا نشد" }, 404, cors);
+      const prior = existing.crm && typeof existing.crm === "object" ? existing.crm : {};
       const stage = String(b.stage === undefined ? (prior.stage || "جدید") : b.stage).trim();
       const allowedStages = ["جدید", "تماس با مشتری", "در انتظار پیگیری", "ارجاع به اپراتور", "حل‌شده"];
       if (!allowedStages.includes(stage)) return json({ ok: false, err: "مرحله CRM معتبر نیست" }, 400, cors);
@@ -689,11 +791,34 @@ async function handle(req, env, cors) {
       const followUpAt = String(b.followUpAt === undefined ? (prior.followUpAt || "") : b.followUpAt).trim().slice(0, 40);
       const owner = String(b.owner === undefined ? (prior.owner || "") : b.owner).trim().slice(0, 100);
       const note = String(b.note === undefined ? (prior.note || "") : b.note).trim().slice(0, 2000);
-      r.crm = { stage, priority, followUpAt, owner, note, updatedAt: now() };
-      r.log = Array.isArray(r.log) ? r.log : [];
-      r.log.push({ t: now(), ev: "پیگیری CRM به‌روزرسانی شد: " + stage });
-      await saveReq(env, r);
-      return json({ ok: true, crm: r.crm }, 200, cors);
+      const res = await mutateReq(env, existing.id, (r) => {
+        r.crm = { stage, priority, followUpAt, owner, note, updatedAt: now() };
+        r.log = Array.isArray(r.log) ? r.log : [];
+        r.log.push({ t: now(), ev: "پیگیری CRM به‌روزرسانی شد: " + stage });
+        return true;
+      });
+      if (!res.ok) return json({ ok: false, err: "وضعیت درخواست هم‌زمان تغییر کرد؛ دوباره تلاش کنید" }, 409, cors);
+      return json({ ok: true, crm: res.req.crm }, 200, cors);
+    }
+    // Operator-assisted cancellation: the only path for legacy requests that
+    // have no cancelToken (and for customers who lost their tracking link).
+    // Master key only (the generic POST guard above already enforces it).
+    if (path === "/api/admin/request/cancel" && method === "POST") {
+      const b = await body(req);
+      const r = await getReq(env, String(b.id || ""));
+      if (!r) return json({ ok: false, err: "درخواست پیدا نشد" }, 404, cors);
+      if (r.status === "لغو شد") return json({ ok: true, status: r.status }, 200, cors);
+      if (r.status === "انجام شد") return json({ ok: false, err: "مأموریت انجام شده قابل لغو نیست" }, 409, cors);
+      const reason = String(b.reason || "لغو توسط اپراتور").trim().slice(0, 200);
+      const before = structuredClone(r);
+      r.status = "لغو شد";
+      r.cancelledAt = now();
+      r.cancelledBy = "operator";
+      r.cancelReason = reason;
+      r.log.push({ t: now(), ev: "توسط اپراتور لغو شد: " + reason });
+      if (!await casReq(env, before, r)) return json({ ok: false, err: "وضعیت مأموریت تغییر کرده" }, 409, cors);
+      await storeDelete(env, kOffer(r.id));
+      return json({ ok: true, status: r.status }, 200, cors);
     }
     if (path === "/api/admin/drivers") {
       const allReqs = await listRequests(env);
@@ -917,7 +1042,7 @@ if(!confirm("از اتمام شیفت کاری مطمئنی؟"))return;
 api("/api/driver/shift",{method:"POST",body:JSON.stringify({token:T,onShift:false})}).then(function(){showShift(false)}).catch(function(e){document.getElementById("st").textContent="اتمام شیفت انجام نشد: "+e.message})};
 function hb(){if(!T||!ON||!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(function(p){
 api("/api/driver/heartbeat",{method:"POST",body:JSON.stringify({token:T,lat:p.coords.latitude,lng:p.coords.longitude})}).catch(function(){})},function(){},{enableHighAccuracy:true,maximumAge:30000,timeout:10000})}
-function refreshMissions(){if(!T)return;api("/api/driver/history?token="+encodeURIComponent(T)).then(function(j){var m=(j.missions||[]).filter(function(x){return x.status==="راننده در راه"});document.getElementById("activeMissions").style.display=m.length?"block":"none";document.getElementById("missionList").textContent="";m.forEach(function(x){var d=document.createElement("div");d.className="card";d.textContent=x.id+" — "+x.loc+" — "+x.problem;var b=document.createElement("button");b.className="no";b.textContent="لغو مأموریت";b.onclick=function(){var reason=prompt("دلیل لغو مأموریت را وارد کنید:");if(!reason||!reason.trim())return;if(!confirm("مأموریت لغو شود؟"))return;api("/api/driver/cancel",{method:"POST",body:JSON.stringify({token:T,reqId:x.id,reason:reason.trim()})}).then(function(){refreshMissions();loop()}).catch(function(e){alert(e.message)})};d.appendChild(b);document.getElementById("missionList").appendChild(d)})}).catch(function(e){document.getElementById("st").textContent=e.message})}
+function refreshMissions(){if(!T)return;api("/api/driver/history?token="+encodeURIComponent(T)).then(function(j){var m=(j.missions||[]).filter(function(x){return x.status==="راننده در راه"});document.getElementById("activeMissions").style.display=m.length?"block":"none";document.getElementById("missionList").textContent="";m.forEach(function(x){var d=document.createElement("div");d.className="card";d.textContent=x.id+" — "+x.loc+" — "+x.problem;var b=document.createElement("button");b.className="no";b.textContent="لغو مأموریت";b.onclick=function(){var reason=prompt("دلیل لغو مأموریت را وارد کنید:");if(!reason||!reason.trim())return;if(!confirm("مأموریت لغو شود؟"))return;b.disabled=true;api("/api/driver/cancel",{method:"POST",body:JSON.stringify({token:T,reqId:x.id,reason:reason.trim()})}).then(function(){b.disabled=false;refreshMissions();loop()}).catch(function(e){b.disabled=false;alert(e.message)})};d.appendChild(b);document.getElementById("missionList").appendChild(d)})}).catch(function(e){document.getElementById("st").textContent=e.message})}
 function loop(){refreshMissions();api("/api/driver/offers?token="+encodeURIComponent(T)).then(function(j){
 if(!j.ok)return;var o=j.offer;var box=document.getElementById("offer");
 if(o&&o.request){REQ=o.reqId;box.style.display="block";
@@ -930,9 +1055,12 @@ document.getElementById("rej").onclick=function(){if(REQ)api("/api/driver/respon
 const CUSTOMER_CANCEL_PAGE = `<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>پیگیری یدک‌کشی REV</title><style>body{font-family:Tahoma,sans-serif;background:#f5f8fc;color:#18283b;margin:0;padding:20px}.card{max-width:450px;margin:20px auto;background:white;border-radius:16px;padding:22px;box-shadow:0 4px 22px #152d5015}input,select,button{box-sizing:border-box;width:100%;padding:12px;margin:8px 0;border-radius:9px;border:1px solid #cbd5e1;font:inherit}button{background:#1766c1;color:white;border:0;cursor:pointer}button.danger{background:#bd3030}button:disabled{opacity:.5}#cancelArea{display:none}#message{white-space:pre-wrap}</style></head><body><div class="card"><h2>پیگیری مأموریت یدک‌کشی REV</h2><label>شناسه درخواست<input id="id" placeholder="TW-XXXXXX"></label><label>شماره موبایل ثبت‌شده<input id="phone" inputmode="tel" placeholder="09xxxxxxxxx"></label><button id="check">بررسی وضعیت</button><p id="message" role="status"></p><section id="cancelArea"><label>دلیل لغو<select id="reason"><option value="مشکل خودرو برطرف شد">مشکل خودرو برطرف شد</option><option value="تأخیر یدک‌کش">تأخیر یدک‌کش</option><option value="انصراف از درخواست">انصراف از درخواست</option><option value="سایر دلایل">سایر دلایل</option></select></label><button class="danger" id="cancel">لغو مأموریت</button></section></div><script>
 const id=document.getElementById("id"),phone=document.getElementById("phone"),message=document.getElementById("message"),area=document.getElementById("cancelArea");
 const params=new URLSearchParams(location.search);id.value=params.get("id")||"";phone.value=params.get("phone")||"";const cancelToken=params.get("cancelToken")||"";
+// Never leave the per-request token in the address bar / browser history:
+// keep it only in this page's memory after the first read.
+try{if(cancelToken)history.replaceState(null,"",location.pathname+"?id="+encodeURIComponent(id.value)+"&phone="+encodeURIComponent(phone.value))}catch(e){}
 async function call(path,options){const r=await fetch(path,options);const j=await r.json();if(!r.ok||!j.ok)throw Error(j.err||"خطای سرور");return j}
-async function check(){area.style.display="none";try{if(!/^09\\d{9}$/.test(phone.value.trim()))throw Error("شماره موبایل معتبر نیست");const r=await call("/api/tow/status?id="+encodeURIComponent(id.value.trim()));message.textContent="وضعیت: "+r.status;area.style.display=(!cancelToken||["لغو شد","انجام شد"].includes(r.status))?"none":"block";if(!cancelToken)message.textContent+=" — برای لغو درخواست قدیمی با پشتیبانی تماس بگیرید"}catch(e){message.textContent=e.message}}
+async function check(){area.style.display="none";try{if(!/^09\\d{9}$/.test(phone.value.trim()))throw Error("شماره موبایل معتبر نیست");const r=await call("/api/tow/status?id="+encodeURIComponent(id.value.trim())+(cancelToken?"&cancelToken="+encodeURIComponent(cancelToken):""));message.textContent="وضعیت: "+r.status;area.style.display=(!cancelToken||["لغو شد","انجام شد"].includes(r.status))?"none":"block";if(!cancelToken)message.textContent+=" — برای لغو درخواست قدیمی با پشتیبانی تماس بگیرید"}catch(e){message.textContent=e.message}}
 document.getElementById("check").onclick=check;
-document.getElementById("cancel").onclick=async function(){if(!confirm("آیا از لغو مأموریت مطمئن هستید؟"))return;this.disabled=true;try{await call("/api/tow/cancel",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:id.value.trim(),phone:phone.value.trim(),cancelToken,reason:document.getElementById("reason").value})});message.textContent="مأموریت لغو شد";area.style.display="none"}catch(e){message.textContent=e.message}finally{this.disabled=false}};
+document.getElementById("cancel").onclick=async function(){if(!confirm("آیا از لغو مأموریت مطمئن هستید؟"))return;this.disabled=true;try{await call("/api/tow/cancel",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({id:id.value.trim(),phone:phone.value.trim(),cancelToken,reason:document.getElementById("reason").value})});message.textContent="مأموریت لغو شد";area.style.display="none";check()}catch(e){message.textContent=e.message}finally{this.disabled=false}};
 if(id.value&&phone.value)check();
 </script></body></html>`;
