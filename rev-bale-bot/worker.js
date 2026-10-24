@@ -138,8 +138,10 @@ const editText = (env, chatId, messageId, text, extra = {}) =>
 // ---------- کیبوردها ----------
 const KB_USER = {
   keyboard: [
-    [{ text: "🔌 شارژ و ایستگاه‌ها" }, { text: "🧭 سفر و امداد" }],
-    [{ text: "🚗 ابزارهای خودرو" }, { text: "👤 حساب و خدمات" }],
+    [{ text: "📍 گزارش وضعیت شارژر" }, { text: "🔌 شارژر نزدیک" }],
+    [{ text: "🚨 درخواست امداد" }, { text: "🚕 بخش راننده" }],
+    [{ text: "🧮 ماشین‌حساب شارژ" }, { text: "🧭 برنامه‌ریز سفر" }],
+    [{ text: "🛒 فروشگاه Rev Part" }, { text: "👤 حساب من" }],
   ],
   resize_keyboard: true,
 };
@@ -147,40 +149,11 @@ const KB_USER = {
 const KB_OWNER = {
   keyboard: [
     [{ text: "📥 صف بررسی ایستگاه‌ها" }, { text: "📊 گزارش امروز" }],
-    [{ text: "📣 پست در کانال" }, { text: "➕ افزودن کالا" }],
-    [{ text: "👤 منوی کاربران" }],
-  ],
-  resize_keyboard: true,
-};
-
-const KB_CHARGING = {
-  keyboard: [
-    [{ text: "🔌 شارژر نزدیک" }, { text: "📍 گزارش وضعیت شارژر" }],
-    [{ text: "🔙 بازگشت به منوی اصلی" }],
-  ],
-  resize_keyboard: true,
-};
-
-const KB_TRAVEL = {
-  keyboard: [
-    [{ text: "🧭 برنامه‌ریز سفر" }, { text: "🚨 درخواست امداد" }],
-    [{ text: "🚕 بخش راننده" }, { text: "🔙 بازگشت به منوی اصلی" }],
-  ],
-  resize_keyboard: true,
-};
-
-const KB_TOOLS = {
-  keyboard: [
-    [{ text: "🧮 ماشین‌حساب شارژ" }, { text: "👤 حساب من" }],
-    [{ text: "🔙 بازگشت به منوی اصلی" }],
-  ],
-  resize_keyboard: true,
-};
-
-const KB_SERVICES = {
-  keyboard: [
+    [{ text: "📣 پست در کانال" }, { text: "📍 گزارش وضعیت شارژر" }],
+    [{ text: "🔌 شارژر نزدیک" }, { text: "🚨 درخواست امداد" }],
+    [{ text: "🚕 بخش راننده" }, { text: "🧮 ماشین‌حساب شارژ" }],
+    [{ text: "🧭 برنامه‌ریز سفر" }, { text: "➕ افزودن کالا" }],
     [{ text: "🛒 فروشگاه Rev Part" }, { text: "👤 حساب من" }],
-    [{ text: "🔙 بازگشت به منوی اصلی" }],
   ],
   resize_keyboard: true,
 };
@@ -647,7 +620,7 @@ async function handleUnbell(env, cb) {
 async function towStatusText(env, chatId) {
   const act = await kvGet(env, `tow:${chatId}`);
   if (!act || !act.reqId) return null;
-  const { j } = await jfetch(`${TOW_API}/api/tow/status?id=${encodeURIComponent(act.reqId)}`);
+  const { j } = await jfetch(`${TOW_API}/api/tow/status?id=${encodeURIComponent(act.reqId)}${act.cancelToken ? `&cancelToken=${encodeURIComponent(act.cancelToken)}` : ""}`);
   if (!j || !j.ok) return { act, text: "نتونستم وضعیت درخواستت رو بگیرم؛ چند دقیقه دیگه «وضعیت» رو بزن." };
   const done = ["انجام شد", "لغو شد"].includes(j.status);
   if (done) await env.BOT_KV.delete(`tow:${chatId}`);
@@ -708,7 +681,7 @@ async function createTowRequest(env, chatId, ses, loc) {
   });
   await clearSession(env, chatId);
   if (j && j.ok && j.id) {
-    await kvPut(env, `tow:${chatId}`, { reqId: j.id, at: Date.now() }, 24 * 3600);
+    await kvPut(env, `tow:${chatId}`, { reqId: j.id, cancelToken: j.cancelToken || null, at: Date.now() }, 24 * 3600);
     await send(env, chatId,
       `درخواستت ثبت شد ✅ (کد: ${j.id})\nوضعیت: ${j.status || "ثبت شد"}\n\nبه محض قبول راننده، از دکمه «درخواست امداد» وضعیت و مشخصاتش رو می‌بینی؛ موقعیت زنده‌ش هم توی آپ REV هست.`,
       { reply_markup: kbFor(env, chatId) });
@@ -746,11 +719,16 @@ async function handleTowCb(env, cb) {
     const act = await kvGet(env, `tow:${chatId}`);
     const usr = await getUser(env, chatId);
     if (act && usr && usr.phone) {
-      await jfetch(`${TOW_API}/api/tow/cancel`, {
+      const { j } = await jfetch(`${TOW_API}/api/tow/cancel`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ id: act.reqId, phone: usr.phone }),
+        body: JSON.stringify({ id: act.reqId, phone: usr.phone, cancelToken: act.cancelToken || undefined }),
       });
+      if (j && !j.ok) {
+        await answerCb(env, cb.id, "لغو نشد");
+        await editText(env, chatId, cb.message.message_id, `لغو انجام نشد: ${j.err || "خطا"}\nبرای لغو درخواست‌های قدیمی با پشتیبانی تماس بگیر.`);
+        return;
+      }
     }
     await env.BOT_KV.delete(`tow:${chatId}`);
     await answerCb(env, cb.id, "لغو شد");
@@ -1121,16 +1099,6 @@ async function handleMessage(env, msg) {
     return;
   }
 
-  // هر انتخاب منویی، جریان قبلی را قطع می‌کند تا پاسخ بعدی به سؤال قدیمی نچسبد.
-  const topLevelActions = new Set([
-    "📍 گزارش وضعیت شارژر", "🔌 شارژر نزدیک", "🚨 درخواست امداد", "🚕 بخش راننده",
-    "🧮 ماشین‌حساب شارژ", "🧭 برنامه‌ریز سفر", "🛒 فروشگاه Rev Part", "👤 حساب من",
-    "➕ افزودن کالا", "📥 صف بررسی ایستگاه‌ها", "📊 گزارش امروز", "📣 پست در کانال",
-    "🔌 شارژ و ایستگاه‌ها", "🧭 سفر و امداد", "🚗 ابزارهای خودرو", "👤 حساب و خدمات",
-    "👤 منوی کاربران", "🔙 بازگشت", "🔙 بازگشت به منوی اصلی",
-  ]);
-  if (topLevelActions.has(text)) await clearSession(env, chatId);
-
   const ses = await getSession(env, chatId);
   if (ses && ses.flow === "phone") { await handlePhoneInput(env, chatId, text); return; }
   if (ses && ses.flow === "driver_token") { await handleDriverToken(env, chatId, text); return; }
@@ -1201,20 +1169,6 @@ async function handleMessage(env, msg) {
   }
 
   switch (text) {
-    case "🔌 شارژ و ایستگاه‌ها":
-      await send(env, chatId, "شارژ و ایستگاه‌ها — یکی از گزینه‌ها را انتخاب کن:", { reply_markup: KB_CHARGING }); return;
-    case "🧭 سفر و امداد":
-      await send(env, chatId, "سفر و امداد — یکی از گزینه‌ها را انتخاب کن:", { reply_markup: KB_TRAVEL }); return;
-    case "🚗 ابزارهای خودرو":
-      await send(env, chatId, "ابزارهای خودرو — یکی از گزینه‌ها را انتخاب کن:", { reply_markup: KB_TOOLS }); return;
-    case "👤 حساب و خدمات":
-      await send(env, chatId, "حساب و خدمات — یکی از گزینه‌ها را انتخاب کن:", { reply_markup: KB_SERVICES }); return;
-    case "👤 منوی کاربران":
-      await send(env, chatId, "منوی کاربران:", { reply_markup: KB_USER }); return;
-    case "🔙 بازگشت":
-    case "🔙 بازگشت به منوی اصلی":
-      await clearSession(env, chatId);
-      await send(env, chatId, "منوی اصلی", { reply_markup: kbFor(env, chatId) }); return;
     case "📍 گزارش وضعیت شارژر": await askLocation(env, chatId, "report"); return;
     case "🔌 شارژر نزدیک": await askLocation(env, chatId, "nearby"); return;
     case "🚨 درخواست امداد": await handleTowHome(env, chatId); return;
@@ -1233,6 +1187,10 @@ async function handleMessage(env, msg) {
       }
       return;
     case "👤 حساب من": await handleAccount(env, chatId); return;
+    case "🔙 بازگشت":
+      await clearSession(env, chatId);
+      await send(env, chatId, "منوی اصلی", { reply_markup: kbFor(env, chatId) });
+      return;
     case "📥 صف بررسی ایستگاه‌ها":
       if (chatId === ownerId(env)) await ownerPending(env, chatId);
       return;
@@ -1320,7 +1278,7 @@ async function handleInternal(env, request) {
 
 // ---------- ورودی اصلی ----------
 export default {
-  // کرون ورکر: هر روز ۰۲:۳۰ UTC = ۰۶:۰۰ تهران (زمان‌بندی در داشبورد Cloudflare)
+  // کرون ورکر: هر روز ۰۳:۳۰ UTC = ۰۷:۰۰ تهران (تریگر در wrangler.toml / داشبورد)
   async scheduled(event, env, ctx) {
     ctx.waitUntil(runDigest(env).catch(() => {}));
   },
