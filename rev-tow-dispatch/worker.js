@@ -391,8 +391,14 @@ async function handle(req, env, cors) {
     const b = await body(req);
     const r = await getReq(env, b.id);
     if (!r || r.phone !== String(b.phone || "").trim()) return json({ ok: false, err: "یافت نشد" }, 404, cors);
+    if (r.status === "لغو شد") return json({ ok: true, status: r.status }, 200, cors);
+    if (r.status === "انجام شد") return json({ ok: false, err: "مأموریت انجام شده قابل لغو نیست" }, 409, cors);
+    const reason = String(b.reason || "بدون ذکر دلیل").trim().slice(0, 200);
     r.status = "لغو شد";
-    r.log.push({ t: now(), ev: "توسط مشتری لغو شد" });
+    r.cancelledAt = now();
+    r.cancelledBy = "customer";
+    r.cancelReason = reason;
+    r.log.push({ t: now(), ev: "توسط درخواست‌کننده لغو شد: " + reason });
     await saveReq(env, r);
     await storeDelete(env, kOffer(r.id));
     return json({ ok: true }, 200, cors);
@@ -562,6 +568,27 @@ async function handle(req, env, cors) {
     await saveReq(env, r);
     await dispatchToNext(env, r);
     return json({ ok: true, moved: true }, 200, cors);
+  }
+
+  // ---- assigned driver: cancel active mission ----
+  if (path === "/api/driver/cancel" && method === "POST") {
+    const b = await body(req);
+    const d = await driverByToken(env, b.token);
+    if (!d) return json({ ok: false, err: "احراز هویت نامعتبر" }, 401, cors);
+    const r = await getReq(env, b.reqId);
+    if (!r || r.assignedDriver !== d.id) return json({ ok: false, err: "مأموریت برای این راننده نیست" }, 403, cors);
+    if (r.status === "لغو شد") return json({ ok: true, status: r.status }, 200, cors);
+    if (r.status !== "راننده در راه") return json({ ok: false, err: "این مأموریت قابل لغو نیست" }, 409, cors);
+    const reason = String(b.reason || "").trim().slice(0, 200);
+    if (!reason) return json({ ok: false, err: "دلیل لغو الزامی است" }, 400, cors);
+    r.status = "لغو شد";
+    r.cancelledAt = now();
+    r.cancelledBy = "driver";
+    r.cancelReason = reason;
+    r.log.push({ t: now(), ev: "توسط راننده " + d.name + " لغو شد: " + reason });
+    await saveReq(env, r);
+    await storeDelete(env, kOffer(r.id));
+    return json({ ok: true, status: r.status }, 200, cors);
   }
 
   // ---- driver: complete mission ----
@@ -848,6 +875,7 @@ button{padding:12px;border:0;border-radius:8px;font-weight:800;width:100%;margin
 <div class="card" id="shiftCard" style="display:none"><div class="big" id="shiftTitle">وضعیت شیفت</div><div class="mut" id="shiftHint">برای دریافت درخواست باید شیفت را شروع کنی.</div><button class="ok" id="startShift">🟢 آماده فعالیت هستم — شروع شیفت</button><button class="no" id="endShift" style="display:none">⏹️ اتمام شیفت کاری</button></div>
 <div class="card" id="offer"><div class="big">📥 درخواست جدید</div><div id="od"></div>
 <button class="ok" id="acc">✅ قبول می‌کنم</button><button class="no" id="rej">❌ رد</button></div>
+<div class="card" id="activeMissions" style="display:none"><div class="big">مأموریت‌های فعال من</div><div id="missionList"></div></div>
 <div class="card"><div class="mut" id="st">وارد نشده‌ای.</div></div>
 <script>
 var T="",REQ=null,ON=false,loopTimer=null,hbTimer=null;
@@ -872,7 +900,8 @@ if(!confirm("از اتمام شیفت کاری مطمئنی؟"))return;
 api("/api/driver/shift",{method:"POST",body:JSON.stringify({token:T,onShift:false})}).then(function(){showShift(false)}).catch(function(e){document.getElementById("st").textContent="اتمام شیفت انجام نشد: "+e.message})};
 function hb(){if(!T||!ON||!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(function(p){
 api("/api/driver/heartbeat",{method:"POST",body:JSON.stringify({token:T,lat:p.coords.latitude,lng:p.coords.longitude})}).catch(function(){})},function(){},{enableHighAccuracy:true,maximumAge:30000,timeout:10000})}
-function loop(){api("/api/driver/offers?token="+encodeURIComponent(T)).then(function(j){
+function refreshMissions(){if(!T)return;api("/api/driver/history?token="+encodeURIComponent(T)).then(function(j){var m=(j.missions||[]).filter(function(x){return x.status==="راننده در راه"});document.getElementById("activeMissions").style.display=m.length?"block":"none";document.getElementById("missionList").textContent="";m.forEach(function(x){var d=document.createElement("div");d.className="card";d.textContent=x.id+" — "+x.loc+" — "+x.problem;var b=document.createElement("button");b.className="no";b.textContent="لغو مأموریت";b.onclick=function(){var reason=prompt("دلیل لغو مأموریت را وارد کنید:");if(!reason||!reason.trim())return;if(!confirm("مأموریت لغو شود؟"))return;api("/api/driver/cancel",{method:"POST",body:JSON.stringify({token:T,reqId:x.id,reason:reason.trim()})}).then(function(){refreshMissions();loop()}).catch(function(e){alert(e.message)})};d.appendChild(b);document.getElementById("missionList").appendChild(d)})}).catch(function(e){document.getElementById("st").textContent=e.message})}
+function loop(){refreshMissions();api("/api/driver/offers?token="+encodeURIComponent(T)).then(function(j){
 if(!j.ok)return;var o=j.offer;var box=document.getElementById("offer");
 if(o&&o.request){REQ=o.reqId;box.style.display="block";
 document.getElementById("od").innerHTML="<div class='big'>"+o.request.problem+"</div><div>"+(o.request.car||"")+" — "+(o.request.loc||"")+"</div><div class='mut'>تلفن: "+o.request.phone+"</div>"+(o.request.note?"<div>"+o.request.note+"</div>":"")}
