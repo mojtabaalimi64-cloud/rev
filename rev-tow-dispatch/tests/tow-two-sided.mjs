@@ -227,7 +227,136 @@ ok("customer page has confirm + reason select", src.includes('confirm("آیا ا
 ok("driver page has reason prompt + confirm + double-submit guard", src.includes('prompt("دلیل لغو مأموریت را وارد کنید:")') && src.includes("b.disabled=true"));
 ok("both pages declare mobile viewport", (src.match(/width=device-width,initial-scale=1/g) || []).length >= 2);
 
-// 15. no data loss: every created request still present
+// ---------- notify harness (sections 15+) ----------
+const notifyCalls = [];
+globalThis.fetch = async (url, opts = {}) => {
+  let body = null;
+  try { body = JSON.parse(opts.body || "null"); } catch { /* ignore */ }
+  notifyCalls.push({ url: String(url), body });
+  return new Response(JSON.stringify({ ok: true }), { status: 200, headers: { "content-type": "application/json" } });
+};
+env.INTERNAL_KEY = "test-internal";
+const towOfferCalls = () => notifyCalls.filter((c) => c.body && c.body.type === "tow_offer");
+const towStatusCalls = () => notifyCalls.filter((c) => c.body && c.body.type === "tow_status");
+
+// 15. driver link-chat + offer push (secret set)
+const d9 = await makeDriver("راننده نه", "09199999991", 36.0, 52.0);
+const linkBad = await call("/api/driver/link-chat", { method: "POST", body: { token: "NOPE", chatId: 777 } });
+ok("link-chat with bad token -> 401", linkBad.status === 401 && linkBad.err === "توکن راننده معتبر نیست");
+const linkBadChat = await call("/api/driver/link-chat", { method: "POST", body: { token: d9.token, chatId: 0 } });
+ok("link-chat with bad chatId -> 400", linkBadChat.status === 400);
+const linkOk = await call("/api/driver/link-chat", { method: "POST", body: { token: d9.token, chatId: 777 } });
+ok("link-chat ok", linkOk.ok === true);
+const reqN1 = await call("/api/tow/request", { method: "POST", body: {
+  name: "مشتری تست", phone: "09150000001", car: "", problem: "سایر", loc: "تست",
+  gps: { lat: 36.0, lng: 52.0 },
+} });
+ok("notify-test request created", reqN1.ok === true);
+ok("offer goes to linked driver d9", row("req:" + reqN1.id).currentOffer?.driverId === d9.id);
+ok("offer push sent to linked chat", towOfferCalls().some((c) => c.body.chatId === 777));
+
+// 16. no secret -> dispatch intact, no push attempted
+const callsBefore = notifyCalls.length;
+delete env.INTERNAL_KEY;
+const reqN2 = await call("/api/tow/request", { method: "POST", body: {
+  name: "مشتری تست", phone: "09150000002", car: "", problem: "سایر", loc: "تست",
+  gps: { lat: 36.0, lng: 52.0 },
+} });
+ok("dispatch without secret still creates offer", reqN2.ok === true && row("req:" + reqN2.id).currentOffer !== null);
+ok("no push attempted without secret", notifyCalls.length === callsBefore);
+env.INTERNAL_KEY = "test-internal";
+
+// 17. customer push on accept / complete / driver-cancel (baleChatId only)
+const reqC1 = await call("/api/tow/request", { method: "POST", body: {
+  name: "مشتری تست", phone: "09150000003", car: "", problem: "سایر", loc: "تست",
+  gps: { lat: 36.0, lng: 52.0 }, baleChatId: 555,
+} });
+await call("/api/driver/respond", { method: "POST", body: { token: d9.token, reqId: reqC1.id, accept: true } });
+ok("customer push on accept", towStatusCalls().some((c) => c.body.chatId === 555 && c.body.text.includes("قبول کرد")));
+await call("/api/driver/complete", { method: "POST", body: { token: d9.token, reqId: reqC1.id } });
+ok("customer push on complete", towStatusCalls().some((c) => c.body.chatId === 555 && c.body.text.includes("انجام شد")));
+const reqC2 = await call("/api/tow/request", { method: "POST", body: {
+  name: "مشتری تست", phone: "09150000004", car: "", problem: "سایر", loc: "تست",
+  gps: { lat: 36.0, lng: 52.0 }, baleChatId: 556,
+} });
+await call("/api/driver/respond", { method: "POST", body: { token: d9.token, reqId: reqC2.id, accept: true } });
+const dc2 = await call("/api/driver/cancel", { method: "POST", body: { token: d9.token, reqId: reqC2.id, reason: "خرابی خودرو" } });
+ok("driver cancel reassigns (flag true)", dc2.ok === true && dc2.reassigned === true && dc2.status === "در انتظار پذیرش راننده");
+ok("customer push on driver cancel (reassigned)", towStatusCalls().some((c) => c.body.chatId === 556 && c.body.text.includes("راننده بعدی")));
+const dSolo = await makeDriver("راننده تنها", "09199999992", 30.0, 50.0);
+const reqC3 = await call("/api/tow/request", { method: "POST", body: {
+  name: "مشتری تست", phone: "09150000005", car: "", problem: "سایر", loc: "تست",
+  gps: { lat: 30.0, lng: 50.0 }, baleChatId: 557,
+} });
+await call("/api/driver/respond", { method: "POST", body: { token: dSolo.token, reqId: reqC3.id, accept: true } });
+const dc3 = await call("/api/driver/cancel", { method: "POST", body: { token: dSolo.token, reqId: reqC3.id, reason: "دور بود" } });
+ok("driver cancel with no replacement -> operator + flag false", dc3.ok === true && dc3.reassigned === false && dc3.status === "در انتظار اپراتور");
+ok("customer push on driver cancel (operator)", towStatusCalls().some((c) => c.body.chatId === 557 && c.body.text.includes("اپراتور")));
+const statusBefore = towStatusCalls().length;
+const reqC4 = await call("/api/tow/request", { method: "POST", body: {
+  name: "مشتری تست", phone: "09150000006", car: "", problem: "سایر", loc: "تست",
+  gps: { lat: 36.0, lng: 52.0 },
+} });
+await call("/api/driver/respond", { method: "POST", body: { token: d9.token, reqId: reqC4.id, accept: true } });
+ok("no customer push without baleChatId", towStatusCalls().length === statusBefore);
+ok("every push carries a numeric chatId", notifyCalls.every((c) => typeof c.body.chatId === "number"));
+
+// 18. operator redispatch
+const parked = await call("/api/tow/request", { method: "POST", body: {
+  name: "مشتری تست", phone: "09150000007", car: "", problem: "سایر", loc: "تست",
+  gps: { lat: 25.0, lng: 45.0 },
+} });
+ok("far request parks in operator queue", row("req:" + parked.id).status === "در انتظار اپراتور" && row("req:" + parked.id).currentOffer === null);
+const rdNoKey = await call("/api/admin/request/redispatch", { method: "POST", body: { id: parked.id } });
+ok("redispatch without admin key -> 401", rdNoKey.status === 401);
+const rdWrong = await call("/api/admin/request/redispatch", { method: "POST", body: { id: reqC2.id }, headers: ADMIN });
+ok("redispatch on non-parked request -> 409", rdWrong.status === 409);
+const rdStill = await call("/api/admin/request/redispatch", { method: "POST", body: { id: parked.id }, headers: ADMIN });
+ok("redispatch with no driver stays parked", rdStill.ok === true && rdStill.status === "در انتظار اپراتور");
+const dNew = await makeDriver("راننده تازه", "09199999993", 25.0, 45.0);
+await call("/api/driver/link-chat", { method: "POST", body: { token: dNew.token, chatId: 888 } });
+const rdOk = await call("/api/admin/request/redispatch", { method: "POST", body: { id: parked.id }, headers: ADMIN });
+ok("redispatch offers to new driver", rdOk.ok === true && rdOk.status === "در انتظار پذیرش راننده" && rdOk.currentOffer?.driverId === dNew.id);
+ok("redispatch push sent to new driver chat", towOfferCalls().some((c) => c.body.chatId === 888));
+// skipped list preserved: solo driver rejects, then redispatch must not re-offer them
+const reqS = await call("/api/tow/request", { method: "POST", body: {
+  name: "مشتری تست", phone: "09150000008", car: "", problem: "سایر", loc: "تست",
+  gps: { lat: 30.0, lng: 50.0 },
+} });
+await call("/api/driver/respond", { method: "POST", body: { token: dSolo.token, reqId: reqS.id, accept: false } });
+ok("solo reject parks request with skipped driver", row("req:" + reqS.id).status === "در انتظار اپراتور" && row("req:" + reqS.id).skipped.includes(dSolo.id));
+const rdSk = await call("/api/admin/request/redispatch", { method: "POST", body: { id: reqS.id }, headers: ADMIN });
+ok("redispatch respects skipped list", rdSk.ok === true && rdSk.status === "در انتظار اپراتور" && row("req:" + reqS.id).skipped.includes(dSolo.id));
+
+// 19. operator cancel from admin UI endpoint (parked request)
+const oc = await call("/api/admin/request/cancel", { method: "POST", body: { id: reqS.id, reason: "تست مدیر" }, headers: ADMIN });
+ok("admin cancel works", oc.ok === true && oc.status === "لغو شد" && row("req:" + reqS.id).log.some((e) => e.ev.includes("اپراتور")));
+
+// 20. driver token error texts (no bare 401/404)
+for (const [p, m] of [
+  ["/api/driver/history?token=NOPE", "GET"],
+  ["/api/driver/offers?token=NOPE", "GET"],
+]) {
+  const r = await call(p, { method: m });
+  ok("bad token error text on " + p, r.status === 401 && r.err === "توکن راننده معتبر نیست");
+}
+for (const [p, b] of [
+  ["/api/driver/heartbeat", { token: "NOPE", lat: 1, lng: 1 }],
+  ["/api/driver/respond", { token: "NOPE", reqId: "x", accept: true }],
+  ["/api/driver/complete", { token: "NOPE", reqId: "x" }],
+]) {
+  const r = await call(p, { method: "POST", body: b });
+  ok("bad token error text on " + p, r.status === 401 && r.err === "توکن راننده معتبر نیست");
+}
+
+// 21. driver page complete button (static)
+ok("driver page has complete button with confirm", src.includes('"/api/driver/complete"') && src.includes('اتمام مأموریت') && src.includes('confirm("مأموریت انجام شد؟")'));
+
+// 22. legacy compat: old-style request/driver (no baleChatId, no chatId) still flow
+const legacyReq = await makeRequest("09150000009");
+ok("legacy request still dispatches", row("req:" + legacyReq.id).currentOffer !== null);
+
+// 23. no data loss: every created request still present
 const adminList2 = await call("/api/admin/requests", { headers: ADMIN });
 ok("no request records lost", adminList2.requests.length >= 8);
 

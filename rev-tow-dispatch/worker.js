@@ -20,8 +20,17 @@
  *  - Settings → Variables → Secret: ADMIN_KEY = <random string>
  *  - Note the worker URL, e.g. https://rev-tow-dispatch.<sub>.workers.dev
  *
- * Limits of this MVP (honest): no push notifications — drivers poll every
- * ~25 s from the /driver page; customer status via polling too.
+ * Notifications (best-effort, never blocking): when a driver links their
+ * Bale chat (POST /api/driver/link-chat), new offers are pushed to the bot
+ * via POST /internal/notify {type:"tow_offer"}; when a request carries
+ * baleChatId (Bale-originated), driver accept/cancel/complete push a
+ * {type:"tow_status"} message to the customer. Requires INTERNAL_KEY (same
+ * value as the bot) on this worker; without it, notifications are skipped
+ * silently and polling keeps working. Drivers still poll every ~25 s from
+ * the /driver page; customer status via polling too.
+ *
+ * Operator re-dispatch: POST /api/admin/request/redispatch (master only)
+ * re-runs dispatch for requests parked in "در انتظار اپراتور".
  *
  * Two-sided cancellation guarantees (feature/tow-two-sided-cancellation):
  *  - Customer cancel needs the per-request cancelToken (legacy requests
@@ -93,6 +102,26 @@ function json(data, status = 200, cors) {
     status,
     headers: { "content-type": "application/json; charset=utf-8", ...cors },
   });
+}
+
+// ---------- best-effort Bale notifications ----------
+// BOT_NOTIFY_URL: the rev-bale-bot /internal/notify endpoint. The shared
+// secret must be set as INTERNAL_KEY on THIS worker too (deploy step; the
+// value itself is never stored in code). If the secret is missing, or the
+// call fails/times out, the notification is silently skipped and the
+// dispatch/accept/cancel/complete flow is never affected.
+const BOT_NOTIFY_URL = "https://rev-bale-bot.mojtaba-alimi64.workers.dev/internal/notify";
+async function notifyBot(env, payload) {
+  try {
+    if (!env.INTERNAL_KEY || !payload || !payload.chatId) return false;
+    const res = await fetch(BOT_NOTIFY_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "x-internal-key": env.INTERNAL_KEY },
+      body: JSON.stringify(payload),
+      signal: AbortSignal.timeout(4000),
+    });
+    return res.ok;
+  } catch { return false; }
 }
 function corsHeaders(req) {
   const origin = req.headers.get("origin") || "";
@@ -370,6 +399,8 @@ async function dispatchToNext(env, req) {
     if (!await casReq(env, before, after)) continue; // lost race: re-read and retry
     await storePut(env, kOffer(reqId), JSON.stringify(offer));
     await addIndexedName(env, "offer:", kOffer(reqId));
+    // Best-effort driver push: never blocks or breaks the dispatch.
+    await notifyBot(env, { type: "tow_offer", chatId: pick.driver.chatId });
     return offer;
   }
   return null;
@@ -428,8 +459,11 @@ async function handle(req, env, cors) {
 
     const id = "TW-" + crypto.randomUUID().slice(0, 8).toUpperCase();
     const cancelToken = crypto.randomUUID() + crypto.randomUUID();
+    const baleChatId = (typeof b.baleChatId === "number" && isFinite(b.baleChatId))
+      ? b.baleChatId
+      : (typeof b.baleChatId === "string" && /^\d+$/.test(b.baleChatId.trim()) ? Number(b.baleChatId.trim()) : null);
     const r = {
-      id, ts: now(), status: "ثبت شد", cancelToken,
+      id, ts: now(), status: "ثبت شد", cancelToken, baleChatId,
       name: String(b.name).trim(), phone: String(b.phone).trim(),
       car: String(b.car || "").trim(), problem: String(b.problem || "سایر"),
       loc: String(b.loc || "").trim(),
@@ -550,6 +584,21 @@ async function handle(req, env, cors) {
     return json({ ok: true, id: d.id, token: d.token, name: d.name, phone: d.phone, radius: d.radius, approved: d.approved === true }, 200, cors);
   }
 
+  // ---- driver: link Bale chat for offer push notifications ----
+  // Called by the Bale bot when a driver links their account (best-effort
+  // on the bot side). Authenticated with the same driver token; stores
+  // only the numeric chat id, nothing else.
+  if (path === "/api/driver/link-chat" && method === "POST") {
+    const b = await body(req);
+    const d = await driverByToken(env, b.token);
+    if (!d) return json({ ok: false, err: "توکن راننده معتبر نیست" }, 401, cors);
+    const chatId = Number(b.chatId);
+    if (!isFinite(chatId) || chatId <= 0) return json({ ok: false, err: "شناسه چت معتبر نیست" }, 400, cors);
+    d.chatId = chatId;
+    await saveDriver(env, d);
+    return json({ ok: true }, 200, cors);
+  }
+
   // ---- driver: change own password ----
   if (path === "/api/driver/password/change" && method === "POST") {
     const b = await body(req);
@@ -591,7 +640,7 @@ async function handle(req, env, cors) {
   if (path === "/api/driver/heartbeat" && method === "POST") {
     const b = await body(req);
     const d = await driverByToken(env, b.token);
-    if (!d) return json({ ok: false }, 401, cors);
+    if (!d) return json({ ok: false, err: "توکن راننده معتبر نیست" }, 401, cors);
     if (isFinite(Number(b.lat)) && isFinite(Number(b.lng))) { d.lat = Number(b.lat); d.lng = Number(b.lng); }
     if (b.radius !== undefined && b.radius !== null && b.radius !== "") d.radius = clampRadius(b.radius);
     d.lastSeen = now();
@@ -602,7 +651,7 @@ async function handle(req, env, cors) {
   // ---- driver: poll offers ----
   if (path === "/api/driver/offers" && method === "GET") {
     const d = await driverByToken(env, url.searchParams.get("token"));
-    if (!d) return json({ ok: false }, 401, cors);
+    if (!d) return json({ ok: false, err: "توکن راننده معتبر نیست" }, 401, cors);
     d.lastSeen = now(); await saveDriver(env, d);
     if (d.approved !== true || d.active === false || d.onShift !== true)
       return json({ ok: true, offer: null, approved: d.approved === true, onShift: d.onShift === true }, 200, cors);
@@ -629,7 +678,7 @@ async function handle(req, env, cors) {
   if (path === "/api/driver/respond" && method === "POST") {
     const b = await body(req);
     const d = await driverByToken(env, b.token);
-    if (!d) return json({ ok: false }, 401, cors);
+    if (!d) return json({ ok: false, err: "توکن راننده معتبر نیست" }, 401, cors);
     if (d.approved !== true || d.active === false || d.onShift !== true) {
       await releasePendingOffersForDriver(env, d, "امکان دریافت درخواست را از دست داد");
       return json({ ok: false, err: "برای پاسخ به درخواست باید حساب تأییدشده و شیفت فعال داشته باشی" }, 403, cors);
@@ -645,7 +694,7 @@ async function handle(req, env, cors) {
       return json({ ok: false, err: "مهلت پاسخ به این پیشنهاد تمام شد" }, 410, cors);
     }
     const r = await getReq(env, b.reqId);
-    if (!r) return json({ ok: false }, 404, cors);
+    if (!r) return json({ ok: false, err: "درخواست پیدا نشد" }, 404, cors);
 
     if (r.status === "لغو شد" || r.status === "انجام شد") {
       await storeDelete(env, kOffer(r.id));
@@ -662,6 +711,8 @@ async function handle(req, env, cors) {
       d.score = Math.min(200, (d.score || 100) + 1);
       if (!await casReq(env, before, r)) return json({ ok: false, err: "پیشنهاد هم‌زمان تغییر کرده" }, 409, cors);
       await storeDelete(env, kOffer(r.id)); await saveDriver(env, d);
+      // Best-effort customer push (only for Bale-originated requests).
+      await notifyBot(env, { type: "tow_status", chatId: r.baleChatId, text: `🚨 راننده ${d.name} درخواستت را قبول کرد و در راه است.\nکد امداد: ${r.serviceCode}` });
       return json({ ok: true, status: r.status, serviceCode: r.serviceCode }, 200, cors);
     }
     // reject → same as timeout: move to next driver (CAS, not blind save)
@@ -703,14 +754,19 @@ async function handle(req, env, cors) {
     await storeDelete(env, kOffer(r.id));
     await dispatchToNext(env, r);
     const fresh = await getReq(env, r.id);
-    return json({ ok: true, status: fresh.status, reassigned: true }, 200, cors);
+    const reassigned = fresh.status === "در انتظار پذیرش راننده";
+    // Best-effort customer push (only for Bale-originated requests).
+    await notifyBot(env, { type: "tow_status", chatId: r.baleChatId, text: reassigned
+      ? `⚠️ راننده ${d.name} انصراف داد؛ درخواستت به راننده بعدی ارجاع شد و به‌زودی خبرش را می‌گیری.`
+      : `⚠️ راننده ${d.name} انصراف داد و فعلاً راننده جایگزینی نیست؛ درخواستت در انتظار اپراتور است.` });
+    return json({ ok: true, status: fresh.status, reassigned }, 200, cors);
   }
 
   // ---- driver: complete mission ----
   if (path === "/api/driver/complete" && method === "POST") {
     const b = await body(req);
     const d = await driverByToken(env, b.token);
-    if (!d) return json({ ok: false }, 401, cors);
+    if (!d) return json({ ok: false, err: "توکن راننده معتبر نیست" }, 401, cors);
     const r = await getReq(env, b.reqId);
     if (!r || r.assignedDriver !== d.id) return json({ ok: false, err: "این مأموریت برای شما نیست" }, 403, cors);
     // Idempotent completion: a retried completion after a dropped response
@@ -722,6 +778,8 @@ async function handle(req, env, cors) {
     r.completedAt = now();
     r.log.push({ t: now(), ev: `مأموریت توسط راننده ${d.name} انجام شد` });
     if (!await casReq(env, before, r)) return json({ ok: false, err: "وضعیت مأموریت تغییر کرده" }, 409, cors);
+    // Best-effort customer push (only for Bale-originated requests).
+    await notifyBot(env, { type: "tow_status", chatId: r.baleChatId, text: `✅ مأموریت امداد انجام شد. ممنون از اعتمادت به REV ⚡` });
     return json({ ok: true, status: r.status }, 200, cors);
   }
 
@@ -729,7 +787,7 @@ async function handle(req, env, cors) {
   if (path === "/api/driver/history" && method === "GET") {
     const token = url.searchParams.get("token");
     const d = (await listDrivers(env)).find(x => x.token === token) || null;
-    if (!d) return json({ ok: false }, 401, cors);
+    if (!d) return json({ ok: false, err: "توکن راننده معتبر نیست" }, 401, cors);
     if (d.registrationDeleted === true || d.registrationRevoked === true) {
       return json({ ok: true, registrationRevoked: true, registrationDeleted: d.registrationDeleted === true, driver: { id: d.id, name: d.name, phone: d.phone, registrationRevoked: true, registrationDeleted: d.registrationDeleted === true, approved: false, active: false } }, 200, cors);
     }
@@ -819,6 +877,18 @@ async function handle(req, env, cors) {
       if (!await casReq(env, before, r)) return json({ ok: false, err: "وضعیت مأموریت تغییر کرده" }, 409, cors);
       await storeDelete(env, kOffer(r.id));
       return json({ ok: true, status: r.status }, 200, cors);
+    }
+    // ---- operator: re-dispatch a parked request (master only, enforced above) ----
+    // Only requests in "در انتظار اپراتور" can be re-dispatched; the skipped
+    // list is left untouched so drivers who rejected/timed out are not re-offered.
+    if (path === "/api/admin/request/redispatch" && method === "POST") {
+      const b = await body(req);
+      const r = await getReq(env, String(b.id || ""));
+      if (!r) return json({ ok: false, err: "درخواست پیدا نشد" }, 404, cors);
+      if (r.status !== "در انتظار اپراتور") return json({ ok: false, err: "فقط درخواست‌های در انتظار اپراتور قابل ارجاع مجدد هستند" }, 409, cors);
+      await dispatchToNext(env, r);
+      const fresh = await getReq(env, String(b.id || ""));
+      return json({ ok: true, status: fresh.status, currentOffer: fresh.currentOffer || null }, 200, cors);
     }
     if (path === "/api/admin/drivers") {
       const allReqs = await listRequests(env);
@@ -1042,7 +1112,7 @@ if(!confirm("از اتمام شیفت کاری مطمئنی؟"))return;
 api("/api/driver/shift",{method:"POST",body:JSON.stringify({token:T,onShift:false})}).then(function(){showShift(false)}).catch(function(e){document.getElementById("st").textContent="اتمام شیفت انجام نشد: "+e.message})};
 function hb(){if(!T||!ON||!navigator.geolocation)return;navigator.geolocation.getCurrentPosition(function(p){
 api("/api/driver/heartbeat",{method:"POST",body:JSON.stringify({token:T,lat:p.coords.latitude,lng:p.coords.longitude})}).catch(function(){})},function(){},{enableHighAccuracy:true,maximumAge:30000,timeout:10000})}
-function refreshMissions(){if(!T)return;api("/api/driver/history?token="+encodeURIComponent(T)).then(function(j){var m=(j.missions||[]).filter(function(x){return x.status==="راننده در راه"});document.getElementById("activeMissions").style.display=m.length?"block":"none";document.getElementById("missionList").textContent="";m.forEach(function(x){var d=document.createElement("div");d.className="card";d.textContent=x.id+" — "+x.loc+" — "+x.problem;var b=document.createElement("button");b.className="no";b.textContent="لغو مأموریت";b.onclick=function(){var reason=prompt("دلیل لغو مأموریت را وارد کنید:");if(!reason||!reason.trim())return;if(!confirm("مأموریت لغو شود؟"))return;b.disabled=true;api("/api/driver/cancel",{method:"POST",body:JSON.stringify({token:T,reqId:x.id,reason:reason.trim()})}).then(function(){b.disabled=false;refreshMissions();loop()}).catch(function(e){b.disabled=false;alert(e.message)})};d.appendChild(b);document.getElementById("missionList").appendChild(d)})}).catch(function(e){document.getElementById("st").textContent=e.message})}
+function refreshMissions(){if(!T)return;api("/api/driver/history?token="+encodeURIComponent(T)).then(function(j){var m=(j.missions||[]).filter(function(x){return x.status==="راننده در راه"});document.getElementById("activeMissions").style.display=m.length?"block":"none";document.getElementById("missionList").textContent="";m.forEach(function(x){var d=document.createElement("div");d.className="card";d.textContent=x.id+" — "+x.loc+" — "+x.problem;var b=document.createElement("button");b.className="no";b.textContent="لغو مأموریت";b.onclick=function(){var reason=prompt("دلیل لغو مأموریت را وارد کنید:");if(!reason||!reason.trim())return;if(!confirm("مأموریت لغو شود؟"))return;b.disabled=true;api("/api/driver/cancel",{method:"POST",body:JSON.stringify({token:T,reqId:x.id,reason:reason.trim()})}).then(function(){b.disabled=false;refreshMissions();loop()}).catch(function(e){b.disabled=false;alert(e.message)})};d.appendChild(b);var c=document.createElement("button");c.className="ok";c.textContent="اتمام مأموریت";c.onclick=function(){if(!confirm("مأموریت انجام شد؟"))return;c.disabled=true;api("/api/driver/complete",{method:"POST",body:JSON.stringify({token:T,reqId:x.id})}).then(function(){c.disabled=false;refreshMissions();loop()}).catch(function(e){c.disabled=false;alert(e.message)})};d.appendChild(c);document.getElementById("missionList").appendChild(d)})}).catch(function(e){document.getElementById("st").textContent=e.message})}
 function loop(){refreshMissions();api("/api/driver/offers?token="+encodeURIComponent(T)).then(function(j){
 if(!j.ok)return;var o=j.offer;var box=document.getElementById("offer");
 if(o&&o.request){REQ=o.reqId;box.style.display="block";
