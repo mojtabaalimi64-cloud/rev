@@ -1,0 +1,19 @@
+name: Tow cancellation checks
+on:
+  push:
+    branches:
+      - feature/tow-two-sided-cancellation-20261024
+  pull_request:
+    paths:
+      - 'rev-tow-dispatch/**'
+      - '.github/workflows/tow-cancellation-checks.yml'
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check rev-tow-dispatch/worker.js
+      - run: node rev-tow-dispatch/tests/cancellation-static.mjs
